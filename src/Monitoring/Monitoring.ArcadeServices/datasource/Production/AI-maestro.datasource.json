@@ -11,12 +11,12 @@
   "withCredentials": false,
   "isDefault": false,
   "jsonData": {
-    "appInsightsAppId": "b9f0e0b0-bb36-4375-b774-da2f4a222136",
+    "appInsightsAppId": "f9f25a39-2e7f-4085-b1f7-7a4e415a5d0e",
     "azureLogAnalyticsSameAs": false,
     "cloudName": "azuremonitor"
   },
+  "readOnly": false,
   "secureJsonData": {
-    "appInsightsApiKey": "[vault(dnc-eng-app-insights-api-key)]"
-  },
-  "readOnly": false
+    "appInsightsApiKey": "[vault(maestro-app-insights-api-key)]"
+  }
 }
