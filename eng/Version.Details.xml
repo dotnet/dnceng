@@ -1,26 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.DotNet.Internal.Logging" Version="1.1.0-beta.23221.1">
-      <Uri>https://github.com/dotnet/dnceng-shared</Uri>
-      <Sha>be1c3df8cfe9a00caa586318812794374b9f5855</Sha>
-    </Dependency>
-    <Dependency Name="Microsoft.AspNetCore.ApiPagination" Version="1.1.0-beta.23221.1">
-      <Uri>https://github.com/dotnet/dnceng-shared</Uri>
-      <Sha>be1c3df8cfe9a00caa586318812794374b9f5855</Sha>
-    </Dependency>
-    <Dependency Name="Microsoft.AspNetCore.ApiVersioning" Version="1.1.0-beta.23221.1">
-      <Uri>https://github.com/dotnet/dnceng-shared</Uri>
-      <Sha>be1c3df8cfe9a00caa586318812794374b9f5855</Sha>
-    </Dependency>
-    <Dependency Name="Microsoft.AspNetCore.ApiVersioning.Analyzers" Version="1.1.0-beta.23221.1">
-      <Uri>https://github.com/dotnet/dnceng-shared</Uri>
-      <Sha>be1c3df8cfe9a00caa586318812794374b9f5855</Sha>
-    </Dependency>
-    <Dependency Name="Microsoft.AspNetCore.ApiVersioning.Swashbuckle" Version="1.1.0-beta.23221.1">
-      <Uri>https://github.com/dotnet/dnceng-shared</Uri>
-      <Sha>be1c3df8cfe9a00caa586318812794374b9f5855</Sha>
-    </Dependency>
     <Dependency Name="Microsoft.DncEng.CommandLineLib" Version="1.1.0-beta.23221.1">
       <Uri>https://github.com/dotnet/dnceng-shared</Uri>
       <Sha>be1c3df8cfe9a00caa586318812794374b9f5855</Sha>
@@ -65,10 +45,6 @@
       <Uri>https://github.com/dotnet/dnceng-shared</Uri>
       <Sha>be1c3df8cfe9a00caa586318812794374b9f5855</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Metrics" Version="1.1.0-beta.23221.1">
-      <Uri>https://github.com/dotnet/dnceng-shared</Uri>
-      <Sha>be1c3df8cfe9a00caa586318812794374b9f5855</Sha>
-    </Dependency>
     <Dependency Name="Microsoft.DotNet.ServiceFabric.ServiceHost" Version="1.1.0-beta.23221.1">
       <Uri>https://github.com/dotnet/dnceng-shared</Uri>
       <Sha>be1c3df8cfe9a00caa586318812794374b9f5855</Sha>
@@ -78,10 +54,6 @@
       <Sha>be1c3df8cfe9a00caa586318812794374b9f5855</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.Web.Authentication" Version="1.1.0-beta.23221.1">
-      <Uri>https://github.com/dotnet/dnceng-shared</Uri>
-      <Sha>be1c3df8cfe9a00caa586318812794374b9f5855</Sha>
-    </Dependency>
-    <Dependency Name="ServiceFabricMocks" Version="1.1.0-beta.23221.1">
       <Uri>https://github.com/dotnet/dnceng-shared</Uri>
       <Sha>be1c3df8cfe9a00caa586318812794374b9f5855</Sha>
     </Dependency>
