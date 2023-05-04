@@ -38,6 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Telemetry\AzureDevOpsClient\AzureDevOpsClient.csproj" />
-  </ItemGroup>
+	<ProjectReference Include="..\..\Telemetry\AzureDevOpsClient\AzureDevOpsClient.csproj" />
+  </ItemGroup>    
+
 </Project>
