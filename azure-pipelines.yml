@@ -37,7 +37,6 @@ stages:
 - stage: build
   dependsOn: []
   displayName: Build
-  # Three phases for each of the three OSes we want to run on
   jobs:
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
@@ -81,12 +80,6 @@ stages:
               /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
               /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
               /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
-        # In production, create stable package versions
-        # TODO: We depend on a prerelease version of Microsoft.TeamFoundationServer.Client
-        # https://github.com/dotnet/arcade-services/issues/59
-        # and so we can't stabilize for right now.
-        # - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranchName'], 'production')) }}:
-            # - _ProductionArgs: /p:DotNetFinalVersionKind=release
 
         strategy:
           matrix:
@@ -141,14 +134,6 @@ stages:
           displayName: Calculate release version variables
 
         - powershell: |
-            [xml]$manifest = Get-Content src\Maestro\MaestroApplication\ApplicationPackageRoot\ApplicationManifest.xml
-            $manifest.SelectSingleNode("/*[local-name()='ApplicationManifest']/*[local-name()='Policies']").RemoveAll()
-            $manifest.SelectSingleNode("/*[local-name()='ApplicationManifest']/*[local-name()='Principals']").RemoveAll()
-            $manifest.Save("src\Maestro\MaestroApplication\ApplicationPackageRoot\ApplicationManifest.xml")
-            git diff
-          displayName: Remove Service Fabric RunAsPolicy from MaestroApplication
-
-        - powershell: |
             [xml]$manifest = Get-Content src\Telemetry\TelemetryApplication\ApplicationPackageRoot\ApplicationManifest.xml
             $manifest.SelectSingleNode("/*[local-name()='ApplicationManifest']/*[local-name()='Policies']").RemoveAll()
             $manifest.SelectSingleNode("/*[local-name()='ApplicationManifest']/*[local-name()='Principals']").RemoveAll()
@@ -167,13 +152,14 @@ stages:
           displayName: Build / Publish
           condition: succeeded()
         
-        - powershell: |
-            $manifestArgs = @()
-            Get-ChildItem .vault-config/*.yaml |% {
-              $manifestArgs += @("-m", $_.FullName)
-            }
-            dotnet run --project src/Microsoft.DncEng.SecretManager -- validate-all -b src @manifestArgs
-          displayName: Verify Secret Usages
+        # TODO https://github.com/dotnet/arcade/issues/13373
+        #- powershell: |
+        #    $manifestArgs = @()
+        #    Get-ChildItem .vault-config/*.yaml |% {
+        #      $manifestArgs += @("-m", $_.FullName)
+        #    }
+        #    dotnet run --project src/Microsoft.DncEng.SecretManager -- validate-all -b src @manifestArgs
+        #  displayName: Verify Secret Usages
 
         - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
 
@@ -190,26 +176,12 @@ stages:
               # when scanning .csproj and package.json files.
               ignoreDirectories: '.packages'
 
-        - template: /eng/test.yaml
+        - ${{ if in(variables['Build.Reason'], 'PullRequest') }}:
+          - template: /eng/test.yaml
 
         - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
 
           ## Prepare service fabric artifact
-          - task: ServiceFabricUpdateManifests@2
-            inputs:
-              applicationPackagePath: $(Build.ArtifactStagingDirectory)\ServiceFabric\MaestroApplication\applicationpackage
-
-          - powershell: |
-              robocopy src/Maestro/MaestroApplication/PublishProfiles $(Build.ArtifactStagingDirectory)\ServiceFabric\MaestroApplication\projectartifacts\PublishProfiles /S *.xml
-              robocopy src/Maestro/MaestroApplication/ApplicationParameters $(Build.ArtifactStagingDirectory)\ServiceFabric\MaestroApplication\projectartifacts\ApplicationParameters /S *.xml
-              robocopy src/Maestro/MaestroApplication/ApplicationPackageRoot $(Build.ArtifactStagingDirectory)\ServiceFabric\MaestroApplication\projectartifacts\ApplicationPackageRoot /S *.xml
-              exit 0
-            displayName: Copy Maestro Project Artifacts
-
-          - publish: $(Build.ArtifactStagingDirectory)\ServiceFabric\MaestroApplication
-            artifact: MaestroApplication
-            displayName: Publish MaestroApplication
-
           - task: ServiceFabricUpdateManifests@2
             inputs:
               applicationPackagePath: $(Build.ArtifactStagingDirectory)\ServiceFabric\TelemetryApplication\applicationpackage
@@ -226,7 +198,7 @@ stages:
             displayName: Publish TelemetryApplication
 
           - script: $(Build.SourcesDirectory)\.dotnet\dotnet publish -o $(Build.ArtifactStagingDirectory)\DotNet.Status.Web\publish -f net6.0
-            workingDirectory: src/DotNet.Status.Web
+            workingDirectory: src\DotNet.Status.Web\DotNet.Status.Web
             displayName: dotnet publish DotNet.Status.Web
 
           - task: ArchiveFiles@2
@@ -260,25 +232,6 @@ stages:
           ## Generate SBOM manifest
           - template: ../../../generate-sbom.yml
 
-          ## Prepare database update artifact
-          - script: $(Build.SourcesDirectory)\.dotnet\dotnet publish -o $(Build.ArtifactStagingDirectory)\Maestro.Data -f net6.0
-            workingDirectory: src/Maestro/Maestro.Data
-            displayName: Create Data Package
-
-          - task: CopyFiles@2
-            displayName: Copy update-database.ps1
-            inputs:
-              sourceFolder: $(Build.SourcesDirectory)\src\Maestro
-              contents: update-database.ps1
-              targetFolder: $(Build.ArtifactStagingDirectory)\Maestro.Data\
-
-          - task: PublishBuildArtifacts@1
-            displayName: Publish Maestro.Data Artifact
-            inputs:
-              PathtoPublish: $(Build.ArtifactStagingDirectory)\Maestro.Data
-              ArtifactName: Maestro.Data
-              ArtifactType: Container
-
           ## Prepare release utilities artifact
           - task: CopyFiles@2
             displayName: Prepare Release Utilities
@@ -291,24 +244,13 @@ stages:
             artifact: ReleaseUtilities
             displayName: Publish Release Utilities Artifact
 
-          - publish: $(Build.SourcesDirectory)\artifacts\bin\Maestro.ScenarioTests\$(_BuildConfig)\net6.0\publish
-            artifact: Maestro.ScenarioTests
-            displayName: Publish Maestro Scenario Tests
-
           - publish: $(Build.SourcesDirectory)\artifacts\bin\Microsoft.DncEng.SecretManager.ScenarioTests\$(_BuildConfig)\net6.0
             artifact: Microsoft.DncEng.SecretManager.ScenarioTests
             displayName: Publish Secret Manager Scenario Tests
 
-          # Reenable tagging when stable package versions can be generated.
-          # https://github.com/dotnet/arcade-services/issues/59
-          # - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranchName'], 'production')) }}:
-            # - powershell: eng\create-tag.ps1 -AccessToken $(System.AccessToken)
-
 - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
   - template: eng\common\templates\post-build\post-build.yml
     parameters:
-      # Symbol validation isn't being very reliable lately. This should be enabled back
-      # once this issue is resolved: https://github.com/dotnet/arcade/issues/2871
       enableSymbolValidation: false
       enableSigningValidation: false
       artifactsPublishingAdditionalParameters: '/p:CheckEolTargetFramework=false'
@@ -334,8 +276,6 @@ stages:
         DeploymentEnvironment: Staging
         DotNetStatusAppName: dotneteng-status-staging
         DotNetStatusEndpoint: .NET Engineering Deployment Notification - Staging
-        MaestroPublishEndpoint: https://maestro-prod.westus2.cloudapp.azure.com
-        MaestroTestEndpoint: https://maestro-int.westus2.cloudapp.azure.com
         PublishProfile: Int
         RolloutScorerAppName: rollout-scorer-int
         ServiceFabricConnection: Maestro-Int
@@ -349,8 +289,6 @@ stages:
         DeploymentEnvironment: Production
         DotNetStatusAppName: dotneteng-status
         DotNetStatusEndpoint: .NET Engineering Deployment Notification - Production
-        MaestroPublishEndpoint: https://maestro-prod.westus2.cloudapp.azure.com
-        MaestroTestEndpoint: https://maestro-prod.westus2.cloudapp.azure.com
         PublishProfile: Prod
         RolloutScorerAppName: rollout-scorer-prod
         ServiceFabricConnection: Maestro-Prod

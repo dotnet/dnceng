@@ -1,4 +1,3 @@
-[cmdletbinding()]
 param(
     [Parameter(Mandatory=$True)]
     [string]$Path,

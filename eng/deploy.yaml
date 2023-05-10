@@ -5,16 +5,12 @@ parameters:
   DotNetStatusAppName: ''
   DeploymentEnvironment: ''
   VariableGroup: ''
-  MaestroPublishEndpoint: ''
-  MaestroTestEndpoint: ''
   DotNetStatusEndpoint: ''
   StatusVariableGroup: ''
 
   # --- Secret Variable group requirements ---
   # build-asset-registry-admin-connection-string
-  # scenario-test-maestro-token
   # dn-bot-dnceng-build-rw-code-rw-release-rw
-  # maestro-scenario-test-github-token
   # dotnet-build-bot-dotnet-eng-status-token
   # secret-manager-scenario-tests-client-secret
 
@@ -89,75 +85,6 @@ stages:
   - name: PublishProfile
     value: ${{ parameters.PublishProfile }}
   jobs:
-  - job: updateDatabase
-    displayName: Update BuildAssetRegistry database
-    steps:
-    - download: current
-      artifact: ReleaseUtilities
-    - download: current
-      artifact: Maestro.Data
-
-    - task: UseDotNet@2
-      displayName: Install Correct .NET Version
-      inputs:
-        useGlobalJson: true
-
-    - task: AzurePowerShell@3
-      displayName: eng\firewall.ps1 -Add
-      inputs:
-        azureSubscription: ${{ parameters.Subscription }}
-        ScriptPath: $(Pipeline.Workspace)/ReleaseUtilities/firewall.ps1
-        ScriptArguments: -RuleName UnblockSQLForUpgrade -Add -ConnectionString "$(build-asset-registry-admin-connection-string)"
-        azurePowerShellVersion: LatestVersion
-    - task: PowerShell@2
-      displayName: update-database.ps1
-      inputs:
-        targetType: filePath
-        filePath: $(Pipeline.Workspace)/Maestro.Data/update-database.ps1
-        arguments: Maestro.Data.dll
-        workingDirectory: $(Pipeline.Workspace)/Maestro.Data
-      env:
-        BUILD_ASSET_REGISTRY_DB_CONNECTION_STRING: $(build-asset-registry-admin-connection-string)
-    - task: AzurePowerShell@3
-      displayName: eng\firewall.ps1 -Remove
-      inputs:
-        azureSubscription: ${{ parameters.Subscription }}
-        ScriptPath: $(Pipeline.Workspace)/ReleaseUtilities/firewall.ps1
-        ScriptArguments: -RuleName UnblockSQLForUpgrade -Remove -ConnectionString "$(build-asset-registry-admin-connection-string)"
-        azurePowerShellVersion: LatestVersion
-      condition: always()
-
-  - job: deployMaestro
-    displayName: Deploy maestro service fabric application
-    dependsOn:
-    - updateDatabase
-    pool:
-      name: NetCore1ESPool-Internal-NoMSI
-      demands: ImageOverride -equals 1es-windows-2019
-    steps:
-    - download: current
-      artifact: MaestroApplication
-    - download: current
-      artifact: ReleaseUtilities
-    - task: AzurePowerShell@5
-      displayName: Deploy Service Fabric Application (Maestro)
-      inputs:
-        azureSubscription: ${{ parameters.Subscription }}
-        scriptType: inlineScript
-        azurePowerShellVersion: LatestVersion
-        inline: |
-          $autoRollBack = $true
-          if ($env:DisableAutoRollBack -eq 'true') {
-            $autoRollBack = $false
-          }
-          if ($env:BUILD_SOURCEBRANCH -eq 'refs/heads/main') {
-            $autoRollBack = $false
-          }
-          eng/deployment/deploy.ps1 -obj $env:BUILD_ARTIFACTSTAGINGDIRECTORY -appPackagePath $env:ApplicationPackage -publishProfile $env:PublishProfilePath -autoRollBack $autoRollBack -location westus2
-      env:
-        PublishProfilePath: $(Pipeline.Workspace)/MaestroApplication/projectartifacts/PublishProfiles/$(PublishProfile).xml
-        ApplicationPackage: $(Pipeline.Workspace)/MaestroApplication/applicationpackage
-
   - job: deployTelemetry
     displayName: Deploy telemetry service fabric application
     pool:
@@ -293,8 +220,6 @@ stages:
   - group: ${{ parameters.VariableGroup }}
   # Secret-Manager-Scenario-Tests provides: secret-manager-scenario-tests-client-secret
   - group: Secret-Manager-Scenario-Tests
-  - name: MaestroTestEndpoint
-    value: ${{ parameters.MaestroTestEndpoint }}
   jobs:
   - job: scenario
     displayName: Scenario tests
@@ -304,8 +229,6 @@ stages:
       artifact: PackageArtifacts
     - download: current
       artifact: Microsoft.DncEng.SecretManager.ScenarioTests
-    - download: current
-      artifact: Maestro.ScenarioTests
 
     - task: NuGetToolInstaller@1
       displayName: Use NuGet
@@ -326,31 +249,6 @@ stages:
         searchFolder: $(Pipeline.Workspace)/Microsoft.DncEng.SecretManager.ScenarioTests
       env:
         AzureServicesAuthConnectionString: $(secret-manager-scenario-tests-client-secret)
-
-    - task: VSTest@2
-      displayName: Maestro Scenario Tests
-      inputs:
-        testSelector: testAssemblies
-        testAssemblyVer2: |
-          Maestro.ScenarioTests.dll
-        searchFolder: $(Pipeline.Workspace)/Maestro.ScenarioTests
-      env:
-        MAESTRO_BASEURI: $(MaestroTestEndpoint)
-        MAESTRO_TOKEN: $(scenario-test-maestro-token)
-        GITHUB_TOKEN: $(maestro-scenario-test-github-token)
-        AZDO_TOKEN: $(dn-bot-dnceng-build-rw-code-rw-release-rw)
-        DARC_PACKAGE_SOURCE: $(Pipeline.Workspace)\PackageArtifacts
-
-    - powershell: |
-        nuget sources add -Name "arcade" -Source "https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json"
-        nuget sources add -Name "dotnet-core" -Source "https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json"
-      displayName: Add nuget Sources
-    - powershell: |
-        $versionEndpoint = "$(MaestroTestEndpoint)/api/assets/darc-version?api-version=2019-01-16"
-        $latestDarcVersion = $darcVersion = $(Invoke-WebRequest -Uri $versionEndpoint -UseBasicParsing).Content
-        Write-Host "##vso[task.setvariable variable=darcVersion]$latestDarcVersion"
-        Write-Host "Using Darc version $latestDarcVersion to run the tests"
-      displayName: Get DARC version
 
 
 
