@@ -15,37 +15,39 @@ parameters:
   # secret-manager-scenario-tests-client-secret
 
 stages:
-- stage: ValidateSecrets
-  dependsOn:
-  - build
-  jobs:
-  - job: ValidateSecrets
-    pool: 
-      name: NetCore1ESPool-Internal-NoMSI
-      demands: ImageOverride -equals 1es-windows-2019
-    steps:
-    - task: UseDotNet@2
-      displayName: Install Correct .NET Version
-      inputs:
-        useGlobalJson: true
+# TODO https://github.com/dotnet/arcade/issues/13373
+# - stage: ValidateSecrets
+#   dependsOn:
+#   - build
+#   jobs:
+#   - job: ValidateSecrets
+#     pool: 
+#       name: NetCore1ESPool-Internal-NoMSI
+#       demands: ImageOverride -equals 1es-windows-2019
+#     steps:
+#     - task: UseDotNet@2
+#       displayName: Install Correct .NET Version
+#       inputs:
+#         useGlobalJson: true
 
-    - script: dotnet build
-      workingDirectory: src/Microsoft.DncEng.SecretManager
+#     - script: dotnet build
+#       workingDirectory: src/Microsoft.DncEng.SecretManager
 
-    - task: AzureCLI@2
-      inputs:
-        azureSubscription: DotNet Eng Services Secret Manager
-        scriptType: ps
-        scriptLocation: inlineScript
-        inlineScript: |
-          Get-ChildItem .vault-config/*.yaml |% { dotnet run --project src/Microsoft.DncEng.SecretManager -- synchronize --verify-only $_}
+#     - task: AzureCLI@2
+#       inputs:
+#         azureSubscription: DotNet Eng Services Secret Manager
+#         scriptType: ps
+#         scriptLocation: inlineScript
+#         inlineScript: |
+#           Get-ChildItem .vault-config/*.yaml |% { dotnet run --project src/Microsoft.DncEng.SecretManager -- synchronize --verify-only $_}
 
 - stage: approval
   pool: server
   dependsOn:
   - build
   - Validate
-  - ValidateSecrets
+  # TODO https://github.com/dotnet/arcade/issues/13373
+  #- ValidateSecrets
   - publish_using_darc
   jobs:
   - deployment: approval
