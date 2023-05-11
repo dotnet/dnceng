@@ -269,32 +269,32 @@ stages:
         -TsaCodebaseName "Arcade-Services"
         -TsaPublish $True
         -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)/eng/PoliCheckExclusions.xml")'
-- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), in(variables['Build.SourceBranch'], 'refs/heads/main', 'refs/heads/production'))}}:
-  - template: eng\deploy.yaml
-    parameters:
-      ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/production') }}:
-        DeploymentEnvironment: Staging
-        DotNetStatusAppName: dotneteng-status-staging
-        DotNetStatusEndpoint: .NET Engineering Deployment Notification - Staging
-        PublishProfile: Int
-        RolloutScorerAppName: rollout-scorer-int
-        ServiceFabricConnection: Maestro-Int
-        Subscription: NetHelixStaging
-        VariableGroup: MaestroInt KeyVault
-        StatusVariableGroup: DotNetStatus Staging
-        GrafanaHost: https://dotnet-eng-grafana-staging.westus2.cloudapp.azure.com
-        GrafanaKeyVault: dotnet-grafana-staging
-        GrafanaVariableGroup: Dotnet-Grafana-Staging
-      ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/production') }}:
-        DeploymentEnvironment: Production
-        DotNetStatusAppName: dotneteng-status
-        DotNetStatusEndpoint: .NET Engineering Deployment Notification - Production
-        PublishProfile: Prod
-        RolloutScorerAppName: rollout-scorer-prod
-        ServiceFabricConnection: Maestro-Prod
-        Subscription: NetHelix
-        VariableGroup: MaestroProd KeyVault
-        StatusVariableGroup: DotNetStatus Production
-        GrafanaHost: https://dotnet-eng-grafana.westus2.cloudapp.azure.com
-        GrafanaKeyVault: dotnet-grafana
-        GrafanaVariableGroup: Dotnet-Grafana-Production
+  - ${{ if in(variables['Build.SourceBranch'], 'refs/heads/main', 'refs/heads/production')}}:
+    - template: eng\deploy.yaml
+      parameters:
+        ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/production') }}:
+          DeploymentEnvironment: Staging
+          DotNetStatusAppName: dotneteng-status-staging
+          DotNetStatusEndpoint: .NET Engineering Deployment Notification - Staging
+          PublishProfile: Int
+          RolloutScorerAppName: rollout-scorer-int
+          ServiceFabricConnection: Maestro-Int
+          Subscription: NetHelixStaging
+          VariableGroup: MaestroInt KeyVault
+          StatusVariableGroup: DotNetStatus Staging
+          GrafanaHost: https://dotnet-eng-grafana-staging.westus2.cloudapp.azure.com
+          GrafanaKeyVault: dotnet-grafana-staging
+          GrafanaVariableGroup: Dotnet-Grafana-Staging
+        ${{ else }}:
+          DeploymentEnvironment: Production
+          DotNetStatusAppName: dotneteng-status
+          DotNetStatusEndpoint: .NET Engineering Deployment Notification - Production
+          PublishProfile: Prod
+          RolloutScorerAppName: rollout-scorer-prod
+          ServiceFabricConnection: Maestro-Prod
+          Subscription: NetHelix
+          VariableGroup: MaestroProd KeyVault
+          StatusVariableGroup: DotNetStatus Production
+          GrafanaHost: https://dotnet-eng-grafana.westus2.cloudapp.azure.com
+          GrafanaKeyVault: dotnet-grafana
+          GrafanaVariableGroup: Dotnet-Grafana-Production
