@@ -32,4 +32,4 @@ stages:
           scriptType: ps
           scriptLocation: inlineScript
           inlineScript: |
-            Get-ChildItem .vault-config/*.yaml |% { dotnet run --project src/Microsoft.DncEng.SecretManager/Microsoft.DncEng.SecretManager -- synchronize $_}
+            Get-ChildItem .vault-config/*.yaml |% { dotnet run --project src/SecretManager/Microsoft.DncEng.SecretManager -- synchronize $_}
