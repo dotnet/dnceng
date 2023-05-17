@@ -23,9 +23,6 @@ stages:
         inputs:
           useGlobalJson: true
 
-      # - script: dotnet build
-      #   workingDirectory: src/Microsoft.DncEng.SecretManager
-
       - task: AzureCLI@2
         inputs:
           azureSubscription: DotNet Eng Services Secret Manager
