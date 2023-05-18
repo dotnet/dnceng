@@ -6,10 +6,8 @@ param (
 
 $prDetail = Invoke-WebRequest `
 	-UseBasicParsing `
-	-Uri "https://api.github.com/repos/dotnet/arcade-services/pulls/$PullRequestNumber" `
+	-Uri "https://api.github.com/repos/dotnet/dnceng/pulls/$PullRequestNumber" `
 | ConvertFrom-Json
-
-Write-Host $prDetail.title
 
 if ($prDetail.draft) {
 	Write-Host "Draft PR does not have to have GitHub issue specified. Check passed."
