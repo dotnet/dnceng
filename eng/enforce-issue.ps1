@@ -1,12 +1,14 @@
 [CmdletBinding()]
 param (
 	[Parameter(Mandatory = $True)]
-	$PullRequestNumber
+	$PullRequestNumber,
+	[Parameter(Mandatory = $True)]
+	$RepositoryName
 )
 
 $prDetail = Invoke-WebRequest `
 	-UseBasicParsing `
-	-Uri "https://api.github.com/repos/dotnet/dnceng/pulls/$PullRequestNumber" `
+	-Uri "https://api.github.com/repos/$RepositoryName/pulls/$PullRequestNumber" `
 | ConvertFrom-Json
 
 if ($prDetail.draft) {
