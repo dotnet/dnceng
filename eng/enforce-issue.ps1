@@ -6,7 +6,7 @@ param (
 
 $prDetail = Invoke-WebRequest `
 	-UseBasicParsing `
-	-Uri "https://api.github.com/repos/dotnet/arcade-services/pulls/$PullRequestNumber" `
+	-Uri "https://api.github.com/repos/dotnet/dnceng/pulls/$PullRequestNumber" `
 | ConvertFrom-Json
 
 if ($prDetail.draft) {
