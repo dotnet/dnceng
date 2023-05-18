@@ -72,7 +72,7 @@ stages:
       inputs:
         serviceConnection: ${{ parameters.DotNetStatusEndpoint }}
         method: POST
-        urlSuffix: /arcade-services/$(Build.BuildNumber)/start
+        urlSuffix: /dnceng/$(Build.BuildNumber)/start
 
 - stage: deploy
   displayName: Deploy
@@ -199,7 +199,7 @@ stages:
       inputs:
         serviceConnection: ${{ parameters.DotNetStatusEndpoint }}
         method: POST
-        urlSuffix: /arcade-services/$(Build.BuildNumber)/end
+        urlSuffix: /dnceng/$(Build.BuildNumber)/end
   - job: updateMetrics
     displayName: Update Grafana Metrics
     dependsOn:

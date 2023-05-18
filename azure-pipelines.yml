@@ -265,8 +265,8 @@ stages:
         -TsaCodebaseAdmin $(_TsaCodebaseAdmin)
         -TsaBugAreaPath $(_TsaBugAreaPath)
         -TsaIterationPath $(_TsaIterationPath)
-        -TsaRepositoryName "Arcade-Services"
-        -TsaCodebaseName "Arcade-Services"
+        -TsaRepositoryName "Dnceng"
+        -TsaCodebaseName "Dnceng"
         -TsaPublish $True
         -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)/eng/PoliCheckExclusions.xml")'
   - ${{ if in(variables['Build.SourceBranch'], 'refs/heads/main', 'refs/heads/production')}}:
