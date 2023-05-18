@@ -31,6 +31,7 @@ stages:
         vmImage: 'windows-latest'
       steps:
         - checkout: self
+        - powershell: Write-Host "$(Build.QueuedBy)"
         - powershell: eng/enforce-issue.ps1 -PullRequestNumber $(System.PullRequest.PullRequestNumber)
           displayName: Enforce GitHub issue link presence
 
