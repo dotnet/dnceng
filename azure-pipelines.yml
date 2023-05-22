@@ -46,7 +46,6 @@ stages:
       enablePublishBuildAssets: true
       enablePublishUsingPipelines: ${{ variables._PublishUsingPipelines }}
       enableTelemetry: true
-      helixRepo: dotnet/arcade-services
       jobs:
       - job: Windows_NT
         timeoutInMinutes: 90
