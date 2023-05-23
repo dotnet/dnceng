@@ -15,39 +15,34 @@ parameters:
   # secret-manager-scenario-tests-client-secret
 
 stages:
-# TODO https://github.com/dotnet/arcade/issues/13373
-# - stage: ValidateSecrets
-#   dependsOn:
-#   - build
-#   jobs:
-#   - job: ValidateSecrets
-#     pool: 
-#       name: NetCore1ESPool-Internal-NoMSI
-#       demands: ImageOverride -equals 1es-windows-2019
-#     steps:
-#     - task: UseDotNet@2
-#       displayName: Install Correct .NET Version
-#       inputs:
-#         useGlobalJson: true
+- stage: ValidateSecrets
+  dependsOn:
+  - build
+  jobs:
+  - job: ValidateSecrets
+    pool: 
+      name: NetCore1ESPool-Internal-NoMSI
+      demands: ImageOverride -equals 1es-windows-2019
+    steps:
+    - task: UseDotNet@2
+      displayName: Install Correct .NET Version
+      inputs:
+        useGlobalJson: true
 
-#     - script: dotnet build
-#       workingDirectory: src/Microsoft.DncEng.SecretManager
-
-#     - task: AzureCLI@2
-#       inputs:
-#         azureSubscription: DotNet Eng Services Secret Manager
-#         scriptType: ps
-#         scriptLocation: inlineScript
-#         inlineScript: |
-#           Get-ChildItem .vault-config/*.yaml |% { dotnet run --project src/Microsoft.DncEng.SecretManager -- synchronize --verify-only $_}
+    - task: AzureCLI@2
+      inputs:
+        azureSubscription: DotNet Eng Services Secret Manager
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          Get-ChildItem .vault-config/*.yaml |% { dotnet run --project src/SecretManager/Microsoft.DncEng.SecretManager -- synchronize --verify-only $_}
 
 - stage: approval
   pool: server
   dependsOn:
   - build
   - Validate
-  # TODO https://github.com/dotnet/arcade/issues/13373
-  #- ValidateSecrets
+  - ValidateSecrets
   - publish_using_darc
   jobs:
   - deployment: approval
@@ -72,7 +67,7 @@ stages:
       inputs:
         serviceConnection: ${{ parameters.DotNetStatusEndpoint }}
         method: POST
-        urlSuffix: /arcade-services/$(Build.BuildNumber)/start
+        urlSuffix: /dnceng/$(Build.BuildNumber)/start
 
 - stage: deploy
   displayName: Deploy
@@ -199,7 +194,7 @@ stages:
       inputs:
         serviceConnection: ${{ parameters.DotNetStatusEndpoint }}
         method: POST
-        urlSuffix: /arcade-services/$(Build.BuildNumber)/end
+        urlSuffix: /dnceng/$(Build.BuildNumber)/end
   - job: updateMetrics
     displayName: Update Grafana Metrics
     dependsOn:
