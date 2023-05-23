@@ -38,46 +38,37 @@
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\arcade-validation\\dotnet-arcade-validation-official",
           "Branches": [ "main" ],
-          "Assignee": "missymessa",
-          "IssuesId": "dotnet-arcade"
-        },
-        {
-          "Project": "internal",
-          "DefinitionPath": "\\dotnet\\source-indexer\\dotnet-source-indexer CI",
-          "Branches": [ "main" ],
-          "Assignee": "alperovi",
-          "IssuesId": "dotnet-arcade"
+          "IssuesId": "dotnet-dnceng-build-failed"
         },
         {
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\arcade-services\\arcade-services-internal-ci",
           "Branches": [ "main" ],
-          "Assignee": "riarenas",
-          "IssuesId": "dotnet-arcade"
+          "IssuesId": "dotnet-dnceng-build-failed"
         },
         {
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\arcade-services\\dotnet-arcade-services-weekly",
           "Branches": [ "main" ],
-          "IssuesId": "dotnet-arcade-frops"
+          "IssuesId": "dotnet-dnceng-frops"
         },
         {
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\arcade\\dotnet-arcade-weekly",
           "Branches": [ "main" ],
-          "IssuesId": "dotnet-arcade-frops"
+          "IssuesId": "dotnet-dnceng-frops"
         },
         {
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\helix-service\\dotnet-helix-service-weekly",
           "Branches": [ "main" ],
-          "IssuesId": "dotnet-arcade-frops"
+          "IssuesId": "dotnet-dnceng-frops"
         },
         {
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\helix-machines\\dotnet-helix-machines-weekly",
           "Branches": [ "main" ],
-          "IssuesId": "dotnet-arcade-frops"
+          "IssuesId": "dotnet-dnceng-frops"
         },
         {
           "Project": "internal",
@@ -111,27 +102,27 @@
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\arcade\\Maestro Build Promotion",
           "Branches": [ "main" ],
-          "IssuesId": "dotnet-arcade-first-responder"
+          "IssuesId": "dotnet-dnceng-first-responder"
         },
       ]
     },
     "Issues": [
       {
-        "Id": "dotnet-arcade",
+        "Id": "dotnet-dnceng-build-failed",
         "Owner": "dotnet",
-        "Name": "arcade",
+        "Name": "dnceng",
         "Labels": [ "Build Failed" ]
       },
       {
-        "Id": "dotnet-arcade-first-responder",
+        "Id": "dotnet-dnceng-first-responder",
         "Owner": "dotnet",
-        "Name": "arcade",
+        "Name": "dnceng",
         "Labels": [ "Build Failed", "First Responder" ]
       },
       {
-        "Id": "dotnet-arcade-frops",
+        "Id": "dotnet-dnceng-frops",
         "Owner": "dotnet",
-        "Name": "arcade",
+        "Name": "dnceng",
         "Labels": [ "Build Failed", "FROps" ]
       },
       {
