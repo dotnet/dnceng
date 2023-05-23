@@ -161,7 +161,7 @@ public class UploadCommand : Command
 {
     public UploadCommand() : base("upload", "The upload command takes a series of inline arguments which specify the" +
                                             "locations of the scorecard CSV files to upload. Each of these files will be combined into a single scorecard document.\n\n" +
-                                            "\"Uploading\" the file here means making a PR to arcade containing adding the scorecard to '/Documentation/Rollout-Scorecards/'" +
+                                            "\"Uploading\" the file here means making a PR to dnceng containing adding the scorecard to '/Documentation/Rollout-Scorecards/'" +
                                             "and placing the data in Kusto which backs a PowerBI dashboard.\n\n" +
                                             "usage: RolloutScorer upload [CSV_FILE_1] [CSV_FILE_2] ...\n")
     {
