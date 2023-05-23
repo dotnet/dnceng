@@ -21,7 +21,7 @@ namespace DotNet.Status.Web;
 
 public class TimelineIssueTriage : ITimelineIssueTriage
 {
-    private static readonly string _docLink = "[Documentation](https://github.com/dotnet/arcade-services/blob/main/docs/BuildFailuresIssueTriage.md)";
+    private static readonly string _docLink = "[Documentation](https://github.com/dotnet/dnceng/blob/main/docs/BuildFailuresIssueTriage.md)";
     private static readonly string _markingLabelName = "darcbot";
     private static readonly string[] _issueLabels = new[] { "Detected By - Ad-Hoc Testing", "First Responder", "Build Failed" };
 
