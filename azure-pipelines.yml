@@ -151,14 +151,13 @@ stages:
           displayName: Build / Publish
           condition: succeeded()
         
-        # TODO https://github.com/dotnet/arcade/issues/13373
-        #- powershell: |
-        #    $manifestArgs = @()
-        #    Get-ChildItem .vault-config/*.yaml |% {
-        #      $manifestArgs += @("-m", $_.FullName)
-        #    }
-        #    dotnet run --project src/Microsoft.DncEng.SecretManager -- validate-all -b src @manifestArgs
-        #  displayName: Verify Secret Usages
+        - powershell: |
+           $manifestArgs = @()
+           Get-ChildItem .vault-config/*.yaml |% {
+             $manifestArgs += @("-m", $_.FullName)
+           }
+           dotnet run --project src/SecretManager/Microsoft.DncEng.SecretManager -- validate-all -b src @manifestArgs
+         displayName: Verify Secret Usages
 
         - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
 
