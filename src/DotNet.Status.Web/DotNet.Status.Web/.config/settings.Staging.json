@@ -3,7 +3,7 @@
   "KeyVaultUri": "https://DotNetEng-Status-Staging.vault.azure.net/",
   "GitHub": {
     "Organization": "dotnet",
-    "Repository": "arcade",
+    "Repository": "dnceng",
     "NotificationTarget": "dotnet/dnceng",
     "AlertLabels": [ "First Responder" ],
     "EnvironmentLabels": [ "Staging" ],

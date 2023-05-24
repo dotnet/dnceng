@@ -3,7 +3,7 @@
   "KeyVaultUri": "https://DotNetEng-Status-Prod.vault.azure.net/",
   "GitHub": {
     "Organization": "dotnet",
-    "Repository": "arcade",
+    "Repository": "dnceng",
     "NotificationTarget": "dotnet/dnceng",
     "AlertLabels": [ "First Responder", "Critical" ],
     "EnvironmentLabels": [ "Production" ],
