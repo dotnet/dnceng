@@ -317,7 +317,7 @@ For help filling out this form, see the [Root Cause Analysis](https://dev.azure.
                 triggeringLabel = names.FirstOrDefault();
                 if (names.Count == 0)
                 {
-                    _logger.LogTrace("Issue {repo}/{number} is closed by has no RCA label, taking no RCA action", data.Repository.Name, data.Issue.Number);
+                    _logger.LogTrace("Issue {repo}/{number} is closed but has no RCA label, taking no RCA action", data.Repository.Name, data.Issue.Number);
                     return false;
                 }
 
