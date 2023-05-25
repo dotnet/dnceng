@@ -187,8 +187,7 @@
   },
   "IssueMentionForwarding": {
     "WatchedTeam": "dotnet/dnceng",
-    "IgnoreRepos": [
-    ],
+    "IgnoreRepos": [ "arcade", "dnceng" ],
     "TeamsWebHookUri": "[vault(fr-teams-channel-webhook-url)]"
   }
 }
