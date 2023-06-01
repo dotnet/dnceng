@@ -28,15 +28,6 @@ public static class StandardConfig
             },
             new RepoConfig
             {
-                Repo = "arcade-services",
-                BuildDefinitionIds = new List<string> { "252" },
-                AzdoInstance = "dnceng",
-                GithubIssueLabel = "Rollout Arcade-Services",
-                MaxAllowedTimeInMinutes = 360,
-                ExcludeStages = new List<string> { "Post-Deployment", "Validate deployment" },
-            },
-            new RepoConfig
-            {
                 Repo = "dnceng",
                 BuildDefinitionIds = new List<string> { "1254" },
                 AzdoInstance = "dnceng",
