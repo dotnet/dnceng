@@ -167,13 +167,13 @@ public class AzurePipelinesController : ControllerBase
                 continue;
             }
 
-            string prettyBranch = build.SourceBranch;
-            if (prettyBranch.StartsWith(fullBranchPrefix))
+            string branchName = build.SourceBranch;
+            if (branchName.StartsWith(fullBranchPrefix))
             {
-                prettyBranch = prettyBranch.Substring(fullBranchPrefix.Length);
+                branchName = branchName.Substring(fullBranchPrefix.Length);
             }
 
-            if (!IsBranchMonitored(monitor.Branches, prettyBranch))
+            if (!IsBranchMonitored(monitor.Branches, branchName))
             {
                 continue;
             }
@@ -240,7 +240,7 @@ public class AzurePipelinesController : ControllerBase
 
 {changesMessage}
 ";
-                string issueTitlePrefix = $"Build failed: {build.Definition.Name}/{prettyBranch} {prettyTags}";
+                string issueTitlePrefix = $"Build failed: {build.Definition.Name}/{branchName} {prettyTags}";
 
                 if (repo.UpdateExisting)
                 {
