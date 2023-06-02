@@ -128,9 +128,33 @@ public class AzurePipelinesController : ControllerBase
         }
     }
 
+    private static bool IsBranchMonitored(string[] patterns, string branch)
+    {
+        foreach (string pattern in patterns)
+        {
+            if (pattern.EndsWith("*"))
+            {
+                if (branch.StartsWith(pattern[..^1], StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                if (string.Equals(branch, pattern, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private async Task ProcessBuildNotificationsAsync(IAzureDevOpsClient client, Build build)
     {
         const string fullBranchPrefix = "refs/heads/";
+
         foreach (var monitor in _options.Value.Monitor.Builds)
         {
             if (!string.Equals(build.Project.Name, monitor.Project, StringComparison.OrdinalIgnoreCase))
@@ -143,9 +167,13 @@ public class AzurePipelinesController : ControllerBase
                 continue;
             }
 
-            if (monitor.Branches.All(mb => !string.Equals($"{fullBranchPrefix}{mb}",
-                    build.SourceBranch,
-                    StringComparison.OrdinalIgnoreCase)))
+            string prettyBranch = build.SourceBranch;
+            if (prettyBranch.StartsWith(fullBranchPrefix))
+            {
+                prettyBranch = prettyBranch.Substring(fullBranchPrefix.Length);
+            }
+
+            if (!IsBranchMonitored(monitor.Branches, prettyBranch))
             {
                 continue;
             }
@@ -154,12 +182,6 @@ public class AzurePipelinesController : ControllerBase
             {
                 // We should only skip processing if tags were specified in the monitor, and none of those tags were found in the build
                 continue;
-            }
-
-            string prettyBranch = build.SourceBranch;
-            if (prettyBranch.StartsWith(fullBranchPrefix))
-            {
-                prettyBranch = prettyBranch.Substring(fullBranchPrefix.Length);
             }
 
             string prettyTags = (monitor.Tags != null && monitor.Tags.Any()) ? $"{string.Join(", ", build.Tags)}" : "";
