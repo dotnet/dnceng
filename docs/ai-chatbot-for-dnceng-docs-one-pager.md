@@ -7,11 +7,16 @@ The project aims to create an Azure OpenAI-powered service that can answer quest
 1. Use documentation from the "dotnet/arcade" repository
 2. Establish an automated procedure for customers to get their documentation-involved questions answered in real-time
 3. Admin and manipulate the documentation ingested by the AI Chatbot service
+4. Incorporate DNCEng's "Sentiment Tracker" to help gather telemetry
 
 ## Stretch Goal(s)
 1. Use documentation from the "dotnet/dnceng" repository
 2. Use documentation from the public Wiki
 3. Use documentation from the internal Wiki
+
+## Current Investigation(s)
+- PoC support for markdown file types
+
 ## Unknowns
 1. How to pull documentation from the multiple existing resources
 2. Automate the service to ingest newly created documentation
@@ -20,9 +25,9 @@ The project aims to create an Azure OpenAI-powered service that can answer quest
 ## Measurable Metric of Success
 1. Comparing the Chatbot's responses to non-bar FR questions
 
-
 ## Potential Risks
 1. Giving responses that expose internal information
+2. Discontinuation of the Azure OpenAI resource
 
 ## Expected Telemetry
 1. Collection of questions the AI Chatbot service was not able to answer
