@@ -11,7 +11,7 @@ public static class StandardConfig
             new RepoConfig
             {
                 Repo = "dotnet-helix-service",
-                BuildDefinitionIds = new List<string> { "620", "697" },
+                BuildDefinitionIds = new List<string> { "620" },
                 AzdoInstance = "dnceng",
                 GithubIssueLabel = "Rollout Helix",
                 MaxAllowedTimeInMinutes = 360,
@@ -28,10 +28,10 @@ public static class StandardConfig
             },
             new RepoConfig
             {
-                Repo = "arcade-services",
-                BuildDefinitionIds = new List<string> { "252", "728" },
+                Repo = "dnceng",
+                BuildDefinitionIds = new List<string> { "1254" },
                 AzdoInstance = "dnceng",
-                GithubIssueLabel = "Rollout Arcade-Services",
+                GithubIssueLabel = "Rollout dnceng",
                 MaxAllowedTimeInMinutes = 360,
                 ExcludeStages = new List<string> { "Post-Deployment", "Validate deployment" },
             },
@@ -58,7 +58,7 @@ public static class StandardConfig
         GithubConfig = new GithubConfig
         {
             ScorecardsGithubOrg = "dotnet",
-            ScorecardsGithubRepo = "arcade",
+            ScorecardsGithubRepo = "dnceng",
             ScorecardsDirectoryPath = "Documentation/TeamProcess/Rollout-Scorecards/",
         },
     };
