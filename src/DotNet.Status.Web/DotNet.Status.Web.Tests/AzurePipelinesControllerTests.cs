@@ -251,6 +251,157 @@ public partial class AzurePipelinesControllerTests
     }
 
     [Test]
+    public async Task BuildCompleteBuildHasMatchingBranch()
+    {
+        var buildEvent = new AzurePipelinesController.AzureDevOpsEvent<AzurePipelinesController.AzureDevOpsMinimalBuildResource>
+        {
+            Resource = new AzurePipelinesController.AzureDevOpsMinimalBuildResource
+            {
+                Id = 123456,
+                Url = "test-build-url"
+            },
+            ResourceContainers = new AzurePipelinesController.AzureDevOpsResourceContainers
+            {
+                Collection = new AzurePipelinesController.HasId
+                {
+                    Id = "test-collection-id"
+                },
+                Account = new AzurePipelinesController.HasId
+                {
+                    Id = "test-account-id"
+                },
+                Project = new AzurePipelinesController.HasId
+                {
+                    Id = "test-project-id"
+                }
+            }
+        };
+
+        var build = new JObject
+        {
+            ["_links"] = new JObject
+            {
+                ["web"] = new JObject
+                {
+                    ["href"] = "href"
+                }
+            },
+            ["buildNumber"] = "123456",
+            ["definition"] = new JObject
+            {
+                ["name"] = "path4",
+                ["path"] = "\\test\\definition"
+            },
+            ["finishTime"] = "05/01/2008 6:00:00",
+            ["id"] = "123",
+            ["project"] = new JObject
+            {
+                ["name"] = "test-project-name"
+            },
+            ["reason"] = "batchedCI",
+            ["requestedFor"] = new JObject
+            {
+                ["displayName"] = "requested-for"
+            },
+            ["result"] = "failed",
+            ["sourceBranch"] = "refs/heads/release/8.0",
+            ["startTime"] = "05/01/2008 5:00:00",
+            ["tags"] = new JArray
+            {
+                "tag1"
+            }
+        };
+
+        var expectedOwners = new List<string>
+        {
+            "dotnet"
+        };
+
+        var expectedNames = new List<string>
+        {
+            "repo"
+        };
+        var expectedCommentOwners = new List<string>();
+        var expectedCommentNames = new List<string>();
+
+        using TestData testData = await TestData.Default.WithBuildData(build).WithExpectMatchingTitle(false).BuildAsync();
+        var response = await testData.Controller.BuildComplete(buildEvent);
+        VerifyGitHubCalls(testData, expectedOwners, expectedNames, expectedCommentOwners, expectedCommentNames);
+    }
+
+    [Test]
+    public async Task BuildCompleteBuildHasNoMatchingBranch()
+    {
+        var buildEvent = new AzurePipelinesController.AzureDevOpsEvent<AzurePipelinesController.AzureDevOpsMinimalBuildResource>
+        {
+            Resource = new AzurePipelinesController.AzureDevOpsMinimalBuildResource
+            {
+                Id = 123456,
+                Url = "test-build-url"
+            },
+            ResourceContainers = new AzurePipelinesController.AzureDevOpsResourceContainers
+            {
+                Collection = new AzurePipelinesController.HasId
+                {
+                    Id = "test-collection-id"
+                },
+                Account = new AzurePipelinesController.HasId
+                {
+                    Id = "test-account-id"
+                },
+                Project = new AzurePipelinesController.HasId
+                {
+                    Id = "test-project-id"
+                }
+            }
+        };
+
+        var build = new JObject
+        {
+            ["_links"] = new JObject
+            {
+                ["web"] = new JObject
+                {
+                    ["href"] = "href"
+                }
+            },
+            ["buildNumber"] = "123456",
+            ["definition"] = new JObject
+            {
+                ["name"] = "path4",
+                ["path"] = "\\test\\definition"
+            },
+            ["finishTime"] = "05/01/2008 6:00:00",
+            ["id"] = "123",
+            ["project"] = new JObject
+            {
+                ["name"] = "test-project-name"
+            },
+            ["reason"] = "batchedCI",
+            ["requestedFor"] = new JObject
+            {
+                ["displayName"] = "requested-for"
+            },
+            ["result"] = "failed",
+            ["sourceBranch"] = "refs/heads/release",
+            ["startTime"] = "05/01/2008 5:00:00",
+            ["tags"] = new JArray
+            {
+                "tag1"
+            }
+        };
+
+        var expectedOwners = new List<string>();
+        var expectedNames = new List<string>();
+        var expectedCommentOwners = new List<string>();
+        var expectedCommentNames = new List<string>();
+
+        using TestData testData = await TestData.Default.WithBuildData(build).WithExpectMatchingTitle(false).BuildAsync();
+        var response = await testData.Controller.BuildComplete(buildEvent);
+        VerifyGitHubCalls(testData, expectedOwners, expectedNames, expectedCommentOwners, expectedCommentNames);
+    }
+
+    [Test]
     public async Task BuildCompleteUpdateExistingIssueExists()
     {
         var buildEvent = new AzurePipelinesController.AzureDevOpsEvent<AzurePipelinesController.AzureDevOpsMinimalBuildResource>
@@ -440,6 +591,13 @@ public partial class AzurePipelinesControllerTests
                                 Branches = new string[] { "sourceBranch" },
                                 Assignee = "assignee",
                                 IssuesId = "second-issues"
+                            },
+                            new BuildMonitorOptions.AzurePipelinesOptions.BuildDescription
+                            {
+                                Project = "test-project-name",
+                                DefinitionPath = "\\test\\definition\\path4",
+                                Branches = new string[] { "main", "release/*" },
+                                IssuesId = "third-issues"
                             }
                         }
                     };
@@ -458,6 +616,14 @@ public partial class AzurePipelinesControllerTests
                             Owner = "dotnet",
                             Name = "repo",
                             Labels = new string[] { "label" },
+                            UpdateExisting = true
+                        },
+                        new BuildMonitorOptions.IssuesOptions
+                        {
+                            Id = "third-issues",
+                            Owner = "dotnet",
+                            Name = "repo",
+                            Labels = new string[] { "label2" },
                             UpdateExisting = true
                         }
                     };
@@ -558,7 +724,7 @@ public partial class AzurePipelinesControllerTests
         }
     }
 
-    private void VerifyGitHubCalls(
+    private static void VerifyGitHubCalls(
         TestData testData, 
         List<string> expectedOwners, 
         List<string> expectedNames,
