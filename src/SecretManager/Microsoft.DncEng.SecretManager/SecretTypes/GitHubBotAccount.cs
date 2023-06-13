@@ -53,7 +53,7 @@ public class GitHubBotAccount : GitHubAccountInteractiveSecretType<GitHubBotAcco
         var secret = await context.GetSecretValue(new SecretReference(context.SecretName + GitHubSecretSuffix));
 
         const string helpUrl = "https://github.com/settings/security";
-        await ShowGitHubLoginInformation(helpUrl, parameters.Name, secret, password);
+        await ShowGitHubLoginInformation(helpUrl, parameters.Name, password, secret);
 
         var rollPassword = await Console.ConfirmAsync("Do you want to roll bot's password (yes/no): ");
         if (rollPassword)
