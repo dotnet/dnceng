@@ -104,6 +104,20 @@
           "Branches": [ "main" ],
           "IssuesId": "dotnet-dnceng-first-responder"
         },
+        {
+          "Project": "internal",
+          "DefinitionPath": "\\dotnet\\dotnet\\dotnet-dotnet-synchronization",
+          "Branches": [ "main", "release/*" ],
+          "IssuesId": "dotnet-dotnet-synchronization",
+          "Assignee": "premun"
+        },
+        {
+          "Project": "internal",
+          "DefinitionPath": "\\dotnet\\dotnet\\dotnet-dotnet-synchronization-internal",
+          "Branches": [ "main", "release/*", "internal/release/*" ],
+          "IssuesId": "dotnet-dotnet-synchronization",
+          "Assignee": "premun"
+        }
       ]
     },
     "Issues": [
@@ -151,6 +165,13 @@
         "Owner": "dotnet",
         "Name": "runtime",
         "Labels": [ "area-Infrastructure" ],
+        "UpdateExisting": true
+      },
+      {
+        "Id": "dotnet-dotnet-synchronization",
+        "Owner": "dotnet",
+        "Name": "arcade-services",
+        "Labels": [ "Build Failed" ],
         "UpdateExisting": true
       }
     ]
