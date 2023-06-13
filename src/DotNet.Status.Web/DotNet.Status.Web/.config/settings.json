@@ -117,6 +117,12 @@
           "Branches": [ "main", "release/*", "internal/release/*" ],
           "IssuesId": "dotnet-dotnet-synchronization",
           "Assignee": "premun"
+        },
+        {
+          "Project": "internal",
+          "DefinitionPath": "\\dotnet\\arcade-services\\arcade-services-internal-ci",
+          "Branches": [ "main" ],
+          "IssuesId": "dotnet-arcade-services-build-failed"
         }
       ]
     },
@@ -172,6 +178,13 @@
         "Owner": "dotnet",
         "Name": "arcade-services",
         "Labels": [ "Build Failed" ],
+        "UpdateExisting": true
+      },
+      {
+        "Id": "dotnet-arcade-services-build-failed",
+        "Owner": "dotnet",
+        "Name": "arcade-services",
+        "Labels": [ "Build Failed", "First Responder" ],
         "UpdateExisting": true
       }
     ]
