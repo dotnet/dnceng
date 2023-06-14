@@ -44,13 +44,13 @@
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\arcade-services\\arcade-services-internal-ci",
           "Branches": [ "main" ],
-          "IssuesId": "dotnet-dnceng-build-failed"
+          "IssuesId": "dotnet-arcade-services"
         },
         {
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\arcade-services\\dotnet-arcade-services-weekly",
           "Branches": [ "main" ],
-          "IssuesId": "dotnet-dnceng-frops"
+          "IssuesId": "dotnet-arcade-services"
         },
         {
           "Project": "internal",
@@ -172,6 +172,13 @@
         "Owner": "dotnet",
         "Name": "arcade-services",
         "Labels": [ "Build Failed" ],
+        "UpdateExisting": true
+      },
+      {
+        "Id": "dotnet-arcade-services",
+        "Owner": "dotnet",
+        "Name": "arcade-services",
+        "Labels": [ "Build Failed", "First Responder" ],
         "UpdateExisting": true
       }
     ]
