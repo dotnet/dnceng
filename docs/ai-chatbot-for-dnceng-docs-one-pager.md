@@ -19,7 +19,7 @@ The project aims to create an Azure OpenAI-powered service that can answer quest
 
 ## Unknowns
 1. How to pull documentation from the multiple existing resources
-2. Automate the service to ingest newly created documentation
+2. Automate the service to ingest new and updated documentation
 3. Store the questions and Chatbot responses for telemetry
 
 ## Measurable Metric of Success
