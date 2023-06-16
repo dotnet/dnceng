@@ -227,6 +227,22 @@ stages:
             artifact: RolloutScorer
             displayName: Publish RolloutScorerAzureFunction
 
+          - script: $(Build.SourcesDirectory)\.dotnet\dotnet publish -o $(Build.ArtifactStagingDirectory)\Microsoft.DncEng.AIChatBot\publish -f net7.0
+            workingDirectory: src\Microsoft.DncEng.AIChatBot\backend
+            displayName: dotnet publish Microsoft.DncEng.AIChatBot
+
+          - task: ArchiveFiles@2
+            inputs:
+              rootFolderOrFile: $(Build.ArtifactStagingDirectory)/Microsoft.DncEng.AIChatBot/publish
+              includeRootFolder: false
+              archiveType: zip
+              archiveFile: $(Build.ArtifactStagingDirectory)/Microsoft.DncEng.AIChatBot/package/OpenAiChatbot.zip
+              replaceExistingArchive: true
+
+          - publish: $(Build.ArtifactStagingDirectory)/Microsoft.DncEng.AIChatBot/package
+            artifact: OpenAiChatbot
+            displayName: Publish Microsoft.DncEng.AIChatBot
+
           ## Generate SBOM manifest
           - template: ../../../generate-sbom.yml
 

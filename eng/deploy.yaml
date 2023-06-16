@@ -165,6 +165,22 @@ stages:
         package: $(Pipeline.Workspace)/RolloutScorer/RolloutScorer.zip
         appName: ${{ parameters.RolloutScorerAppName }}
 
+  - job: deployOpenAiChatbot
+    displayName: Deploy OpenAI chatbot app service
+    condition: eq(parameters.DeploymentEnvironment, 'Staging') # As a PoC, only deploy to staging
+    pool:
+      name: NetCore1ESPool-Internal-NoMSI
+      demands: ImageOverride -equals 1es-windows-2019
+    dependsOn:
+    steps:
+    - download: current
+      artifact: OpenAiChatbot
+    - task: AzureWebApp@1
+      inputs:
+        azureSubscription: a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1 # "Dotnet engineering services" subscription
+        appName: OpenAiChatbot
+        package: $(Pipeline.Workspace)/OpenAiChatbot/OpenAiChatbot.zip
+
 - stage: postdeploy
   displayName: Post-Deployment
   pool:
