@@ -2,8 +2,6 @@
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Configuration.ConfigureAzureKeyVault();
-
 // See: https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
