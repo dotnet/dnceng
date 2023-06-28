@@ -1,9 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ConsoleTables;
 using Microsoft.DncEng.CommandLineLib;
 using Microsoft.DncEng.SecretManager.StorageTypes;
 using Mono.Options;
@@ -52,7 +53,7 @@ public class SynchronizeCommand : Command
     {
         try
         {
-            _console.WriteLine($"Synchronizing secrets contained in {_manifestFile}");
+            _console.WriteLine($"📄 Synchronizing secrets contained in {_manifestFile}");
             if (_force || _forcedSecrets.Any())
             {
                 bool confirmed = await _console.ConfirmAsync(
@@ -62,6 +63,13 @@ public class SynchronizeCommand : Command
                     return;
                 }
             }
+
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
+            var problems = new List<(string, string)>();
+            var table = new ConsoleTable(new ConsoleTableOptions()
+            {
+                Columns = new[] { "Secret", "Type", string.Empty, "Status" },
+            });
 
             DateTimeOffset now = _clock.UtcNow;
             SecretManifest manifest = SecretManifest.Read(_manifestFile);
@@ -84,12 +92,16 @@ public class SynchronizeCommand : Command
 
             foreach (var (name, secret, secretType, secretReferences) in orderedSecretTypes)
             {
-                _console.WriteLine($"Synchronizing secret {name}, type {secret.Type}");
+                 _console.WriteLine($"Synchronizing secret {name}, type {secret.Type}");
+                var status = string.Empty;
+                var icon = string.Empty;
 
                 if (existingSecrets.TryGetValue(name, out var existingSecret)
                     && !existingSecret.Tags.ContainsKey(AzureKeyVault.NextRotationOnTag))
                 {
-                    _console.LogError($"Key Vault Secret '{name}' is listed in the secret manifest, but is missing {AzureKeyVault.NextRotationOnTag} tag. Please force a rotation or manually set this value.");
+                    var problem = $"Listed in the secret manifest but missing {AzureKeyVault.NextRotationOnTag} tag. Please force a rotation or manually set this value.";
+                     _console.LogError($"{name}\t- {problem}");
+                    problems.Add((name, problem));
                 }
 
                 List<string> names = secretType.GetCompositeSecretSuffixes().Select(suffix => name + suffix).ToList();
@@ -106,10 +118,14 @@ public class SynchronizeCommand : Command
                 {
                     _console.WriteLine("--force is set, will rotate.");
                     regenerate = true;
+                    status = "Forced-rotated";
+                    icon = "🔁";
                 }
                 else if (_forcedSecrets.Contains(name))
                 {
                     _console.WriteLine($"--force-secret={name} is set, will rotate.");
+                    status = "Forced-rotated";
+                    icon = "🔁";
                     regenerate = true;
                 }
                 else if (existing.Any(e => e == null))
@@ -117,11 +133,15 @@ public class SynchronizeCommand : Command
                     _console.WriteLine("Secret not found in storage, will create.");
                     // secret is missing from storage (either completely missing or partially missing)
                     regenerate = true;
+                    status = "New secret";
+                    icon = "⭐";
                 }
                 else if (regeneratedSecrets.Overlaps(secretReferences))
                 {
                     _console.WriteLine("Referenced secret was rotated, will rotate.");
                     regenerate = true;
+                    status = "Rotated through reference";
+                    icon = "🔁";
                 }
                 else
                 {
@@ -137,12 +157,16 @@ public class SynchronizeCommand : Command
                             }
                             else
                             {
-                                _console.Write($"For secret {name}, could not parse the {AzureKeyVault.NextRotationOnTag} tag with value {nextRotationOn}");
+                                var message = $"Missing {AzureKeyVault.NextRotationOnTag} tag, using the end of time as value";
+                                _console.Write($"Secret {name} - {message}");
+                                problems.Add((name, message));
                             }
                         }
                         else
                         {
-                            _console.Write($"Secret {e.Name} does not have the {AzureKeyVault.NextRotationOnTag} tag, using the end of time as value");
+                            var message = $"Missing {AzureKeyVault.NextRotationOnTag} tag, using the end of time as value";
+                            _console.Write($"Secret {e.Name} - {message}");
+                            problems.Add((name, message));
                         }
                         return ret;
                     }).Min();
@@ -164,24 +188,34 @@ public class SynchronizeCommand : Command
                             _console.WriteLine("Secret is within verification grace period.");
                             regenerate = false;
                         }
+                        else
+                        {
+                            status = "Rotated";
+                            icon = "🔁";
+                        }
                     }
                     if (expires <= now)
                     {
                         _console.WriteLine($"Secret expired on {expires}, will rotate.");
                         // the secret has expired, this shouldn't happen in normal operation but we should rotate
                         regenerate = true;
+                        status = "Rotated";
+                        icon = "🔁";
                     }
                 }
 
                 if (!regenerate)
                 {
                     _console.WriteLine("Secret is fine.");
+                    status = "OK";
+                    icon = "✅";
                 }
-
 
                 if (regenerate && _verifyOnly)
                 {
                     _console.LogError($"Secret {name} requires rotation.");
+                    status = "Requires rotation";
+                    icon = "❌";
                 }
                 else if (regenerate)
                 {
@@ -199,8 +233,14 @@ public class SynchronizeCommand : Command
                         await storage.SetSecretValueAsync(n, new SecretValue(value.Value, newTags, value.NextRotationOn, value.ExpiresOn));
                     }
 
+                    string nextRotationOn = newTags[AzureKeyVault.NextRotationOnTag];
+                    status = $"Rotated - next on {nextRotationOn}";
+                    icon = "🔁";
+
                     _console.WriteLine("Done.");
                 }
+
+                table.AddRow(name, secret.Type, icon, status);
             }
 
             if (!_verifyOnly)
@@ -213,8 +253,22 @@ public class SynchronizeCommand : Command
                 foreach (var (name, value) in existingSecrets)
                 {
                     _console.LogWarning($"Extra secret '{name}' consider deleting it.");
+                    table.AddRow(name, string.Empty, "⚠️", "Extra secret");
                 }
             }
+
+            _console.WriteLine(Environment.NewLine + Environment.NewLine + "🔎 Summary:" + Environment.NewLine);
+            _console.WriteLine(table.ToMinimalString());
+            _console.WriteLine("🔥 Detected additional problems:");
+            foreach (var group in problems.ToLookup(k => k.Item1, v => v.Item2))
+            {
+                _console.WriteLine($"{group.Key}:");
+                foreach (var problem in group)
+                {
+                    _console.WriteLine($"    - {problem}");
+                }
+            }
+
         }
         catch (FailWithExitCodeException)
         {
