@@ -219,13 +219,20 @@ public class SynchronizeCommand : Command
                     regeneratedSecrets.Add(name);
                     _console.WriteLine("Done.");
                     _console.WriteLine($"Storing new value(s) in storage for secret {name}...");
+
                     foreach (var (n, value) in names.Zip(newValues))
                     {
                         await storage.SetSecretValueAsync(n, new SecretValue(value.Value, newTags, value.NextRotationOn, value.ExpiresOn));
                     }
 
-                    string nextRotationOn = newTags[AzureKeyVault.NextRotationOnTag];
-                    summaryStatus = ($"Rotated - next on {nextRotationOn}", "🔁");
+                    if (newTags.TryGetValue(AzureKeyVault.NextRotationOnTag, out string nextRotationOn))
+                    {
+                        summaryStatus = ($"Rotated - next on {nextRotationOn}", "🔁");
+                    }
+                    else
+                    {
+                        summaryStatus = ("Rotated", "🔁");
+                    }
 
                     _console.WriteLine("Done.");
                 }
