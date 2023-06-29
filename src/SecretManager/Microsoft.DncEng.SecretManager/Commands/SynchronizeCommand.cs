@@ -93,8 +93,7 @@ public class SynchronizeCommand : Command
             foreach (var (name, secret, secretType, secretReferences) in orderedSecretTypes)
             {
                  _console.WriteLine($"Synchronizing secret {name}, type {secret.Type}");
-                var status = string.Empty;
-                var icon = string.Empty;
+                var summaryStatus = (Status: string.Empty, Icon: string.Empty);
 
                 if (existingSecrets.TryGetValue(name, out var existingSecret)
                     && !existingSecret.Tags.ContainsKey(AzureKeyVault.NextRotationOnTag))
@@ -118,14 +117,12 @@ public class SynchronizeCommand : Command
                 {
                     _console.WriteLine("--force is set, will rotate.");
                     regenerate = true;
-                    status = "Forced-rotated";
-                    icon = "🔁";
+                    summaryStatus = ("Forced-rotated", "🔁");
                 }
                 else if (_forcedSecrets.Contains(name))
                 {
                     _console.WriteLine($"--force-secret={name} is set, will rotate.");
-                    status = "Forced-rotated";
-                    icon = "🔁";
+                    summaryStatus = ("Forced-rotated", "🔁");
                     regenerate = true;
                 }
                 else if (existing.Any(e => e == null))
@@ -133,15 +130,13 @@ public class SynchronizeCommand : Command
                     _console.WriteLine("Secret not found in storage, will create.");
                     // secret is missing from storage (either completely missing or partially missing)
                     regenerate = true;
-                    status = "New secret";
-                    icon = "⭐";
+                    summaryStatus = ("New secret", "⭐");
                 }
                 else if (regeneratedSecrets.Overlaps(secretReferences))
                 {
                     _console.WriteLine("Referenced secret was rotated, will rotate.");
                     regenerate = true;
-                    status = "Rotated through reference";
-                    icon = "🔁";
+                    summaryStatus = ("Rotated through reference", "🔁");
                 }
                 else
                 {
@@ -190,8 +185,7 @@ public class SynchronizeCommand : Command
                         }
                         else
                         {
-                            status = "Rotated";
-                            icon = "🔁";
+                            summaryStatus = ("Rotated", "🔁");
                         }
                     }
                     if (expires <= now)
@@ -199,23 +193,20 @@ public class SynchronizeCommand : Command
                         _console.WriteLine($"Secret expired on {expires}, will rotate.");
                         // the secret has expired, this shouldn't happen in normal operation but we should rotate
                         regenerate = true;
-                        status = "Rotated";
-                        icon = "🔁";
+                        summaryStatus = ("Rotated", "🔁");
                     }
                 }
 
                 if (!regenerate)
                 {
                     _console.WriteLine("Secret is fine.");
-                    status = "OK";
-                    icon = "✅";
+                    summaryStatus = ("OK", "✅");
                 }
 
                 if (regenerate && _verifyOnly)
                 {
                     _console.LogError($"Secret {name} requires rotation.");
-                    status = "Requires rotation";
-                    icon = "❌";
+                    summaryStatus = ("Requires rotation", "❌");
                 }
                 else if (regenerate)
                 {
@@ -234,13 +225,12 @@ public class SynchronizeCommand : Command
                     }
 
                     string nextRotationOn = newTags[AzureKeyVault.NextRotationOnTag];
-                    status = $"Rotated - next on {nextRotationOn}";
-                    icon = "🔁";
+                    summaryStatus = ($"Rotated - next on {nextRotationOn}", "🔁");
 
                     _console.WriteLine("Done.");
                 }
 
-                table.AddRow(name, secret.Type, icon, status);
+                table.AddRow(name, secret.Type, summaryStatus.Icon, summaryStatus.Status);
             }
 
             if (!_verifyOnly)
