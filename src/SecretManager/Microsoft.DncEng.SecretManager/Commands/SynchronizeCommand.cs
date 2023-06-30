@@ -65,7 +65,7 @@ public class SynchronizeCommand : Command
             }
 
             Console.OutputEncoding = System.Text.Encoding.UTF8;
-            var problems = new List<(string, string)>();
+            var problems = new List<(string SecretName, string Problem)>();
             var table = new ConsoleTable(new ConsoleTableOptions()
             {
                 Columns = new[] { "Secret", "Type", string.Empty, "Status" },
@@ -257,7 +257,7 @@ public class SynchronizeCommand : Command
             _console.WriteLine(Environment.NewLine + Environment.NewLine + "🔎 Summary:" + Environment.NewLine);
             _console.WriteLine(table.ToMinimalString());
             _console.WriteLine("🔥 Detected additional problems:");
-            foreach (var group in problems.ToLookup(k => k.Item1, v => v.Item2))
+            foreach (var group in problems.ToLookup(k => k.SecretName, v => v.Problem))
             {
                 _console.WriteLine($"{group.Key}:");
                 foreach (var problem in group)
