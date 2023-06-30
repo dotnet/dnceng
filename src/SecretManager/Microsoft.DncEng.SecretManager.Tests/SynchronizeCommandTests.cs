@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -99,16 +101,13 @@ public class SynchronizeCommandTests
     public async Task ExpiredSecretsGetRotated()
     {
         var now = DateTimeOffset.ParseExact("03/25/2021 1:30", "MM/dd/yyyy m:ss", null);
-        await TestCommand(
-            now,
-            """
-            storageLocation:
-              type: test
-            secrets:
-              expired:
-                type: test-secret
-            """,
-            "test",
+        await TestCommand(now, @"
+storageLocation:
+  type: test
+secrets:
+  expired:
+    type: test-secret
+", "test",
             new List<SecretProperties>
             {
                 new SecretProperties("expired", now.AddDays(-5),
@@ -123,8 +122,7 @@ public class SynchronizeCommandTests
                 {
                     new SecretData("test-value", now.AddDays(5), now.AddDays(2))
                 }
-            },
-            new List<(string name, SecretValue value)>
+            }, new List<(string name, SecretValue value)>
             {
                 ("expired", new SecretValue("test-value", ImmutableDictionary.Create<string, string>(), now.AddDays(2), now.AddDays(5)))
             });
@@ -140,16 +138,13 @@ public class SynchronizeCommandTests
             { AzureKeyVault.NextRotationOnTag, now.AddDays(-1).ToString() }
         };
 
-        await TestCommand(
-            now,
-            """
-            storageLocation:
-              type: test
-            secrets:
-              normal:
-                type: test-secret
-            """,
-            "test",
+        await TestCommand(now, @"
+storageLocation:
+  type: test
+secrets:
+  normal:
+    type: test-secret
+", "test",
             new List<SecretProperties>
             {
                 new SecretProperties("normal", now.AddDays(10), dic.ToImmutableDictionary()),
@@ -163,8 +158,7 @@ public class SynchronizeCommandTests
                 {
                     new SecretData("test-value", now.AddDays(20), now.AddDays(5))
                 }
-            },
-            new List<(string name, SecretValue value)>
+            }, new List<(string name, SecretValue value)>
             {
                 ("normal", new SecretValue("test-value", dic.ToImmutableDictionary(), now.AddDays(5), now.AddDays(20)))
             });
@@ -174,16 +168,13 @@ public class SynchronizeCommandTests
     public async Task ValidSecretIsntRotated()
     {
         var now = DateTimeOffset.ParseExact("03/25/2021 1:30", "MM/dd/yyyy m:ss", null);
-        await TestCommand(
-            now,
-            """
-            storageLocation:
-              type: test
-            secrets:
-              normal:
-                type: test-secret
-            """,
-            "test",
+        await TestCommand(now, @"
+storageLocation:
+  type: test
+secrets:
+  normal:
+    type: test-secret
+", "test",
             new List<SecretProperties>
             {
                 new SecretProperties("normal", now.AddDays(10),
@@ -214,16 +205,13 @@ public class SynchronizeCommandTests
             { AzureKeyVault.NextRotationOnTag, now.AddDays(-2).ToString() }
         };
 
-        await TestCommand(
-            now,
-            """
-            storageLocation:
-              type: test
-            secrets:
-              normal:
-                type: test-secret
-            """,
-            "test",
+        await TestCommand(now, @"
+storageLocation:
+  type: test
+secrets:
+  normal:
+    type: test-secret
+", "test",
             new List<SecretProperties>
             {
                 new SecretProperties("normal", now.AddDays(10), dic.ToImmutableDictionary()),
@@ -250,24 +238,21 @@ public class SynchronizeCommandTests
     public async Task SecretsAreRotatedInCorrectOrderAndAllTriggeredByExpiredMainSecret()
     {
         var now = DateTimeOffset.ParseExact("03/25/2021 1:30", "MM/dd/yyyy m:ss", null);
-        await TestCommand(
-            now,
-            """
-            storageLocation:
-              type: test
-            secrets:
-              grand-child:
-                type: test-secret
-                parameters:
-                    dependsOnSecret: child
-              child:
-                type: test-secret
-                parameters:
-                    dependsOnSecret: expired-main
-              expired-main:
-                type: test-secret
-            """,
-            "test",
+        await TestCommand(now, @"
+storageLocation:
+  type: test
+secrets:
+  grand-child:
+    type: test-secret
+    parameters:
+        dependsOnSecret: child
+  child:
+    type: test-secret
+    parameters:
+        dependsOnSecret: expired-main
+  expired-main:
+    type: test-secret
+", "test",
             new List<SecretProperties>
             {
                 new SecretProperties("expired-main", now.AddDays(-5),
@@ -306,24 +291,21 @@ public class SynchronizeCommandTests
     public async Task SecretsAreRotatedInCorrectOrderAndGrandChildTriggeredByExpiredChildSecret()
     {
         var now = DateTimeOffset.ParseExact("03/25/2021 1:30", "MM/dd/yyyy m:ss", null);
-        await TestCommand(
-            now,
-            """
-            storageLocation:
-              type: test
-            secrets:
-              grand-child:
-                type: test-secret
-                parameters:
-                    dependsOnSecret: expired-child
-              expired-child:
-                type: test-secret
-                parameters:
-                    dependsOnSecret: main
-              main:
-                type: test-secret
-            """,
-            "test",
+        await TestCommand(now, @"
+storageLocation:
+  type: test
+secrets:
+  grand-child:
+    type: test-secret
+    parameters:
+        dependsOnSecret: expired-child
+  expired-child:
+    type: test-secret
+    parameters:
+        dependsOnSecret: main
+  main:
+    type: test-secret
+", "test",
             new List<SecretProperties>
             {
                 new SecretProperties("main", now.AddDays(5),
@@ -359,20 +341,17 @@ public class SynchronizeCommandTests
     {
         var now = DateTimeOffset.ParseExact("03/25/2021 1:30", "MM/dd/yyyy m:ss", null);
         Assert.ThrowsAsync<FailWithExitCodeException>(() =>
-            TestCommand(
-                now,
-                """
-                storageLocation:
-                  type: test
-                secrets:
-                  main:
-                    type: test-secret
-                  expired-child:
-                    type: test-secret
-                    parameters:
-                        dependsOnSecret: X
-                """,
-                "test",
+            TestCommand(now, @"
+    storageLocation:
+      type: test
+    secrets:
+      main:
+        type: test-secret
+      expired-child:
+        type: test-secret
+        parameters:
+            dependsOnSecret: X
+    ", "test",
                 new List<SecretProperties>
                 {
                     new SecretProperties("main", now.AddDays(5),
@@ -385,8 +364,7 @@ public class SynchronizeCommandTests
                 parameters => parameters == null ? new List<string>() : new List<string> { parameters["dependsOnSecret"].ToString() },
                 new List<List<SecretData>>
                 {
-                },
-                new List<(string name, SecretValue value)>
+                }, new List<(string name, SecretValue value)>
                 {
                 }));
     }
