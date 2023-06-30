@@ -256,16 +256,20 @@ public class SynchronizeCommand : Command
 
             _console.WriteLine(Environment.NewLine + Environment.NewLine + "🔎 Summary:" + Environment.NewLine);
             _console.WriteLine(table.ToMinimalString());
-            _console.WriteLine("🔥 Detected additional problems:");
-            foreach (var group in problems.ToLookup(k => k.SecretName, v => v.Problem))
+
+            if (problems.Any())
             {
-                _console.WriteLine($"{group.Key}:");
-                foreach (var problem in group)
+                _console.WriteLine("🔥 Detected additional problems:");
+
+                foreach (var group in problems.ToLookup(k => k.SecretName, v => v.Problem))
                 {
-                    _console.WriteLine($"    - {problem}");
+                    _console.WriteLine($"{group.Key}:");
+                    foreach (var problem in group)
+                    {
+                        _console.WriteLine($"    - {problem}");
+                    }
                 }
             }
-
         }
         catch (FailWithExitCodeException)
         {
