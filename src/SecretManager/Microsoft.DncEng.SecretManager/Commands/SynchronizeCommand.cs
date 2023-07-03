@@ -53,7 +53,7 @@ public class SynchronizeCommand : Command
     {
         try
         {
-            _console.WriteLine($"📄 Synchronizing secrets contained in {_manifestFile}");
+            _console.WriteLine($"🔁 Synchronizing secrets contained in {_manifestFile}");
             if (_force || _forcedSecrets.Any())
             {
                 bool confirmed = await _console.ConfirmAsync(
