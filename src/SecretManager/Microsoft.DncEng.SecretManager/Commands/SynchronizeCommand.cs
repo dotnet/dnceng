@@ -152,7 +152,7 @@ public class SynchronizeCommand : Command
                             }
                             else
                             {
-                                var message = $"Missing {AzureKeyVault.NextRotationOnTag} tag, using the end of time as value";
+                                var message = $"Could not parse the {AzureKeyVault.NextRotationOnTag} tag with value {nextRotationOn}";
                                 _console.Write($"Secret {name} - {message}");
                                 problems.Add((name, message));
                             }
