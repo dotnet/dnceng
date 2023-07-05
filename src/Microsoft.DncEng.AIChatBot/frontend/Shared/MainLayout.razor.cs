@@ -28,19 +28,18 @@ public sealed partial class MainLayout
     [Inject] public required ILocalStorageService LocalStorage { get; set; }
     [Inject] public required IDialogService Dialog { get; set; }
 
-    private bool SettingsDisabled => new Uri(Nav.Uri).Segments.LastOrDefault() switch
+    /*private bool SettingsDisabled => new Uri(Nav.Uri).Segments.LastOrDefault() switch
     {
         "ask" or "chat" => false,
         _ => true
-    };
+    };*/
 
-    private bool SortDisabled => new Uri(Nav.Uri).Segments.LastOrDefault() switch
+    /*private bool SortDisabled => new Uri(Nav.Uri).Segments.LastOrDefault() switch
     {
         "voicechat" or "chat" => false,
         _ => true
-    };
+    };*/
 
-    private void OnMenuClicked() => _drawerOpen = !_drawerOpen;
     private void OnThemeChanged() => _isDarkTheme = !_isDarkTheme;
     private void OnIsReversedChanged() => _isReversed = !_isReversed;
 }
