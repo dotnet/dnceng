@@ -8,26 +8,6 @@
         </MudText>
     </MudDrawerHeader>
     <div class="pa-6">
-        @if (_supportedSettings is not SupportedSettings.Chat)
-        {
-            <MudText Typo="Typo.subtitle1">Approach</MudText>
-            <MudRadioGroup @bind-SelectedOption="@Settings.Approach" Class="pa-2">
-                <MudRadio Option="@Approach.RetrieveThenRead" Color="Color.Primary">
-                    Retrieve-Then-Read
-                </MudRadio>
-                <MudRadio Option="@Approach.ReadRetrieveRead" Color="Color.Primary">
-                    Read-Retrieve-Read
-                </MudRadio>
-                <MudRadio Option="@Approach.ReadDecomposeAsk" Color="Color.Primary">
-                    Read-Decompose-Ask
-                </MudRadio>
-            </MudRadioGroup>
-        }
-
-        <MudTextField T="string" Lines="5" Variant="Variant.Outlined"
-                      Label="Override prompt template" Placeholder="Override prompt template" Class="pa-2"
-                      @bind-Value="Settings.Overrides.PromptTemplate" Clearable="true" />
-                      
         <MudNumericField @bind-Value="Settings.Overrides.Top" Class="pa-2"
                          Placeholder="Retrieve this many documents from search"
                          Label="Retrieve this many documents from search" HideSpinButtons="true"
@@ -37,10 +17,6 @@
         <MudTextField T="string" Variant="Variant.Outlined"
                       Label="Exclude category" Placeholder="Exclude category" Class="pa-2"
                       @bind-Value="Settings.Overrides.ExcludeCategory" Clearable="true" />
-
-        <MudCheckBox @bind-Checked="@Settings.Overrides.SemanticRanker" Size="Size.Large"
-                     Color="Color.Primary" Label="Use semantic ranker for retrieval" />
-
         <MudCheckBox @bind-Checked="@Settings.Overrides.SemanticCaptions" Size="Size.Large"
                      Color="Color.Primary" 
                      Label="Use query-contrextual summaries instead of whole documents" />

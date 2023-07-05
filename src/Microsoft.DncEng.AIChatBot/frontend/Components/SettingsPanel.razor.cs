@@ -39,7 +39,6 @@ public sealed partial class SettingsPanel : IDisposable
         var route = url.Segments.LastOrDefault();
         _supportedSettings = route switch
         {
-            "ask" => SupportedSettings.Ask,
             "chat" => SupportedSettings.Chat,
             _ => SupportedSettings.All
         };
@@ -52,5 +51,4 @@ public enum SupportedSettings
 {
     All,
     Chat,
-    Ask
 };
