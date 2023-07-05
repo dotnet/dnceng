@@ -8,9 +8,6 @@ public sealed class ApiClient
 
     public ApiClient(HttpClient httpClient) => _httpClient = httpClient;
 
-    public Task<AnswerResult<AskRequest>> AskQuestionAsync(AskRequest request) =>
-        PostRequestAsync(request, "api/ask");
-
     public Task<AnswerResult<ChatRequest>> ChatConversationAsync(ChatRequest request) =>
         PostRequestAsync(request, "api/chat");
 
