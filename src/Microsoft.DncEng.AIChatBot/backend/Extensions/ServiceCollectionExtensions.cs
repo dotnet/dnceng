@@ -83,9 +83,7 @@ internal static class ServiceCollectionExtensions
         services.AddSingleton<AzureOpenAIChatCompletionService>();
         services.AddSingleton<ReadRetrieveReadChatService>();
 
-        services.AddSingleton<IApproachBasedService, RetrieveThenReadApproachService>();
-        services.AddSingleton<IApproachBasedService, ReadRetrieveReadApproachService>();
-        services.AddSingleton<IApproachBasedService, ReadDecomposeAskApproachService>();
+     
 
         services.AddSingleton<ApproachServiceResponseFactory>();
 
