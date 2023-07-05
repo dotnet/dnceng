@@ -1,4 +1,5 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
+// This class is used for the openai chat functionality
 
 namespace MinimalApi.Services;
 
@@ -84,7 +85,8 @@ public class ReadRetrieveReadChatService
         {
             throw new InvalidOperationException("Use question is null");
         }
-
+        //When you run the Semantic Kernel function,
+        //it provides the composed prompt to the Azure OpenAI Service ChatGPT model which generates the query.
         var query = await _kernel.RunAsync(context, cancellationToken, queryFunction);
         // step 2
         // use query to search related docs

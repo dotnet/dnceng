@@ -1,4 +1,4 @@
-﻿@page "/chat"
+﻿@page "/"
 
 <!-- This page is intended for conversational Q&A. -->
 
@@ -9,7 +9,7 @@
         @if (_questionAndAnswerMap is { Count: 0 })
         {
             <div class="d-flex align-content-center flex-wrap flex-grow-1 full-height">
-                <Examples Message="Chat with your data" OnExampleClicked="@OnAskQuestionAsync" />
+                <Examples Message="Chat with DNCEng Docs" OnExampleClicked="@OnAskQuestionAsync" />
             </div>
         }
         else

@@ -5,7 +5,7 @@ namespace ClientApp.Shared;
 public sealed partial class MainLayout
 {
     private readonly MudTheme _theme = new();
-    private bool _drawerOpen = true;
+    private bool _drawerOpen = false;
     private bool _settingsOpen = false;
     private SettingsPanel? _settingsPanel;
 

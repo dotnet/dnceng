@@ -14,9 +14,10 @@
 <MudRTLProvider RightToLeft="_isRightToLeft">
     <MudLayout class="@(_isRightToLeft ? "rtl-lang" : "")">
         <MudAppBar Elevation="20">
+            @*
             <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" id="nav-toggle"
                         Title="Toggle navigation sidebar"
-                        Size="Size.Large" Edge="Edge.Start" OnClick="@OnMenuClicked" />
+            Size="Size.Large" Edge="Edge.Start" OnClick="@OnMenuClicked" /> *@
             @if (SortDisabled is false)
             {
                 <MudTooltip Text="@(_isReversed ? "Sort conversations with latest answers on bottom" : "Sort conversations with latest answers on top")"
@@ -38,9 +39,9 @@
                                 ToggledSize="Size.Large"
                                 Title="Switch to Dark theme" Icon=@Icons.Material.Filled.DarkMode Color="@Color.Info"
                                 ToggledTitle="Switch to Light theme" ToggledIcon=@Icons.Material.Filled.WbSunny ToggledColor=@Color.Warning />
-            <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Size="Size.Large"
+            @*<MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Size="Size.Large"
                         Title="Visit the Azure Sampls: GitHub repository for this app."
-                        Href="https://github.com/Azure-Samples/azure-search-openai-demo-csharp" Target="_blank" />
+                        Href="https://github.com/Azure-Samples/azure-search-openai-demo-csharp" Target="_blank" />*@
         </MudAppBar>
         <MudDrawer @bind-Open="_drawerOpen" Elevation="5" id="drawer">
             <MudDrawerHeader>
