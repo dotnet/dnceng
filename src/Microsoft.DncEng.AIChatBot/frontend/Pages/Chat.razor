@@ -63,10 +63,10 @@
     <MudItem xs="12" Class="rounded">
         <MudGrid>
             <MudItem xs="12" lg="10">
-                <VoiceTextInput @bind-Value="_userQuestion" Label="Prompt"
+                <VoiceTextInput @bind-Value="_userQuestion" Label="User Prompt"
                                 Icon="@Icons.Material.Filled.QuestionAnswer"
-                                Placeholder="Enter OpenAI + Azure Search prompt"
-                                HelperText="Use Shift + Enter for new lines."
+                                Placeholder="Enter your question here"
+                                HelperText="Press Shift + Enter for new lines."
                                 Disabled=@_isReceivingResponse
                                 OnEnterKeyPressed="OnAskClickedAsync" />
             </MudItem>
