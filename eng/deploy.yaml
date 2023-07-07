@@ -177,7 +177,7 @@ stages:
       artifact: OpenAiChatbot
     - task: AzureWebApp@1
       inputs:
-        azureSubscription: 8bc5dfe4-dd28-4a26-b722-d6ec96f921f0
+        azureSubscription: 4a511f6f-b538-48e6-a389-207e430634d1
         appName: apps-lwgeqj45b3lbe
         package: $(Pipeline.Workspace)/OpenAiChatbot/OpenAiChatbot.zip
 
