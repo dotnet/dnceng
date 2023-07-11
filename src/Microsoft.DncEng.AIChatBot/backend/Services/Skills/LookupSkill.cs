@@ -1,6 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
-
-namespace MinimalApi.Services.Skills;
+﻿namespace MinimalApi.Services.Skills;
 
 public sealed class LookupSkill
 {

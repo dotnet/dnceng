@@ -1,6 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
-
-global using System.Diagnostics;
+﻿global using System.Diagnostics;
 global using System.Runtime.CompilerServices;
 global using System.Text;
 global using System.Text.Json;

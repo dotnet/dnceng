@@ -1,6 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
-
-using Microsoft.SemanticKernel.Planning.Planners;
+﻿using Microsoft.SemanticKernel.Planning.Planners;
 
 namespace MinimalApi.Services;
 
