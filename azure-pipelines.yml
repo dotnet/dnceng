@@ -110,10 +110,9 @@ stages:
             useGlobalJson: true
 
         - task: UseDotNet@2
-          displayName: Install .NET 6 Runtime
+          displayName: Install .NET 6 SDK
           inputs:
             version: 6.0.x
-            packageType: runtime
 
         - task: NuGetToolInstaller@0
           inputs:
