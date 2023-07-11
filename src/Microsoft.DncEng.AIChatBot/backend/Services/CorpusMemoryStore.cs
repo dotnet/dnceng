@@ -1,6 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
-
-namespace MinimalApi.Services;
+﻿namespace MinimalApi.Services;
 
 public sealed class CorpusMemoryStore : IMemoryStore
 {
@@ -8,8 +6,7 @@ public sealed class CorpusMemoryStore : IMemoryStore
     private readonly BlobServiceClient _blobServiceClient;
     private readonly IMemoryStore _store = new VolatileMemoryStore();
 
-    // TODO: Consider using the StringBuilderObjectPool approach for reusing builders in tight loops.
-    // https://learn.microsoft.com/aspnet/core/performance/objectpool?view=aspnetcore-7.0
+
     public CorpusMemoryStore(BlobServiceClient blobServiceClient, ILogger<CorpusMemoryStore> logger) =>
         (_blobServiceClient, _logger) = (blobServiceClient, logger);
 

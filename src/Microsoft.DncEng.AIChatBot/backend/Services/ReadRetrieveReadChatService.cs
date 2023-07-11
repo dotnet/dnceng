@@ -1,5 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
-// This class is used for the openai chat functionality
+﻿// This class is used for the openai chat functionality
 
 namespace MinimalApi.Services;
 
