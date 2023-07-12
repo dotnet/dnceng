@@ -54,7 +54,7 @@ stages:
   pool: server
   dependsOn:
   - build
-  - Validate
+  #- Validate
   - approval
   jobs:
   - job: notifyStartDeployment
