@@ -41,9 +41,9 @@ stages:
   pool: server
   dependsOn:
   - build
-  - Validate
+  #- Validate
   - ValidateSecrets
-  - publish_using_darc
+  # - publish_using_darc
   jobs:
   - deployment: approval
     displayName: deployment approval (conditional)
