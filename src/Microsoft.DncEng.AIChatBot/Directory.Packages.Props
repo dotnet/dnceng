@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageVersion Include="Azure.AI.FormRecognizer" Version="4.0.0" />
+        <PackageVersion Include="Azure.AI.OpenAI" Version="1.0.0-beta.5" />
+        <PackageVersion Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.2.2" />
+        <PackageVersion Include="Azure.Identity" Version="1.9.0-beta.3" />
+        <PackageVersion Include="Azure.Search.Documents" Version="11.5.0-beta.2" />
+        <PackageVersion Include="Azure.Storage.Blobs" Version="12.16.0" />
+        <PackageVersion Include="Blazor.LocalStorage.WebAssembly" Version="7.0.3" />
+        <PackageVersion Include="Blazor.SessionStorage.WebAssembly" Version="7.0.3" />
+        <PackageVersion Include="Blazor.SpeechRecognition.WebAssembly" Version="7.0.3" />
+        <PackageVersion Include="Blazor.SpeechSynthesis.WebAssembly" Version="7.0.3" />
+        <PackageVersion Include="bunit" Version="1.18.4" />
+        <PackageVersion Include="coverlet.collector" Version="3.2.0">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageVersion>
+        <PackageVersion Include="Markdig" Version="0.31.0" />
+        <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="7.0.5" PrivateAssets="all" />
+        <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="7.0.5" />
+        <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="7.0.5" />
+        <PackageVersion Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="7.0.5" />
+        <PackageVersion Include="Microsoft.Extensions.Http" Version="7.0.0" />
+        <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="7.0.0" />
+        <PackageVersion Include="Microsoft.ML" Version="2.0.1" />
+        <PackageVersion Include="Microsoft.SemanticKernel" Version="0.13.277.1-preview" />
+        <PackageVersion Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.18.1" />
+        <PackageVersion Include="MudBlazor" Version="6.2.2" />
+        <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+        <PackageVersion Include="xunit" Version="2.4.2" />
+        <PackageVersion Include="xunit.runner.visualstudio" Version="2.4.5">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageVersion>
+
+        <PackageVersion Include="FluentAssertions" Version="5.10.3" />
+        <PackageVersion Include="Microsoft.CodeCoverage" Version="17.6.2" />
+        <PackageVersion Include="Moq" Version="4.8.3" />
+        <PackageVersion Include="NUnit" Version="3.13.3" />
+        <PackageVersion Include="NUnit3TestAdapter" Version="3.16.1" />
+    </ItemGroup>
+</Project>
