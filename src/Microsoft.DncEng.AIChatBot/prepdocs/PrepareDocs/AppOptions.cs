@@ -7,6 +7,8 @@ internal record class AppOptions(
     string? StorageServiceBlobEndpoint,
     string? Container,
     string? TenantId,
+    Guid? clientId,
+    string? clientSecret,
     string? SearchServiceEndpoint,
     string? SearchIndexName,
     bool Remove,

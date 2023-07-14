@@ -1,0 +1,43 @@
+trigger:
+- "t-jelipscomb/AIChatbotDataPipeline"
+
+pool:
+  vmImage: 'windows-latest'
+
+jobs:
+  - job: build
+    timeoutInMinutes: 360
+    steps:
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: |
+          choco install pandoc --yes
+      displayName: 'Install Pandoc using Chocolatey'
+    - task: PowerShell@2
+      inputs:
+        targetType: 'inline'
+        script: |
+          choco install miktex --yes --verbose
+          choco install rsvg-convert --yes --verbose
+          write-host $env:PATH
+          $env:Path += ";C:\Program Files\MiKTeX\miktex\bin\x64"
+          mpm --update --list --admin
+          mpm --update --list 
+          write-host $env:PATH
+      displayName: 'Install MikTex and xetex using Chocolatey'
+
+    #- task: PowerShell@2
+    #  inputs:
+    #    targetType: 'filePath'
+    #    filePath: 'src\AIChatbot\scripts\PublishDocumentationIndex.ps1'
+    #  displayName: 'Run PublishDocumentationIndex.ps1 script to prepare and push docs'
+    
+    - task: AzureCLI@2
+      displayName: 'Run PublishDocumentationIndex.ps1 script to prepare and push docs'
+      inputs:
+        azureSubscription: dd8c2cfc-b9c9-452c-a168-ccd4240ada55
+        scriptType: pscore
+        scriptLocation: scriptPath
+        scriptPath: 'src\AIChatbot\scripts\PublishDocumentationIndex.ps1'
+      

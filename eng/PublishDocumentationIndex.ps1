@@ -2,32 +2,33 @@
 
 param(
     [string]
-    $markdownDir,
+    $markdownDir = "./arcade/Documentation",
     [string]
-    $pdfDir,
+    $pdfDir = "./arcade/src/AIChatbot/PDFs",
     [string]
-    $azureStorageBlobEndpoint,
+    $azureStorageBlobEndpoint = "https://stlwgeqj45b3lbe.blob.core.windows.net/content",
     [string]
-    $azureStorageContainer,
+    $azureStorageContainer = "content",
     [string]
-    $azureSearchServiceEndpoint,
+    $azureSearchServiceEndpoint = "https://gptkb-lwgeqj45b3lbe.search.windows.net/",
     [string]
-    $azureSearchIndex,
+    $azureSearchIndex = "gptkbindex",
     [string]
-    $azureFormRecognizerServiceEndpoint,
+    $azureFormRecognizerServiceEndpoint = "https://cog-fr-lwgeqj45b3lbe.cognitiveservices.azure.com/",
     [string]
-    $azureTenantId
+    $azureTenantId = "72f988bf-86f1-41af-91ab-2d7cd011db47"
+
+    # [Parameter(Mandatory=$true)]
+    # [string]
+    # $servicePrincipalId,
+
+    # [Parameter(Mandatory=$true)]
+    # [string]
+    # $servicePrincipalSecret
 )
 
-$markdownDir = "./Documentation"
-$pdfDir = "./src/AIChatbot/PDFs"
-$azureStorageBlobEndpoint = "https://stlwgeqj45b3lbe.blob.core.windows.net/content"
-$azureStorageContainer = "content"
-$azureSearchServiceEndpoint = "https://gptkb-lwgeqj45b3lbe.search.windows.net/"
-$azureSearchIndex = "gptkbindex"
-$azureFormRecognizerServiceEndpoint = "https://cog-fr-lwgeqj45b3lbe.cognitiveservices.azure.com/"
-$azureTenantId = "72f988bf-86f1-41af-91ab-2d7cd011db47"
-
+# git checkout https://github.com/dotnet/arcade.git
+git checkout https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-arcade
 
 if (!(Test-Path $pdfDir)) {
     New-Item -ItemType Directory -Path $pdfDir | Out-Null
@@ -55,3 +56,5 @@ dotnet run --project "src/AIChatbot/prepdocs/PrepareDocs/PrepareDocs.csproj" -- 
     --formrecognizerendpoint $azureFormRecognizerServiceEndpoint `
     --tenantid $azureTenantId `
     --verbose
+    # --servicePrincipalId "asdf" `
+    # --servicePrincipalSecret "asdf" `

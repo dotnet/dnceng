@@ -1,7 +1,7 @@
 ﻿s_rootCommand.SetHandler(
     async (context) =>
     {
-        var options = GetParsedAppOptions(context);
+        AppOptions options = GetParsedAppOptions(context);
         if (options.RemoveAll)
         {
             await RemoveBlobsAsync(options);
@@ -610,17 +610,32 @@ static int FindPage(IReadOnlyList<PageDetail> pageMap, int offset)
     return length - 1;
 }
 
-internal static partial class Program
+internal partial class Program
 {
     [GeneratedRegex("[^0-9a-zA-Z_-]")]
     private static partial Regex MatchInSetRegex();
 
-    internal static DefaultAzureCredential DefaultCredential { get; } = new DefaultAzureCredential(
+/*     internal static DefaultAzureCredential DefaultCredential { get; } = new DefaultAzureCredential(
         new DefaultAzureCredentialOptions() 
         { 
             // https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1/resourceGroups/rg-CSharpOpenAIDemo/providers/Microsoft.ManagedIdentity/userAssignedIdentities/dnceng-ai-chatbot-deployment/overview
             ManagedIdentityClientId = "de9b9aac-f9b7-4104-aec6-506e4ac83ce9";
         }
-    );
+    ); */
+
+    internal AzureCredential DefaultCredential { get; } => {
+        if (options.clientId is null && options.clientSecret is null)
+        {
+            return new DefaultAzureCredential();
+        }
+        else if (options.clientId is not null && options.clientSecret is not null)
+        {
+            return new ClientSecretCredential(options.tenantId, options.clientId, options.clientSecret);
+        }
+        else
+        {
+            throw new Exception("Either both client id and secret must be specified, or neither.");
+        }
+    } 
 
 }
