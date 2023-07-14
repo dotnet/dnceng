@@ -8,6 +8,8 @@ jobs:
   - job: build
     timeoutInMinutes: 360
     steps:
+    - checkout: self
+    - checkout: git://internal/dotnet-arcade
     - task: UseDotNet@2
       inputs:
         useGlobalJson: true

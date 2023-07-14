@@ -28,7 +28,7 @@ param(
 )
 
 # git checkout https://github.com/dotnet/arcade.git
-git clone "https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-arcade"
+# git clone "https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-arcade"
 
 if (!(Test-Path $pdfDir)) {
     New-Item -ItemType Directory -Path $pdfDir | Out-Null
