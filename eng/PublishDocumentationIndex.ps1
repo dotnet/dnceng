@@ -28,7 +28,7 @@ param(
 )
 
 # git checkout https://github.com/dotnet/arcade.git
-git checkout https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-arcade
+git clone "https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-arcade"
 
 if (!(Test-Path $pdfDir)) {
     New-Item -ItemType Directory -Path $pdfDir | Out-Null
@@ -47,7 +47,7 @@ Get-ChildItem $markdownDir -Recurse -Filter "*.md" | ForEach-Object {
     
 }
 
-dotnet run --project "src/AIChatbot/prepdocs/PrepareDocs/PrepareDocs.csproj" -- `
+dotnet run --project "src/prepdocs/PrepareDocs/PrepareDocs.csproj" -- `
     "$pdfDir/*.pdf" `
     --storageendpoint $azureStorageBlobEndpoint `
     --container $azureStorageContainer `
