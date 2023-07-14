@@ -9,9 +9,9 @@ jobs:
     timeoutInMinutes: 360
     steps:
     - task: UseDotNet@2
-          displayName: Install default .NET SDK
       inputs:
         useGlobalJson: true
+      displayName: Install default .NET SDK
     - task: PowerShell@2
       inputs:
         targetType: 'inline'
