@@ -1,6 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
-
-internal static partial class Program
+﻿internal static partial class Program
 {
     private static BlobContainerClient? s_corpusContainerClient;
     private static BlobContainerClient? s_containerClient;

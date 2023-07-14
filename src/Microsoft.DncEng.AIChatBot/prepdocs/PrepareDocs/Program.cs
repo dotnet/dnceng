@@ -1,6 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
-
-s_rootCommand.SetHandler(
+﻿s_rootCommand.SetHandler(
     async (context) =>
     {
         var options = GetParsedAppOptions(context);

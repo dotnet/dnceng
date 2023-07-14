@@ -1,6 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
-
-internal readonly record struct Section(
+﻿internal readonly record struct Section(
     string Id,
     string Content,
     string SourcePage,
