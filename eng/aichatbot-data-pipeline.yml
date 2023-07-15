@@ -9,7 +9,10 @@ jobs:
     timeoutInMinutes: 360
     steps:
     - checkout: self
+      path: $(Agent.BuildDirectory)
     - checkout: git://internal/dotnet-arcade
+      path: $(Agent.BuildDirectory)/arcade
+      name: dotnet-arcade
     - task: UseDotNet@2
       inputs:
         useGlobalJson: true
