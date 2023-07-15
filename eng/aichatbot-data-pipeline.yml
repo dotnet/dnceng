@@ -12,7 +12,6 @@ jobs:
       path: $(Agent.BuildDirectory)
     - checkout: git://internal/dotnet-arcade
       path: $(Agent.BuildDirectory)/arcade
-      name: dotnet-arcade
     - task: UseDotNet@2
       inputs:
         useGlobalJson: true
@@ -35,6 +34,7 @@ jobs:
           mpm --update --list 
           write-host $env:PATH
       displayName: 'Install MikTex and xetex using Chocolatey'
+    
 
     #- task: PowerShell@2
     #  inputs:
