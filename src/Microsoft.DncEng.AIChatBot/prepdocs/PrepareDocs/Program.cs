@@ -1,4 +1,6 @@
-﻿s_rootCommand.SetHandler(
+﻿using Azure.Identity;
+
+s_rootCommand.SetHandler(
     async (context) =>
     {
         AppOptions options = GetParsedAppOptions(context);
@@ -623,7 +625,7 @@ internal partial class Program
             }
         ); */
 
-    internal AzureCredential DefaultCredential
+    internal static AzureCredential DefaultCredential
     {
         get
         {
