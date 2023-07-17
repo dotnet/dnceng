@@ -51,5 +51,5 @@ jobs:
         azureSubscription: dd8c2cfc-b9c9-452c-a168-ccd4240ada55
         scriptType: pscore
         scriptLocation: scriptPath
-        scriptPath: 'dnceng\eng\PublishDocumentationIndex.ps1'
+        scriptPath: 'd:\a\1\dnceng\eng\PublishDocumentationIndex.ps1'
       
