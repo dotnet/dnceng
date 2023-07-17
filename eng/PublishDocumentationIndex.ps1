@@ -46,8 +46,8 @@ Get-ChildItem $markdownDir -Recurse -Filter "*.md" | ForEach-Object {
     
     
 }
-
-dotnet run --project "d:a/1/dnceng/src/Microsoft.DncEng.AIChatBot/prepdocs/PrepareDocs/PrepareDocs.csproj" -- `
+#src\Microsoft.DncEng.AIChatBot\prepdocs\PrepareDocs\PrepareDocs.csproj
+dotnet run --project "d:a\1\dnceng\src\Microsoft.DncEng.AIChatBot\prepdocs\PrepareDocs\PrepareDocs.csproj" -- `
     "$pdfDir/*.pdf" `
     --storageendpoint $azureStorageBlobEndpoint `
     --container $azureStorageContainer `
