@@ -36,6 +36,7 @@ jobs:
       displayName: 'Install MikTex and xetex using Chocolatey'
     - script: |
         pwd
+        ls
       displayName: Print working directory
     
     #- task: PowerShell@2
