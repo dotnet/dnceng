@@ -9,9 +9,9 @@ jobs:
     timeoutInMinutes: 360
     steps:
     - checkout: self
-      path: $(Pipeline.Workspace)/s/
+      path: dnceng
     - checkout: git://internal/dotnet-arcade
-      path: $(Pipeline.Workspace)/s/arcade
+      path: arcade
     - task: UseDotNet@2
       inputs:
         useGlobalJson: true
