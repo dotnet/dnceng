@@ -12,10 +12,10 @@ jobs:
       path: dnceng
     - checkout: git://internal/dotnet-arcade
       path: arcade
-    - task: UseDotNet@2
-      inputs:
-        useGlobalJson: true
-      displayName: Install default .NET SDK
+   # - task: UseDotNet@2
+   #   inputs:
+   #     useGlobalJson: true
+   #   displayName: Install default .NET SDK
     - task: PowerShell@2
       inputs:
         targetType: 'inline'
