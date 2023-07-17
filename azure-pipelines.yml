@@ -247,27 +247,27 @@ stages:
             displayName: Publish Secret Manager Scenario Tests
 
 - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-  # - template: eng\common\templates\post-build\post-build.yml
-  #   parameters:
-  #     enableSymbolValidation: false
-  #     enableSigningValidation: false
-  #     artifactsPublishingAdditionalParameters: '/p:CheckEolTargetFramework=false'
-  #     symbolPublishingAdditionalParameters: '/p:CheckEolTargetFramework=false'
-  #     # This is to enable SDL runs part of Post-Build Validation Stage
-  #     SDLValidationParameters:
-  #       enable: true
-  #       params: '-SourceToolsList @("policheck","credscan")
-  #       -TsaInstanceURL $(_TsaInstanceURL)
-  #       -TsaProjectName $(_TsaProjectName)
-  #       -TsaNotificationEmail $(_TsaNotificationEmail)
-  #       -TsaCodebaseAdmin $(_TsaCodebaseAdmin)
-  #       -TsaBugAreaPath $(_TsaBugAreaPath)
-  #       -TsaIterationPath $(_TsaIterationPath)
-  #       -TsaRepositoryName "Dnceng"
-  #       -TsaCodebaseName "Dnceng"
-  #       -TsaPublish $True
-  #       -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)/eng/PoliCheckExclusions.xml")'
-  - ${{ if in(variables['Build.SourceBranch'], 'refs/heads/main', 'refs/heads/production', 'refs/heads/dkurepa/MigrateTelemetryService')}}:
+  - template: eng\common\templates\post-build\post-build.yml
+    parameters:
+      enableSymbolValidation: false
+      enableSigningValidation: false
+      artifactsPublishingAdditionalParameters: '/p:CheckEolTargetFramework=false'
+      symbolPublishingAdditionalParameters: '/p:CheckEolTargetFramework=false'
+      # This is to enable SDL runs part of Post-Build Validation Stage
+      SDLValidationParameters:
+        enable: true
+        params: '-SourceToolsList @("policheck","credscan")
+        -TsaInstanceURL $(_TsaInstanceURL)
+        -TsaProjectName $(_TsaProjectName)
+        -TsaNotificationEmail $(_TsaNotificationEmail)
+        -TsaCodebaseAdmin $(_TsaCodebaseAdmin)
+        -TsaBugAreaPath $(_TsaBugAreaPath)
+        -TsaIterationPath $(_TsaIterationPath)
+        -TsaRepositoryName "Dnceng"
+        -TsaCodebaseName "Dnceng"
+        -TsaPublish $True
+        -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)/eng/PoliCheckExclusions.xml")'
+  - ${{ if in(variables['Build.SourceBranch'], 'refs/heads/main', 'refs/heads/production')}}:
     - template: eng\deploy.yaml
       parameters:
         ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/production') }}:
