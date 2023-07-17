@@ -54,7 +54,6 @@
             SkipBlobs: context.ParseResult.GetValueForOption(s_skipBlobs),
             StorageServiceBlobEndpoint: context.ParseResult.GetValueForOption(s_storageEndpoint),
             Container: context.ParseResult.GetValueForOption(s_container),
-            TenantId: context.ParseResult.GetValueForOption(s_tenantId),
             SearchServiceEndpoint: context.ParseResult.GetValueForOption(s_searchService),
             SearchIndexName: context.ParseResult.GetValueForOption(s_searchIndexName),
             Remove: context.ParseResult.GetValueForOption(s_remove),

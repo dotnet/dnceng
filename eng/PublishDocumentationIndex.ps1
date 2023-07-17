@@ -14,9 +14,7 @@ param(
     [string]
     $azureSearchIndex = "gptkbindex",
     [string]
-    $azureFormRecognizerServiceEndpoint = "https://cog-fr-lwgeqj45b3lbe.cognitiveservices.azure.com/",
-    [string]
-    $azureTenantId = "72f988bf-86f1-41af-91ab-2d7cd011db47"
+    $azureFormRecognizerServiceEndpoint = "https://cog-fr-lwgeqj45b3lbe.cognitiveservices.azure.com/"
 
     # [Parameter(Mandatory=$true)]
     # [string]
@@ -54,7 +52,6 @@ dotnet run --project "d:\a\1\dnceng\src\Microsoft.DncEng.AIChatBot\prepdocs\Prep
     --searchendpoint $azureSearchServiceEndpoint `
     --searchindex $azureSearchIndex `
     --formrecognizerendpoint $azureFormRecognizerServiceEndpoint `
-    --tenantid $azureTenantId `
     --verbose
     # --servicePrincipalId "asdf" `
     # --servicePrincipalSecret "asdf" `
