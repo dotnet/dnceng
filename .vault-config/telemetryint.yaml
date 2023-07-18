@@ -50,21 +50,21 @@ secrets:
       additionalParameters: Authority Id=72f988bf-86f1-41af-91ab-2d7cd011db47
 
   dn-bot-dnceng-build-r:
-  type: azure-devops-access-token
-  parameters:
-    domainAccountName: dn-bot
-    domainAccountSecret:
-      location: helixkv
-      name: dn-bot-account-redmond
-    organizations: dnceng
-    scopes: build
+    type: azure-devops-access-token
+    parameters:
+      domainAccountName: dn-bot
+      domainAccountSecret:
+        location: helixkv
+        name: dn-bot-account-redmond
+      organizations: dnceng
+      scopes: build
 
   dn-bot-dnceng-public-build-r:
-  type: azure-devops-access-token
-  parameters:
-    domainAccountName: dn-bot
-    domainAccountSecret:
-      location: helixkv
-      name: dn-bot-account-redmond
-    organizations: dnceng-public
-    scopes: build
+    type: azure-devops-access-token
+    parameters:
+      domainAccountName: dn-bot
+      domainAccountSecret:
+        location: helixkv
+        name: dn-bot-account-redmond
+      organizations: dnceng-public
+      scopes: build
