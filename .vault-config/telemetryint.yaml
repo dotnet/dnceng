@@ -11,6 +11,8 @@ references:
       subscription: a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1
       name: helixkv
 
+importSecretsFrom: shared/telemetry-secrets.yaml
+
 secrets:
   scripts-storage-account-key:
     type: azure-storage-key
@@ -48,23 +50,3 @@ secrets:
         name: nethelix-staging-kusto-ad-application
       dataSource: https://engdata.kusto.windows.net:443
       additionalParameters: Authority Id=72f988bf-86f1-41af-91ab-2d7cd011db47
-
-  dn-bot-dnceng-build-r:
-    type: azure-devops-access-token
-    parameters:
-      domainAccountName: dn-bot
-      domainAccountSecret:
-        location: helixkv
-        name: dn-bot-account-redmond
-      organizations: dnceng
-      scopes: build
-
-  dn-bot-dnceng-public-build-r:
-    type: azure-devops-access-token
-    parameters:
-      domainAccountName: dn-bot
-      domainAccountSecret:
-        location: helixkv
-        name: dn-bot-account-redmond
-      organizations: dnceng-public
-      scopes: build
