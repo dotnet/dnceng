@@ -164,16 +164,23 @@ static async ValueTask CreateSearchIndexAsync(AppOptions options)
 {
     var indexClient = await GetSearchIndexClientAsync(options);
 
+
     var indexNames = indexClient.GetIndexNamesAsync();
+
     await foreach (var page in indexNames.AsPages())
     {
         if (page.Values.Any(indexName => indexName == options.SearchIndexName))
         {
             if (options.Verbose)
             {
-                options.Console.WriteLine($"Search index '{options.SearchIndexName}' already exists");
+                 options.Console.WriteLine($"Search index '{options.SearchIndexName}' already exists, deleting the existing index");
+                 // delete index if it already exists
+                 await indexClient.DeleteIndexAsync(options.SearchIndexName);
+
+
             }
-            return;
+
+            //return;
         }
     }
 
@@ -211,7 +218,9 @@ static async ValueTask CreateSearchIndexAsync(AppOptions options)
     }
 
     await indexClient.CreateIndexAsync(index);
+
 }
+
 
 static async ValueTask UploadCorpusAsync(
        AppOptions options, string corpusName, string content)
@@ -615,5 +624,5 @@ internal partial class Program
     [GeneratedRegex("[^0-9a-zA-Z_-]")]
     private static partial Regex MatchInSetRegex();
 
-   internal static DefaultAzureCredential DefaultCredential { get; } = new DefaultAzureCredential();
+    internal static DefaultAzureCredential DefaultCredential { get; } = new DefaultAzureCredential();
 }
