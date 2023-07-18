@@ -1,5 +1,4 @@
 {
-  "HealthTableUri": "",
   "KeyVaultUri": "https://telemetryservicelocal.vault.azure.net/",
   "InitialDelay": "0:00:00",
   "Interval": "0:30:00",
