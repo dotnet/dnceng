@@ -75,6 +75,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared", "src\Microsoft.Dnc
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Microsoft.DncEng.AIChatBot", "Microsoft.DncEng.AIChatBot", "{14DBA190-08A1-4DFF-8761-5FF69D9FEB7C}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PrepareDocs", "src\Microsoft.DncEng.AIChatBot\prepdocs\PrepareDocs\PrepareDocs.csproj", "{9245327C-5661-457A-A60F-1234D8CC1A01}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -287,6 +289,14 @@ Global
 		{0AC85966-F339-42AE-ADC8-AC38938F48CA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0AC85966-F339-42AE-ADC8-AC38938F48CA}.Release|x64.ActiveCfg = Release|Any CPU
 		{0AC85966-F339-42AE-ADC8-AC38938F48CA}.Release|x64.Build.0 = Release|Any CPU
+		{9245327C-5661-457A-A60F-1234D8CC1A01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9245327C-5661-457A-A60F-1234D8CC1A01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9245327C-5661-457A-A60F-1234D8CC1A01}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9245327C-5661-457A-A60F-1234D8CC1A01}.Debug|x64.Build.0 = Debug|Any CPU
+		{9245327C-5661-457A-A60F-1234D8CC1A01}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9245327C-5661-457A-A60F-1234D8CC1A01}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9245327C-5661-457A-A60F-1234D8CC1A01}.Release|x64.ActiveCfg = Release|Any CPU
+		{9245327C-5661-457A-A60F-1234D8CC1A01}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -314,6 +324,7 @@ Global
 		{DA2F6742-9EC5-4C81-9332-66D7BEBBD66A} = {14DBA190-08A1-4DFF-8761-5FF69D9FEB7C}
 		{1E60A6BA-C40B-4472-8166-133013E68D0E} = {14DBA190-08A1-4DFF-8761-5FF69D9FEB7C}
 		{0AC85966-F339-42AE-ADC8-AC38938F48CA} = {14DBA190-08A1-4DFF-8761-5FF69D9FEB7C}
+		{9245327C-5661-457A-A60F-1234D8CC1A01} = {14DBA190-08A1-4DFF-8761-5FF69D9FEB7C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C72EF6D0-2510-41EB-87F3-7739C6C6D53B}
