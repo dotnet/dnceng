@@ -176,6 +176,7 @@ static async ValueTask CreateSearchIndexAsync(AppOptions options)
                  options.Console.WriteLine($"Search index '{options.SearchIndexName}' already exists, deleting the existing index");
                  // delete index if it already exists
                  await indexClient.DeleteIndexAsync(options.SearchIndexName);
+                 break;
 
 
             }
