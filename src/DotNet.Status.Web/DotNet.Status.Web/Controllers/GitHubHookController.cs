@@ -179,8 +179,114 @@ public class GitHubHookController : ControllerBase
         await ProcessNotifications(issueEvent);
         await ProcessRcaRulesAsync(issueEvent, action);
         await ProcessTimelineIssueTriageAsync(issueEvent, action);
+        await ProcessEpicIssue(issueEvent, action);
 
         return NoContent();
+    }
+
+    private async Task ProcessEpicIssue(IssuesHookData issueEvent, string action)
+    {
+        string org = issueEvent.Repository.Owner.Login;
+        string repo = issueEvent.Repository.Name;
+        IGitHubClient client = await _gitHubApplicationClientFactory.CreateGitHubClientAsync(org, repo);
+
+        switch (action)
+        {
+            case "edited":
+                // is there an epic label on the issue and was the title changed? If so, update the title of the milestone in the milestone list
+                if(issueEvent.Issue.Labels.Any(x => x.Name == "Epic") &&  !string.IsNullOrEmpty(issueEvent.Changes.Title.From))
+                {
+                    Milestone? foundMilestone = await GetMilestone(issueEvent.Changes.Title.From);
+
+                    MilestoneUpdate update = new MilestoneUpdate
+                    {
+                        Title = issueEvent.Issue.Title
+                    };
+
+                    await client.Issue.Milestone.Update(org, repo, foundMilestone.Number, update);
+                }
+                break;
+            case "labeled":
+                // was the epic label applied? check to see if the milestone name already exists. If it doesn't, create a milestone with the issue name
+                if(issueEvent.Label.Name.Equals("Epic"))
+                {
+                    string epicName = issueEvent.Issue.Title;
+                    string epicUrl = issueEvent.Issue.HtmlUrl;
+
+                    // check to see if it currently exists and is open.
+                    Milestone? foundMilestone = await GetMilestone(epicName);
+                    if (foundMilestone == null)
+                    {
+                        // create new milestone with epic title
+                        NewMilestone newMilestone = new NewMilestone(epicName)
+                        {
+                            // add link to epic issue in the milestone description
+                            Description = epicUrl,
+                            State = ItemState.Open
+                        };
+
+                        Milestone milestone = await client.Issue.Milestone.Create(org, repo, newMilestone);
+
+                        IssueUpdate issueUpdate = new IssueUpdate
+                        {
+                            Milestone = milestone.Number
+                        };
+
+                        await client.Issue.Update(org, repo, issueEvent.Issue.Number, issueUpdate);
+                    }
+                    // Cannot create new milestones with the same name of one that exists even if it's closed, so we'll 
+                    //   re-open the closed one and update the description
+                    else if(foundMilestone.State == "Closed")
+                    {
+                        // reopen the old one
+                        MilestoneUpdate update = new MilestoneUpdate
+                        {
+                            State = ItemState.Open,
+                            // add link to epic issue in the milestone description. 
+                            Description = $"{epicUrl}\r\n\r\nPrevious Description: {foundMilestone.Description}"
+                        };
+
+                        Milestone milestone = await client.Issue.Milestone.Update(org, repo, foundMilestone.Number, update);
+
+                        IssueUpdate issueUpdate = new IssueUpdate
+                        {
+                            Milestone = milestone.Number
+                        };
+
+                        await client.Issue.Update(org, repo, issueEvent.Issue.Number, issueUpdate);
+                    }
+                }
+                break;
+            case "unlabeled":
+                // are we trying to remove the epic label? check to see if there are any open issues (not the current issue) in the milestone.
+                if (issueEvent.Label.Name.Equals("Epic") && issueEvent.Issue.Milestone.OpenIssues > 1)
+                {
+                    await client.Issue.Labels.AddToIssue(org, repo, issueEvent.Issue.Number, new string[]{ "Epic" });
+                    _logger.LogInformation("Issue {0}/{1}#{2} is the epic of a milestone that currently contains open issues. Adding the Epic label back to this issue", org, repo, issueEvent.Issue.Number);
+                }
+                else if(issueEvent.Label.Name.Equals("Epic") && issueEvent.Issue.Milestone.OpenIssues == 1)
+                {
+                    // Remove issue from milestone
+                    await client.Issue.Milestone.
+                    // Close milestone
+                }
+                break;
+            case "closed":
+                // is there an epic label on the issue? Are there open issues in the associated milestone? if yes, reopen the issue. 
+                // close the milestone
+                break;
+        }
+
+        async Task<Milestone?> GetMilestone(string milestoneName, ItemStateFilter state = ItemStateFilter.All)
+        {
+            MilestoneRequest requestOptions = new MilestoneRequest
+            {
+                State = state
+            };
+            IEnumerable<Milestone> milestones = await client.Issue.Milestone.GetAllForRepository(org, repo, requestOptions);
+
+            return milestones.FirstOrDefault(x => x.Title.Equals(milestoneName));
+        }
     }
 
     private async Task ProcessNotifications(IssuesHookData issueEvent)
