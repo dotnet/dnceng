@@ -38,8 +38,8 @@ write-host "environments variables: $env:PATH"
 
 
 Get-ChildItem $markdownDir -Recurse -Filter "*.md" | ForEach-Object {
-    write-Host "Converting file: $($_.Name)"
     $pdfPath = Join-Path $pdfDir $_.Name.Replace(".md", ".pdf")
+    Write-Host "Converting file $($_.Name) to $pdfPath"
     pandoc $_.FullName -o $pdfPath --pdf-engine=xelatex
     
     
