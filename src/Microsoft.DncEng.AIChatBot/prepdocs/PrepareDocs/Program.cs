@@ -11,19 +11,12 @@
         {
             await CreateSearchIndexAsync(options);
 
-            string path = options.Files.Substring(0, options.Files.LastIndexOf('/'));
-            string glob = options.Files.Substring(options.Files.LastIndexOf('/') + 1);
+            var directory = new DirectoryInfo(options.Files);
 
-            Matcher matcher = new();
-            matcher.AddInclude(glob);
+            var files = directory.EnumerateFiles("*", SearchOption.AllDirectories)
+                        .Select(f => f.FullName)
+                        .ToArray();
 
-            var results = matcher.Execute(
-                new DirectoryInfoWrapper(
-                    new DirectoryInfo(path)));
-
-            var files = results.HasMatches
-                ? results.Files.Select(f => f.Path).ToArray()
-                : Array.Empty<string>();
 
             context.Console.WriteLine($"Processing {files.Length} files...");
 
@@ -176,10 +169,10 @@ static async ValueTask CreateSearchIndexAsync(AppOptions options)
         {
             if (options.Verbose)
             {
-                 options.Console.WriteLine($"Search index '{options.SearchIndexName}' already exists, deleting the existing index");
-                 // delete index if it already exists
-                 await indexClient.DeleteIndexAsync(options.SearchIndexName);
-                 break;
+                options.Console.WriteLine($"Search index '{options.SearchIndexName}' already exists, deleting the existing index");
+                // delete index if it already exists
+                await indexClient.DeleteIndexAsync(options.SearchIndexName);
+                break;
 
 
             }
