@@ -4,7 +4,7 @@ param(
     [string]
     $markdownDir = "d:\a\1\arcade\Documentation",
     [string]
-    $pdfDir = "d:\a\1\dnceng\src\Microsoft.DncEng.AIChatBot",
+    $pdfDir = "d:/a/1/dnceng/src/Microsoft.DncEng.AIChatBot",
     [string]
     $azureStorageBlobEndpoint = "https://stlwgeqj45b3lbe.blob.core.windows.net/content",
     [string]
