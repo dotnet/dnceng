@@ -11,12 +11,15 @@
         {
             await CreateSearchIndexAsync(options);
 
+            string path = options.Files.Substring(0, options.Files.LastIndexOf('/'));
+            string glob = options.Files.Substring(options.Files.LastIndexOf('/') + 1);
+
             Matcher matcher = new();
-            matcher.AddInclude(options.Files);
+            matcher.AddInclude(glob);
 
             var results = matcher.Execute(
                 new DirectoryInfoWrapper(
-                    new DirectoryInfo(Directory.GetCurrentDirectory())));
+                    new DirectoryInfo(path)));
 
             var files = results.HasMatches
                 ? results.Files.Select(f => f.Path).ToArray()
