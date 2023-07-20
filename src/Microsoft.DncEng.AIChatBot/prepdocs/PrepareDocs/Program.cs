@@ -101,6 +101,29 @@ static T Retry<T>(Func<T> f)
         Thread.Sleep(TimeSpan.FromSeconds(30));
     }
 }
+static async ValueTask <T> RetryAsync<T>(Func<ValueTask<T>> f)
+{
+    int attempt = 3;
+
+    while (true)
+    {
+        try
+        {
+            return await f();
+        }
+        catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.TooManyRequests)
+        {
+            if (attempt-- <= 0)
+            {
+                Console.WriteLine("TooManyRequests error, will not retry");
+                throw;
+            }
+        }
+
+        Console.WriteLine("TooManyRequests error, will retry");
+        await Task.Delay(TimeSpan.FromSeconds(30));
+    }
+}
 
 static async ValueTask RemoveBlobsAsync(
     AppOptions options, string? fileName = null)
@@ -366,7 +389,10 @@ static async ValueTask<IReadOnlyList<PageDetail>> GetDocumentTextAsync(
     var offset = 0;
     List<PageDetail> pageMap = new();
 
-    var results = await operation.WaitForCompletionAsync();
+
+    Response<AnalyzeResult> results = await RetryAsync(() => operation.WaitForCompletionAsync());
+
+    //var results = await operation.WaitForCompletionAsync();
     var pages = results.Value.Pages;
     for (var i = 0; i < pages.Count; i++)
     {
