@@ -13,7 +13,7 @@
 
             var directory = new DirectoryInfo(options.Files);
 
-            var files = directory.EnumerateFiles("*", SearchOption.AllDirectories)
+            var files = directory.EnumerateFiles("*.pdf", SearchOption.AllDirectories)
                         .Select(f => f.FullName)
                         .ToArray();
 
