@@ -48,6 +48,9 @@
                     return;
                 }
 
+
+
+
                 await UploadBlobsAsync(options, fileName);
                 var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
                 var pageMap = await GetDocumentTextAsync(options, fileName);
@@ -65,11 +68,39 @@
 
                 var sections = CreateSections(options, pageMap, fileName);
                 await IndexSectionsAsync(options, sections, fileName);
+
             }
+
         }
     });
 
 return await s_rootCommand.InvokeAsync(args);
+
+
+
+static T Retry<T>(Func<T> f)
+{
+    int attempt = 3;
+
+    while (true)
+    {
+        try
+        {
+            return f();
+        }
+        catch (RequestFailedException ex) when (ex.Status == (int)HttpStatusCode.TooManyRequests)
+        {
+            if (attempt-- <= 0)
+            {
+                Console.WriteLine("TooManyRequests error, will not retry");
+                throw;
+            }
+        }
+
+        Console.WriteLine("TooManyRequests error, will retry");
+        Thread.Sleep(TimeSpan.FromSeconds(30));
+    }
+}
 
 static async ValueTask RemoveBlobsAsync(
     AppOptions options, string? fileName = null)
@@ -325,8 +356,12 @@ static async ValueTask<IReadOnlyList<PageDetail>> GetDocumentTextAsync(
     await using FileStream stream = File.OpenRead(filename);
 
     var client = await GetFormRecognizerClientAsync(options);
-    AnalyzeDocumentOperation operation = client.AnalyzeDocument(
-        WaitUntil.Started, "prebuilt-layout", stream);
+    // AnalyzeDocumentOperation operation = client.AnalyzeDocument(
+    //     WaitUntil.Started, "prebuilt-layout", stream);
+
+    AnalyzeDocumentOperation operation = Retry(
+        () => client.AnalyzeDocument(WaitUntil.Started, "prebuilt-layout", stream)
+    );
 
     var offset = 0;
     List<PageDetail> pageMap = new();
@@ -501,6 +536,8 @@ static async ValueTask IndexSectionsAsync(
     IEnumerable<Section> sections,
     string fileName)
 {
+
+
     if (options.Verbose)
     {
         options.Console.WriteLine($"""
