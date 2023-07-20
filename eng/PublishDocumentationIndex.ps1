@@ -6,7 +6,7 @@ param(
     [string]
     $pdfDir = "/a/1/dnceng/src/Microsoft.DncEng.AIChatBot",
     [string]
-    $azureStorageBlobEndpoint = "https://stlwgeqj45b3lbe.blob.core.windows.net/content",
+    $azureStorageBlobEndpoint = "https://stlwgeqj45b3lbe.blob.core.windows.net/",
     [string]
     $azureStorageContainer = "content",
     [string]
