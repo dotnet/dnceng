@@ -77,7 +77,7 @@
 return await s_rootCommand.InvokeAsync(args);
 
 
-/*
+
 static T Retry<T>(Func<T> f)
 {
     int attempt = 3;
@@ -101,7 +101,7 @@ static T Retry<T>(Func<T> f)
         Thread.Sleep(TimeSpan.FromSeconds(30));
     }
 }
-*/
+
 static async ValueTask <T> RetryAsync<T>(Func<ValueTask<T>> f)
 {
     int attempt = 3;
@@ -378,15 +378,16 @@ static async ValueTask<IReadOnlyList<PageDetail>> GetDocumentTextAsync(
     }
 
     await using FileStream stream = File.OpenRead(filename);
+    using BufferedStream bufferedStream = new(stream);
 
     var client = await GetFormRecognizerClientAsync(options);
-     AnalyzeDocumentOperation operation = client.AnalyzeDocument(
-         WaitUntil.Started, "prebuilt-layout", stream);
-    /*
+    // AnalyzeDocumentOperation operation = client.AnalyzeDocument(
+    //      WaitUntil.Started, "prebuilt-layout", stream);
+    
     AnalyzeDocumentOperation operation = Retry(
-        () => client.AnalyzeDocument(WaitUntil.Started, "prebuilt-layout", stream)
+        () => client.AnalyzeDocument(WaitUntil.Started, "prebuilt-layout", bufferedStream)
     );
-    */
+    
 
     var offset = 0;
     List<PageDetail> pageMap = new();
