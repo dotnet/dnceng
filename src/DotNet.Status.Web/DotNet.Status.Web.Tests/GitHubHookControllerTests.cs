@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -870,6 +871,86 @@ public class GitHubHookControllerTests
         await SendWebHook(data, eventName, false);
     }
 
+    [Test]
+    public async Task AddEpicLabelToIssue()
+    {
+        var data = new JObject
+        {
+            ["action"] = "labeled",
+            ["repository"] = new JObject
+            {
+                ["owner"] = new JObject
+                {
+                    ["login"] = "test-user",
+                },
+                ["name"] = "test",
+            },
+            ["issue"] = new JObject
+            {
+                ["number"] = 2,
+                ["body"] = "Something pizza",
+                ["user"] = new JObject
+                {
+                    ["login"] = "thatguy",
+                },
+                ["html_url"] = "https://FAKE-GITHUB-URL/test-user/test"
+            },
+            ["label"] = new JObject
+            {
+                ["name"] = "Epic"
+            }
+        };
+        var eventName = "issues";
+        await SendWebHook(data, eventName, false);
+    }
+
+    [Test]
+    public async Task AddNonEpicLabelToIssue()
+    {
+    }
+
+    [Test]
+    public async Task EditEpicIssueTitle()
+    {
+
+    }
+
+    [Test]
+    public async Task AttemptToCloseEpicWithOpenIssuesInMilestone()
+    {
+
+    }
+
+    [Test]
+    public async Task AttemptToCloseEpicWithNoOpenIssuesInMilestone()
+    {
+
+    }
+
+    [Test]
+    public async Task AttemptToRemoveEpicLabelFromIssueWithOpenIssuesInMilestone()
+    {
+
+    }
+
+    [Test]
+    public async Task AttemptToRemoveEpicLabelFromIssueWithNoOpenIssuesInMilestone()
+    {
+
+    }
+
+    [Test]
+    public async Task ReopenClosedEpicIssue()
+    {
+
+    }
+
+    [Test]
+    public async Task NotAllowableRepoAddsEpicLabelToIssue()
+    {
+
+    }
+
     private async Task SendWebHook(JObject data, string eventName, bool expectNotification)
     {
         using TestData testData = SetupTestData(expectNotification);
@@ -929,6 +1010,10 @@ public class GitHubHookControllerTests
                 o.Filters.AddService<TestVerifySignatureFilter>();
             });
             services.AddSingleton(ExponentialRetry.Default);
+            services.Configure<MilestoneManagementOptions>(o =>
+            {
+                o.AllowableRepos = new List<string> { "test-user/test" };
+            });
         });
         factory.ConfigureBuilder(app =>
         {

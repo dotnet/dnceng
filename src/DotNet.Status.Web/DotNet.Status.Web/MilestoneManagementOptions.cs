@@ -5,6 +5,6 @@ namespace DotNet.Status.Web
 {
     public class MilestoneManagementOptions
     {
-        public List<string> AllowableRepos { get; init; }
+        public List<string> AllowableRepos { get; set; }
     }
 }

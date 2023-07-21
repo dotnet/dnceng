@@ -22,6 +22,7 @@ using Microsoft.Extensions.Options;
 using Octokit;
 using Octokit.Internal;
 
+#nullable enable
 namespace DotNet.Status.Web.Controllers;
 
 public class GitHubHookController : ControllerBase
@@ -215,7 +216,7 @@ public class GitHubHookController : ControllerBase
                 case "labeled":
                 case "reopened":
                     // was the epic label applied? check to see if the milestone name already exists. If it doesn't, create a milestone with the issue name
-                    if ((action == "labeled" && issueEvent.Label.Name.Equals("Epic")) || action == "reopened")
+                    if ((action == "labeled" && issueEvent.Label.Name.Equals("Epic", StringComparison.OrdinalIgnoreCase)) || action == "reopened")
                     {
                         string epicName = issueEvent.Issue.Title;
                         string epicUrl = issueEvent.Issue.HtmlUrl;
@@ -267,7 +268,7 @@ public class GitHubHookController : ControllerBase
                     break;
                 case "unlabeled":
                     // are we trying to remove the epic label? check to see if there are any open issues (not the current issue) in the milestone.
-                    if (issueEvent.Label.Name.Equals("Epic") && issueEvent.Issue.Milestone?.OpenIssues > 1)
+                    if (issueEvent.Label.Name.Equals("Epic", StringComparison.OrdinalIgnoreCase) && issueEvent.Issue.Milestone?.OpenIssues > 1)
                     {
                         await client.Issue.Labels.AddToIssue(org, repo, issueEvent.Issue.Number, new string[] { "Epic" });
                         _logger.LogInformation("Issue {0}/{1}#{2} is the epic of a milestone that currently contains open issues. Adding the Epic label back to this issue", org, repo, issueEvent.Issue.Number);
@@ -296,7 +297,7 @@ public class GitHubHookController : ControllerBase
                     break;
                 case "closed":
                     // is there an epic label on the issue?
-                    if (issueEvent.Issue.Labels.Any(x => x.Name == "Epic"))
+                    if (issueEvent.Issue.Labels.Any(x => x.Name.Equals("Epic", StringComparison.OrdinalIgnoreCase)))
                     {
                         // Are there open issues in the associated milestone? if yes, reopen the issue. 
                         if (issueEvent.Issue.Milestone?.OpenIssues > 0)
