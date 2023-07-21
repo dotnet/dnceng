@@ -30,6 +30,9 @@
     "Organization": "dnceng",
     "Project": "internal"
   },
+  "MilestoneManagement": {
+    "AllowableRepos": [ "dotnet/dnceng" ]
+  },
   "BuildMonitor": {
     "Monitor": {
       "Organization": "dnceng",
