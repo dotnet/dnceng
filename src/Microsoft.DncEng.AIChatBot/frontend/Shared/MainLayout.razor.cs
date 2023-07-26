@@ -3,7 +3,7 @@
 public sealed partial class MainLayout
 {
     private readonly MudTheme _theme = new();
-    private bool _drawerOpen = true;
+    private bool _drawerOpen = false;
     private bool _settingsOpen = false;
     private SettingsPanel? _settingsPanel;
 
@@ -26,19 +26,7 @@ public sealed partial class MainLayout
     [Inject] public required ILocalStorageService LocalStorage { get; set; }
     [Inject] public required IDialogService Dialog { get; set; }
 
-    private bool SettingsDisabled => new Uri(Nav.Uri).Segments.LastOrDefault() switch
-    {
-        "ask" or "chat" => false,
-        _ => true
-    };
 
-    private bool SortDisabled => new Uri(Nav.Uri).Segments.LastOrDefault() switch
-    {
-        "voicechat" or "chat" => false,
-        _ => true
-    };
-
-    private void OnMenuClicked() => _drawerOpen = !_drawerOpen;
     private void OnThemeChanged() => _isDarkTheme = !_isDarkTheme;
     private void OnIsReversedChanged() => _isReversed = !_isReversed;
 }
