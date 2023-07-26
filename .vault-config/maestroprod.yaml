@@ -2,7 +2,7 @@ storageLocation:
   type: azure-key-vault
   parameters:
     subscription: 68672ab8-de0c-40f1-8d1b-ffb20bd62c0f
-    name: TelemetryServiceProd
+    name: maestroprod
 
 references:
   helixkv:
@@ -11,9 +11,20 @@ references:
       subscription: a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1
       name: helixkv
 
-importSecretsFrom: shared/telemetry-secrets.yaml
+keys:
+  data-protection-encryption-key:
+    type: RSA
+    size: 2048
+
+importSecretsFrom: shared/maestro-secrets.yaml
 
 secrets:
+  maestro-storage-account:
+    type: azure-storage-connection-string
+    parameters:
+      subscription: 68672ab8-de0c-40f1-8d1b-ffb20bd62c0f
+      account: maestroprod1337
+
   nethelix-engsrv-kusto-connection-string-ingest:
     type: kusto-connection-string
     parameters:
