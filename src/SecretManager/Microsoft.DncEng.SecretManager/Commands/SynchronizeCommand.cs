@@ -1,9 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ConsoleTables;
 using Microsoft.DncEng.CommandLineLib;
 using Microsoft.DncEng.SecretManager.StorageTypes;
 using Mono.Options;
@@ -52,7 +53,7 @@ public class SynchronizeCommand : Command
     {
         try
         {
-            _console.WriteLine($"Synchronizing secrets contained in {_manifestFile}");
+            _console.WriteLine($"🔁 Synchronizing secrets contained in {_manifestFile}");
             if (_force || _forcedSecrets.Any())
             {
                 bool confirmed = await _console.ConfirmAsync(
@@ -62,6 +63,13 @@ public class SynchronizeCommand : Command
                     return;
                 }
             }
+
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
+            var problems = new List<(string SecretName, string Problem)>();
+            var table = new ConsoleTable(new ConsoleTableOptions()
+            {
+                Columns = new[] { "Secret", "Type", string.Empty, "Status" },
+            });
 
             DateTimeOffset now = _clock.UtcNow;
             SecretManifest manifest = SecretManifest.Read(_manifestFile);
@@ -84,12 +92,15 @@ public class SynchronizeCommand : Command
 
             foreach (var (name, secret, secretType, secretReferences) in orderedSecretTypes)
             {
-                _console.WriteLine($"Synchronizing secret {name}, type {secret.Type}");
+                 _console.WriteLine($"Synchronizing secret {name}, type {secret.Type}");
+                var summaryStatus = (Status: string.Empty, Icon: string.Empty);
 
                 if (existingSecrets.TryGetValue(name, out var existingSecret)
                     && !existingSecret.Tags.ContainsKey(AzureKeyVault.NextRotationOnTag))
                 {
-                    _console.LogError($"Key Vault Secret '{name}' is listed in the secret manifest, but is missing {AzureKeyVault.NextRotationOnTag} tag. Please force a rotation or manually set this value.");
+                    var problem = $"Listed in the secret manifest but missing {AzureKeyVault.NextRotationOnTag} tag. Please force a rotation or manually set this value.";
+                     _console.LogError($"{name}\t- {problem}");
+                    problems.Add((name, problem));
                 }
 
                 List<string> names = secretType.GetCompositeSecretSuffixes().Select(suffix => name + suffix).ToList();
@@ -106,10 +117,12 @@ public class SynchronizeCommand : Command
                 {
                     _console.WriteLine("--force is set, will rotate.");
                     regenerate = true;
+                    summaryStatus = ("Forced-rotated", "🔁");
                 }
                 else if (_forcedSecrets.Contains(name))
                 {
                     _console.WriteLine($"--force-secret={name} is set, will rotate.");
+                    summaryStatus = ("Forced-rotated", "🔁");
                     regenerate = true;
                 }
                 else if (existing.Any(e => e == null))
@@ -117,11 +130,13 @@ public class SynchronizeCommand : Command
                     _console.WriteLine("Secret not found in storage, will create.");
                     // secret is missing from storage (either completely missing or partially missing)
                     regenerate = true;
+                    summaryStatus = ("New secret", "⭐");
                 }
                 else if (regeneratedSecrets.Overlaps(secretReferences))
                 {
                     _console.WriteLine("Referenced secret was rotated, will rotate.");
                     regenerate = true;
+                    summaryStatus = ("Rotated through reference", "🔁");
                 }
                 else
                 {
@@ -137,12 +152,16 @@ public class SynchronizeCommand : Command
                             }
                             else
                             {
-                                _console.Write($"For secret {name}, could not parse the {AzureKeyVault.NextRotationOnTag} tag with value {nextRotationOn}");
+                                var message = $"Could not parse the {AzureKeyVault.NextRotationOnTag} tag with value {nextRotationOn}";
+                                _console.Write($"Secret {name} - {message}");
+                                problems.Add((name, message));
                             }
                         }
                         else
                         {
-                            _console.Write($"Secret {e.Name} does not have the {AzureKeyVault.NextRotationOnTag} tag, using the end of time as value");
+                            var message = $"Missing {AzureKeyVault.NextRotationOnTag} tag, using the end of time as value";
+                            _console.Write($"Secret {e.Name} - {message}");
+                            problems.Add((name, message));
                         }
                         return ret;
                     }).Min();
@@ -164,24 +183,30 @@ public class SynchronizeCommand : Command
                             _console.WriteLine("Secret is within verification grace period.");
                             regenerate = false;
                         }
+                        else
+                        {
+                            summaryStatus = ("Rotated", "🔁");
+                        }
                     }
                     if (expires <= now)
                     {
                         _console.WriteLine($"Secret expired on {expires}, will rotate.");
                         // the secret has expired, this shouldn't happen in normal operation but we should rotate
                         regenerate = true;
+                        summaryStatus = ("Rotated", "🔁");
                     }
                 }
 
                 if (!regenerate)
                 {
                     _console.WriteLine("Secret is fine.");
+                    summaryStatus = ("OK", "✅");
                 }
-
 
                 if (regenerate && _verifyOnly)
                 {
                     _console.LogError($"Secret {name} requires rotation.");
+                    summaryStatus = ("Requires rotation", "❌");
                 }
                 else if (regenerate)
                 {
@@ -194,13 +219,25 @@ public class SynchronizeCommand : Command
                     regeneratedSecrets.Add(name);
                     _console.WriteLine("Done.");
                     _console.WriteLine($"Storing new value(s) in storage for secret {name}...");
+
                     foreach (var (n, value) in names.Zip(newValues))
                     {
                         await storage.SetSecretValueAsync(n, new SecretValue(value.Value, newTags, value.NextRotationOn, value.ExpiresOn));
                     }
 
+                    if (newTags.TryGetValue(AzureKeyVault.NextRotationOnTag, out string nextRotationOn))
+                    {
+                        summaryStatus = ($"Rotated - next on {nextRotationOn}", "🔁");
+                    }
+                    else
+                    {
+                        summaryStatus = ("Rotated", "🔁");
+                    }
+
                     _console.WriteLine("Done.");
                 }
+
+                table.AddRow(name, secret.Type, summaryStatus.Icon, summaryStatus.Status);
             }
 
             if (!_verifyOnly)
@@ -213,6 +250,24 @@ public class SynchronizeCommand : Command
                 foreach (var (name, value) in existingSecrets)
                 {
                     _console.LogWarning($"Extra secret '{name}' consider deleting it.");
+                    table.AddRow(name, string.Empty, "⚠️", "Extra secret");
+                }
+            }
+
+            _console.WriteLine(Environment.NewLine + Environment.NewLine + "🔎 Summary:" + Environment.NewLine);
+            _console.WriteLine(table.ToMinimalString());
+
+            if (problems.Any())
+            {
+                _console.WriteLine("🔥 Detected additional problems:");
+
+                foreach (var group in problems.ToLookup(k => k.SecretName, v => v.Problem))
+                {
+                    _console.WriteLine($"{group.Key}:");
+                    foreach (var problem in group)
+                    {
+                        _console.WriteLine($"    - {problem}");
+                    }
                 }
             }
         }
