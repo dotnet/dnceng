@@ -29,11 +29,11 @@ jobs:
     #  displayName: 'Install requirements.txt for AzureAIChatbot'
 
     - task: AzureCLI@2
-      displayName: 'Run PublishDocumentationIndex.ps1 script to prepare and push docs'
+      displayName: 'Run prepdocs'
       inputs:
         azureSubscription: dd8c2cfc-b9c9-452c-a168-ccd4240ada55
         scriptType: pscore
-        scriptLocation: scriptPath
-        scriptPath: 'd:\a\1\dnceng\src\Microsoft.DncEng.AzureAIChatbot\'
-        inlineScript: python data_preparation.py --config config.json --njobs=4
-      
+        scriptLocation: inlineScript
+        inlineScript: |
+          cd d:\a\1\dnceng\src\Microsoft.DncEng.AzureAIChatbot\
+          python data_preparation.py --config config.json --njobs=4
