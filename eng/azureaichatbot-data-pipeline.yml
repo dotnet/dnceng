@@ -35,5 +35,5 @@ jobs:
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: |
-          cd d:\a\1\dnceng\src\Microsoft.DncEng.AzureAIChatbot\
+          cd $(Agent.BuildDirectory)/dnceng/src/Microsoft.DncEng.AzureAIChatbot
           python data_preparation.py --config config.json --njobs=4
