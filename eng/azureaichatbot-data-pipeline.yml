@@ -15,29 +15,25 @@ jobs:
 
     - task: UsePythonVersion@0
       inputs:
-        versionSpec: latest
+        versionSpec: '3.11.4'
         addToPath: true
       displayName: 'Install Python'
 
     - script: pip install pipreqs --user
       displayName: 'Install pipreqs'
 
-    - script: pipreqs src/Microsoft.DncEng.AzureAIChatbot
+    - script: pipreqs d:\a\1\dnceng\src\Microsoft.DncEng.AzureAIChatbot\
       displayName: 'Run pipreqs to generate requirements.txt for AzureAIChatbot'
 
     - script: pip install -r requirements.txt
       displayName: 'Install requirements.txt for AzureAIChatbot'
 
-    - script: python data_preparation.py --config config.json --njobs=4    
-      displayName: 'Run data_preparation.py script to prepare data'
-
-
-#Edit/take inspiration:
     - task: AzureCLI@2
       displayName: 'Run PublishDocumentationIndex.ps1 script to prepare and push docs'
       inputs:
         azureSubscription: dd8c2cfc-b9c9-452c-a168-ccd4240ada55
         scriptType: pscore
         scriptLocation: scriptPath
-        scriptPath: 'd:\a\1\dnceng\eng\PublishDocumentationIndex.ps1'
+        scriptPath: 'd:\a\1\dnceng\src\Microsoft.DncEng.AzureAIChatbot\'
+        inlineScript: python data_preparation.py --config config.json --njobs=4
       
