@@ -25,10 +25,7 @@ jobs:
     - script: pipreqs d:\a\1\dnceng\src\Microsoft.DncEng.AzureAIChatbot\
       displayName: 'Run pipreqs to generate requirements.txt for AzureAIChatbot'
 
-    - script: dir
-      displayName: 'List files in current directory'
-      
-    - script: pip install -r requirements.txt
+    - script: pip install -r d:\a\1\dnceng\src\Microsoft.DncEng.AzureAIChatbot\requirements.txt
       displayName: 'Install requirements.txt for AzureAIChatbot'
 
     - task: AzureCLI@2
