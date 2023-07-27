@@ -37,4 +37,5 @@ jobs:
         inlineScript: |
           cd $(Agent.BuildDirectory)/dnceng/src/Microsoft.DncEng.AzureAIChatbot/prepdocs
           pip install -r requirements.txt
+          pip install requests
           python data_preparation.py --config config.json --njobs=4
