@@ -36,4 +36,4 @@ jobs:
         scriptLocation: inlineScript
         inlineScript: |
           cd $(Agent.BuildDirectory)/dnceng/src/Microsoft.DncEng.AzureAIChatbot
-          python data_preparation.py --config config.json --njobs=4
+          dir
