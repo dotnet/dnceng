@@ -19,14 +19,14 @@ jobs:
         addToPath: true
       displayName: 'Install Python'
 
-    - script: pip install pipreqs --user
-      displayName: 'Install pipreqs'
+    #- script: pip install pipreqs --user
+     # displayName: 'Install pipreqs'
 
-    - script: pipreqs d:\a\1\dnceng\src\Microsoft.DncEng.AzureAIChatbot\
-      displayName: 'Run pipreqs to generate requirements.txt for AzureAIChatbot'
+   # - script: pipreqs d:\a\1\dnceng\src\Microsoft.DncEng.AzureAIChatbot\
+    #  displayName: 'Run pipreqs to generate requirements.txt for AzureAIChatbot'
 
-    - script: pip install -r d:\a\1\dnceng\src\Microsoft.DncEng.AzureAIChatbot\requirements.txt
-      displayName: 'Install requirements.txt for AzureAIChatbot'
+    #- script: pip install -r d:\a\1\dnceng\src\Microsoft.DncEng.AzureAIChatbot\requirements.txt
+    #  displayName: 'Install requirements.txt for AzureAIChatbot'
 
     - task: AzureCLI@2
       displayName: 'Run PublishDocumentationIndex.ps1 script to prepare and push docs'
