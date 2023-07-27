@@ -41,4 +41,10 @@ jobs:
           pip install azure-identity
           pip install tqdm
           pip install data-utils
+          pip install Markdown
+          pip install tiktoken
+          pip install azure-core
+          pip install azure-ai-formrecognizer
+          pip install bs4
+          pip install langchain
           python data_preparation.py --config config.json --njobs=4
