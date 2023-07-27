@@ -3,7 +3,7 @@
     {
         "chunk_size": 1024,
         "data_path": "d:/a/1/arcade/Documentation",
-        "index_name": "gptindextest",
+        "index_name": "gptindex",
         "language": "en",
         "location": "eastus2",
         "resource_group": "DNCEng-Azure-Chatbot",
