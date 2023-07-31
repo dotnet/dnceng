@@ -1,5 +1,8 @@
 {
   "KeyVaultUri": "https://telemetryservicelocal.vault.azure.net/",
+  "Secrets": {
+    "ManagedIdentityId": "e9d81917-4c98-44cc-8a6e-601311ac3c07"
+  },
   "InitialDelay": "0:00:00",
   "Interval": "0:30:00",
   "BuildBatchSize": 1000,
