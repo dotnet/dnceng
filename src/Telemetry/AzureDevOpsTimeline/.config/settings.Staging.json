@@ -1,3 +1,6 @@
 {
-    "KeyVaultUri": "https://maestroint.vault.azure.net/"
+    "KeyVaultUri": "https://telemetryservicestaging.vault.azure.net/",
+    "Secrets": {
+        "ManagedIdentityId": "e9d81917-4c98-44cc-8a6e-601311ac3c07"
+    }
 }
