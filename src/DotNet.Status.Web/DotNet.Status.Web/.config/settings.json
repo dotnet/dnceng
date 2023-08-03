@@ -117,6 +117,18 @@
           "Branches": [ "main", "release/*", "internal/release/*" ],
           "IssuesId": "dotnet-dotnet-synchronization",
           "Assignee": "premun"
+        },
+        {
+          "Project": "internal",
+          "DefinitionPath": "\\dotnet\\dncneg\\dotnet-dnceng-ci",
+          "Branches": [ "main" ],
+          "IssuesId": "dotnet-dnceng-build-failed"
+        },
+        {
+          "Project": "internal",
+          "DefinitionPath": "\\dotnet\\dncneg\\dotnet-dnceng-weekly",
+          "Branches": [ "main" ],
+          "IssuesId": "dotnet-dnceng-frops"
         }
       ]
     },

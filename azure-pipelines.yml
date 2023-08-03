@@ -292,9 +292,7 @@ stages:
           DotNetStatusEndpoint: .NET Engineering Deployment Notification - Staging
           PublishProfile: Int
           RolloutScorerAppName: rollout-scorer-int
-          ServiceFabricConnection: Maestro-Int
           Subscription: NetHelixStaging
-          VariableGroup: MaestroInt KeyVault
           StatusVariableGroup: DotNetStatus Staging
           GrafanaHost: https://dotnet-eng-grafana-staging.westus2.cloudapp.azure.com
           GrafanaKeyVault: dotnet-grafana-staging
@@ -305,9 +303,7 @@ stages:
           DotNetStatusEndpoint: .NET Engineering Deployment Notification - Production
           PublishProfile: Prod
           RolloutScorerAppName: rollout-scorer-prod
-          ServiceFabricConnection: Maestro-Prod
           Subscription: NetHelix
-          VariableGroup: MaestroProd KeyVault
           StatusVariableGroup: DotNetStatus Production
           GrafanaHost: https://dotnet-eng-grafana.westus2.cloudapp.azure.com
           GrafanaKeyVault: dotnet-grafana
