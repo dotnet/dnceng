@@ -1,16 +1,12 @@
 parameters:
   Subscription: ''
-  ServiceFabricConnection: ''
   PublishProfile: ''
   DotNetStatusAppName: ''
   DeploymentEnvironment: ''
-  VariableGroup: ''
   DotNetStatusEndpoint: ''
   StatusVariableGroup: ''
 
   # --- Secret Variable group requirements ---
-  # build-asset-registry-admin-connection-string
-  # dn-bot-dnceng-build-rw-code-rw-release-rw
   # dotnet-build-bot-dotnet-eng-status-token
   # secret-manager-scenario-tests-client-secret
 
@@ -78,7 +74,6 @@ stages:
   - predeploy
   - approval
   variables:
-  - group: ${{ parameters.VariableGroup }}
   - name: PublishProfile
     value: ${{ parameters.PublishProfile }}
   jobs:
@@ -190,7 +185,6 @@ stages:
   - deploy
   variables:
   - group: ${{ parameters.StatusVariableGroup }}
-  - group: ${{ parameters.VariableGroup }}
   - group: ${{ parameters.GrafanaVariableGroup }}
   - name: DeploymentEnvironment
     value: ${{ parameters.DeploymentEnvironment }}
@@ -230,7 +224,6 @@ stages:
   dependsOn:
   - deploy
   variables:
-  - group: ${{ parameters.VariableGroup }}
   # Secret-Manager-Scenario-Tests provides: secret-manager-scenario-tests-client-secret
   - group: Secret-Manager-Scenario-Tests
   jobs:
