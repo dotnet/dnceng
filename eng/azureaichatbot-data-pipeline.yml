@@ -1,11 +1,11 @@
 trigger: none
 
 pool:
-  vmImage: 'windows-latest'
+    name: NetCore1ESPool-Internal
+    demands: ImageOverride -equals 1es-windows-2019
 
 jobs:
   - job: build
-    timeoutInMinutes: 360
     steps:
     - checkout: self
       path: dnceng
@@ -13,12 +13,13 @@ jobs:
       path: arcade
 
     - task: UsePythonVersion@0
+      displayName: 'Install Python'
       inputs:
         versionSpec: '3.x'
         addToPath: true
-      displayName: 'Install Python'
 
     - task: CmdLine@2
+      displayName: 'Install Python Packages'
       inputs:
         script: |
          pip install requests
