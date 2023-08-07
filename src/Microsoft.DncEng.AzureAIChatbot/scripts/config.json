@@ -1,7 +1,8 @@
 [
     {
+
         "chunk_size": 1024,
-        "data_path": "d:/a/1/arcade/Documentation",
+        "data_path": "D:/a/_work/1/arcade/Documentation",
         "index_name": "gptindex",
         "language": "en",
         "location": "eastus2",
