@@ -33,7 +33,6 @@ jobs:
          pip install azure-ai-formrecognizer
          pip install bs4
          pip install langchain
-      displayName: 'Install Python Packages'
 
     - task: AzureCLI@2
       displayName: 'Run prepdocs'
