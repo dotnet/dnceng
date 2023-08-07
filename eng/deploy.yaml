@@ -164,6 +164,22 @@ stages:
             -ScorecardsStorageAccountTableName "scorecards"
         package: $(Pipeline.Workspace)/RolloutScorer/RolloutScorer.zip
         appName: ${{ parameters.RolloutScorerAppName }}
+  
+  - job: deployAzureOpenAiChatbot
+    displayName: Deploy Azure OpenAI Chatbot
+    pool:
+          name: NetCore1ESPool-Internal-NoMSI
+          demands: ImageOverride -equals 1es-windows-2019
+    steps:
+    - task: AzureCLI@2
+      inputs:
+        azureSubscription: dd8c2cfc-b9c9-452c-a168-ccd4240ada55
+        scriptType: pscore
+        scriptLocation: inlineScript
+        condition: eq('${{parameters.DeploymentEnvironment}}', 'Staging') # As a PoC, only deploy to staging
+        inlineScript: |
+          cd src/Microsoft.DncEng.AzureAIChatbot
+          az webapp up --runtime PYTHON:3.10 --sku B1 --name DNCEngAzureChatbot --resource-group DNCEng-Azure-Chatbot --location eastus --subscription "Dotnet Engineering services"
 
 - stage: postdeploy
   displayName: Post-Deployment
