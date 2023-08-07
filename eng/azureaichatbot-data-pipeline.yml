@@ -34,10 +34,6 @@ jobs:
          pip install bs4
          pip install langchain
 
-    - script: |
-       dir 
-      displayName: 'Print Current Directory'
-
     - task: AzureCLI@2
       displayName: 'Run prepdocs'
       inputs:
