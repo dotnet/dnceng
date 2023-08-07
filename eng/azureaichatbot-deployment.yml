@@ -7,8 +7,7 @@ jobs:
   - job: build
     timeoutInMinutes: 360
     steps:
-     - task: AzureCLI@2
-      displayName: 'Run deployment'
+    - task: AzureCLI@2
       inputs:
         azureSubscription: dd8c2cfc-b9c9-452c-a168-ccd4240ada55
         scriptType: pscore
@@ -16,3 +15,4 @@ jobs:
         inlineScript: |
           cd $(Agent.BuildDirectory)/dnceng/src/Microsoft.DncEng.AzureAIChatbot
           az webapp up --runtime PYTHON:3.10 --sku B1 --name DNCEngAzureChatbot --resource-group DNCEng-Azure-Chatbot --location eastus --subscription "Dotnet Engineering services"
+      displayName: 'Run deployment'
