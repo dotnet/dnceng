@@ -1,0 +1,14 @@
+[
+    {
+        "chunk_size": 1024,
+        "data_path": "d:/a/1/arcade/Documentation",
+        "index_name": "gptindex",
+        "language": "en",
+        "location": "eastus2",
+        "resource_group": "DNCEng-Azure-Chatbot",
+        "search_service_name": "dncengsearch",
+        "semantic_config_name": "default",
+        "subscription_id": "a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1",
+        "token_overlap": 128
+    }
+]
