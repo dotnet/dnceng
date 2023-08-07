@@ -13,8 +13,7 @@ jobs:
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: |
-          dir
-          cd $(Agent.BuildDirectory)/dnceng/src/Microsoft.DncEng.AzureAIChatbot/
+          cd $(Agent.BuildDirectory)/s/dnceng/src/Microsoft.DncEng.AzureAIChatbot/
           az webapp up --runtime PYTHON:3.10 --sku B1 --name DNCEngAzureChatbot --resource-group DNCEng-Azure-Chatbot --location eastus --subscription "Dotnet Engineering services"
       displayName: 'Run deployment'
       
