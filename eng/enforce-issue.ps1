@@ -15,8 +15,8 @@ if ($prDetail.draft) {
 	Write-Host "Draft PR does not have to have GitHub issue specified. Check passed."
 	exit 0
 }
-elseif ($prDetail.title -match "\[\w+\] Update dependencies from") {
-	Write-Host "Dependency update PRs don't need release notes. Check passed."
+elseif ($prDetail.user.login -eq "dotnet-bot" -or $prDetail.user.login -eq "dotnet-maestro[bot]") {
+	Write-Host "PRs opened by dotnet bot don't need release notes. Check passed."
 	exit 0
 }
 elseif ($prDetail.title -match "\[automated\]") {
@@ -37,7 +37,7 @@ try {
 	| ConvertFrom-Json
 }
 catch {
-	Write-Host "##vso[task.LogIssue type=error;]Error fetching issue dotnet/$($matches[1])#$($matches[2]) from arcade. Does it exist?"
+	Write-Host "##vso[task.LogIssue type=error;]Error fetching issue dotnet/$($matches[1])#$($matches[2]) from $($matches[1]). Does it exist?"
 	exit 1
 }
 
