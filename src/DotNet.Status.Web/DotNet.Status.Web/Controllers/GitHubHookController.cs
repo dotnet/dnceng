@@ -22,7 +22,6 @@ using Microsoft.Extensions.Options;
 using Octokit;
 using Octokit.Internal;
 
-#nullable enable
 namespace DotNet.Status.Web.Controllers;
 
 public class GitHubHookController : ControllerBase
