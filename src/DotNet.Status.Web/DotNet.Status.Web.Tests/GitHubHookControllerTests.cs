@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using DotNet.Status.Web.Controllers;
@@ -26,6 +27,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
+using Octokit;
 
 namespace DotNet.Status.Web.Tests;
 
@@ -893,7 +895,8 @@ public class GitHubHookControllerTests
                 {
                     ["login"] = "thatguy",
                 },
-                ["html_url"] = "https://FAKE-GITHUB-URL/test-user/test"
+                ["html_url"] = "https://FAKE-GITHUB-URL/test-user/test",
+                ["title"] = "Epic Issue"
             },
             ["label"] = new JObject
             {
@@ -901,59 +904,562 @@ public class GitHubHookControllerTests
             }
         };
         var eventName = "issues";
-        await SendWebHook(data, eventName, false);
+        await SendWebHook(data, eventName, false, new List<Milestone>());
     }
 
     [Test]
     public async Task AddNonEpicLabelToIssue()
     {
+        var data = new JObject
+        {
+            ["action"] = "labeled",
+            ["repository"] = new JObject
+            {
+                ["owner"] = new JObject
+                {
+                    ["login"] = "test-user",
+                },
+                ["name"] = "test",
+            },
+            ["issue"] = new JObject
+            {
+                ["number"] = 2,
+                ["body"] = "Something pizza",
+                ["user"] = new JObject
+                {
+                    ["login"] = "thatguy",
+                },
+                ["html_url"] = "https://FAKE-GITHUB-URL/test-user/test",
+                ["title"] = "Epic Issue"
+            },
+            ["label"] = new JObject
+            {
+                ["name"] = "different label"
+            }
+        };
+        var eventName = "issues";
+        await SendWebHook(data, eventName, false, new List<Milestone>());
     }
 
     [Test]
-    public async Task EditEpicIssueTitle()
+    public async Task EditEpicIssueTitleAndUpdateMilestoneName()
     {
+        var data = new JObject
+        {
+            ["action"] = "edited",
+            ["repository"] = new JObject
+            {
+                ["owner"] = new JObject
+                {
+                    ["login"] = "test-user",
+                },
+                ["name"] = "test",
+            },
+            ["issue"] = new JObject
+            {
+                ["number"] = 2,
+                ["body"] = "Something pizza",
+                ["user"] = new JObject
+                {
+                    ["login"] = "thatguy",
+                },
+                ["html_url"] = "https://FAKE-GITHUB-URL/test-user/test",
+                ["title"] = "Epic Issue With a New Name",
+                ["milestone"] = new JObject
+                {
+                    ["url"] = "",
+                    ["htmlUrl"] = "",
+                    ["id"] = 50,
+                    ["number"] = 50,
+                    ["nodeId"] = "",
+                    ["state"] = "open",
+                    ["title"] = "Epic Issue With a Old Name",
+                    ["description"] = "",
+                    ["creator"] = null,
+                    ["open_issues"] = 5,
+                    ["closed_issues"] = 0,
+                    ["created_at"] = "2023-07-12T12:34:56Z",
+                    ["due_on"] = "2023-07-12T12:34:56Z",
+                    ["closed_at"] = null,
+                    ["updated_at"] = null
+                },
+                ["labels"] = new JArray
+                {
+                    new JObject
+                    {
+                        ["id"] = 1,
+                        ["name"] = "Epic"
+                    }
+                }
+            },
+            ["changes"] = new JObject
+            {
+                ["title"] = new JObject
+                {
+                    ["from"] = "Epic Issue With a Old Name"
+                }
+            }
+        };
+        var eventName = "issues";
+        await SendWebHook(data, eventName, false, new List<Milestone>() { new Milestone(url: "", htmlUrl: "", id: 50, number: 50, nodeId: "", state: ItemState.Open, title: "Epic Issue With a Old Name", description: "", creator: new User(), openIssues: 1, closedIssues: 0, createdAt: DateTimeOffset.Now, dueOn: null, closedAt: null, updatedAt: null) });
+    }
 
+    [Test]
+    public async Task EditEpicIssueTitleAndMilestoneNameNotTheSame()
+    {
+        var data = new JObject
+        {
+            ["action"] = "edited",
+            ["repository"] = new JObject
+            {
+                ["owner"] = new JObject
+                {
+                    ["login"] = "test-user",
+                },
+                ["name"] = "test",
+            },
+            ["issue"] = new JObject
+            {
+                ["number"] = 2,
+                ["body"] = "Something pizza",
+                ["user"] = new JObject
+                {
+                    ["login"] = "thatguy",
+                },
+                ["html_url"] = "https://FAKE-GITHUB-URL/test-user/test",
+                ["title"] = "Epic Issue With a New Name",
+                ["milestone"] = new JObject
+                {
+                    ["url"] = "",
+                    ["htmlUrl"] = "",
+                    ["id"] = 50,
+                    ["number"] = 50,
+                    ["nodeId"] = "",
+                    ["state"] = "open",
+                    ["title"] = "Random Milestone Name",
+                    ["description"] = "",
+                    ["creator"] = null,
+                    ["open_issues"] = 5,
+                    ["closed_issues"] = 0,
+                    ["created_at"] = "2023-07-12T12:34:56Z",
+                    ["due_on"] = "2023-07-12T12:34:56Z",
+                    ["closed_at"] = null,
+                    ["updated_at"] = null
+                },
+                ["labels"] = new JArray
+                {
+                    new JObject
+                    {
+                        ["id"] = 1,
+                        ["name"] = "Epic"
+                    }
+                }
+            },
+            ["changes"] = new JObject
+            {
+                ["title"] = new JObject
+                {
+                    ["from"] = "Epic Issue With a Old Name"
+                }
+            }
+        };
+        var eventName = "issues";
+        await SendWebHook(data, eventName, false, new List<Milestone>() { new Milestone(url: "", htmlUrl: "", id: 50, number: 50, nodeId: "", state: ItemState.Open, title: "Random Milestone Name", description: "", creator: new User(), openIssues: 1, closedIssues: 0, createdAt: DateTimeOffset.Now, dueOn: null, closedAt: null, updatedAt: null) });
+    }
+
+    [Test]
+    public async Task EditLegacyEpicIssueTitleThatHasNoMilestone()
+    {
+        var data = new JObject
+        {
+            ["action"] = "edited",
+            ["repository"] = new JObject
+            {
+                ["owner"] = new JObject
+                {
+                    ["login"] = "test-user",
+                },
+                ["name"] = "test",
+            },
+            ["issue"] = new JObject
+            {
+                ["number"] = 2,
+                ["body"] = "Something pizza",
+                ["user"] = new JObject
+                {
+                    ["login"] = "thatguy",
+                },
+                ["html_url"] = "https://FAKE-GITHUB-URL/test-user/test",
+                ["title"] = "Epic Issue With a New Name",
+                ["labels"] = new JArray
+                {
+                    new JObject
+                    {
+                        ["id"] = 1,
+                        ["name"] = "Epic"
+                    }
+                }
+            },
+            ["changes"] = new JObject
+            {
+                ["title"] = new JObject
+                {
+                    ["from"] = "Epic Issue With a Old Name"
+                }
+            }
+        };
+        var eventName = "issues";
+        await SendWebHook(data, eventName, false, new List<Milestone>());
     }
 
     [Test]
     public async Task AttemptToCloseEpicWithOpenIssuesInMilestone()
     {
-
+        var data = new JObject
+        {
+            ["action"] = "closed",
+            ["repository"] = new JObject
+            {
+                ["owner"] = new JObject
+                {
+                    ["login"] = "test-user",
+                },
+                ["name"] = "test",
+            },
+            ["issue"] = new JObject
+            {
+                ["number"] = 2,
+                ["body"] = "Something pizza",
+                ["user"] = new JObject
+                {
+                    ["login"] = "thatguy",
+                },
+                ["html_url"] = "https://FAKE-GITHUB-URL/test-user/test",
+                ["title"] = "Epic Issue With a New Name",
+                ["milestone"] = new JObject
+                {
+                    ["url"] = "", 
+                    ["htmlUrl"] = "", 
+                    ["id"] = 50, 
+                    ["number"] = 50, 
+                    ["nodeId"] = "", 
+                    ["state"] = "open", 
+                    ["title"] = "Epic Issue With a New Name", 
+                    ["description"] = "", 
+                    ["creator"] = null, 
+                    ["open_issues"] = 5, 
+                    ["closed_issues"] = 0, 
+                    ["created_at"] = "2023-07-12T12:34:56Z", 
+                    ["due_on"] = "2023-07-12T12:34:56Z", 
+                    ["closed_at"] = null, 
+                    ["updated_at"] = null
+                },
+                ["labels"] = new JArray
+                    {
+                        new JObject
+                        {
+                            ["id"] = 1,
+                            ["name"] = "Epic"
+                        }
+                    }
+                }
+            };
+        var eventName = "issues";
+        await SendWebHook(data, eventName, false, new List<Milestone>() { new Milestone(url: "", htmlUrl: "", id: 50, number: 50, nodeId: "", state: ItemState.Open, title: "Epic Issue With a New Name", description: "", creator: new User(), openIssues: 5, closedIssues: 0, createdAt: DateTimeOffset.Now, dueOn: null, closedAt: null, updatedAt: null) });
     }
 
     [Test]
     public async Task AttemptToCloseEpicWithNoOpenIssuesInMilestone()
     {
+        var data = new JObject
+        {
+            ["action"] = "closed",
+            ["repository"] = new JObject
+            {
+                ["owner"] = new JObject
+                {
+                    ["login"] = "test-user",
+                },
+                ["name"] = "test",
+            },
+            ["issue"] = new JObject
+            {
+                ["number"] = 2,
+                ["body"] = "Something pizza",
+                ["user"] = new JObject
+                {
+                    ["login"] = "thatguy",
+                },
+                ["html_url"] = "https://FAKE-GITHUB-URL/test-user/test",
+                ["title"] = "Epic Issue With a New Name",
+                ["milestone"] = new JObject
+                {
+                    ["url"] = "",
+                    ["htmlUrl"] = "",
+                    ["id"] = 50,
+                    ["number"] = 50,
+                    ["nodeId"] = "",
+                    ["state"] = "open",
+                    ["title"] = "Epic Issue With a New Name",
+                    ["description"] = "",
+                    ["creator"] = null,
+                    ["open_issues"] = 0,
+                    ["closed_issues"] = 0,
+                    ["created_at"] = "2023-07-12T12:34:56Z",
+                    ["due_on"] = "2023-07-12T12:34:56Z",
+                    ["closed_at"] = null,
+                    ["updated_at"] = null
+                },
+                ["labels"] = new JArray
+                    {
+                        new JObject
+                        {
+                            ["id"] = 1,
+                            ["name"] = "Epic"
+                        }
+                    }
+            }
+        };
+        var eventName = "issues";
+        await SendWebHook(data, eventName, false, new List<Milestone>() { new Milestone(url: "", htmlUrl: "", id: 50, number: 50, nodeId: "", state: ItemState.Open, title: "Epic Issue With a New Name", description: "", creator: new User(), openIssues: 0, closedIssues: 0, createdAt: DateTimeOffset.Now, dueOn: null, closedAt: null, updatedAt: null) });
+    }
 
+    [Test]
+    public async Task AttemptToCloseLegacyEpicIssueThatHasNoMilestone()
+    {
+        var data = new JObject
+        {
+            ["action"] = "closed",
+            ["repository"] = new JObject
+            {
+                ["owner"] = new JObject
+                {
+                    ["login"] = "test-user",
+                },
+                ["name"] = "test",
+            },
+            ["issue"] = new JObject
+            {
+                ["number"] = 2,
+                ["body"] = "Something pizza",
+                ["user"] = new JObject
+                {
+                    ["login"] = "thatguy",
+                },
+                ["html_url"] = "https://FAKE-GITHUB-URL/test-user/test",
+                ["title"] = "Epic Issue With a New Name",
+                ["labels"] = new JArray
+                {
+                    new JObject
+                    {
+                        ["id"] = 1,
+                        ["name"] = "Epic"
+                    }
+                }
+            },
+        };
+        var eventName = "issues";
+        await SendWebHook(data, eventName, false, new List<Milestone>());
     }
 
     [Test]
     public async Task AttemptToRemoveEpicLabelFromIssueWithOpenIssuesInMilestone()
     {
-
+        var data = new JObject
+        {
+            ["action"] = "unlabeled",
+            ["repository"] = new JObject
+            {
+                ["owner"] = new JObject
+                {
+                    ["login"] = "test-user",
+                },
+                ["name"] = "test",
+            },
+            ["issue"] = new JObject
+            {
+                ["number"] = 2,
+                ["body"] = "Something pizza",
+                ["user"] = new JObject
+                {
+                    ["login"] = "thatguy",
+                },
+                ["html_url"] = "https://FAKE-GITHUB-URL/test-user/test",
+                ["title"] = "Epic Issue With a New Name",
+                ["milestone"] = new JObject
+                {
+                    ["url"] = "",
+                    ["htmlUrl"] = "",
+                    ["id"] = 50,
+                    ["number"] = 50,
+                    ["nodeId"] = "",
+                    ["state"] = "open",
+                    ["title"] = "Epic Issue With a New Name",
+                    ["description"] = "",
+                    ["creator"] = null,
+                    ["open_issues"] = 5,
+                    ["closed_issues"] = 0,
+                    ["created_at"] = "2023-07-12T12:34:56Z",
+                    ["due_on"] = "2023-07-12T12:34:56Z",
+                    ["closed_at"] = null,
+                    ["updated_at"] = null
+                },
+            },
+            ["label"] = new JObject
+            {
+                ["name"] = "Epic"
+            }
+        };
+        var eventName = "issues";
+        await SendWebHook(data, eventName, false, new List<Milestone>() { new Milestone(url: "", htmlUrl: "", id: 50, number: 50, nodeId: "", state: ItemState.Open, title: "Epic Issue With a New Name", description: "", creator: new User(), openIssues: 5, closedIssues: 0, createdAt: DateTimeOffset.Now, dueOn: null, closedAt: null, updatedAt: null) });
     }
 
     [Test]
     public async Task AttemptToRemoveEpicLabelFromIssueWithNoOpenIssuesInMilestone()
     {
-
+        var data = new JObject
+        {
+            ["action"] = "unlabeled",
+            ["repository"] = new JObject
+            {
+                ["owner"] = new JObject
+                {
+                    ["login"] = "test-user",
+                },
+                ["name"] = "test",
+            },
+            ["issue"] = new JObject
+            {
+                ["number"] = 2,
+                ["body"] = "Something pizza",
+                ["user"] = new JObject
+                {
+                    ["login"] = "thatguy",
+                },
+                ["html_url"] = "https://FAKE-GITHUB-URL/test-user/test",
+                ["title"] = "Epic Issue With a New Name",
+                ["milestone"] = new JObject
+                {
+                    ["url"] = "",
+                    ["htmlUrl"] = "",
+                    ["id"] = 50,
+                    ["number"] = 50,
+                    ["nodeId"] = "",
+                    ["state"] = "open",
+                    ["title"] = "Epic Issue With a New Name",
+                    ["description"] = "",
+                    ["creator"] = null,
+                    ["open_issues"] = 0,
+                    ["closed_issues"] = 0,
+                    ["created_at"] = "2023-07-12T12:34:56Z",
+                    ["due_on"] = "2023-07-12T12:34:56Z",
+                    ["closed_at"] = null,
+                    ["updated_at"] = null
+                }
+            },
+            ["label"] = new JObject
+            {
+                ["name"] = "Epic"
+            }
+        };
+        var eventName = "issues";
+        await SendWebHook(data, eventName, false, new List<Milestone>() { new Milestone(url: "", htmlUrl: "", id: 50, number: 50, nodeId: "", state: ItemState.Open, title: "Epic Issue With a New Name", description: "", creator: new User(), openIssues: 0, closedIssues: 0, createdAt: DateTimeOffset.Now, dueOn: null, closedAt: null, updatedAt: null) });
     }
 
     [Test]
     public async Task ReopenClosedEpicIssue()
     {
-
+        var data = new JObject
+        {
+            ["action"] = "reopened",
+            ["repository"] = new JObject
+            {
+                ["owner"] = new JObject
+                {
+                    ["login"] = "test-user",
+                },
+                ["name"] = "test",
+            },
+            ["issue"] = new JObject
+            {
+                ["number"] = 2,
+                ["body"] = "Something pizza",
+                ["user"] = new JObject
+                {
+                    ["login"] = "thatguy",
+                },
+                ["html_url"] = "https://FAKE-GITHUB-URL/test-user/test",
+                ["title"] = "Epic Issue With a New Name",
+                ["milestone"] = new JObject
+                {
+                    ["url"] = "",
+                    ["htmlUrl"] = "",
+                    ["id"] = 50,
+                    ["number"] = 50,
+                    ["nodeId"] = "",
+                    ["state"] = "closed",
+                    ["title"] = "Epic Issue With a New Name",
+                    ["description"] = "",
+                    ["creator"] = null,
+                    ["open_issues"] = 0,
+                    ["closed_issues"] = 0,
+                    ["created_at"] = "2023-07-12T12:34:56Z",
+                    ["due_on"] = "2023-07-12T12:34:56Z",
+                    ["closed_at"] = "2023-07-12T12:34:56Z",
+                    ["updated_at"] = "2023-07-12T12:34:56Z"
+                },
+                ["labels"] = new JArray
+                    {
+                        new JObject
+                        {
+                            ["id"] = 1,
+                            ["name"] = "Epic"
+                        }
+                    }
+            }
+        };
+        var eventName = "issues";
+        await SendWebHook(data, eventName, false, new List<Milestone>() { new Milestone(url: "", htmlUrl: "", id: 50, number: 50, nodeId: "", state: ItemState.Closed, title: "Epic Issue With a New Name", description: "", creator: new User(), openIssues: 0, closedIssues: 0, createdAt: DateTimeOffset.Now, dueOn: DateTimeOffset.Now, closedAt: DateTimeOffset.Now, updatedAt: DateTimeOffset.Now) });
     }
 
     [Test]
     public async Task NotAllowableRepoAddsEpicLabelToIssue()
     {
-
+        var data = new JObject
+        {
+            ["action"] = "labeled",
+            ["repository"] = new JObject
+            {
+                ["owner"] = new JObject
+                {
+                    ["login"] = "not-allowed",
+                },
+                ["name"] = "test",
+            },
+            ["issue"] = new JObject
+            {
+                ["number"] = 2,
+                ["body"] = "Something pizza",
+                ["user"] = new JObject
+                {
+                    ["login"] = "thatguy",
+                },
+                ["html_url"] = "https://FAKE-GITHUB-URL/test-user/test",
+                ["title"] = "Epic Issue"
+            },
+            ["label"] = new JObject
+            {
+                ["name"] = "Epic"
+            }
+        };
+        var eventName = "issues";
+        await SendWebHook(data, eventName, false, new List<Milestone>());
     }
 
-    private async Task SendWebHook(JObject data, string eventName, bool expectNotification)
+    private async Task SendWebHook(JObject data, string eventName, bool expectNotification,
+        IReadOnlyList<Milestone> returnedMilestones = null)
     {
-        using TestData testData = SetupTestData(expectNotification);
+        using TestData testData = SetupTestData(expectNotification, returnedMilestones);
         var text = data.ToString();
         var request = new HttpRequestMessage(HttpMethod.Post, "/api/webhooks/incoming/github")
         {
@@ -975,10 +1481,36 @@ public class GitHubHookControllerTests
         testData.VerifyAll();
     }
 
-    public TestData SetupTestData(bool expectNotification)
+    public TestData SetupTestData(bool expectNotification,
+        IReadOnlyList<Milestone> returnedMilestones = null,
+        IReadOnlyList<Label> returnLabels = null)
     {
         var mockClientFactory = new MockHttpClientFactory();
         var factory = new TestAppFactory<DotNetStatusEmptyTestStartup>();
+
+        var mockGitHubMilestoneClient = new Mock<IMilestonesClient>();
+        mockGitHubMilestoneClient.Setup(o => o.GetAllForRepository(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<MilestoneRequest>()))
+            .ReturnsAsync(returnedMilestones);
+        mockGitHubMilestoneClient.Setup(o => o.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NewMilestone>()))
+            .ReturnsAsync(new Milestone(number: 1));
+        mockGitHubMilestoneClient.Setup(o => o.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MilestoneUpdate>()))
+            .ReturnsAsync(new Milestone(number: 1));
+
+        var mockGitHubLabelClient = new Mock<IIssuesLabelsClient>();
+        mockGitHubLabelClient.Setup(o => o.AddToIssue(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string[]>()))
+            .ReturnsAsync(returnLabels);
+
+        var mockGitHubIssueClient = new Mock<IIssuesClient>();
+        mockGitHubIssueClient.Setup(o => o.Milestone).Returns(mockGitHubMilestoneClient.Object);
+        mockGitHubIssueClient.Setup(o => o.Labels).Returns(mockGitHubLabelClient.Object);
+
+
+        var mockGitHubClient = new Mock<IGitHubClient>();
+        mockGitHubClient.Setup(o => o.Issue).Returns(mockGitHubIssueClient.Object);
+        
+        var mockGitHubApplicationClientFactory = new Mock<IGitHubApplicationClientFactory>();
+        mockGitHubApplicationClientFactory.Setup(o => o.CreateGitHubClientAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(mockGitHubClient.Object);
+
         factory.ConfigureServices(services =>
         {
             services.AddControllers()
@@ -995,7 +1527,7 @@ public class GitHubHookControllerTests
             services.AddLogging();
             services.AddSingleton<IHttpClientFactory>(mockClientFactory);
 
-            services.AddSingleton(Mock.Of<IGitHubApplicationClientFactory>());
+            services.AddSingleton(mockGitHubApplicationClientFactory.Object);
             services.AddSingleton<IClientFactory<IAzureDevOpsClient>>(provider =>
                 new SingleClientFactory<IAzureDevOpsClient>(Mock.Of<IAzureDevOpsClient>()));
             services.AddSingleton(Mock.Of<ITimelineIssueTriage>());
