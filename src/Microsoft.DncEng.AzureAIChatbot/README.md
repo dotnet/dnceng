@@ -9,7 +9,7 @@ The backend is a Flask web framework (Python) that provides API access for the i
 The frontend is in React served by the backend and providing all user-facing functionality
 
 ## Azure Resources
-- Net Helix Service Principal: Used to grant the backend access to resources
+- Service Principal: Used to grant the backend access to resources
 - App Service: Hosts the website
 - App Service Plan: Hosting the website 
 - Azure OpenAI: Provides large language model for chatbot reasoning
