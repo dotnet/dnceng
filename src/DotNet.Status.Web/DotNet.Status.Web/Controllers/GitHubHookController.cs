@@ -299,7 +299,7 @@ public class GitHubHookController : ControllerBase
                     if (issueEvent.Issue.Labels.Any(x => x.Name.Equals("Epic", StringComparison.OrdinalIgnoreCase)) && issueEvent.Issue.Milestone != null)
                     {
                         // Are there open issues in the associated milestone? if yes, reopen the issue. 
-                        if (issueEvent.Issue.Milestone?.OpenIssues > 0)
+                        if (issueEvent.Issue.Milestone.OpenIssues > 0)
                         {
                             IssueUpdate issueUpdate = new IssueUpdate { State = ItemState.Open };
 
