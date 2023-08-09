@@ -202,7 +202,7 @@ public class GitHubHookController : ControllerBase
                     // is there an epic label on the issue and was the title changed? If so, update the title of the milestone in the milestone list
                     if (issueEvent.Issue.Labels != null && issueEvent.Issue.Labels.Any(x => x.Name == "Epic") && !string.IsNullOrEmpty(issueEvent.Changes.Title?.From))
                     {
-                        Milestone? foundMilestone = await GetMilestone(issueEvent.Changes.Title.From);
+                        Milestone foundMilestone = await GetMilestone(issueEvent.Changes.Title.From);
 
                         if (foundMilestone == null)
                         {
@@ -235,7 +235,7 @@ public class GitHubHookController : ControllerBase
                         string epicUrl = issueEvent.Issue.HtmlUrl;
 
                         // check to see if it currently exists and is open.
-                        Milestone? foundMilestone = await GetMilestone(epicName);
+                        Milestone foundMilestone = await GetMilestone(epicName);
                         if (foundMilestone == null)
                         {
                             await CreateMilestoneAndLinkToIssue();
@@ -319,7 +319,7 @@ public class GitHubHookController : ControllerBase
                     break;
             }
 
-            async Task<Milestone?> GetMilestone(string milestoneName, ItemStateFilter state = ItemStateFilter.All)
+            async Task<Milestone> GetMilestone(string milestoneName, ItemStateFilter state = ItemStateFilter.All)
             {
                 MilestoneRequest requestOptions = new MilestoneRequest
                 {
