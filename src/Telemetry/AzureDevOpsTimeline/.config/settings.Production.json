@@ -1,3 +1,6 @@
 {
-    "KeyVaultUri": "https://maestroprod.vault.azure.net/"
+    "KeyVaultUri": "https://telemetryserviceprod.vault.azure.net/",
+    "Secrets": {
+        "ManagedIdentityId": "d2580e46-e758-4778-a864-18f909438b45"
+    }
 }
