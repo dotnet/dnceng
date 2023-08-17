@@ -12,7 +12,7 @@
   },
   "AllowedHosts": "*",
   "ApplicationInsights": {
-    "InstrumentationKey": "[vault(app-insights-instrumentation-key)]"
+    "ConnectionString": "[vault(app-insights-connection-string)]"
   },
   "AzureDevOps": {
     "build-monitor/dnceng": {
