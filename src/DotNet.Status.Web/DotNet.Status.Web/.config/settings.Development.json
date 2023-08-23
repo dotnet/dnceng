@@ -9,7 +9,7 @@
   },
   "ApplicationInsights": {
     "DeveloperMode": true,
-    "InstrumentationKey": ""
+    "ConnectionString": ""
   },
   "BuildMonitor": {
     "Monitor": {
