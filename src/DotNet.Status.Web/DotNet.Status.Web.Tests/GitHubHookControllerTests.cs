@@ -542,6 +542,45 @@ public class GitHubHookControllerTests
         await SendWebHook(data, eventName, true);
     }
 
+
+    [Test]
+    public async Task EditedIssueCommentWithTeamButNotMentionDoesntNotify()
+    {
+        var data = new JObject
+        {
+            ["action"] = "edited",
+            ["repository"] = new JObject
+            {
+                ["owner"] = new JObject
+                {
+                    ["login"] = "test-user",
+                },
+                ["name"] = "test",
+            },
+            ["issue"] = new JObject
+            {
+                ["number"] = 2,
+            },
+            ["comment"] = new JObject
+            {
+                ["user"] = new JObject
+                {
+                    ["login"] = "thatguy",
+                },
+                ["body"] = $"Something pizza {WatchedTeam}",
+            },
+            ["changes"] = new JObject
+            {
+                ["body"] = new JObject
+                {
+                    ["from"] = "Something pizza",
+                },
+            },
+        };
+        var eventName = "issue_comment";
+        await SendWebHook(data, eventName, false);
+    }
+
     [Test]
     public async Task EditedIssueCommentWithExistingMentionDoesntNotify()
     {
