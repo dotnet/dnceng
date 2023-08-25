@@ -5,7 +5,7 @@
     "Organization": "dotnet",
     "Repository": "dnceng",
     "NotificationTarget": "dotnet/dnceng",
-    "AlertLabels": [ "First Responder", "Critical" ],
+    "AlertLabels": [ "Ops - First Responder", "Critical" ],
     "EnvironmentLabels": [ "Production" ],
     "TitlePrefix": "Production - "
   },
