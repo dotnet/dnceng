@@ -399,7 +399,7 @@ public class GitHubHookController : ControllerBase
 
     private async Task ProcessRcaRulesAsync(IssuesHookData data, string action)
     {
-        if (!ShouldOpenRcaIssue(data, action, out string triggeringLabel))
+        if (!ShouldOpenRcaIssue(data, action, out string? triggeringLabel))
         {
             return;
         }
@@ -408,7 +408,7 @@ public class GitHubHookController : ControllerBase
 
         int issueNumber = data.Issue.Number;
         string issueTitle = data.Issue.Title;
-        string assignee = data.Issue.Assignee?.Login;
+        string? assignee = data.Issue.Assignee?.Login;
 
         string[] copiedLabels = Array.Empty<string>();
 
@@ -434,8 +434,8 @@ public class GitHubHookController : ControllerBase
             
         // The RCA template has all of the sections that we want to be filled out, so we don't need to specify the text here
         using var azureDevOpsClient = _azureDevOpsClientFactory.GetClient(_rcaOptions.Value.Organization);
-        WorkItem workItem = await azureDevOpsClient.Value.CreateRcaWorkItem(_rcaOptions.Value.Project, $"RCA: {issueTitle} ({issueNumber})");
-        _logger.LogInformation("Successfully opened work item {number}: {url}", workItem.Id, workItem.Links.Html.Href);
+        WorkItem? workItem = await azureDevOpsClient.Value.CreateRcaWorkItem(_rcaOptions.Value.Project, $"RCA: {issueTitle} ({issueNumber})");
+        _logger.LogInformation("Successfully opened work item {number}: {url}", workItem?.Id, workItem?.Links.Html.Href);
 
         string issueRepo = data.Repository.Name;
         string issueOrg = data.Repository.Owner.Login;
@@ -447,7 +447,7 @@ public class GitHubHookController : ControllerBase
             Body =
                 $@"An issue, {issueOrg}/{issueRepo}#{issueNumber}, that was marked with the '{triggeringLabel}' label was recently closed.
 
-Please fill out the root cause analysis [Azure Boards work item]({workItem.Links.Html.Href}), and then close this issue and the Azure Boards work item.
+Please fill out the root cause analysis [Azure Boards work item]({workItem?.Links.Html.Href}), and then close this issue and the Azure Boards work item.
 
 Filling it out promptly after resolving an issue ensures things are fresh in your mind.
 
@@ -480,7 +480,7 @@ For help filling out this form, see the [Root Cause Analysis](https://dev.azure.
         _logger.LogInformation("Created RCA issue {number}", createdIssue.Number);
     }
 
-    private bool ShouldOpenRcaIssue(IssuesHookData data, string action, out string triggeringLabel)
+    private bool ShouldOpenRcaIssue(IssuesHookData data, string action, out string? triggeringLabel)
     {
         triggeringLabel = null;
         GitHubConnectionOptions options = _githubOptions.Value;
