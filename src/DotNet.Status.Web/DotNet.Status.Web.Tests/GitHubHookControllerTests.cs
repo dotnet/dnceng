@@ -1544,7 +1544,7 @@ public class GitHubHookControllerTests
             services.AddSingleton(ExponentialRetry.Default);
             services.Configure<MilestoneManagementOptions>(o =>
             {
-                o.AllowableRepos = new List<string> { "test-user/test" };
+                o.ReposEnabledFor = new List<string> { "test-user/test" };
             });
         });
         factory.ConfigureBuilder(app =>

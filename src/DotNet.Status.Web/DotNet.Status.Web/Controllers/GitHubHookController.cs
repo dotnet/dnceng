@@ -192,7 +192,7 @@ public class GitHubHookController : ControllerBase
         string org = issueEvent.Repository.Owner.Login;
         string repo = issueEvent.Repository.Name;
 
-        if (!_milestoneManagementOptions.Value.AllowableRepos.Contains($"{org}/{repo}"))
+        if (!_milestoneManagementOptions.Value.ReposEnabledFor.Contains($"{org}/{repo}"))
         {
             return;
         }

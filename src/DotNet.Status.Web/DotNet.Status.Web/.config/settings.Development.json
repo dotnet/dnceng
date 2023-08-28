@@ -22,7 +22,7 @@
     }
   },
   "MilestoneManagement": {
-    "AllowableRepos": [ "maestro-auth-test/webhook-test" ]
+    "ReposEnabledFor": [ "maestro-auth-test/webhook-test" ]
   },
   "KeyVaultUri": "https://DotNetEng-Status-Local.vault.azure.net/",
   "AzureTableTokenStore": {

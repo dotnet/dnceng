@@ -14,6 +14,6 @@
     "DataProtectionKeyUri": "https://dotneteng-status-staging.vault.azure.net/keys/dotnet-status-data-protection/"
   },
   "MilestoneManagement": {
-    "AllowableRepos": [ "maestro-auth-test/webhook-test" ]
+    "ReposEnabledFor": [ "maestro-auth-test/webhook-test" ]
   }
 }

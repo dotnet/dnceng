@@ -31,7 +31,7 @@
     "Project": "internal"
   },
   "MilestoneManagement": {
-    "AllowableRepos": [ "dotnet/dnceng" ]
+    "ReposEnabledFor": [ "dotnet/dnceng" ]
   },
   "BuildMonitor": {
     "Monitor": {
