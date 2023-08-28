@@ -237,7 +237,7 @@ public class GitHubHookController : ControllerBase
                     string epicName = issueEvent.Issue.Title;
                     string epicUrl = issueEvent.Issue.HtmlUrl;
 
-                    // check to see if it currently exists and is open.
+                    // check to see if it currently exists
                     Milestone foundMilestone = await GetMilestone(epicName);
                     if (foundMilestone == null)
                     {
@@ -248,19 +248,22 @@ public class GitHubHookController : ControllerBase
                     //   assign the issue to the milestone, and link it in the description.
                     else
                     {
-                        // reopen the old one
-                        MilestoneUpdate update = new MilestoneUpdate
+                        if (foundMilestone.State == ItemState.Closed)
                         {
-                            State = ItemState.Open,
-                            // add link to epic issue in the milestone description. 
-                            Description = $"{epicUrl}\r\n\r\nPrevious Description: {foundMilestone.Description}"
-                        };
+                            // reopen the old one
+                            MilestoneUpdate update = new MilestoneUpdate
+                            {
+                                State = ItemState.Open,
+                                // add link to epic issue in the milestone description. 
+                                Description = $"{epicUrl}\r\n\r\nPrevious Description: {foundMilestone.Description}"
+                            };
 
-                        Milestone milestone = await client.Issue.Milestone.Update(org, repo, foundMilestone.Number, update);
+                            await client.Issue.Milestone.Update(org, repo, foundMilestone.Number, update);
+                        }
 
                         IssueUpdate issueUpdate = new IssueUpdate
                         {
-                            Milestone = milestone.Number
+                            Milestone = foundMilestone.Number
                         };
 
                         await client.Issue.Update(org, repo, issueEvent.Issue.Number, issueUpdate);
@@ -272,7 +275,7 @@ public class GitHubHookController : ControllerBase
                 if (issueEvent.Label.Name.Equals("Epic", StringComparison.OrdinalIgnoreCase) && issueEvent.Issue.Milestone?.OpenIssues > 1)
                 {
                     await client.Issue.Labels.AddToIssue(org, repo, issueEvent.Issue.Number, new string[] { "Epic" });
-                    _logger.LogInformation("Issue {0}/{1}#{2} is the epic of a milestone that currently contains open issues. Adding the Epic label back to this issue", org, repo, issueEvent.Issue.Number);
+                    _logger.LogInformation("Issue {Organization}/{Repository}#{IssueNumber} is the epic of a milestone that currently contains open issues. Adding the Epic label back to this issue", org, repo, issueEvent.Issue.Number);
                 }
                 else if (issueEvent.Label.Name.Equals("Epic") && issueEvent.Issue.Milestone?.OpenIssues == 1)
                 {
@@ -306,7 +309,7 @@ public class GitHubHookController : ControllerBase
                         IssueUpdate issueUpdate = new IssueUpdate { State = ItemState.Open };
 
                         await client.Issue.Update(org, repo, issueEvent.Issue.Number, issueUpdate);
-                        _logger.LogInformation("Issue {0}/{1}#{2} is the epic of a milestone that currently contains open issues. Re-opening this issue.", org, repo, issueEvent.Issue.Number);
+                        _logger.LogInformation("Issue {Organization}/{Repository}#{IssueNumber} is the epic of a milestone that currently contains open issues. Re-opening this issue.", org, repo, issueEvent.Issue.Number);
                     }
                     // If we close the issue, close the milestone, too
                     else
@@ -322,11 +325,11 @@ public class GitHubHookController : ControllerBase
                 break;
         }
 
-        async Task<Milestone> GetMilestone(string milestoneName, ItemStateFilter state = ItemStateFilter.All)
+        async Task<Milestone> GetMilestone(string milestoneName)
         {
             MilestoneRequest requestOptions = new MilestoneRequest
             {
-                State = state
+                State = ItemStateFilter.All
             };
             IEnumerable<Milestone> milestones = await client.Issue.Milestone.GetAllForRepository(org, repo, requestOptions);
 
