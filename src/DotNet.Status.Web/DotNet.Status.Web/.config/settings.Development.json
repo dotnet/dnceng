@@ -21,6 +21,13 @@
       "Name": "status-test"
     }
   },
+  "WebHooks": {
+    "github": {
+      "SecretKey": {
+        "default": ""
+      }
+    }
+  },
   "MilestoneManagement": {
     "ReposEnabledFor": [ "maestro-auth-test/webhook-test" ]
   },

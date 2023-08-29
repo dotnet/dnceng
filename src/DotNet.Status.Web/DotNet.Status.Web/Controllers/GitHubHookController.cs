@@ -282,6 +282,7 @@ public class GitHubHookController : ControllerBase
                 {
                     await client.Issue.Labels.AddToIssue(org, repo, issueEvent.Issue.Number, new string[] { "Epic" });
                     _logger.LogInformation("Issue {Organization}/{Repository}#{IssueNumber} is the epic of a milestone that currently contains open issues. Adding the Epic label back to this issue", org, repo, issueEvent.Issue.Number);
+                    await CommentOnIssue();
                 }
                 else if (issueEvent.Label.Name.Equals("Epic") && issueEvent.Issue.Milestone?.OpenIssues == 1)
                 {
@@ -316,6 +317,7 @@ public class GitHubHookController : ControllerBase
 
                         await client.Issue.Update(org, repo, issueEvent.Issue.Number, issueUpdate);
                         _logger.LogInformation("Issue {Organization}/{Repository}#{IssueNumber} is the epic of a milestone that currently contains open issues. Re-opening this issue.", org, repo, issueEvent.Issue.Number);
+                        await CommentOnIssue();
                     }
                     // If we close the issue, close the milestone, too
                     else
@@ -329,6 +331,11 @@ public class GitHubHookController : ControllerBase
                     }
                 }
                 break;
+        }
+
+        async Task CommentOnIssue()
+        {
+            await client.Issue.Comment.Create(org, repo, issueEvent.Issue.Number, "Sorry! Could not close or remove the 'Epic' label from this issue because there are still open issues associated with it. Close or remove open issues in the related milestone and try again.");
         }
 
         async Task<Milestone?> GetMilestone(string milestoneName)
