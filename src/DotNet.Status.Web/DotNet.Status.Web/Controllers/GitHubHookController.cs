@@ -318,17 +318,17 @@ public class GitHubHookController : ControllerBase
                         await client.Issue.Update(org, repo, issueEvent.Issue.Number, issueUpdate);
                         _logger.LogInformation("Issue {Organization}/{Repository}#{IssueNumber} is the epic of a milestone that currently contains open issues. Re-opening this issue.", org, repo, issueEvent.Issue.Number);
                         await CommentOnIssue();
+                        break;
                     }
-                    // If we close the issue, close the milestone, too
-                    else
-                    {
-                        var milestoneUpdate = new MilestoneUpdate
-                        {
-                            State = ItemState.Closed
-                        };
 
-                        await client.Issue.Milestone.Update(org, repo, issueEvent.Issue.Milestone.Number, milestoneUpdate);
-                    }
+                    // If we close the issue, close the milestone, too
+                    var milestoneUpdate = new MilestoneUpdate
+                    {
+                        State = ItemState.Closed
+                    };
+
+                    await client.Issue.Milestone.Update(org, repo, issueEvent.Issue.Milestone.Number, milestoneUpdate);
+                    
                 }
                 break;
         }
