@@ -1,4 +1,5 @@
 {
+  "KeyVaultUri": "https://DotNetEng-Status-Local.vault.azure.net/",
   "HealthTableUri": "",
   "Logging": {
     "LogLevel": {
@@ -24,14 +25,13 @@
   "WebHooks": {
     "github": {
       "SecretKey": {
-        "default": ""
+        "default": "[vault(github-app-webhook-secret)]"
       }
     }
   },
   "MilestoneManagement": {
     "ReposEnabledFor": [ "maestro-auth-test/webhook-test" ]
   },
-  "KeyVaultUri": "https://DotNetEng-Status-Local.vault.azure.net/",
   "AzureTableTokenStore": {
     "TableUri": ""
   },
