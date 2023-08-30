@@ -1539,10 +1539,14 @@ public class GitHubHookControllerTests
         mockGitHubLabelClient.Setup(o => o.AddToIssue(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string[]>()))
             .ReturnsAsync(returnLabels);
 
+        var mockGitHubCommentClient = new Mock<IIssueCommentsClient>();
+        mockGitHubCommentClient.Setup(o => o.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>()))
+            .ReturnsAsync(new IssueComment());
+
         var mockGitHubIssueClient = new Mock<IIssuesClient>();
         mockGitHubIssueClient.Setup(o => o.Milestone).Returns(mockGitHubMilestoneClient.Object);
         mockGitHubIssueClient.Setup(o => o.Labels).Returns(mockGitHubLabelClient.Object);
-
+        mockGitHubIssueClient.Setup(o => o.Comment).Returns(mockGitHubCommentClient.Object);
 
         var mockGitHubClient = new Mock<IGitHubClient>();
         mockGitHubClient.Setup(o => o.Issue).Returns(mockGitHubIssueClient.Object);
