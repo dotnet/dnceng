@@ -113,7 +113,6 @@ public class GitHubHookController : ControllerBase
                 break;
         }
 
-
         return NoContent();
     }
 

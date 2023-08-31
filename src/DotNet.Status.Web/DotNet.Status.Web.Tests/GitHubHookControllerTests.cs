@@ -47,6 +47,8 @@ public class TestVerifySignatureFilter : GitHubVerifySignatureFilter, IAsyncReso
 [TestFixture]
 public class GitHubHookControllerTests
 {
+    #region Team Mention Forwarder Tests
+
     public static string TestTeamsWebHookUri = "https://example.teams/webhook/sha";
     public static string TestAzdoWebHookUri = "https://example.azdo/webhook/api";
     public static string WatchedTeam = "test-user/watched-team";
@@ -911,6 +913,17 @@ public class GitHubHookControllerTests
         await SendWebHook(data, eventName, false);
     }
 
+    #endregion
+
+    #region Milestone Management Tests
+
+    private Mock<IMilestonesClient> _mockGitHubMilestoneClient;
+    private Mock<IIssuesLabelsClient> _mockGitHubLabelClient;
+    private Mock<IIssueCommentsClient> _mockGitHubCommentClient;
+    private Mock<IIssuesClient> _mockGitHubIssueClient;
+    private Mock<IGitHubClient> _mockGitHubClient;
+    private Mock<IGitHubApplicationClientFactory> _mockGitHubApplicationClientFactory;
+
     [Test]
     public async Task AddEpicLabelToIssue()
     {
@@ -922,6 +935,8 @@ public class GitHubHookControllerTests
 
         var eventName = "issues";
         await SendWebHook(data, eventName, false, new List<Milestone>());
+
+        _mockGitHubMilestoneClient.Verify(m => m.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NewMilestone>()), Times.Once());
     }
 
     [Test]
@@ -935,6 +950,8 @@ public class GitHubHookControllerTests
 
         var eventName = "issues";
         await SendWebHook(data, eventName, false, new List<Milestone>());
+
+        _mockGitHubMilestoneClient.Verify(m => m.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NewMilestone>()), Times.Never());
     }
 
     [Test]
@@ -951,6 +968,8 @@ public class GitHubHookControllerTests
 
         var eventName = "issues";
         await SendWebHook(data, eventName, false, new List<Milestone>() { new Milestone(url: "", htmlUrl: "", id: 50, number: 50, nodeId: "", state: ItemState.Open, title: "Epic Issue With a Old Name", description: "", creator: new User(), openIssues: 1, closedIssues: 0, createdAt: DateTimeOffset.Now, dueOn: null, closedAt: null, updatedAt: null) });
+
+        _mockGitHubMilestoneClient.Verify(m => m.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MilestoneUpdate>()), Times.Once());
     }
 
     [Test]
@@ -967,6 +986,8 @@ public class GitHubHookControllerTests
 
         var eventName = "issues";
         await SendWebHook(data, eventName, false, new List<Milestone>() { new Milestone(url: "", htmlUrl: "", id: 50, number: 50, nodeId: "", state: ItemState.Open, title: "Random Milestone Name", description: "", creator: new User(), openIssues: 1, closedIssues: 0, createdAt: DateTimeOffset.Now, dueOn: null, closedAt: null, updatedAt: null) });
+
+        _mockGitHubMilestoneClient.Verify(m => m.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MilestoneUpdate>()), Times.Once());
     }
 
     [Test]
@@ -982,6 +1003,8 @@ public class GitHubHookControllerTests
 
         var eventName = "issues";
         await SendWebHook(data, eventName, false, new List<Milestone>());
+
+        _mockGitHubMilestoneClient.Verify(m => m.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NewMilestone>()), Times.Once());
     }
 
     [Test]
@@ -998,6 +1021,9 @@ public class GitHubHookControllerTests
 
         var eventName = "issues";
         await SendWebHook(data, eventName, false, new List<Milestone>() { new Milestone(url: "", htmlUrl: "", id: 50, number: 50, nodeId: "", state: ItemState.Open, title: "Epic Issue With a New Name", description: "", creator: new User(), openIssues: 5, closedIssues: 0, createdAt: DateTimeOffset.Now, dueOn: null, closedAt: null, updatedAt: null) });
+
+        _mockGitHubIssueClient.Verify(m => m.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<IssueUpdate>()), Times.Once());
+        _mockGitHubCommentClient.Verify(m => m.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>()), Times.Once());
     }
 
     [Test]
@@ -1013,6 +1039,10 @@ public class GitHubHookControllerTests
 
         var eventName = "issues";
         await SendWebHook(data, eventName, false, new List<Milestone>() { new Milestone(url: "", htmlUrl: "", id: 50, number: 50, nodeId: "", state: ItemState.Open, title: "Epic Issue With a New Name", description: "", creator: new User(), openIssues: 0, closedIssues: 0, createdAt: DateTimeOffset.Now, dueOn: null, closedAt: null, updatedAt: null) });
+
+        _mockGitHubIssueClient.Verify(m => m.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<IssueUpdate>()), Times.Never());
+        _mockGitHubCommentClient.Verify(m => m.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>()), Times.Never());
+        _mockGitHubMilestoneClient.Verify(m => m.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MilestoneUpdate>()), Times.Once());
     }
 
     [Test]
@@ -1028,6 +1058,10 @@ public class GitHubHookControllerTests
 
         var eventName = "issues";
         await SendWebHook(data, eventName, false, new List<Milestone>());
+
+        _mockGitHubIssueClient.Verify(m => m.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<IssueUpdate>()), Times.Never());
+        _mockGitHubCommentClient.Verify(m => m.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>()), Times.Never());
+        _mockGitHubMilestoneClient.Verify(m => m.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MilestoneUpdate>()), Times.Never());
     }
 
     [Test]
@@ -1044,21 +1078,29 @@ public class GitHubHookControllerTests
 
         var eventName = "issues";
         await SendWebHook(data, eventName, false, new List<Milestone>() { new Milestone(url: "", htmlUrl: "", id: 50, number: 50, nodeId: "", state: ItemState.Open, title: "Epic Issue With a New Name", description: "", creator: new User(), openIssues: 5, closedIssues: 0, createdAt: DateTimeOffset.Now, dueOn: null, closedAt: null, updatedAt: null) });
+
+        _mockGitHubLabelClient.Verify(m => m.AddToIssue(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string[]>()), Times.Once());
+        _mockGitHubCommentClient.Verify(m => m.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>()), Times.Once());
     }
 
     [Test]
     public async Task AttemptToRemoveEpicLabelFromIssueWithNoOpenIssuesInMilestone()
-    {
+    {        
         TestGitHubJson factory = new TestGitHubJson();
         var data = factory.WithActionUnlabeled("Epic")
             .WithRepository("test-user", "test")
             .WithIssue(title: "Epic Issue With a New Name",
                 milestoneName: "Epic Issue With a New Name",
+                openIssuesInMilestone: 1, // I know the test says no open issues, but the epic issue is technically an open issue in the epic, we just want to make sure nothing else is in there
                 labels: new string[] { "Epic" })
             .Build();
 
         var eventName = "issues";
-        await SendWebHook(data, eventName, false, new List<Milestone>() { new Milestone(url: "", htmlUrl: "", id: 50, number: 50, nodeId: "", state: ItemState.Open, title: "Epic Issue With a New Name", description: "", creator: new User(), openIssues: 0, closedIssues: 0, createdAt: DateTimeOffset.Now, dueOn: null, closedAt: null, updatedAt: null) });
+        await SendWebHook(data, eventName, false, new List<Milestone>() { new Milestone(url: "", htmlUrl: "", id: 50, number: 50, nodeId: "", state: ItemState.Open, title: "Epic Issue With a New Name", description: "", creator: new User(), openIssues: 1, closedIssues: 0, createdAt: DateTimeOffset.Now, dueOn: null, closedAt: null, updatedAt: null) });
+
+        _mockGitHubLabelClient.Verify(m => m.AddToIssue(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string[]>()), Times.Never());
+        _mockGitHubCommentClient.Verify(m => m.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>()), Times.Never());
+        _mockGitHubMilestoneClient.Verify(m => m.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MilestoneUpdate>()), Times.Once());
     }
 
     [Test]
@@ -1075,6 +1117,8 @@ public class GitHubHookControllerTests
 
         var eventName = "issues";
         await SendWebHook(data, eventName, false, new List<Milestone>() { new Milestone(url: "", htmlUrl: "", id: 50, number: 50, nodeId: "", state: ItemState.Closed, title: "Epic Issue With a New Name", description: "", creator: new User(), openIssues: 0, closedIssues: 0, createdAt: DateTimeOffset.Now, dueOn: DateTimeOffset.Now, closedAt: DateTimeOffset.Now, updatedAt: DateTimeOffset.Now) });
+
+        _mockGitHubMilestoneClient.Verify(m => m.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MilestoneUpdate>()), Times.Once());
     }
 
     [Test]
@@ -1088,7 +1132,11 @@ public class GitHubHookControllerTests
 
         var eventName = "issues";
         await SendWebHook(data, eventName, false, new List<Milestone>());
+
+        _mockGitHubMilestoneClient.Verify(m => m.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NewMilestone>()), Times.Never());
     }
+
+    #endregion
 
     private async Task SendWebHook(JObject data, string eventName, bool expectNotification,
         IReadOnlyList<Milestone> returnedMilestones = null)
@@ -1116,38 +1164,39 @@ public class GitHubHookControllerTests
     }
 
     public TestData SetupTestData(bool expectNotification,
-        IReadOnlyList<Milestone> returnedMilestones = null,
-        IReadOnlyList<Label> returnLabels = null)
+        IReadOnlyList<Milestone> returnedMilestones = null)
     {
         var mockClientFactory = new MockHttpClientFactory();
         var factory = new TestAppFactory<DotNetStatusEmptyTestStartup>();
 
-        var mockGitHubMilestoneClient = new Mock<IMilestonesClient>();
-        mockGitHubMilestoneClient.Setup(o => o.GetAllForRepository(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<MilestoneRequest>()))
+        _mockGitHubMilestoneClient = new Mock<IMilestonesClient>();
+        _mockGitHubMilestoneClient.Setup(o => o.GetAllForRepository(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<MilestoneRequest>()))
             .ReturnsAsync(returnedMilestones);
-        mockGitHubMilestoneClient.Setup(o => o.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NewMilestone>()))
+        _mockGitHubMilestoneClient.Setup(o => o.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NewMilestone>()))
             .ReturnsAsync(new Milestone(number: 1));
-        mockGitHubMilestoneClient.Setup(o => o.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MilestoneUpdate>()))
+        _mockGitHubMilestoneClient.Setup(o => o.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MilestoneUpdate>()))
             .ReturnsAsync(new Milestone(number: 1));
 
-        var mockGitHubLabelClient = new Mock<IIssuesLabelsClient>();
-        mockGitHubLabelClient.Setup(o => o.AddToIssue(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string[]>()))
-            .ReturnsAsync(returnLabels);
+        _mockGitHubLabelClient = new Mock<IIssuesLabelsClient>();
+        _mockGitHubLabelClient.Setup(o => o.AddToIssue(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string[]>()))
+            .ReturnsAsync(new List<Label>());
 
-        var mockGitHubCommentClient = new Mock<IIssueCommentsClient>();
-        mockGitHubCommentClient.Setup(o => o.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>()))
+        _mockGitHubCommentClient = new Mock<IIssueCommentsClient>();
+        _mockGitHubCommentClient.Setup(o => o.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>()))
             .ReturnsAsync(new IssueComment());
 
-        var mockGitHubIssueClient = new Mock<IIssuesClient>();
-        mockGitHubIssueClient.Setup(o => o.Milestone).Returns(mockGitHubMilestoneClient.Object);
-        mockGitHubIssueClient.Setup(o => o.Labels).Returns(mockGitHubLabelClient.Object);
-        mockGitHubIssueClient.Setup(o => o.Comment).Returns(mockGitHubCommentClient.Object);
+        _mockGitHubIssueClient = new Mock<IIssuesClient>();
+        _mockGitHubIssueClient.Setup(o => o.Milestone).Returns(_mockGitHubMilestoneClient.Object);
+        _mockGitHubIssueClient.Setup(o => o.Labels).Returns(_mockGitHubLabelClient.Object);
+        _mockGitHubIssueClient.Setup(o => o.Comment).Returns(_mockGitHubCommentClient.Object);
+        _mockGitHubIssueClient.Setup(o => o.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<IssueUpdate>()))
+            .ReturnsAsync(new Issue());
 
-        var mockGitHubClient = new Mock<IGitHubClient>();
-        mockGitHubClient.Setup(o => o.Issue).Returns(mockGitHubIssueClient.Object);
-        
-        var mockGitHubApplicationClientFactory = new Mock<IGitHubApplicationClientFactory>();
-        mockGitHubApplicationClientFactory.Setup(o => o.CreateGitHubClientAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(mockGitHubClient.Object);
+        _mockGitHubClient = new Mock<IGitHubClient>();
+        _mockGitHubClient.Setup(o => o.Issue).Returns(_mockGitHubIssueClient.Object);
+
+        _mockGitHubApplicationClientFactory = new Mock<IGitHubApplicationClientFactory>();
+        _mockGitHubApplicationClientFactory.Setup(o => o.CreateGitHubClientAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(_mockGitHubClient.Object);
 
         factory.ConfigureServices(services =>
         {
@@ -1165,7 +1214,7 @@ public class GitHubHookControllerTests
             services.AddLogging();
             services.AddSingleton<IHttpClientFactory>(mockClientFactory);
 
-            services.AddSingleton(mockGitHubApplicationClientFactory.Object);
+            services.AddSingleton(_mockGitHubApplicationClientFactory.Object);
             services.AddSingleton<IClientFactory<IAzureDevOpsClient>>(provider =>
                 new SingleClientFactory<IAzureDevOpsClient>(Mock.Of<IAzureDevOpsClient>()));
             services.AddSingleton(Mock.Of<ITimelineIssueTriage>());
@@ -1209,7 +1258,9 @@ public class GitHubHookControllerTests
 
     public class TestData : IDisposable
     {
-        public TestData(HttpClient client, TestAppFactory<DotNetStatusEmptyTestStartup> factory, MockHttpClientFactory mockClientFactory)
+        public TestData(HttpClient client, 
+            TestAppFactory<DotNetStatusEmptyTestStartup> factory, 
+            MockHttpClientFactory mockClientFactory)
         {
             Client = client;
             Factory = factory;
@@ -1314,12 +1365,12 @@ public class GitHubHookControllerTests
 
             if (labels != null)
             {
-                for (int id = 1; id < labels.Length; id++)
+                for (int id = 1; id <= labels.Length; id++)
                 {
                     labelsArray.Add(new JObject
                     {
                         ["id"] = id,
-                        ["name"] = labels[id]
+                        ["name"] = labels[id-1]
                     }); ;
                 }
             }
