@@ -44,26 +44,6 @@ stages:
             name: NetCore-Public          
             demands: ImageOverride -equals 1es-windows-2019-open
 
-        strategy:
-          matrix:
-            # Only build debug in non-official builds
-            ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-                debug_configuration:
-                  _BuildConfig: Debug
-                  _PublishType: none
-                  _SignType: test
-                  _DotNetPublishToBlobFeed : false
-            release_configuration:
-              _BuildConfig: Release
-              # PRs or external builds are not signed.
-              ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-                _PublishType: none
-                _SignType: test
-                _DotNetPublishToBlobFeed : false
-              ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-                _PublishType: blob
-                _SignType: test
-                _DotNetPublishToBlobFeed : true
         steps:
         - checkout: self
           clean: true
@@ -82,38 +62,12 @@ stages:
           inputs:
             versionSpec: 6.1.x
 
-        - task: NodeTool@0
-          inputs:
-            versionSpec: 12.x
-
         - task: NuGetCommand@2
           displayName: Restore Packages
           inputs:
             command: restore
             solution: "**/*.sln"
             feedstoUse: config
-
-        - powershell: eng\set-version-parameters.ps1
-          displayName: Calculate release version variables
-
-        - powershell: |
-            [xml]$manifest = Get-Content src\Telemetry\TelemetryApplication\ApplicationPackageRoot\ApplicationManifest.xml
-            $manifest.SelectSingleNode("/*[local-name()='ApplicationManifest']/*[local-name()='Policies']").RemoveAll()
-            $manifest.SelectSingleNode("/*[local-name()='ApplicationManifest']/*[local-name()='Principals']").RemoveAll()
-            $manifest.Save("src\Telemetry\TelemetryApplication\ApplicationPackageRoot\ApplicationManifest.xml")
-            git diff
-          displayName: Remove Service Fabric RunAsPolicy from TelemetryApplication
-
-        - script: eng\common\cibuild.cmd
-            -configuration $(_BuildConfig)
-            -prepareMachine
-            $(_InternalBuildArgs)
-            $(_ProductionArgs)
-            /p:Test=false
-            /P:Sign=false
-          name: Build
-          displayName: Build / Publish
-          condition: succeeded()
 
         - task: AzureCLI@2
           displayName: Verify Secret Usages
@@ -130,6 +84,7 @@ stages:
             displayName: Generate cgmanifest.json for Grafana
 
           - task: ComponentGovernanceComponentDetection@0
+            condition: succeededOrFailed()
             inputs:
               # `.packages` directory is used by some tools running during build.
               # By default ComponentDetection scans this directory and sometimes reports
