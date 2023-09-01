@@ -41,7 +41,7 @@ public class EventHubConnectionString : SecretType<EventHubConnectionString.Para
     {
         var creds = await _tokenCredentialProvider.GetCredentialAsync();
 
-        creds = new ChainedTokenCredential(creds, new AzureCliCredential(new AzureCliCredentialOptions() { TenantId = ConfigurationConstants.MsftAdTenantId }));
+        creds = new ChainedTokenCredential(new AzureCliCredential(new AzureCliCredentialOptions() { TenantId = ConfigurationConstants.MsftAdTenantId }), creds);
         var token = await creds.GetTokenAsync(new TokenRequestContext(new[]
         {
             "https://management.azure.com/.default",

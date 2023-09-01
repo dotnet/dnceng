@@ -25,7 +25,7 @@ class TestCommand : Command
     {
         var creds = await _tokenProvider.GetCredentialAsync();
 
-        creds = new ChainedTokenCredential(creds, new AzureCliCredential(new AzureCliCredentialOptions() { TenantId = ConfigurationConstants.MsftAdTenantId }));
+        creds = new ChainedTokenCredential(new AzureCliCredential(new AzureCliCredentialOptions() { TenantId = ConfigurationConstants.MsftAdTenantId }), creds);
         var token = await creds.GetTokenAsync(new TokenRequestContext(new []
         {
             "https://servicebus.azure.net/.default",

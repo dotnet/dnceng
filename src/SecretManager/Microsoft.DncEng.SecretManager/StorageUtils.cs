@@ -129,7 +129,7 @@ public static class StorageUtils
     {
         TokenCredential credentials = await tokenCredentialProvider.GetCredentialAsync();
 
-        credentials = new ChainedTokenCredential(credentials, new AzureCliCredential(new AzureCliCredentialOptions() { TenantId = ConfigurationConstants.MsftAdTenantId }));
+        credentials = new ChainedTokenCredential(new AzureCliCredential(new AzureCliCredentialOptions() { TenantId = ConfigurationConstants.MsftAdTenantId }), credentials);
 
         AccessToken token = await credentials.GetTokenAsync(new TokenRequestContext(new[]
         {
