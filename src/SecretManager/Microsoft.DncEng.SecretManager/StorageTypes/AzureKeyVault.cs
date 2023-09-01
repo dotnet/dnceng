@@ -4,11 +4,13 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Azure;
+using Azure.Identity;
 using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Secrets;
 using JetBrains.Annotations;
 using Microsoft.DncEng.CommandLineLib;
 using Microsoft.DncEng.CommandLineLib.Authentication;
+using Microsoft.DncEng.Configuration.Extensions;
 
 namespace Microsoft.DncEng.SecretManager.StorageTypes;
 
@@ -34,12 +36,16 @@ public class AzureKeyVault : StorageLocationType<AzureKeyVaultParameters>
     private async Task<SecretClient> CreateSecretClient(AzureKeyVaultParameters parameters)
     {
         var creds = await _tokenCredentialProvider.GetCredentialAsync();
+
+        creds = new ChainedTokenCredential(creds, new AzureCliCredential(new AzureCliCredentialOptions() { TenantId = ConfigurationConstants.MsftAdTenantId }));
         return new SecretClient(new Uri($"https://{parameters.Name}.vault.azure.net/"), creds);
     }
 
     private async Task<KeyClient> CreateKeyClient(AzureKeyVaultParameters parameters)
     {
         var creds = await _tokenCredentialProvider.GetCredentialAsync();
+
+        creds = new ChainedTokenCredential(creds, new AzureCliCredential(new AzureCliCredentialOptions() { TenantId = ConfigurationConstants.MsftAdTenantId }));
         return new KeyClient(new Uri($"https://{parameters.Name}.vault.azure.net/"), creds);
     }
 

@@ -5,10 +5,13 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Azure.Core;
+using Azure.Identity;
 using Microsoft.Azure.Management.EventHub;
 using Microsoft.Azure.Management.EventHub.Models;
 using Microsoft.DncEng.CommandLineLib;
 using Microsoft.DncEng.CommandLineLib.Authentication;
+using Microsoft.DncEng.Configuration.Extensions;
+using Microsoft.Identity.Client.Platforms.Features.DesktopOs.Kerberos;
 using Microsoft.Rest;
 
 namespace Microsoft.DncEng.SecretManager.SecretTypes;
@@ -37,6 +40,8 @@ public class EventHubConnectionString : SecretType<EventHubConnectionString.Para
     private async Task<EventHubManagementClient> CreateManagementClient(Parameters parameters, CancellationToken cancellationToken)
     {
         var creds = await _tokenCredentialProvider.GetCredentialAsync();
+
+        creds = new ChainedTokenCredential(creds, new AzureCliCredential(new AzureCliCredentialOptions() { TenantId = ConfigurationConstants.MsftAdTenantId }));
         var token = await creds.GetTokenAsync(new TokenRequestContext(new[]
         {
             "https://management.azure.com/.default",

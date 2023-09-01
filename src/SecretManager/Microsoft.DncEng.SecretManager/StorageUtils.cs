@@ -12,6 +12,8 @@ using Microsoft.Rest;
 using Microsoft.Rest.Azure;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
+using Azure.Identity;
+using Microsoft.DncEng.Configuration.Extensions;
 
 namespace Microsoft.DncEng.SecretManager;
 
@@ -126,6 +128,9 @@ public static class StorageUtils
     private static async Task<StorageManagementClient> CreateManagementClient(string subscriptionId, TokenCredentialProvider tokenCredentialProvider, CancellationToken cancellationToken)
     {
         TokenCredential credentials = await tokenCredentialProvider.GetCredentialAsync();
+
+        credentials = new ChainedTokenCredential(credentials, new AzureCliCredential(new AzureCliCredentialOptions() { TenantId = ConfigurationConstants.MsftAdTenantId }));
+
         AccessToken token = await credentials.GetTokenAsync(new TokenRequestContext(new[]
         {
             "https://management.azure.com/.default",
