@@ -23,7 +23,9 @@ class TestCommand : Command
 
     public override async Task RunAsync(CancellationToken cancellationToken)
     {
-        var creds = new AzureCliCredential(new AzureCliCredentialOptions() { TenantId = ConfigurationConstants.MsftAdTenantId });
+        var creds = await _tokenProvider.GetCredentialAsync();
+
+        creds = new ChainedTokenCredential(creds, new AzureCliCredential(new AzureCliCredentialOptions() { TenantId = ConfigurationConstants.MsftAdTenantId }));
         var token = await creds.GetTokenAsync(new TokenRequestContext(new []
         {
             "https://servicebus.azure.net/.default",

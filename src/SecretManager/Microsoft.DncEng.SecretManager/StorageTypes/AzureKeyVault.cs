@@ -35,13 +35,17 @@ public class AzureKeyVault : StorageLocationType<AzureKeyVaultParameters>
 
     private async Task<SecretClient> CreateSecretClient(AzureKeyVaultParameters parameters)
     {
-        var creds = new AzureCliCredential(new AzureCliCredentialOptions() { TenantId = ConfigurationConstants.MsftAdTenantId });
+        var creds = await _tokenCredentialProvider.GetCredentialAsync();
+
+        creds = new ChainedTokenCredential(creds, new AzureCliCredential(new AzureCliCredentialOptions() { TenantId = ConfigurationConstants.MsftAdTenantId }));
         return new SecretClient(new Uri($"https://{parameters.Name}.vault.azure.net/"), creds);
     }
 
     private async Task<KeyClient> CreateKeyClient(AzureKeyVaultParameters parameters)
     {
-        var creds = new AzureCliCredential(new AzureCliCredentialOptions() { TenantId = ConfigurationConstants.MsftAdTenantId });
+        var creds = await _tokenCredentialProvider.GetCredentialAsync();
+
+        creds = new ChainedTokenCredential(creds, new AzureCliCredential(new AzureCliCredentialOptions() { TenantId = ConfigurationConstants.MsftAdTenantId }));
         return new KeyClient(new Uri($"https://{parameters.Name}.vault.azure.net/"), creds);
     }
 
