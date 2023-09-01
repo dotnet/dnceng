@@ -4,14 +4,10 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Azure.Core;
-using Azure.Identity;
 using Microsoft.Azure.Management.ServiceBus;
 using Microsoft.Azure.Management.ServiceBus.Models;
 using Microsoft.DncEng.CommandLineLib;
 using Microsoft.DncEng.CommandLineLib.Authentication;
-using Microsoft.DncEng.Configuration.Extensions;
-using Microsoft.Identity.Client.Platforms.Features.DesktopOs.Kerberos;
 using Microsoft.Rest;
 
 namespace Microsoft.DncEng.SecretManager.SecretTypes;
@@ -38,14 +34,9 @@ public class ServiceBusConnectionString : SecretType<ServiceBusConnectionString.
 
     private async Task<ServiceBusManagementClient> CreateManagementClient(Parameters parameters, CancellationToken cancellationToken)
     {
-        var creds = await _tokenCredentialProvider.GetCredentialAsync();
+        TokenCredentials serviceClientCredentials = await _tokenCredentialProvider.GetTokenCredentialsFromAzureCli(
+            cancellationToken: cancellationToken);
 
-        creds = new ChainedTokenCredential(new AzureCliCredential(new AzureCliCredentialOptions() { TenantId = ConfigurationConstants.MsftAdTenantId }), creds);
-        var token = await creds.GetTokenAsync(new TokenRequestContext(new[]
-        {
-            "https://management.azure.com/.default",
-        }), cancellationToken);
-        var serviceClientCredentials = new TokenCredentials(token.Token);
         return new ServiceBusManagementClient(serviceClientCredentials)
         {
             SubscriptionId = parameters.Subscription.ToString(),

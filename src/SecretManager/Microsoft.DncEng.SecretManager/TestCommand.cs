@@ -2,10 +2,8 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Azure.Core;
-using Azure.Identity;
 using Microsoft.DncEng.CommandLineLib;
 using Microsoft.DncEng.CommandLineLib.Authentication;
-using Microsoft.DncEng.Configuration.Extensions;
 
 namespace Microsoft.DncEng.SecretManager;
 
@@ -24,12 +22,13 @@ class TestCommand : Command
     public override async Task RunAsync(CancellationToken cancellationToken)
     {
         var creds = await _tokenProvider.GetCredentialAsync();
+        creds = creds.WithAzureCliCredentials();
 
-        creds = new ChainedTokenCredential(new AzureCliCredential(new AzureCliCredentialOptions() { TenantId = ConfigurationConstants.MsftAdTenantId }), creds);
-        var token = await creds.GetTokenAsync(new TokenRequestContext(new []
+        var token = await creds.GetTokenAsync(new TokenRequestContext(new[]
         {
             "https://servicebus.azure.net/.default",
         }), cancellationToken);
+
         Debug.WriteLine(token.ExpiresOn);
         _console.WriteImportant("Successfully authenticated");
     }
