@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Azure.Core;
 using Microsoft.Azure.Management.EventHub;
 using Microsoft.Azure.Management.EventHub.Models;
 using Microsoft.DncEng.CommandLineLib;
@@ -36,12 +35,9 @@ public class EventHubConnectionString : SecretType<EventHubConnectionString.Para
 
     private async Task<EventHubManagementClient> CreateManagementClient(Parameters parameters, CancellationToken cancellationToken)
     {
-        var creds = await _tokenCredentialProvider.GetCredentialAsync();
-        var token = await creds.GetTokenAsync(new TokenRequestContext(new[]
-        {
-            "https://management.azure.com/.default",
-        }), cancellationToken);
-        var serviceClientCredentials = new TokenCredentials(token.Token);
+        TokenCredentials serviceClientCredentials = await _tokenCredentialProvider.GetTokenCredentialsUsingAzureCli(
+            cancellationToken: cancellationToken);
+
         return new EventHubManagementClient(serviceClientCredentials)
         {
             SubscriptionId = parameters.Subscription.ToString(),
