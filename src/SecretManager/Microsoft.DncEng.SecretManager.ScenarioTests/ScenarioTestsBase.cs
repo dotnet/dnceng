@@ -22,6 +22,20 @@ namespace Microsoft.DncEng.SecretManager.Tests
         protected const string NextRotationOnTag = "next-rotation-on";
         protected const string KeyVaultName = "SecretManagerTestsKv";
 
+        private readonly ChainedTokenCredential _tokenCredential = new ChainedTokenCredential(new TokenCredential[]
+        {
+            new AzureCliCredential(new AzureCliCredentialOptions
+            {
+                TenantId = ConfigurationConstants.MsftAdTenantId,
+            }),
+
+            new DefaultAzureCredential(new DefaultAzureCredentialOptions
+            {
+                TenantId = ConfigurationConstants.MsftAdTenantId,
+                ExcludeInteractiveBrowserCredential = false,
+            }),
+        });
+
         protected async Task ExecuteSynchronizeCommand(string manifest)
         {
             ServiceCollection services = new ServiceCollection();
@@ -61,17 +75,9 @@ namespace Microsoft.DncEng.SecretManager.Tests
             }
         }
 
-        protected static async Task<TokenCredentials> GetServiceClientCredentials()
+        protected async Task<TokenCredentials> GetServiceClientCredentials()
         {
-            var credentials = new ChainedTokenCredential(new TokenCredential[]
-            {
-                new AzureCliCredential(new AzureCliCredentialOptions
-                {
-                    TenantId = ConfigurationConstants.MsftAdTenantId,
-                }),
-            });
-
-            AccessToken token = await credentials.GetTokenAsync(new TokenRequestContext(new[]
+            AccessToken token = await _tokenCredential.GetTokenAsync(new TokenRequestContext(new[]
             {
                 "https://management.azure.com/.default",
             }, tenantId: ConfigurationConstants.MsftAdTenantId), default);
@@ -79,19 +85,11 @@ namespace Microsoft.DncEng.SecretManager.Tests
             return new TokenCredentials(token.Token);
         }
 
-        protected static SecretClient GetSecretClient()
+        protected SecretClient GetSecretClient()
         {
-            var credentials = new ChainedTokenCredential(new TokenCredential[]
-            {
-                new AzureCliCredential(new AzureCliCredentialOptions
-                {
-                    TenantId = ConfigurationConstants.MsftAdTenantId
-                }),
-            });
-
             var client = new SecretClient(
                 new Uri($"https://{KeyVaultName}.vault.azure.net/"),
-                credentials);
+                _tokenCredential);
 
             return client;
         }
@@ -112,7 +110,7 @@ namespace Microsoft.DncEng.SecretManager.Tests
             await UpdateNextRotationTag(client, secret, DateTime.Today.AddDays(15));
         }
 
-        protected static async Task PurgeAllSecrets()
+        protected async Task PurgeAllSecrets()
         {
             var deleteOperations = new List<DeleteSecretOperation>();
             SecretClient client = GetSecretClient();
