@@ -24,6 +24,7 @@ using Octokit.Internal;
 
 namespace DotNet.Status.Web.Controllers;
 
+#nullable enable
 public class GitHubHookController : ControllerBase
 {
     private readonly Lazy<Task> _ensureLabels;
@@ -35,6 +36,7 @@ public class GitHubHookController : ControllerBase
     private readonly ITeamMentionForwarder _teamMentionForwarder;
     private readonly ISystemClock _systemClock;
     private readonly IOptionsSnapshot<RcaOptions> _rcaOptions;
+    private readonly IOptionsSnapshot<MilestoneManagementOptions> _milestoneManagementOptions;
 
     public GitHubHookController(
         IOptions<GitHubConnectionOptions> githubOptions,
@@ -44,7 +46,8 @@ public class GitHubHookController : ControllerBase
         ILogger<GitHubHookController> logger,
         ITeamMentionForwarder teamMentionForwarder,
         ISystemClock systemClock,
-        IOptionsSnapshot<RcaOptions> rcaOptions)
+        IOptionsSnapshot<RcaOptions> rcaOptions,
+        IOptionsSnapshot<MilestoneManagementOptions> milestoneManagementOptions)
     {
         _githubOptions = githubOptions;
         _logger = logger;
@@ -54,6 +57,7 @@ public class GitHubHookController : ControllerBase
         _gitHubApplicationClientFactory = gitHubApplicationClientFactory;
         _azureDevOpsClientFactory = azureDevOpsClientFactory;
         _timelineIssueTriage = timelineIssueTriage;
+        _milestoneManagementOptions = milestoneManagementOptions;
         _ensureLabels = new Lazy<Task>(EnsureLabelsAsync);
     }
 
@@ -108,7 +112,6 @@ public class GitHubHookController : ControllerBase
                 await _teamMentionForwarder.HandleMentions(repo, payload.Changes.Body.From, payload.Comment.Body, title, uri, username, date);
                 break;
         }
-
 
         return NoContent();
     }
@@ -179,8 +182,191 @@ public class GitHubHookController : ControllerBase
         await ProcessNotifications(issueEvent);
         await ProcessRcaRulesAsync(issueEvent, action);
         await ProcessTimelineIssueTriageAsync(issueEvent, action);
+        await ProcessEpicIssue(issueEvent, action);
 
         return NoContent();
+    }
+
+    private async Task ProcessEpicIssue(IssuesHookData issueEvent, string action)
+    {
+        string org = issueEvent.Repository.Owner.Login;
+        string repo = issueEvent.Repository.Name;
+
+        if (!_milestoneManagementOptions.Value.ReposEnabledFor.Contains($"{org}/{repo}"))
+        {
+            return;
+        }
+
+        IGitHubClient client = await _gitHubApplicationClientFactory.CreateGitHubClientAsync(org, repo);
+
+        switch (action)
+        {
+            case "edited":
+                // is there an epic label on the issue and was the title changed? If so, update the title of the milestone in the milestone list
+                if (issueEvent.Issue.Labels != null && issueEvent.Issue.Labels.Any(x => x.Name == "Epic") && !string.IsNullOrEmpty(issueEvent.Changes.Title?.From))
+                {
+                    // check to see if the epic issue already has a milestone assigned and change that name
+                    //   (in the event the milestone name is different from the epic it's associated with).
+                    //   If there isn't a milestone assigned already, go see if one exists (maybe they got disconnected).
+                    Milestone? foundMilestone = issueEvent.Issue.Milestone ?? await GetMilestone(issueEvent.Changes.Title.From);
+
+                    if (foundMilestone == null)
+                    {
+                        await CreateMilestoneAndLinkToIssue();
+                        break;
+                    }                    
+
+                    MilestoneUpdate update = new MilestoneUpdate
+                    {
+                        Title = issueEvent.Issue.Title
+                    };
+
+                    Milestone updatedMilestone = await client.Issue.Milestone.Update(org, repo, foundMilestone.Number, update);
+
+                    IssueUpdate issueUpdate = new IssueUpdate
+                    {
+                        Milestone = updatedMilestone.Number
+                    };
+
+                    await client.Issue.Update(org, repo, issueEvent.Issue.Number, issueUpdate);
+                    
+                }
+                break;
+            case "labeled":
+            case "reopened":
+                // was the epic label applied? check to see if the milestone name already exists. If it doesn't, create a milestone with the issue name
+                if ((action == "labeled" && issueEvent.Label.Name.Equals("Epic", StringComparison.OrdinalIgnoreCase)) || 
+                    (action == "reopened" && issueEvent.Issue.Labels != null && issueEvent.Issue.Labels.Any(x => x.Name == "Epic")))
+                {
+                    string epicName = issueEvent.Issue.Title;
+                    string epicUrl = issueEvent.Issue.HtmlUrl;
+
+                    // check to see if it currently exists
+                    Milestone? foundMilestone = await GetMilestone(epicName);
+                    if (foundMilestone == null)
+                    {
+                        await CreateMilestoneAndLinkToIssue();
+                        break;
+                    }
+
+                    // Cannot create new milestones with the same name of one that exists even if it's closed, so we'll 
+                    //   re-open the closed one and update the description. If it already exists for some reason, we'll 
+                    //   assign the issue to the milestone, and link it in the description.
+                    
+                    if (foundMilestone.State == ItemState.Closed)
+                    {
+                        // reopen the old one
+                        MilestoneUpdate update = new MilestoneUpdate
+                        {
+                            State = ItemState.Open,
+                            // add link to epic issue in the milestone description. 
+                            Description = $"{epicUrl}\r\n\r\nPrevious Description: {foundMilestone.Description}"
+                        };
+
+                        await client.Issue.Milestone.Update(org, repo, foundMilestone.Number, update);
+                    }
+
+                    IssueUpdate issueUpdate = new IssueUpdate
+                    {
+                        Milestone = foundMilestone.Number
+                    };
+
+                    await client.Issue.Update(org, repo, issueEvent.Issue.Number, issueUpdate);
+                    
+                }
+                break;
+            case "unlabeled":
+                // are we trying to remove the epic label? check to see if there are any open issues (not the current issue) in the milestone.
+                if (issueEvent.Label.Name.Equals("Epic", StringComparison.OrdinalIgnoreCase) && issueEvent.Issue.Milestone?.OpenIssues > 1)
+                {
+                    await client.Issue.Labels.AddToIssue(org, repo, issueEvent.Issue.Number, new string[] { "Epic" });
+                    _logger.LogInformation("Issue {Organization}/{Repository}#{IssueNumber} is the epic of a milestone that currently contains open issues. Adding the Epic label back to this issue", org, repo, issueEvent.Issue.Number);
+                    await CommentOnIssue();
+                }
+                else if (issueEvent.Label.Name.Equals("Epic") && issueEvent.Issue.Milestone?.OpenIssues == 1)
+                {
+                    int currentMilestone = issueEvent.Issue.Milestone.Number;
+
+                    // Remove issue from milestone
+                    IssueUpdate issueUpdate = new IssueUpdate
+                    {
+                        Milestone = null
+                    };
+
+                    await client.Issue.Update(org, repo, issueEvent.Issue.Number, issueUpdate);
+
+                    // Close milestone
+                    var milestoneUpdate = new MilestoneUpdate
+                    {
+                        State = ItemState.Closed
+                    };
+
+                    await client.Issue.Milestone.Update(org, repo, currentMilestone, milestoneUpdate);
+
+                }
+                break;
+            case "closed":
+                // is there an epic label on the issue?
+                if (issueEvent.Issue.Labels.Any(x => x.Name.Equals("Epic", StringComparison.OrdinalIgnoreCase)) && issueEvent.Issue.Milestone != null)
+                {
+                    // Are there open issues in the associated milestone? if yes, reopen the issue. 
+                    if (issueEvent.Issue.Milestone.OpenIssues > 0)
+                    {
+                        IssueUpdate issueUpdate = new IssueUpdate { State = ItemState.Open };
+
+                        await client.Issue.Update(org, repo, issueEvent.Issue.Number, issueUpdate);
+                        _logger.LogInformation("Issue {Organization}/{Repository}#{IssueNumber} is the epic of a milestone that currently contains open issues. Re-opening this issue.", org, repo, issueEvent.Issue.Number);
+                        await CommentOnIssue();
+                        break;
+                    }
+
+                    // If we close the issue, close the milestone, too
+                    var milestoneUpdate = new MilestoneUpdate
+                    {
+                        State = ItemState.Closed
+                    };
+
+                    await client.Issue.Milestone.Update(org, repo, issueEvent.Issue.Milestone.Number, milestoneUpdate);
+                    
+                }
+                break;
+        }
+
+        async Task CommentOnIssue()
+        {
+            await client.Issue.Comment.Create(org, repo, issueEvent.Issue.Number, "Sorry! Could not close or remove the 'Epic' label from this issue because there are still open issues associated with it. Close or remove open issues in the related milestone and try again.");
+        }
+
+        async Task<Milestone?> GetMilestone(string milestoneName)
+        {
+            MilestoneRequest requestOptions = new MilestoneRequest
+            {
+                State = ItemStateFilter.All
+            };
+            IEnumerable<Milestone> milestones = await client.Issue.Milestone.GetAllForRepository(org, repo, requestOptions);
+
+            return milestones.FirstOrDefault(x => x.Title.Equals(milestoneName));
+        }
+
+        async Task CreateMilestoneAndLinkToIssue()
+        {
+            // create new milestone with epic title
+            NewMilestone newMilestone = new NewMilestone(issueEvent.Issue.Title)
+            {
+                // add link to epic issue in the milestone description
+                Description = issueEvent.Issue.HtmlUrl,
+                State = ItemState.Open
+            };
+
+            Milestone milestone = await client.Issue.Milestone.Create(org, repo, newMilestone);
+
+            IssueUpdate issueUpdate = new IssueUpdate
+            {
+                Milestone = milestone.Number
+            };
+
+            await client.Issue.Update(org, repo, issueEvent.Issue.Number, issueUpdate);
+        }
     }
 
     private async Task ProcessNotifications(IssuesHookData issueEvent)
@@ -219,7 +405,7 @@ public class GitHubHookController : ControllerBase
 
     private async Task ProcessRcaRulesAsync(IssuesHookData data, string action)
     {
-        if (!ShouldOpenRcaIssue(data, action, out string triggeringLabel))
+        if (!ShouldOpenRcaIssue(data, action, out string? triggeringLabel))
         {
             return;
         }
@@ -228,7 +414,7 @@ public class GitHubHookController : ControllerBase
 
         int issueNumber = data.Issue.Number;
         string issueTitle = data.Issue.Title;
-        string assignee = data.Issue.Assignee?.Login;
+        string? assignee = data.Issue.Assignee?.Login;
 
         string[] copiedLabels = Array.Empty<string>();
 
@@ -254,8 +440,8 @@ public class GitHubHookController : ControllerBase
             
         // The RCA template has all of the sections that we want to be filled out, so we don't need to specify the text here
         using var azureDevOpsClient = _azureDevOpsClientFactory.GetClient(_rcaOptions.Value.Organization);
-        WorkItem workItem = await azureDevOpsClient.Value.CreateRcaWorkItem(_rcaOptions.Value.Project, $"RCA: {issueTitle} ({issueNumber})");
-        _logger.LogInformation("Successfully opened work item {number}: {url}", workItem.Id, workItem.Links.Html.Href);
+        WorkItem? workItem = await azureDevOpsClient.Value.CreateRcaWorkItem(_rcaOptions.Value.Project, $"RCA: {issueTitle} ({issueNumber})");
+        _logger.LogInformation("Successfully opened work item {number}: {url}", workItem?.Id, workItem?.Links.Html.Href);
 
         string issueRepo = data.Repository.Name;
         string issueOrg = data.Repository.Owner.Login;
@@ -267,7 +453,7 @@ public class GitHubHookController : ControllerBase
             Body =
                 $@"An issue, {issueOrg}/{issueRepo}#{issueNumber}, that was marked with the '{triggeringLabel}' label was recently closed.
 
-Please fill out the root cause analysis [Azure Boards work item]({workItem.Links.Html.Href}), and then close this issue and the Azure Boards work item.
+Please fill out the root cause analysis [Azure Boards work item]({workItem?.Links.Html.Href}), and then close this issue and the Azure Boards work item.
 
 Filling it out promptly after resolving an issue ensures things are fresh in your mind.
 
@@ -300,7 +486,7 @@ For help filling out this form, see the [Root Cause Analysis](https://dev.azure.
         _logger.LogInformation("Created RCA issue {number}", createdIssue.Number);
     }
 
-    private bool ShouldOpenRcaIssue(IssuesHookData data, string action, out string triggeringLabel)
+    private bool ShouldOpenRcaIssue(IssuesHookData data, string action, out string? triggeringLabel)
     {
         triggeringLabel = null;
         GitHubConnectionOptions options = _githubOptions.Value;
