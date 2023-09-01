@@ -22,19 +22,13 @@ namespace Microsoft.DncEng.SecretManager.Tests
         protected const string NextRotationOnTag = "next-rotation-on";
         protected const string KeyVaultName = "SecretManagerTestsKv";
 
-        private readonly ChainedTokenCredential _tokenCredential = new ChainedTokenCredential(new TokenCredential[]
-        {
-            new AzureCliCredential(new AzureCliCredentialOptions
+        // Token credentials that first try to get credentials from Azure CLI, then fall back to the default
+        private readonly TokenCredential _tokenCredential = new AzureCliCredential(
+            new AzureCliCredentialOptions
             {
                 TenantId = ConfigurationConstants.MsftAdTenantId,
-            }),
-
-            new DefaultAzureCredential(new DefaultAzureCredentialOptions
-            {
-                TenantId = ConfigurationConstants.MsftAdTenantId,
-                ExcludeInteractiveBrowserCredential = false,
-            }),
-        });
+            })
+            .WithAzureCliCredentials();
 
         protected async Task ExecuteSynchronizeCommand(string manifest)
         {
