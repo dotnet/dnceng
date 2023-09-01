@@ -127,9 +127,7 @@ public static class StorageUtils
 
     private static async Task<StorageManagementClient> CreateManagementClient(string subscriptionId, TokenCredentialProvider tokenCredentialProvider, CancellationToken cancellationToken)
     {
-        TokenCredential credentials = await tokenCredentialProvider.GetCredentialAsync();
-
-        credentials = new ChainedTokenCredential(credentials, new AzureCliCredential(new AzureCliCredentialOptions() { TenantId = ConfigurationConstants.MsftAdTenantId }));
+        var credentials = new AzureCliCredential(new AzureCliCredentialOptions() { TenantId = ConfigurationConstants.MsftAdTenantId });
 
         AccessToken token = await credentials.GetTokenAsync(new TokenRequestContext(new[]
         {

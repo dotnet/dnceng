@@ -38,9 +38,7 @@ public class ServiceBusConnectionString : SecretType<ServiceBusConnectionString.
 
     private async Task<ServiceBusManagementClient> CreateManagementClient(Parameters parameters, CancellationToken cancellationToken)
     {
-        var creds = await _tokenCredentialProvider.GetCredentialAsync();
-
-        creds = new ChainedTokenCredential(creds, new AzureCliCredential(new AzureCliCredentialOptions() { TenantId = ConfigurationConstants.MsftAdTenantId }));
+        var creds = new AzureCliCredential(new AzureCliCredentialOptions() { TenantId = ConfigurationConstants.MsftAdTenantId });
         var token = await creds.GetTokenAsync(new TokenRequestContext(new[]
         {
             "https://management.azure.com/.default",
