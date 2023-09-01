@@ -67,19 +67,14 @@ namespace Microsoft.DncEng.SecretManager.Tests
             {
                 new AzureCliCredential(new AzureCliCredentialOptions
                 {
-                    TenantId = ConfigurationConstants.MsftAdTenantId
-                }),
-
-                new DefaultAzureCredential(new DefaultAzureCredentialOptions
-                {
-                    TenantId = ConfigurationConstants.MsftAdTenantId
+                    TenantId = ConfigurationConstants.MsftAdTenantId,
                 }),
             });
 
             AccessToken token = await credentials.GetTokenAsync(new TokenRequestContext(new[]
             {
                 "https://management.azure.com/.default",
-            }), default);
+            }, tenantId: ConfigurationConstants.MsftAdTenantId), default);
 
             return new TokenCredentials(token.Token);
         }
@@ -89,11 +84,6 @@ namespace Microsoft.DncEng.SecretManager.Tests
             var credentials = new ChainedTokenCredential(new TokenCredential[]
             {
                 new AzureCliCredential(new AzureCliCredentialOptions
-                {
-                    TenantId = ConfigurationConstants.MsftAdTenantId
-                }),
-
-                new DefaultAzureCredential(new DefaultAzureCredentialOptions
                 {
                     TenantId = ConfigurationConstants.MsftAdTenantId
                 }),
