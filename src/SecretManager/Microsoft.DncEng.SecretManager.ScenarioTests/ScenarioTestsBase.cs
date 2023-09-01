@@ -65,7 +65,10 @@ namespace Microsoft.DncEng.SecretManager.Tests
         {
             var credentials = new ChainedTokenCredential(new TokenCredential[]
             {
-                new AzureCliCredential(),
+                new AzureCliCredential(new AzureCliCredentialOptions
+                {
+                    TenantId = ConfigurationConstants.MsftAdTenantId
+                }),
 
                 new DefaultAzureCredential(new DefaultAzureCredentialOptions
                 {
@@ -85,7 +88,10 @@ namespace Microsoft.DncEng.SecretManager.Tests
         {
             var credentials = new ChainedTokenCredential(new TokenCredential[]
             {
-                new AzureCliCredential(),
+                new AzureCliCredential(new AzureCliCredentialOptions
+                {
+                    TenantId = ConfigurationConstants.MsftAdTenantId
+                }),
 
                 new DefaultAzureCredential(new DefaultAzureCredentialOptions
                 {
