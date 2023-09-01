@@ -41,6 +41,8 @@ public class TeamMentionForwarder : ITeamMentionForwarder
     {
         bool shouldSend = true;
         string team = _options.Value.WatchedTeam;
+        string teamMention = $"@{team}";
+
         string[] ignoredRepos = _options.Value.IgnoreRepos;
 
         if (ignoredRepos != null && ignoredRepos.Contains(repo))
@@ -48,13 +50,13 @@ public class TeamMentionForwarder : ITeamMentionForwarder
             shouldSend = false;
         }
 
-        if (string.IsNullOrEmpty(newBody) || !newBody.Contains(team))
+        if (string.IsNullOrEmpty(newBody) || !newBody.Contains(teamMention))
         {
             shouldSend = false;
         }
         else if (!string.IsNullOrEmpty(oldBody))
         {
-            if (oldBody.Contains(team))
+            if (oldBody.Contains(teamMention))
             {
                 shouldSend = false;
             }

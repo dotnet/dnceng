@@ -1,4 +1,5 @@
 {
+  "KeyVaultUri": "https://DotNetEng-Status-Local.vault.azure.net/",
   "HealthTableUri": "",
   "Logging": {
     "LogLevel": {
@@ -9,7 +10,7 @@
   },
   "ApplicationInsights": {
     "DeveloperMode": true,
-    "InstrumentationKey": ""
+    "ConnectionString": ""
   },
   "BuildMonitor": {
     "Monitor": {
@@ -21,7 +22,16 @@
       "Name": "status-test"
     }
   },
-  "KeyVaultUri": "https://DotNetEng-Status-Local.vault.azure.net/",
+  "WebHooks": {
+    "github": {
+      "SecretKey": {
+        "default": "[vault(github-app-webhook-secret)]"
+      }
+    }
+  },
+  "MilestoneManagement": {
+    "ReposEnabledFor": [ "maestro-auth-test/webhook-test" ]
+  },
   "AzureTableTokenStore": {
     "TableUri": ""
   },

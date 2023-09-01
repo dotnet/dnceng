@@ -1,7 +1,6 @@
 using Azure.Core;
 using Azure.Identity;
 using Microsoft.DncEng.PatGenerator;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.VisualStudio.Services.Client;
 using Microsoft.VisualStudio.Services.Common;
 using System;

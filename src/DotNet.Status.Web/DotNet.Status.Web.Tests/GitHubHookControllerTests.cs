@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -25,6 +26,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
+using Octokit;
 
 namespace DotNet.Status.Web.Tests;
 
@@ -45,6 +47,8 @@ public class TestVerifySignatureFilter : GitHubVerifySignatureFilter, IAsyncReso
 [TestFixture]
 public class GitHubHookControllerTests
 {
+    #region Team Mention Forwarder Tests
+
     public static string TestTeamsWebHookUri = "https://example.teams/webhook/sha";
     public static string TestAzdoWebHookUri = "https://example.azdo/webhook/api";
     public static string WatchedTeam = "test-user/watched-team";
@@ -542,6 +546,45 @@ public class GitHubHookControllerTests
         await SendWebHook(data, eventName, true);
     }
 
+
+    [Test]
+    public async Task EditedIssueCommentWithTeamButNotMentionDoesntNotify()
+    {
+        var data = new JObject
+        {
+            ["action"] = "edited",
+            ["repository"] = new JObject
+            {
+                ["owner"] = new JObject
+                {
+                    ["login"] = "test-user",
+                },
+                ["name"] = "test",
+            },
+            ["issue"] = new JObject
+            {
+                ["number"] = 2,
+            },
+            ["comment"] = new JObject
+            {
+                ["user"] = new JObject
+                {
+                    ["login"] = "thatguy",
+                },
+                ["body"] = $"Something pizza {WatchedTeam}",
+            },
+            ["changes"] = new JObject
+            {
+                ["body"] = new JObject
+                {
+                    ["from"] = "Something pizza",
+                },
+            },
+        };
+        var eventName = "issue_comment";
+        await SendWebHook(data, eventName, false);
+    }
+
     [Test]
     public async Task EditedIssueCommentWithExistingMentionDoesntNotify()
     {
@@ -870,9 +913,235 @@ public class GitHubHookControllerTests
         await SendWebHook(data, eventName, false);
     }
 
-    private async Task SendWebHook(JObject data, string eventName, bool expectNotification)
+    #endregion
+
+    #region Milestone Management Tests
+
+    private Mock<IMilestonesClient> _mockGitHubMilestoneClient;
+    private Mock<IIssuesLabelsClient> _mockGitHubLabelClient;
+    private Mock<IIssueCommentsClient> _mockGitHubCommentClient;
+    private Mock<IIssuesClient> _mockGitHubIssueClient;
+    private Mock<IGitHubClient> _mockGitHubClient;
+    private Mock<IGitHubApplicationClientFactory> _mockGitHubApplicationClientFactory;
+
+    [Test]
+    public async Task AddEpicLabelToIssue()
     {
-        using TestData testData = SetupTestData(expectNotification);
+        TestGitHubJson factory = new TestGitHubJson();
+        var data = factory.WithActionLabeled("Epic")
+            .WithRepository("test-user", "test")
+            .WithIssue(title: "Epic Issue")
+            .Build();
+
+        var eventName = "issues";
+        await SendWebHook(data, eventName, false, new List<Milestone>());
+
+        _mockGitHubMilestoneClient.Verify(m => m.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NewMilestone>()), Times.Once());
+    }
+
+    [Test]
+    public async Task AddNonEpicLabelToIssue()
+    {
+        TestGitHubJson factory = new TestGitHubJson();
+        var data = factory.WithActionLabeled("different label")
+            .WithRepository("test-user", "test")
+            .WithIssue(title: "Epic Issue")
+            .Build();
+
+        var eventName = "issues";
+        await SendWebHook(data, eventName, false, new List<Milestone>());
+
+        _mockGitHubMilestoneClient.Verify(m => m.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NewMilestone>()), Times.Never());
+    }
+
+    [Test]
+    public async Task EditEpicIssueTitleAndUpdateMilestoneName()
+    {
+        TestGitHubJson factory = new TestGitHubJson();
+        var data = factory.WithActionEdited(previousTitle: "Epic Issue With a Old Name")
+            .WithRepository("test-user", "test")
+            .WithIssue(title: "Epic Issue With a New Name",
+                milestoneName: "Epic Issue With a Old Name",
+                openIssuesInMilestone: 5,
+                labels: new string[] { "Epic" })
+            .Build();
+
+        var eventName = "issues";
+        await SendWebHook(data, eventName, false, new List<Milestone>() { new Milestone(url: "", htmlUrl: "", id: 50, number: 50, nodeId: "", state: ItemState.Open, title: "Epic Issue With a Old Name", description: "", creator: new User(), openIssues: 1, closedIssues: 0, createdAt: DateTimeOffset.Now, dueOn: null, closedAt: null, updatedAt: null) });
+
+        _mockGitHubMilestoneClient.Verify(m => m.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MilestoneUpdate>()), Times.Once());
+    }
+
+    [Test]
+    public async Task EditEpicIssueTitleAndMilestoneNameNotTheSame()
+    {
+        TestGitHubJson factory = new TestGitHubJson();
+        var data = factory.WithActionEdited(previousTitle: "Epic Issue With a Old Name")
+            .WithRepository("test-user", "test")
+            .WithIssue(title: "Epic Issue With a New Name",
+                milestoneName: "Random Milestone Name",
+                openIssuesInMilestone: 5,
+                labels: new string[] { "Epic" })
+            .Build();
+
+        var eventName = "issues";
+        await SendWebHook(data, eventName, false, new List<Milestone>() { new Milestone(url: "", htmlUrl: "", id: 50, number: 50, nodeId: "", state: ItemState.Open, title: "Random Milestone Name", description: "", creator: new User(), openIssues: 1, closedIssues: 0, createdAt: DateTimeOffset.Now, dueOn: null, closedAt: null, updatedAt: null) });
+
+        _mockGitHubMilestoneClient.Verify(m => m.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MilestoneUpdate>()), Times.Once());
+    }
+
+    [Test]
+    public async Task EditLegacyEpicIssueTitleThatHasNoMilestone()
+    {
+        TestGitHubJson factory = new TestGitHubJson();
+        var data = factory.WithActionEdited(previousTitle: "Epic Issue With a Old Name")
+            .WithRepository("test-user", "test")
+            .WithIssue(title: "Epic Issue With a New Name",
+                overrideNoMilestone: true,
+                labels: new string[] { "Epic" })
+            .Build();
+
+        var eventName = "issues";
+        await SendWebHook(data, eventName, false, new List<Milestone>());
+
+        _mockGitHubMilestoneClient.Verify(m => m.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NewMilestone>()), Times.Once());
+    }
+
+    [Test]
+    public async Task AttemptToCloseEpicWithOpenIssuesInMilestone()
+    {
+        TestGitHubJson factory = new TestGitHubJson();
+        var data = factory.WithAction("closed")
+            .WithRepository("test-user", "test")
+            .WithIssue(title: "Epic Issue With a New Name",
+                milestoneName: "Epic Issue With a New Name",
+                openIssuesInMilestone: 5,
+                labels: new string[] { "Epic" })
+            .Build();
+
+        var eventName = "issues";
+        await SendWebHook(data, eventName, false, new List<Milestone>() { new Milestone(url: "", htmlUrl: "", id: 50, number: 50, nodeId: "", state: ItemState.Open, title: "Epic Issue With a New Name", description: "", creator: new User(), openIssues: 5, closedIssues: 0, createdAt: DateTimeOffset.Now, dueOn: null, closedAt: null, updatedAt: null) });
+
+        _mockGitHubIssueClient.Verify(m => m.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<IssueUpdate>()), Times.Once());
+        _mockGitHubCommentClient.Verify(m => m.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>()), Times.Once());
+    }
+
+    [Test]
+    public async Task AttemptToCloseEpicWithNoOpenIssuesInMilestone()
+    {
+        TestGitHubJson factory = new TestGitHubJson();
+        var data = factory.WithAction("closed")
+            .WithRepository("test-user", "test")
+            .WithIssue(title: "Epic Issue With a New Name",
+                milestoneName: "Epic Issue With a New Name",
+                labels: new string[] { "Epic" })
+            .Build();
+
+        var eventName = "issues";
+        await SendWebHook(data, eventName, false, new List<Milestone>() { new Milestone(url: "", htmlUrl: "", id: 50, number: 50, nodeId: "", state: ItemState.Open, title: "Epic Issue With a New Name", description: "", creator: new User(), openIssues: 0, closedIssues: 0, createdAt: DateTimeOffset.Now, dueOn: null, closedAt: null, updatedAt: null) });
+
+        _mockGitHubIssueClient.Verify(m => m.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<IssueUpdate>()), Times.Never());
+        _mockGitHubCommentClient.Verify(m => m.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>()), Times.Never());
+        _mockGitHubMilestoneClient.Verify(m => m.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MilestoneUpdate>()), Times.Once());
+    }
+
+    [Test]
+    public async Task AttemptToCloseLegacyEpicIssueThatHasNoMilestone()
+    {
+        TestGitHubJson factory = new TestGitHubJson();
+        var data = factory.WithAction("closed")
+            .WithRepository("test-user", "test")
+            .WithIssue(title: "Epic Issue With a New Name",
+                overrideNoMilestone: true,
+                labels: new string[] { "Epic" })
+            .Build();
+
+        var eventName = "issues";
+        await SendWebHook(data, eventName, false, new List<Milestone>());
+
+        _mockGitHubIssueClient.Verify(m => m.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<IssueUpdate>()), Times.Never());
+        _mockGitHubCommentClient.Verify(m => m.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>()), Times.Never());
+        _mockGitHubMilestoneClient.Verify(m => m.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MilestoneUpdate>()), Times.Never());
+    }
+
+    [Test]
+    public async Task AttemptToRemoveEpicLabelFromIssueWithOpenIssuesInMilestone()
+    {
+        TestGitHubJson factory = new TestGitHubJson();
+        var data = factory.WithActionUnlabeled("Epic")
+            .WithRepository("test-user", "test")
+            .WithIssue(title: "Epic Issue With a New Name",
+                milestoneName: "Epic Issue With a New Name",
+                openIssuesInMilestone: 5,
+                labels: new string[] { "Epic" })
+            .Build();
+
+        var eventName = "issues";
+        await SendWebHook(data, eventName, false, new List<Milestone>() { new Milestone(url: "", htmlUrl: "", id: 50, number: 50, nodeId: "", state: ItemState.Open, title: "Epic Issue With a New Name", description: "", creator: new User(), openIssues: 5, closedIssues: 0, createdAt: DateTimeOffset.Now, dueOn: null, closedAt: null, updatedAt: null) });
+
+        _mockGitHubLabelClient.Verify(m => m.AddToIssue(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string[]>()), Times.Once());
+        _mockGitHubCommentClient.Verify(m => m.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>()), Times.Once());
+    }
+
+    [Test]
+    public async Task AttemptToRemoveEpicLabelFromIssueWithNoOpenIssuesInMilestone()
+    {        
+        TestGitHubJson factory = new TestGitHubJson();
+        var data = factory.WithActionUnlabeled("Epic")
+            .WithRepository("test-user", "test")
+            .WithIssue(title: "Epic Issue With a New Name",
+                milestoneName: "Epic Issue With a New Name",
+                openIssuesInMilestone: 1, // I know the test says no open issues, but the epic issue is technically an open issue in the epic, we just want to make sure nothing else is in there
+                labels: new string[] { "Epic" })
+            .Build();
+
+        var eventName = "issues";
+        await SendWebHook(data, eventName, false, new List<Milestone>() { new Milestone(url: "", htmlUrl: "", id: 50, number: 50, nodeId: "", state: ItemState.Open, title: "Epic Issue With a New Name", description: "", creator: new User(), openIssues: 1, closedIssues: 0, createdAt: DateTimeOffset.Now, dueOn: null, closedAt: null, updatedAt: null) });
+
+        _mockGitHubLabelClient.Verify(m => m.AddToIssue(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string[]>()), Times.Never());
+        _mockGitHubCommentClient.Verify(m => m.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>()), Times.Never());
+        _mockGitHubMilestoneClient.Verify(m => m.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MilestoneUpdate>()), Times.Once());
+    }
+
+    [Test]
+    public async Task ReopenClosedEpicIssue()
+    {
+        TestGitHubJson factory = new TestGitHubJson();
+        var data = factory.WithAction("reopened")
+            .WithRepository("test-user", "test")
+            .WithIssue(title: "Epic Issue With a New Name", 
+                milestoneName: "Epic Issue With a New Name", 
+                milestoneState: "closed", 
+                labels: new string[] { "Epic" })
+            .Build();
+
+        var eventName = "issues";
+        await SendWebHook(data, eventName, false, new List<Milestone>() { new Milestone(url: "", htmlUrl: "", id: 50, number: 50, nodeId: "", state: ItemState.Closed, title: "Epic Issue With a New Name", description: "", creator: new User(), openIssues: 0, closedIssues: 0, createdAt: DateTimeOffset.Now, dueOn: DateTimeOffset.Now, closedAt: DateTimeOffset.Now, updatedAt: DateTimeOffset.Now) });
+
+        _mockGitHubMilestoneClient.Verify(m => m.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MilestoneUpdate>()), Times.Once());
+    }
+
+    [Test]
+    public async Task NotAllowableRepoAddsEpicLabelToIssue()
+    {
+        TestGitHubJson factory = new TestGitHubJson();
+        var data = factory.WithActionLabeled("Epic")
+            .WithRepository("not-allowed", "test")
+            .WithIssue(title: "Epic Issue")
+            .Build();
+
+        var eventName = "issues";
+        await SendWebHook(data, eventName, false, new List<Milestone>());
+
+        _mockGitHubMilestoneClient.Verify(m => m.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NewMilestone>()), Times.Never());
+    }
+
+    #endregion
+
+    private async Task SendWebHook(JObject data, string eventName, bool expectNotification,
+        IReadOnlyList<Milestone> returnedMilestones = null)
+    {
+        using TestData testData = SetupTestData(expectNotification, returnedMilestones);
         var text = data.ToString();
         var request = new HttpRequestMessage(HttpMethod.Post, "/api/webhooks/incoming/github")
         {
@@ -894,10 +1163,41 @@ public class GitHubHookControllerTests
         testData.VerifyAll();
     }
 
-    public TestData SetupTestData(bool expectNotification)
+    public TestData SetupTestData(bool expectNotification,
+        IReadOnlyList<Milestone> returnedMilestones = null)
     {
         var mockClientFactory = new MockHttpClientFactory();
         var factory = new TestAppFactory<DotNetStatusEmptyTestStartup>();
+
+        _mockGitHubMilestoneClient = new Mock<IMilestonesClient>();
+        _mockGitHubMilestoneClient.Setup(o => o.GetAllForRepository(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<MilestoneRequest>()))
+            .ReturnsAsync(returnedMilestones);
+        _mockGitHubMilestoneClient.Setup(o => o.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NewMilestone>()))
+            .ReturnsAsync(new Milestone(number: 1));
+        _mockGitHubMilestoneClient.Setup(o => o.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<MilestoneUpdate>()))
+            .ReturnsAsync(new Milestone(number: 1));
+
+        _mockGitHubLabelClient = new Mock<IIssuesLabelsClient>();
+        _mockGitHubLabelClient.Setup(o => o.AddToIssue(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string[]>()))
+            .ReturnsAsync(new List<Label>());
+
+        _mockGitHubCommentClient = new Mock<IIssueCommentsClient>();
+        _mockGitHubCommentClient.Setup(o => o.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>()))
+            .ReturnsAsync(new IssueComment());
+
+        _mockGitHubIssueClient = new Mock<IIssuesClient>();
+        _mockGitHubIssueClient.Setup(o => o.Milestone).Returns(_mockGitHubMilestoneClient.Object);
+        _mockGitHubIssueClient.Setup(o => o.Labels).Returns(_mockGitHubLabelClient.Object);
+        _mockGitHubIssueClient.Setup(o => o.Comment).Returns(_mockGitHubCommentClient.Object);
+        _mockGitHubIssueClient.Setup(o => o.Update(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<IssueUpdate>()))
+            .ReturnsAsync(new Issue());
+
+        _mockGitHubClient = new Mock<IGitHubClient>();
+        _mockGitHubClient.Setup(o => o.Issue).Returns(_mockGitHubIssueClient.Object);
+
+        _mockGitHubApplicationClientFactory = new Mock<IGitHubApplicationClientFactory>();
+        _mockGitHubApplicationClientFactory.Setup(o => o.CreateGitHubClientAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(_mockGitHubClient.Object);
+
         factory.ConfigureServices(services =>
         {
             services.AddControllers()
@@ -914,7 +1214,7 @@ public class GitHubHookControllerTests
             services.AddLogging();
             services.AddSingleton<IHttpClientFactory>(mockClientFactory);
 
-            services.AddSingleton(Mock.Of<IGitHubApplicationClientFactory>());
+            services.AddSingleton(_mockGitHubApplicationClientFactory.Object);
             services.AddSingleton<IClientFactory<IAzureDevOpsClient>>(provider =>
                 new SingleClientFactory<IAzureDevOpsClient>(Mock.Of<IAzureDevOpsClient>()));
             services.AddSingleton(Mock.Of<ITimelineIssueTriage>());
@@ -929,6 +1229,10 @@ public class GitHubHookControllerTests
                 o.Filters.AddService<TestVerifySignatureFilter>();
             });
             services.AddSingleton(ExponentialRetry.Default);
+            services.Configure<MilestoneManagementOptions>(o =>
+            {
+                o.ReposEnabledFor = new List<string> { "test-user/test" };
+            });
         });
         factory.ConfigureBuilder(app =>
         {
@@ -954,7 +1258,9 @@ public class GitHubHookControllerTests
 
     public class TestData : IDisposable
     {
-        public TestData(HttpClient client, TestAppFactory<DotNetStatusEmptyTestStartup> factory, MockHttpClientFactory mockClientFactory)
+        public TestData(HttpClient client, 
+            TestAppFactory<DotNetStatusEmptyTestStartup> factory, 
+            MockHttpClientFactory mockClientFactory)
         {
             Client = client;
             Factory = factory;
@@ -974,6 +1280,142 @@ public class GitHubHookControllerTests
         {
             Client?.Dispose();
             Factory?.Dispose();
+        }
+    }
+
+    public class TestGitHubJson : IDisposable
+    {
+        private JObject _returnObject;
+
+        public TestGitHubJson()
+        {
+            _returnObject = new JObject();
+        }
+
+        public TestGitHubJson WithAction(string action)
+        {
+            _returnObject["action"] = action;
+            return this;
+        }
+
+        /// <summary>
+        /// Adds the labeled action to the json and the label that was added
+        /// </summary>
+        /// <param name="labelName">Name of the label applied to the issue</param>
+        /// <returns></returns>
+        public TestGitHubJson WithActionLabeled(string labelName)
+        {
+            _returnObject["action"] = "labeled";
+            _returnObject["label"] = new JObject
+            {
+                ["name"] = labelName
+            };
+            return this;
+        }
+
+        /// <summary>
+        /// Adds the unlabeled action to the json the label that was removed
+        /// </summary>
+        /// <param name="labelName">Name of the label removed from the issue</param>
+        /// <returns></returns>
+        public TestGitHubJson WithActionUnlabeled(string labelName)
+        {
+            _returnObject["action"] = "unlabeled";
+            _returnObject["label"] = new JObject
+            {
+                ["name"] = labelName
+            };
+            return this;
+        }
+
+        public TestGitHubJson WithActionEdited(string previousTitle = null)
+        {
+            _returnObject["action"] = "edited";
+            _returnObject["changes"] = new JObject
+            {
+                ["title"] = new JObject
+                {
+                    ["from"] = previousTitle
+                }
+            };
+            return this;
+        }
+
+        public TestGitHubJson WithRepository(string owner, string repo)
+        {
+            _returnObject["repository"] = new JObject
+            {
+                ["owner"] = new JObject
+                {
+                    ["login"] = owner,
+                },
+                ["name"] = repo,
+            };
+            return this;
+        }
+
+        public TestGitHubJson WithIssue(string title = "",
+            string milestoneName = "Milestone Name",
+            string milestoneState = "open",
+            int openIssuesInMilestone = 0,
+            bool overrideNoMilestone = false,
+            string[] labels = null)
+        {
+            JArray labelsArray = new JArray();
+
+            if (labels != null)
+            {
+                for (int id = 1; id <= labels.Length; id++)
+                {
+                    labelsArray.Add(new JObject
+                    {
+                        ["id"] = id,
+                        ["name"] = labels[id-1]
+                    }); ;
+                }
+            }
+
+            _returnObject["issue"] = new JObject
+            {
+                ["number"] = 2,
+                ["body"] = "Something pizza",
+                ["user"] = new JObject
+                {
+                    ["login"] = "thatguy",
+                },
+                ["html_url"] = "https://FAKE-GITHUB-URL/test-user/test",
+                ["title"] = title,
+                ["milestone"] = overrideNoMilestone ? null : new JObject
+                {
+                    ["url"] = "",
+                    ["htmlUrl"] = "",
+                    ["id"] = 50,
+                    ["number"] = 50,
+                    ["nodeId"] = "",
+                    ["state"] = milestoneState,
+                    ["title"] = milestoneName,
+                    ["description"] = "",
+                    ["creator"] = null,
+                    ["open_issues"] = openIssuesInMilestone,
+                    ["closed_issues"] = 0,
+                    ["created_at"] = "2023-07-12T12:34:56Z",
+                    ["due_on"] = "2023-07-12T12:34:56Z",
+                    ["closed_at"] = "2023-07-12T12:34:56Z",
+                    ["updated_at"] = "2023-07-12T12:34:56Z"
+                },
+                ["labels"] = labelsArray
+            };
+            return this;
+        }
+
+        public JObject Build()
+        {
+            return _returnObject;
+        }
+
+        public void Dispose()
+        {
+            _returnObject = null;
         }
     }
 }
