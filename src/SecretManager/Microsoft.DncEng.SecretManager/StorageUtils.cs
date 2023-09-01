@@ -1,12 +1,11 @@
-using Microsoft.Azure.Management.Storage;
-using Microsoft.Azure.Management.Storage.Models;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Linq;
-using System.Collections.Generic;
-using Azure.Core;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Core;
+using Microsoft.Azure.Management.Storage;
+using Microsoft.Azure.Management.Storage.Models;
 using Microsoft.DncEng.CommandLineLib.Authentication;
 using Microsoft.Rest;
 using Microsoft.Rest.Azure;
@@ -125,12 +124,9 @@ public static class StorageUtils
 
     private static async Task<StorageManagementClient> CreateManagementClient(string subscriptionId, TokenCredentialProvider tokenCredentialProvider, CancellationToken cancellationToken)
     {
-        TokenCredential credentials = await tokenCredentialProvider.GetCredentialAsync();
-        AccessToken token = await credentials.GetTokenAsync(new TokenRequestContext(new[]
-        {
-            "https://management.azure.com/.default",
-        }), cancellationToken);
-        var serviceClientCredentials = new TokenCredentials(token.Token);
+        TokenCredentials serviceClientCredentials = await tokenCredentialProvider.GetTokenCredentialsUsingAzureCli(
+            cancellationToken: cancellationToken);
+
         var client = new StorageManagementClient(serviceClientCredentials)
         {
             SubscriptionId = subscriptionId,

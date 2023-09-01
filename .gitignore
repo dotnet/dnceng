@@ -348,3 +348,15 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+
+# Local installations of .net core
+.dotnet/
+
+# Locally restored packages (when simulating AzDO build)
+.packages/
+
+# remove noise in mac os x
+.DS_Store
+
+# some ide stuff
+.idea
