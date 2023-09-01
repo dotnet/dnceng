@@ -63,12 +63,17 @@ namespace Microsoft.DncEng.SecretManager.Tests
 
         protected static async Task<TokenCredentials> GetServiceClientCredentials()
         {
-            var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
+            var credentials = new ChainedTokenCredential(new TokenCredential[]
             {
-                TenantId = ConfigurationConstants.MsftAdTenantId
+                new AzureCliCredential(),
+
+                new DefaultAzureCredential(new DefaultAzureCredentialOptions
+                {
+                    TenantId = ConfigurationConstants.MsftAdTenantId
+                }),
             });
 
-            AccessToken token = await credential.GetTokenAsync(new TokenRequestContext(new[]
+            AccessToken token = await credentials.GetTokenAsync(new TokenRequestContext(new[]
             {
                 "https://management.azure.com/.default",
             }), default);
@@ -78,14 +83,19 @@ namespace Microsoft.DncEng.SecretManager.Tests
 
         protected static SecretClient GetSecretClient()
         {
-            var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions
+            var credentials = new ChainedTokenCredential(new TokenCredential[]
             {
-                TenantId = ConfigurationConstants.MsftAdTenantId
+                new AzureCliCredential(),
+
+                new DefaultAzureCredential(new DefaultAzureCredentialOptions
+                {
+                    TenantId = ConfigurationConstants.MsftAdTenantId
+                }),
             });
 
             var client = new SecretClient(
                 new Uri($"https://{KeyVaultName}.vault.azure.net/"),
-                credential);
+                credentials);
 
             return client;
         }
