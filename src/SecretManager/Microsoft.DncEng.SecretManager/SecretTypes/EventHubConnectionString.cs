@@ -35,7 +35,7 @@ public class EventHubConnectionString : SecretType<EventHubConnectionString.Para
 
     private async Task<EventHubManagementClient> CreateManagementClient(Parameters parameters, CancellationToken cancellationToken)
     {
-        TokenCredentials serviceClientCredentials = await _tokenCredentialProvider.GetTokenCredentialsFromAzureCli(
+        TokenCredentials serviceClientCredentials = await _tokenCredentialProvider.GetTokenCredentialsUsingAzureCli(
             cancellationToken: cancellationToken);
 
         return new EventHubManagementClient(serviceClientCredentials)

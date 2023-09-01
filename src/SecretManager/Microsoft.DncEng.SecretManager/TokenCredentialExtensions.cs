@@ -10,6 +10,9 @@ namespace Microsoft.DncEng.SecretManager;
 
 public static class TokenCredentialExtensions
 {
+    /// <summary>
+    /// Returns credentials that will first try to use Azure CLI credentials, then fall back to the provided credentials.
+    /// </summary>
     public static TokenCredential WithAzureCliCredentials(this TokenCredential otherCredentials)
     {
         return new ChainedTokenCredential(
@@ -20,7 +23,10 @@ public static class TokenCredentialExtensions
                 }), otherCredentials);
     }
 
-    public static async Task<TokenCredentials> GetTokenCredentialsFromAzureCli(
+    /// <summary>
+    /// Retrieves token credentials by first trying to use Azure CLI credentials, then falling back to the default.
+    /// </summary>
+    public static async Task<TokenCredentials> GetTokenCredentialsUsingAzureCli(
         this TokenCredentialProvider tokenCredential,
         string resourceId = "https://management.azure.com/.default",
         CancellationToken cancellationToken = default)
