@@ -19,6 +19,7 @@
     <PackageReference Include="Microsoft.Build.Utilities.Core" />
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="System.Net.Http" />
+    <PackageReference Include="System.Text.Json" />
   </ItemGroup>
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 </Project>
