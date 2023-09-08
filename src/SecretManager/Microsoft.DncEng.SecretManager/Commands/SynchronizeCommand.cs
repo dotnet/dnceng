@@ -282,7 +282,7 @@ public class SynchronizeCommand : Command
         }
         catch (Exception ex)
         {
-            _console.LogError($"Unhandled Exception: {ex.Message}");
+            _console.LogError($"Unhandled Exception: {ex}");
             throw new FailWithExitCodeException(-1);
         }
     }

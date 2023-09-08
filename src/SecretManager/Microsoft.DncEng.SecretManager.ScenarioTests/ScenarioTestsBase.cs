@@ -23,8 +23,8 @@ namespace Microsoft.DncEng.SecretManager.Tests
         protected const string KeyVaultName = "SecretManagerTestsKv";
 
         // Token credentials that first try to get credentials from Azure CLI, then fall back to the default
-        private readonly TokenCredential _tokenCredential = new AzureCliCredential(
-            new AzureCliCredentialOptions
+        private readonly TokenCredential _tokenCredential =
+            new DefaultAzureCredential(new DefaultAzureCredentialOptions
             {
                 TenantId = ConfigurationConstants.MsftAdTenantId,
             })
