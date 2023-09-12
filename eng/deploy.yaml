@@ -230,6 +230,14 @@ stages:
       inputs:
         useGlobalJson: true
 
+    - task: AzureCLI@2
+      inputs: 
+        azureSubscription: DotNet Eng Services Secret Manager
+        scriptType: ps
+        scriptLocation: inlineScript
+        inlineScript: |
+          az login
+
     - task: VSTest@2
       displayName: Secret Manager Scenario Tests
       inputs:
