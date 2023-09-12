@@ -11,28 +11,6 @@ parameters:
   # secret-manager-scenario-tests-client-secret
 
 stages:
-- stage: ValidateSecrets
-  dependsOn:
-  - build
-  jobs:
-  - job: ValidateSecrets
-    pool: 
-      name: NetCore1ESPool-Internal-NoMSI
-      demands: ImageOverride -equals 1es-windows-2022
-    steps:
-    - task: UseDotNet@2
-      displayName: Install Correct .NET Version
-      inputs:
-        useGlobalJson: true
-
-    - task: AzureCLI@2
-      inputs:
-        azureSubscription: DotNet Eng Services Secret Manager
-        scriptType: ps
-        scriptLocation: inlineScript
-        inlineScript: |
-          Get-ChildItem .vault-config/*.yaml |% { dotnet run --project src/SecretManager/Microsoft.DncEng.SecretManager -- synchronize --verify-only $_}
-
 - stage: validateDeployment
   displayName: Validate deployment
   pool:
@@ -67,7 +45,7 @@ stages:
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: |
-          az login
+          az login --use-device-code
 
     - task: VSTest@2
       displayName: Secret Manager Scenario Tests
