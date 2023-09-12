@@ -248,15 +248,14 @@ stages:
 
   - template: eng\deploy.yaml
     parameters:
-      ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/production') }}:
-        DeploymentEnvironment: Staging
-        DotNetStatusAppName: dotneteng-status-staging
-        DotNetStatusEndpoint: .NET Engineering Deployment Notification - Staging
-        PublishProfile: Int
-        RolloutScorerAppName: rollout-scorer-int
-        Subscription: NetHelixStaging
-        StatusVariableGroup: DotNetStatus Staging
-        GrafanaHost: https://dotnet-eng-grafana-staging.westus2.cloudapp.azure.com
-        GrafanaKeyVault: dotnet-grafana-staging
-        GrafanaVariableGroup: Dotnet-Grafana-Staging
+      DeploymentEnvironment: Staging
+      DotNetStatusAppName: dotneteng-status-staging
+      DotNetStatusEndpoint: .NET Engineering Deployment Notification - Staging
+      PublishProfile: Int
+      RolloutScorerAppName: rollout-scorer-int
+      Subscription: NetHelixStaging
+      StatusVariableGroup: DotNetStatus Staging
+      GrafanaHost: https://dotnet-eng-grafana-staging.westus2.cloudapp.azure.com
+      GrafanaKeyVault: dotnet-grafana-staging
+      GrafanaVariableGroup: Dotnet-Grafana-Staging
 
