@@ -45,7 +45,8 @@ stages:
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: |
-          az login --use-device-code
+          az --version
+          az account show
 
     - task: VSTest@2
       displayName: Secret Manager Scenario Tests
