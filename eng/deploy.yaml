@@ -46,7 +46,7 @@ stages:
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: |
-          dotnet test $(Pipeline.Workspace)/Microsoft.DncEng.SecretManager.ScenarioTests/Microsoft.DncEng.SecretManager.ScenarioTests.csproj
+          dotnet test $(Pipeline.Workspace)/src/Microsoft.DncEng.SecretManager.ScenarioTests/Microsoft.DncEng.SecretManager.ScenarioTests.csproj
 
 
 
