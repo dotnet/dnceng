@@ -17,7 +17,9 @@ stages:
     name: NetCore1ESPool-Internal
     demands: ImageOverride -equals 1es-windows-2019
   variables:
-  # Secret-Manager-Scenario-Tests provides: secret-manager-scenario-tests-client-secret
+  # Secret-Manager-Scenario-Tests provides: 
+  #   - secret-manager-scenario-tests-app-id
+  #   - secret-manager-scenario-tests-app-secret
   - group: Secret-Manager-Scenario-Tests
   jobs:
   - job: scenario
@@ -48,6 +50,14 @@ stages:
         inlineScript: |
           dotnet test $(System.DefaultWorkingDirectory)/src/SecretManager/Microsoft.DncEng.SecretManager.ScenarioTests/Microsoft.DncEng.SecretManager.ScenarioTests.csproj
 
-
-
-
+    - task: VSTest@2
+      displayName: Secret Manager Scenario Tests
+      inputs:
+        testSelector: testAssemblies
+        testAssemblyVer2: |
+          Microsoft.DncEng.SecretManager.ScenarioTests.dll
+        searchFolder: $(Pipeline.Workspace)/Microsoft.DncEng.SecretManager.ScenarioTests
+      env:
+        AZURE_TENANT_ID: 72f988bf-86f1-41af-91ab-2d7cd011db47
+        AZURE_CLIENT_ID: $(secret-manager-scenario-tests-app-id)
+        AZURE_CLIENT_SECRET: $(secret-manager-scenario-tests-app-secret)
