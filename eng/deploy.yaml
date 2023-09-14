@@ -41,15 +41,6 @@ stages:
       inputs:
         useGlobalJson: true
 
-    - task: AzureCLI@2
-      displayName: Secret Manager Scenario Tests (in AzureCLI)
-      inputs: 
-        azureSubscription: DotNet Eng Services Secret Manager
-        scriptType: ps
-        scriptLocation: inlineScript
-        inlineScript: |
-          dotnet test $(System.DefaultWorkingDirectory)/src/SecretManager/Microsoft.DncEng.SecretManager.ScenarioTests/Microsoft.DncEng.SecretManager.ScenarioTests.csproj
-
     - task: VSTest@2
       displayName: Secret Manager Scenario Tests
       inputs:
