@@ -27,8 +27,7 @@ namespace Microsoft.DncEng.SecretManager.Tests
             new DefaultAzureCredential(new DefaultAzureCredentialOptions
             {
                 TenantId = ConfigurationConstants.MsftAdTenantId,
-            })
-            .WithAzureCliCredentials();
+            });
 
         protected async Task ExecuteSynchronizeCommand(string manifest)
         {

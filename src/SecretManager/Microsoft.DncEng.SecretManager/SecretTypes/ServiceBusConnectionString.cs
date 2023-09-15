@@ -34,7 +34,7 @@ public class ServiceBusConnectionString : SecretType<ServiceBusConnectionString.
 
     private async Task<ServiceBusManagementClient> CreateManagementClient(Parameters parameters, CancellationToken cancellationToken)
     {
-        TokenCredentials serviceClientCredentials = await _tokenCredentialProvider.GetTokenCredentialsUsingAzureCli(
+        TokenCredentials serviceClientCredentials = await _tokenCredentialProvider.GetTokenCredentials(
             cancellationToken: cancellationToken);
 
         return new ServiceBusManagementClient(serviceClientCredentials)

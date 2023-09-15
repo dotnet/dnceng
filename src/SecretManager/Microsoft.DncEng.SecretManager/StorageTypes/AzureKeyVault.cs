@@ -37,7 +37,7 @@ public class AzureKeyVault : StorageLocationType<AzureKeyVaultParameters>
 
         return new SecretClient(
             new Uri($"https://{parameters.Name}.vault.azure.net/"),
-            creds.WithAzureCliCredentials());
+            creds);
     }
 
     private async Task<KeyClient> CreateKeyClient(AzureKeyVaultParameters parameters)
@@ -46,7 +46,7 @@ public class AzureKeyVault : StorageLocationType<AzureKeyVaultParameters>
 
         return new KeyClient(
             new Uri($"https://{parameters.Name}.vault.azure.net/"),
-            creds.WithAzureCliCredentials());
+            creds);
     }
 
     public string GetAzureKeyVaultUri(AzureKeyVaultParameters parameters)

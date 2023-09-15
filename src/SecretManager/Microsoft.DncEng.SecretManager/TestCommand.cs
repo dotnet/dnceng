@@ -22,7 +22,6 @@ class TestCommand : Command
     public override async Task RunAsync(CancellationToken cancellationToken)
     {
         var creds = await _tokenProvider.GetCredentialAsync();
-        creds = creds.WithAzureCliCredentials();
 
         var token = await creds.GetTokenAsync(new TokenRequestContext(new[]
         {
