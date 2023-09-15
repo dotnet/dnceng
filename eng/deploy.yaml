@@ -205,6 +205,8 @@ stages:
   pool:
     name: NetCore1ESPool-Internal
     demands: ImageOverride -equals 1es-windows-2019
+  dependsOn:
+  - deploy
   variables:
   # Secret-Manager-Scenario-Tests provides: 
   #   - secret-manager-scenario-tests-app-id
