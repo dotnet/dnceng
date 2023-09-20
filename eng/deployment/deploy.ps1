@@ -44,7 +44,7 @@ try {
   $account = New-AzStorageAccount -ResourceGroupName "ARM_Deploy_Staging" -Name $stagingStorageAccountName -Location $location -SkuName Standard_LRS
 }
 catch {
-  $account = Get-AzStorageAccount | Where-Object StorageAccountName -eq $stagingStorageAccountName
+  $account = Get-AzStorageAccount -ResourceGroupName "ARM_Deploy_Staging" -Name $stagingStorageAccountName
 }
 
 $manifestFile = Join-Path $appPackagePath ApplicationManifest.xml

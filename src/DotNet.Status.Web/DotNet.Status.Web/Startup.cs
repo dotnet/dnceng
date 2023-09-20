@@ -99,6 +99,7 @@ public class Startup
         services.Configure<BuildMonitorOptions>(Configuration.GetSection("BuildMonitor"));
         services.Configure<KustoOptions>(Configuration.GetSection("Kusto"));
         services.Configure<RcaOptions>(Configuration.GetSection("Rca"));
+        services.Configure<MilestoneManagementOptions>(Configuration.GetSection("MilestoneManagement"));
 
         services.Configure<SimpleSigninOptions>(o => { o.ChallengeScheme = GitHubScheme; });
         services.ConfigureExternalCookie(options =>

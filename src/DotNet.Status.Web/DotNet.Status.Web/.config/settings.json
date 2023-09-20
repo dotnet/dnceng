@@ -30,6 +30,9 @@
     "Organization": "dnceng",
     "Project": "internal"
   },
+  "MilestoneManagement": {
+    "ReposEnabledFor": [ "dotnet/dnceng" ]
+  },
   "BuildMonitor": {
     "Monitor": {
       "Organization": "dnceng",
@@ -120,13 +123,13 @@
         },
         {
           "Project": "internal",
-          "DefinitionPath": "\\dotnet\\dncneg\\dotnet-dnceng-ci",
+          "DefinitionPath": "\\dotnet\\dnceng\\dotnet-dnceng-ci",
           "Branches": [ "main" ],
           "IssuesId": "dotnet-dnceng-build-failed"
         },
         {
           "Project": "internal",
-          "DefinitionPath": "\\dotnet\\dncneg\\dotnet-dnceng-weekly",
+          "DefinitionPath": "\\dotnet\\dnceng\\dotnet-dnceng-weekly",
           "Branches": [ "main" ],
           "IssuesId": "dotnet-dnceng-ops"
         }

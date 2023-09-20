@@ -1,15 +1,15 @@
+using Azure;
+using Azure.Core;
+using Azure.ResourceManager;
+using Azure.ResourceManager.EventHubs;
+using Microsoft.DncEng.CommandLineLib;
+using Microsoft.DncEng.CommandLineLib.Authentication;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Azure.Core;
-using Microsoft.Azure.Management.EventHub;
-using Microsoft.Azure.Management.EventHub.Models;
-using Microsoft.DncEng.CommandLineLib;
-using Microsoft.DncEng.CommandLineLib.Authentication;
-using Microsoft.Rest;
+using Azure.ResourceManager.EventHubs.Models;
 
 namespace Microsoft.DncEng.SecretManager.SecretTypes;
 
@@ -34,84 +34,67 @@ public class EventHubConnectionString : SecretType<EventHubConnectionString.Para
         _clock = clock;
     }
 
-    private async Task<EventHubManagementClient> CreateManagementClient(Parameters parameters, CancellationToken cancellationToken)
+    private async Task<ArmClient> CreateManagementClient(Parameters parameters, CancellationToken cancellationToken)
     {
-        var creds = await _tokenCredentialProvider.GetCredentialAsync();
-        var token = await creds.GetTokenAsync(new TokenRequestContext(new[]
-        {
-            "https://management.azure.com/.default",
-        }), cancellationToken);
-        var serviceClientCredentials = new TokenCredentials(token.Token);
-        return new EventHubManagementClient(serviceClientCredentials)
-        {
-            SubscriptionId = parameters.Subscription.ToString(),
-        };
+        TokenCredential serviceClientCredentials = await _tokenCredentialProvider.GetCredentialAsync();
+
+        return new ArmClient(serviceClientCredentials, parameters.Subscription.ToString());
     }
 
     protected override async Task<SecretData> RotateValue(Parameters parameters, RotationContext context, CancellationToken cancellationToken)
     {
-        var client = await CreateManagementClient(parameters, cancellationToken);
-        var accessPolicyName = context.SecretName + "-access-policy";
-        var rule = new AuthorizationRule(new List<string>(), name: accessPolicyName);
-        bool updateRule = false;
-        foreach (var c in parameters.Permissions)
+        ArmClient client = await CreateManagementClient(parameters, cancellationToken);
+
+        ResourceIdentifier id = EventHubResource.CreateResourceIdentifier(
+            parameters.Subscription.ToString(),
+            parameters.ResourceGroup,
+            parameters.Namespace,
+            parameters.Name);
+
+        EventHubResource eventHubResource = await client.GetEventHubResource(id).GetAsync(cancellationToken);
+
+        string accessPolicyName = context.SecretName + "-access-policy";
+        EventHubsAuthorizationRuleData rule = new();
+
+        foreach (char c in parameters.Permissions)
         {
             switch (c)
             {
                 case 's':
-                    rule.Rights.Add(AccessRights.Send);
+                    rule.Rights.Add(EventHubsAccessRight.Send);
                     break;
                 case 'l':
-                    rule.Rights.Add(AccessRights.Listen);
+                    rule.Rights.Add(EventHubsAccessRight.Listen);
                     break;
                 case 'm':
-                    rule.Rights.Add(AccessRights.Manage);
+                    rule.Rights.Add(EventHubsAccessRight.Manage);
                     break;
                 default:
                     throw new ArgumentException($"Invalid permission specification '{c}'");
             }
         }
-        try
-        {
-            var existingRule = await client.EventHubs.GetAuthorizationRuleAsync(parameters.ResourceGroup, parameters.Namespace, parameters.Name, accessPolicyName, cancellationToken);
-            if (existingRule.Rights.Count != rule.Rights.Count ||
-                existingRule.Rights.Zip(rule.Rights).Any((p) => p.First != p.Second))
-            {
-                updateRule = true;
-            }
-        }
-        catch (ErrorResponseException e) when (e.Response.StatusCode == HttpStatusCode.NotFound)
-        {
-            updateRule = true;
-        }
 
-        if (updateRule)
-        {
-            await client.EventHubs.CreateOrUpdateAuthorizationRuleAsync(parameters.ResourceGroup, parameters.Namespace, parameters.Name,
-                accessPolicyName, rule, cancellationToken);
-        }
+        ArmOperation<EventHubAuthorizationRuleResource> ruleResourceOperation = await eventHubResource.GetEventHubAuthorizationRules().CreateOrUpdateAsync(WaitUntil.Completed, accessPolicyName, rule, cancellationToken);
+        EventHubAuthorizationRuleResource ruleResource = ruleResourceOperation.Value;
 
         var currentKey = context.GetValue("currentKey", "primary");
-        AccessKeys keys;
+        EventHubsAccessKeys keys;
         string result;
         switch (currentKey)
         {
             case "primary":
-                keys = await client.EventHubs.RegenerateKeysAsync(parameters.ResourceGroup, parameters.Namespace, parameters.Name, accessPolicyName,
-                    new RegenerateAccessKeyParameters(KeyType.SecondaryKey), cancellationToken);
+                keys = await ruleResource.RegenerateKeysAsync(new EventHubsRegenerateAccessKeyContent(EventHubsAccessKeyType.SecondaryKey), cancellationToken);
                 result = keys.SecondaryConnectionString;
                 context.SetValue("currentKey", "secondary");
                 break;
             case "secondary":
-                keys = await client.EventHubs.RegenerateKeysAsync(parameters.ResourceGroup, parameters.Namespace, parameters.Name, accessPolicyName,
-                    new RegenerateAccessKeyParameters(KeyType.PrimaryKey), cancellationToken);
+                keys = await ruleResource.RegenerateKeysAsync(new EventHubsRegenerateAccessKeyContent(EventHubsAccessKeyType.PrimaryKey), cancellationToken);
                 result = keys.PrimaryConnectionString;
                 context.SetValue("currentKey", "primary");
                 break;
             default:
                 throw new InvalidOperationException($"Unexpected 'currentKey' value '{currentKey}'.");
         }
-
 
         return new SecretData(result, DateTimeOffset.MaxValue, _clock.UtcNow.AddMonths(6));
     }

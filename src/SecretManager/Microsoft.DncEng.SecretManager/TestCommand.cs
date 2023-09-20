@@ -22,10 +22,12 @@ class TestCommand : Command
     public override async Task RunAsync(CancellationToken cancellationToken)
     {
         var creds = await _tokenProvider.GetCredentialAsync();
-        var token = await creds.GetTokenAsync(new TokenRequestContext(new []
+
+        var token = await creds.GetTokenAsync(new TokenRequestContext(new[]
         {
             "https://servicebus.azure.net/.default",
         }), cancellationToken);
+
         Debug.WriteLine(token.ExpiresOn);
         _console.WriteImportant("Successfully authenticated");
     }
