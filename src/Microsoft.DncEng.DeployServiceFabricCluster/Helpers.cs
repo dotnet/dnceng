@@ -2,11 +2,12 @@ using System.Net.Http.Headers;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Azure.Core;
+using Azure.Identity;
 using Microsoft.Azure.Management.Fluent;
 using Microsoft.Azure.Management.ResourceManager.Fluent;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Authentication;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Core;
-using Microsoft.Azure.Services.AppAuthentication;
 using Microsoft.Rest;
 using Microsoft.Rest.TransientFaultHandling;
 
@@ -15,20 +16,24 @@ namespace Microsoft.DncEng.DeployServiceFabricCluster;
 internal static class Helpers
 {
     private const string MsftAdTenantId = "72f988bf-86f1-41af-91ab-2d7cd011db47";
-    private static readonly AzureServiceTokenProvider TokenProvider = new AzureServiceTokenProvider();
+    private static readonly DefaultAzureCredential TokenProvider = new DefaultAzureCredential();
 
     private class AzureCredentialsTokenProvider : ITokenProvider
     {
-        private readonly AzureServiceTokenProvider _inner;
+        private readonly DefaultAzureCredential _inner;
 
-        public AzureCredentialsTokenProvider(AzureServiceTokenProvider inner)
+        public AzureCredentialsTokenProvider(DefaultAzureCredential inner)
         {
             _inner = inner;
         }
 
         public async Task<AuthenticationHeaderValue> GetAuthenticationHeaderAsync(CancellationToken cancellationToken)
         {
-            string token = await _inner.GetAccessTokenAsync("https://management.azure.com", MsftAdTenantId);
+            AccessToken accessToken = await _inner.GetTokenAsync(
+                new TokenRequestContext(scopes: new string[] { "https://management.azure.com/.default" }, tenantId: MsftAdTenantId) { }
+            );
+
+            string token = accessToken.Token;
             return new AuthenticationHeaderValue("Bearer", token);
         }
     }
