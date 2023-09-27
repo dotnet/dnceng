@@ -60,6 +60,8 @@ public class AlertHookController : ControllerBase
             case "no_data":
                 await OpenNewNotificationAsync(notification);
                 break;
+            default:
+                return BadRequest();
         }
 
         return NoContent();
