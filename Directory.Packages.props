@@ -39,7 +39,6 @@
     <PackageVersion Include="Microsoft.Azure.Management.ResourceManager.Fluent" Version="1.37.1" />
     <PackageVersion Include="Microsoft.Azure.Management.ServiceBus" Version="2.1.0" />
     <PackageVersion Include="Microsoft.Azure.Management.Storage" Version="19.0.0" />
-    <PackageVersion Include="Microsoft.Azure.Services.AppAuthentication" Version="1.4.0" />
     <PackageVersion Include="Microsoft.Azure.WebJobs.Extensions.Storage" Version="5.0.1" />
     <PackageVersion Include="Microsoft.Build" Version="17.1.0" />
     <PackageVersion Include="Microsoft.Build.Framework" Version="17.1.0" />
