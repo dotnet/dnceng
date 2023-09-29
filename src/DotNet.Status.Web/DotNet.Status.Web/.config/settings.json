@@ -146,7 +146,7 @@
         "Id": "dotnet-dnceng-first-responder",
         "Owner": "dotnet",
         "Name": "dnceng",
-        "Labels": [ "Build Failed", "First Responder" ]
+        "Labels": [ "Build Failed", "Ops - First Responder" ]
       },
       {
         "Id": "dotnet-dnceng-ops",
@@ -193,7 +193,7 @@
         "Id": "dotnet-arcade-services",
         "Owner": "dotnet",
         "Name": "arcade-services",
-        "Labels": [ "Build Failed", "First Responder" ],
+        "Labels": [ "Build Failed", "Ops - First Responder" ],
         "UpdateExisting": true
       }
     ]
