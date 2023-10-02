@@ -31,5 +31,5 @@ If `OptionalToolSource` isn't set, no optional tooling is restored.
 
 
 <!-- Begin Generated Content: Doc Feedback -->
-<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5Cfetch-internal-tooling.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5Cfetch-internal-tooling.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5Cfetch-internal-tooling.md)</sub>
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProjectDocs%5Cfetch-internal-tooling.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProjectDocs%5Cfetch-internal-tooling.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProjectDocs%5Cfetch-internal-tooling.md)</sub>
 <!-- End Generated Content-->

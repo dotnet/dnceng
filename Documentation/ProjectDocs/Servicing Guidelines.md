@@ -31,5 +31,5 @@ From One-Pager Guidelines
 
 
 <!-- Begin Generated Content: Doc Feedback -->
-<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CServicing%20Guidelines.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CServicing%20Guidelines.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CServicing%20Guidelines.md)</sub>
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProjectDocs%5CServicing%20Guidelines.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProjectDocs%5CServicing%20Guidelines.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProjectDocs%5CServicing%20Guidelines.md)</sub>
 <!-- End Generated Content-->

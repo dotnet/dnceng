@@ -48,5 +48,5 @@ The YAML template is not top priority as devs are familiar with MSBuild tasks. H
 
 
 <!-- Begin Generated Content: Doc Feedback -->
-<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CVSTS%5Chelix-job-sender.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CVSTS%5Chelix-job-sender.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CVSTS%5Chelix-job-sender.md)</sub>
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProjectDocs%5CVSTS%5Chelix-job-sender.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProjectDocs%5CVSTS%5Chelix-job-sender.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProjectDocs%5CVSTS%5Chelix-job-sender.md)</sub>
 <!-- End Generated Content-->

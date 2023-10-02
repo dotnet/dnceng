@@ -44,5 +44,5 @@ We will reassess this step after two weeks to see if we're getting any value out
 
 
 <!-- Begin Generated Content: Doc Feedback -->
-<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5Cimprove-arcade-reliability.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5Cimprove-arcade-reliability.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5Cimprove-arcade-reliability.md)</sub>
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProjectDocs%5Cimprove-arcade-reliability.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProjectDocs%5Cimprove-arcade-reliability.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProjectDocs%5Cimprove-arcade-reliability.md)</sub>
 <!-- End Generated Content-->

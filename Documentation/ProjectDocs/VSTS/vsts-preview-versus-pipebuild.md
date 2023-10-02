@@ -75,5 +75,5 @@ These ae additional items which it would be great to utilize, but we could work 
 
 
 <!-- Begin Generated Content: Doc Feedback -->
-<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CVSTS%5Cvsts-preview-versus-pipebuild.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CVSTS%5Cvsts-preview-versus-pipebuild.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CVSTS%5Cvsts-preview-versus-pipebuild.md)</sub>
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProjectDocs%5CVSTS%5Cvsts-preview-versus-pipebuild.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProjectDocs%5CVSTS%5Cvsts-preview-versus-pipebuild.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProjectDocs%5CVSTS%5Cvsts-preview-versus-pipebuild.md)</sub>
 <!-- End Generated Content-->

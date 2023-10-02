@@ -51,7 +51,7 @@ A POC can help
 
 ## Service-ability of Feature
 
-Changes that we implement often require addition maintenance to support them long term. The FR group has been set up to handle this work but it is up to the v-team to make sure FR is successful in servicing the changes made within your epic long term. Please see the [Servicing Guidelines](https://github.com/dotnet/arcade/blob/main/Documentation/Project-Docs/Servicing%20Guidelines.md) Document for what you should be thinking about during your feature creation to help the team be able to easily service your feature long term.
+Changes that we implement often require addition maintenance to support them long term. The FR group has been set up to handle this work but it is up to the v-team to make sure FR is successful in servicing the changes made within your epic long term. Please see the [Servicing Guidelines](https://github.com/dotnet/arcade/blob/main/Documentation/ProjectDocs/Servicing%20Guidelines.md) Document for what you should be thinking about during your feature creation to help the team be able to easily service your feature long term.
 
 ## House Keeping
 
@@ -67,5 +67,5 @@ After all discussions have been resolved, the resulting one-pager document shoul
 
 
 <!-- Begin Generated Content: Doc Feedback -->
-<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5Cone-pager-template.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5Cone-pager-template.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5Cone-pager-template.md)</sub>
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProjectDocs%5Cone-pager-template.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProjectDocs%5Cone-pager-template.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProjectDocs%5Cone-pager-template.md)</sub>
 <!-- End Generated Content-->

@@ -150,5 +150,5 @@ duplicates are ignored and not ingested into Kusto.
 
 
 <!-- Begin Generated Content: Doc Feedback -->
-<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CDependency%20Flow%5Cimproved-dependency-flow.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CDependency%20Flow%5Cimproved-dependency-flow.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CDependency%20Flow%5Cimproved-dependency-flow.md)</sub>
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProjectDocs%5CDependency%20Flow%5Cimproved-dependency-flow.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProjectDocs%5CDependency%20Flow%5Cimproved-dependency-flow.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProjectDocs%5CDependency%20Flow%5Cimproved-dependency-flow.md)</sub>
 <!-- End Generated Content-->

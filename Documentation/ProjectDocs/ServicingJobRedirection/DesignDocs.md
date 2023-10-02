@@ -12,7 +12,7 @@ More information about how we use different subscription types can be found at t
 
 All 2.1, 3.1 and 5.x builds and tests should be redirected. Any servicing branches that are created in the future will also have to be onboarded into this mechanism which must be taken into account in this epic.
 
-Parts of the changes in this epic will leverage the work we already did to enable team/repository based redirection for `runtime` and `xaml` subscriptions. The documentation on this can be found here: [Documentation/Project-Docs/RepositoriesInTheirOwnSubscription.md](https://github.com/dotnet/arcade/blob/main/Documentation/Project-Docs/RepositoriesInTheirOwnSubscription.md).
+Parts of the changes in this epic will leverage the work we already did to enable team/repository based redirection for `runtime` and `xaml` subscriptions. The documentation on this can be found here: [Documentation/ProjectDocs/RepositoriesInTheirOwnSubscription.md](https://github.com/dotnet/arcade/blob/main/Documentation/ProjectDocs/RepositoriesInTheirOwnSubscription.md).
 
 Following diagram depicts high level view of the components that will be involved in the implementation and the general logic of redirecting jobs to queues located in separate subscriptions:
 
@@ -77,5 +77,5 @@ For 2.1 servicing branches it may be necessary to manually update the files in e
 
 
 <!-- Begin Generated Content: Doc Feedback -->
-<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CServicingJobRedirection%5CDesignDocs.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CServicingJobRedirection%5CDesignDocs.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CServicingJobRedirection%5CDesignDocs.md)</sub>
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProjectDocs%5CServicingJobRedirection%5CDesignDocs.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProjectDocs%5CServicingJobRedirection%5CDesignDocs.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProjectDocs%5CServicingJobRedirection%5CDesignDocs.md)</sub>
 <!-- End Generated Content-->

@@ -47,5 +47,5 @@ Requirements [gist](https://gist.github.com/chcosta/51af24ab8a1cfd303a50d0aa7332
 
 
 <!-- Begin Generated Content: Doc Feedback -->
-<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CSecret%20Management%5Cone-pager.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CSecret%20Management%5Cone-pager.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CSecret%20Management%5Cone-pager.md)</sub>
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProjectDocs%5CSecret%20Management%5Cone-pager.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProjectDocs%5CSecret%20Management%5Cone-pager.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProjectDocs%5CSecret%20Management%5Cone-pager.md)</sub>
 <!-- End Generated Content-->

@@ -165,5 +165,5 @@ As a reminder, the .NET Core Engineering team never wanted to own a build orches
 
 
 <!-- Begin Generated Content: Doc Feedback -->
-<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CVSTS%5Cpipebuild-feature-history.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CVSTS%5Cpipebuild-feature-history.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CVSTS%5Cpipebuild-feature-history.md)</sub>
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProjectDocs%5CVSTS%5Cpipebuild-feature-history.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProjectDocs%5CVSTS%5Cpipebuild-feature-history.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProjectDocs%5CVSTS%5Cpipebuild-feature-history.md)</sub>
 <!-- End Generated Content-->

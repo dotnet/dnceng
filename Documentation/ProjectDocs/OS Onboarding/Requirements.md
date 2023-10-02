@@ -74,5 +74,5 @@ The requirement for Platform/OS onboarding is that it should be relatively painl
 
 
 <!-- Begin Generated Content: Doc Feedback -->
-<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5COS%20Onboarding%5CRequirements.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5COS%20Onboarding%5CRequirements.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5COS%20Onboarding%5CRequirements.md)</sub>
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProjectDocs%5COS%20Onboarding%5CRequirements.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProjectDocs%5COS%20Onboarding%5CRequirements.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProjectDocs%5COS%20Onboarding%5CRequirements.md)</sub>
 <!-- End Generated Content-->
