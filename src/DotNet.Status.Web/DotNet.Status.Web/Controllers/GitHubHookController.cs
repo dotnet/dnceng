@@ -146,34 +146,26 @@ public class GitHubHookController : ControllerBase
     [GitHubWebHook(EventName = "pull_request")]
     public async Task<IActionResult> PullRequestHook()
     {
-        try
-        {
-            var payload = await DeserializeGitHubWebHook<PullRequestEventPayloadWithChanges>();
+        var payload = await DeserializeGitHubWebHook<PullRequestEventPayloadWithChanges>();
 
-            string repo = payload.Repository.Owner.Login + "/" + payload.Repository.Name;
-            int number = payload.PullRequest.Number;
-            _logger.LogInformation("Received webhook for pull request {repo}#{number}", repo, number);
-            string title = payload.PullRequest.Title;
-            string uri = payload.PullRequest.HtmlUrl;
-            string username = payload.PullRequest.User.Login;
-            DateTimeOffset date = payload.PullRequest.UpdatedAt;
-            using IDisposable scope = _logger.BeginScope("Handling pull request {repo}#{prNumber}", repo, number);
+        string repo = payload.Repository.Owner.Login + "/" + payload.Repository.Name;
+        int number = payload.PullRequest.Number;
+        _logger.LogInformation("Received webhook for pull request {repo}#{number}", repo, number);
+        string title = payload.PullRequest.Title;
+        string uri = payload.PullRequest.HtmlUrl;
+        string username = payload.PullRequest.User.Login;
+        DateTimeOffset date = payload.PullRequest.UpdatedAt;
+        using IDisposable scope = _logger.BeginScope("Handling pull request {repo}#{prNumber}", repo, number);
 
-            switch (payload.Action)
-            {
-                case "opened":
-                    await _teamMentionForwarder.HandleMentions(repo, null, payload.PullRequest.Body, title, uri, username,
-                        date);
-                    break;
-                case "edited" when !string.IsNullOrEmpty(payload.Changes.Body?.From):
-                    await _teamMentionForwarder.HandleMentions(repo, payload.Changes.Body.From, payload.PullRequest.Body, title, uri, username, date);
-                    break;
-            }
-        }
-        catch (NullReferenceException ex)
+        switch (payload.Action)
         {
-            _logger.LogError(ex, "Unexpected null value when processing pull request hook");
-            throw;
+            case "opened":
+                await _teamMentionForwarder.HandleMentions(repo, null, payload.PullRequest.Body, title, uri, username,
+                    date);
+                break;
+            case "edited" when !string.IsNullOrEmpty(payload.Changes.Body?.From):
+                await _teamMentionForwarder.HandleMentions(repo, payload.Changes.Body.From, payload.PullRequest.Body, title, uri, username, date);
+                break;
         }
         return NoContent();
     }
@@ -221,7 +213,7 @@ public class GitHubHookController : ControllerBase
                     {
                         await CreateMilestoneAndLinkToIssue();
                         break;
-                    }                    
+                    }
 
                     MilestoneUpdate update = new MilestoneUpdate
                     {
@@ -236,13 +228,13 @@ public class GitHubHookController : ControllerBase
                     };
 
                     await client.Issue.Update(org, repo, issueEvent.Issue.Number, issueUpdate);
-                    
+
                 }
                 break;
             case "labeled":
             case "reopened":
                 // was the epic label applied? check to see if the milestone name already exists. If it doesn't, create a milestone with the issue name
-                if ((action == "labeled" && issueEvent.Label.Name.Equals("Epic", StringComparison.OrdinalIgnoreCase)) || 
+                if ((action == "labeled" && issueEvent.Label.Name.Equals("Epic", StringComparison.OrdinalIgnoreCase)) ||
                     (action == "reopened" && issueEvent.Issue.Labels != null && issueEvent.Issue.Labels.Any(x => x.Name == "Epic")))
                 {
                     string epicName = issueEvent.Issue.Title;
@@ -259,7 +251,7 @@ public class GitHubHookController : ControllerBase
                     // Cannot create new milestones with the same name of one that exists even if it's closed, so we'll 
                     //   re-open the closed one and update the description. If it already exists for some reason, we'll 
                     //   assign the issue to the milestone, and link it in the description.
-                    
+
                     if (foundMilestone.State == ItemState.Closed)
                     {
                         // reopen the old one
@@ -279,7 +271,7 @@ public class GitHubHookController : ControllerBase
                     };
 
                     await client.Issue.Update(org, repo, issueEvent.Issue.Number, issueUpdate);
-                    
+
                 }
                 break;
             case "unlabeled":
@@ -334,7 +326,7 @@ public class GitHubHookController : ControllerBase
                     };
 
                     await client.Issue.Milestone.Update(org, repo, issueEvent.Issue.Milestone.Number, milestoneUpdate);
-                    
+
                 }
                 break;
         }
@@ -444,7 +436,7 @@ public class GitHubHookController : ControllerBase
         }
 
         _logger.LogInformation("Opening RCA work item in Azure Boards {org}/{project}", _rcaOptions.Value.Organization, _rcaOptions.Value.Project);
-            
+
         // The RCA template has all of the sections that we want to be filled out, so we don't need to specify the text here
         using var azureDevOpsClient = _azureDevOpsClientFactory.GetClient(_rcaOptions.Value.Organization);
         WorkItem? workItem = await azureDevOpsClient.Value.CreateRcaWorkItem(_rcaOptions.Value.Project, $"RCA: {issueTitle} ({issueNumber})");
