@@ -9,7 +9,7 @@ namespace DotNet.Status.Web.Models;
 public class GrafanaNotification
 {
     public string Title { get; set; }
-    public int RuleId { get; set; }
+    public ulong RuleId { get; set; }
     public string RuleName { get; set; }
     public string RuleUrl { get; set; }
     public string State { get; set; }
