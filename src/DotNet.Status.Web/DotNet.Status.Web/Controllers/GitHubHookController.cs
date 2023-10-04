@@ -146,28 +146,35 @@ public class GitHubHookController : ControllerBase
     [GitHubWebHook(EventName = "pull_request")]
     public async Task<IActionResult> PullRequestHook()
     {
-        var payload = await DeserializeGitHubWebHook<PullRequestEventPayloadWithChanges>();
-
-        string repo = payload.Repository.Owner.Login + "/" + payload.Repository.Name;
-        int number = payload.PullRequest.Number;
-        _logger.LogInformation("Received webhook for pull request {repo}#{number}", repo, number);
-        string title = payload.PullRequest.Title;
-        string uri = payload.PullRequest.HtmlUrl;
-        string username = payload.PullRequest.User.Login;
-        DateTimeOffset date = payload.PullRequest.UpdatedAt;
-        using IDisposable scope = _logger.BeginScope("Handling pull request {repo}#{prNumber}", repo, number);
-        switch (payload.Action)
+        try
         {
-            case "opened":
-                await _teamMentionForwarder.HandleMentions(repo, null, payload.PullRequest.Body, title, uri, username,
-                    date);
-                break;
-            case "edited":
-                await _teamMentionForwarder.HandleMentions(repo, payload.Changes.Body.From, payload.PullRequest.Body, title, uri, username, date);
-                break;
+            var payload = await DeserializeGitHubWebHook<PullRequestEventPayloadWithChanges>();
+
+            string repo = payload.Repository.Owner.Login + "/" + payload.Repository.Name;
+            int number = payload.PullRequest.Number;
+            _logger.LogInformation("Received webhook for pull request {repo}#{number}", repo, number);
+            string title = payload.PullRequest.Title;
+            string uri = payload.PullRequest.HtmlUrl;
+            string username = payload.PullRequest.User.Login;
+            DateTimeOffset date = payload.PullRequest.UpdatedAt;
+            using IDisposable scope = _logger.BeginScope("Handling pull request {repo}#{prNumber}", repo, number);
+
+            switch (payload.Action)
+            {
+                case "opened":
+                    await _teamMentionForwarder.HandleMentions(repo, null, payload.PullRequest.Body, title, uri, username,
+                        date);
+                    break;
+                case "edited" when !string.IsNullOrEmpty(payload.Changes.Body?.From):
+                    await _teamMentionForwarder.HandleMentions(repo, payload.Changes.Body.From, payload.PullRequest.Body, title, uri, username, date);
+                    break;
+            }
         }
-
-
+        catch (NullReferenceException ex)
+        {
+            _logger.LogError(ex, "Unexpected null value when processing pull request hook");
+            throw;
+        }
         return NoContent();
     }
 
