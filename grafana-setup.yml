@@ -39,7 +39,7 @@ stages:
 
     - script: dotnet build
       displayName: Build SecretManager
-      workingDirectory: src/SecretManager
+      workingDirectory: src/SecretManager/Microsoft.DncEng.SecretManager
 
     - task: AzureCLI@2
       displayName: Synchronize Grafana secrets
@@ -48,7 +48,7 @@ stages:
         scriptType: ps
         scriptLocation: inlineScript
         inlineScript: |
-          dotnet run --project src/SecretManager -- synchronize .vault-config/dotnet-grafana-staging.yaml
+          dotnet run --project src/SecretManager/Microsoft.DncEng.SecretManager -- synchronize .vault-config/dotnet-grafana-staging.yaml
 
 - stage: deploy
   displayName: Deploy grafana server
