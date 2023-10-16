@@ -101,6 +101,21 @@ export DEBIAN_FRONTEND=noninteractive
 wget -q -O - https://packages.grafana.com/gpg.key | sudo apt-key add -
 add-apt-repository "deb https://packages.grafana.com/oss/deb stable main"
 
+# Before
+df --human-readable --inodes
+df --human-readable
+
+# Clean apt cache every which way before doing more.
+apt-get autoremove --yes
+apt-get autoclean --yes
+apt-get clean --yes
+apt-get install --fix-broken --yes
+
+# After
+df --human-readable --inodes
+df --human-readable
+
+# Find latest available packages then install pip and grafana packages.
 apt-get update
 apt-get -y install python3-pip "grafana=$GRAFANA_VERSION"
 
