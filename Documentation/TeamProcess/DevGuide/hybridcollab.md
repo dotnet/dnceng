@@ -23,7 +23,7 @@ Research is showing more and more that social interactions are more of a "must h
 
 _One of the most felt aspects of remote and hybrid work is the impact it&#39;s had on our relationships. _[_Last year&#39;s Work Trend Index_](https://www.microsoft.com/en-us/worklab/work-trend-index/hybrid-work)_ revealed that teams became more siloed, and this year's study shows the trend one year later._
 
-_When people trust one another and have [social] capital, you get a willingness to take risks, you get more innovation and creativity and less groupthink - Nancy Baym, Principal Researcher, Microsoft Research_
+Nancy Baym, Principal Researcher @ Microsoft Research, once said something like this... _When people trust one another and have [social] currency, you get a willingness to take risks, you get more innovation and creativity and less groupthink_
 
 _When work-life balance is out of whack, most people cut out relationship-building for more urgent matters,&quot; says Constance Noonan Hadley, an organizational psychologist who studies workplace relationships. &quot;Regardless of remote status, building relationships will still feel like a luxury workers cannot afford unless there is a shift in how time is prioritized and valued by managers_
 
