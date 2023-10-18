@@ -1,6 +1,6 @@
 # Core-Eng Repository Migration
 
-It is discouraged to have repositories without code. Our documentation and issues are fragmented between multiple places, and it's hard to orient in it. To make things cleaner, it makes sense to migrate all valid items from core-eng repository and archive this repository.
+It is discouraged to have repositories without code. Our documentation and issues are fragmented between multiple places, and it's hard to find direction in it. To make things cleaner, it makes sense to migrate all valid items from core-eng repository and archive this repository.
 
 
 ## Stakeholders
