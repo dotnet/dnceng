@@ -22,7 +22,7 @@ stages:
 - stage: SynchronizeSecrets
   jobs:
   - job: Synchronize
-    pool: 
+    pool:
       name: NetCore1ESPool-Internal-NoMSI
       demands: ImageOverride -equals 1es-windows-2019
     steps:
@@ -65,7 +65,7 @@ stages:
       jobs:
       - job: Windows_NT
         timeoutInMinutes: 90
-        pool: 
+        pool:
           name: NetCore1ESPool-Internal-NoMSI
           demands: ImageOverride -equals 1es-windows-2019
 
@@ -80,7 +80,7 @@ stages:
             if ($env:GrafanaEnvironment -ne "staging" -and $env:GrafanaEnvironment -ne "production") { Write-Host "GrafanaEnvironment must be 'staging' or 'production'"; exit 1}
             Write-Host "All required variables defined"
           displayName: Ensure variables defined
-        
+
         - task: ArchiveFiles@2
           displayName: Create grafana-init archive
           inputs:
@@ -100,12 +100,12 @@ stages:
             blobPrefix: grafana-init-$(Build.BuildNumber)
             destination: azureBlob
             outputStorageUri: UploadedUri
-        
+
         - task: AzureCLI@2
           displayName: Execute grafana-init/setup.sh on VM
           inputs:
             azureSubscription: DncEng-VSTS
-            scriptType: ps
+            scriptType: pscore
             scriptLocation: inlineScript
             inlineScript: >-
               az vm run-command invoke
@@ -121,7 +121,5 @@ stages:
               sudo bash ./setup.sh -b '$(GrafanaBinPath)' -d '$(GrafanaDomain)' --$(GrafanaEnvironment)
               "
               | Tee-Object -variable cmdoutput
-              | findstr /c:"SETUP_EXIT_CODE=0"
-              | Out-Null;
-              $cmdoutput |% {$_ -replace "\\n","`n->  "} |% {$_ -replace "\\",""} | Write-Host;
-              $LASTEXITCODE
+              |% {$_ -replace "\\n","`n->  "} |% {$_ -replace "\\",""} | Write-Host;
+              select-string -inputObject $cmdoutput -pattern "SETUP_EXIT_CODE=0" -quiet -simpleMatch || exit 1
