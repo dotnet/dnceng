@@ -56,19 +56,19 @@
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\arcade\\dotnet-arcade-weekly",
           "Branches": [ "main" ],
-          "IssuesId": "dotnet-dnceng-frops"
+          "IssuesId": "dotnet-dnceng-first-responder"
         },
         {
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\helix-service\\dotnet-helix-service-weekly",
           "Branches": [ "main" ],
-          "IssuesId": "dotnet-dnceng-frops"
+          "IssuesId": "dotnet-dnceng-first-responder"
         },
         {
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\helix-machines\\dotnet-helix-machines-weekly",
           "Branches": [ "main" ],
-          "IssuesId": "dotnet-dnceng-frops"
+          "IssuesId": "dotnet-dnceng-first-responder"
         },
         {
           "Project": "internal",
@@ -128,7 +128,7 @@
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\dncneg\\dotnet-dnceng-weekly",
           "Branches": [ "main" ],
-          "IssuesId": "dotnet-dnceng-frops"
+          "IssuesId": "dotnet-dnceng-first-responder"
         }
       ]
     },
@@ -144,12 +144,6 @@
         "Owner": "dotnet",
         "Name": "dnceng",
         "Labels": [ "Build Failed", "First Responder" ]
-      },
-      {
-        "Id": "dotnet-dnceng-frops",
-        "Owner": "dotnet",
-        "Name": "dnceng",
-        "Labels": [ "Build Failed", "FROps" ]
       },
       {
         "Id": "dotnet-aspnetcore-infra",
