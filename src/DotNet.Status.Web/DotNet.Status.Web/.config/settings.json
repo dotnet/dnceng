@@ -59,7 +59,7 @@
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\arcade\\dotnet-arcade-weekly",
           "Branches": [ "main" ],
-          "IssuesId": "dotnet-dnceng-ops"
+          "IssuesId": "dotnet-dnceng-first-responder"
         },
         {
           "Project": "internal",
