@@ -96,11 +96,6 @@ fi
 
 export DEBIAN_FRONTEND=noninteractive
 
-# This is the grafana package repo that allos us to apt-get grafana
-# If we don't trust grafana.com, we're in hot water already, so this is fine
-wget -q -O - https://packages.grafana.com/gpg.key | sudo apt-key add -
-add-apt-repository "deb https://packages.grafana.com/oss/deb stable main"
-
 # Before
 df --human-readable --inodes
 df --human-readable
@@ -109,11 +104,17 @@ df --human-readable
 apt-get autoremove --yes
 apt-get autoclean --yes
 apt-get clean --yes
-apt-get install --fix-broken --yes
+apt-get check --yes
 
 # After
 df --human-readable --inodes
 df --human-readable
+du --human-readable --max-depth=2 --threshold=500M /tmp /var
+
+# This is the grafana package repo that allos us to apt-get grafana
+# If we don't trust grafana.com, we're in hot water already, so this is fine
+wget -q -O - https://packages.grafana.com/gpg.key | apt-key add -
+add-apt-repository "deb https://packages.grafana.com/oss/deb stable main"
 
 # Find latest available packages then install pip and grafana packages.
 apt-get update
@@ -170,4 +171,3 @@ systemctl daemon-reload
 systemctl enable grafana-server
 systemctl restart grafana-server
 echo "SETUP_EXIT_CODE=${EXIT_CODE}"
-
