@@ -59,19 +59,19 @@
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\arcade\\dotnet-arcade-weekly",
           "Branches": [ "main" ],
-          "IssuesId": "dotnet-dnceng-ops"
+          "IssuesId": "dotnet-dnceng-first-responder"
         },
         {
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\helix-service\\dotnet-helix-service-weekly",
           "Branches": [ "main" ],
-          "IssuesId": "dotnet-dnceng-ops"
+          "IssuesId": "dotnet-dnceng-first-responder"
         },
         {
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\helix-machines\\dotnet-helix-machines-weekly",
           "Branches": [ "main" ],
-          "IssuesId": "dotnet-dnceng-ops"
+          "IssuesId": "dotnet-dnceng-first-responder"
         },
         {
           "Project": "internal",
@@ -131,7 +131,7 @@
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\dnceng\\dotnet-dnceng-weekly",
           "Branches": [ "main" ],
-          "IssuesId": "dotnet-dnceng-ops"
+          "IssuesId": "dotnet-dnceng-first-responder"
         }
       ]
     },
