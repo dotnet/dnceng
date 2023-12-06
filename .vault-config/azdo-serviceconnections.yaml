@@ -1,0 +1,17 @@
+storageLocation:
+  type: azure-key-vault
+  parameters:
+    subscription: 84a65c9a-787d-45da-b10a-3a1cefce8060
+    name: Azdo-serviceconnections
+
+# Format for Secret entries
+# Secret name <azdoInstance-ServiceConnectionName>
+# type: text
+# paramaters:
+# <indent> description: <link to wiki with instructions>
+
+dnceng-internal-net-engineering-deployment-notification-production:
+    type: text
+    parameters:
+      description: Please visit https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1157/Generic-Service-Connections
+      
