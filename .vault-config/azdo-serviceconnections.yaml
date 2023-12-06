@@ -9,8 +9,8 @@ storageLocation:
 # type: text
 # paramaters:
 # <indent> description: <link to wiki with instructions>
-
-dnceng-internal-net-engineering-deployment-notification-production:
+secrets:
+  dnceng-internal-net-engineering-deployment-notification-production:
     type: text
     parameters:
       description: Please visit https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1157/Generic-Service-Connections
