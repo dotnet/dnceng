@@ -409,7 +409,7 @@ parameters:
 ```
 
 ### Service Connection
-This type is designed help manage secrets backing Azure DevOps service connections. 
+This type is designed to help manage secrets backing Azure DevOps service connections. 
 
 Secret manager does not store the actual secret in the vault. The Key Vault entry is used only to track rotation.
 
