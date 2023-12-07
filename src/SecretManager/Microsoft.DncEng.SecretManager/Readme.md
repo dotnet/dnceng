@@ -407,3 +407,18 @@ type: base64-encoder
 parameters:
   secret: SecretReference to another secret
 ```
+
+### Service Connection
+This type is designed help manage secrets backing Azure DevOps service connections. 
+
+Secret manager does not store the actual secret in the vault. The Key Vault entry is used only to track rotation.
+
+```yaml
+type: service-connection
+parameters:
+  description: This service connection is for doin' stuff
+  organization: dnceng
+  project: internal
+  id: 02878e8e-af59-4dad-96c1-341e4a1c0524
+  name: .NET Engineering Deployment Notification - Production
+```
