@@ -16,7 +16,7 @@ public class ServiceConnectionSecretType : SecretType<ServiceConnectionSecretTyp
         Service Connections have no standard way to rotate their tokens. Please follow instructions 
         in the DNCEng Internal Wiki at:
         
-        > https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1157/Generic-Service-Connections.
+        > https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1157
 
         Direct link to this service connection in the portal: 
         
