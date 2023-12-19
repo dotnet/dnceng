@@ -57,7 +57,7 @@ public class SynchronizeCommand : Command
             if (_force || _forcedSecrets.Any())
             {
                 bool confirmed = await _console.ConfirmAsync(
-                    "--force or --force-secret is set, this will rotate one or more secrets ahead of schedule, possibly causing service disruption. Continue? ");
+                    "--force or --force-secret is set, this will rotate one or more secrets ahead of schedule, possibly causing service disruption. Continue? (yes/no): ");
                 if (!confirmed)
                 {
                     return;
@@ -115,28 +115,28 @@ public class SynchronizeCommand : Command
 
                 if (_force)
                 {
-                    _console.WriteLine("--force is set, will rotate.");
+                    _console.WriteLine($"--force is set, will rotate secret {name}.");
                     regenerate = true;
                     summaryStatus = ("Forced-rotated", "🔁");
                 }
                 else if (_forcedSecrets.Contains(name))
                 {
-                    _console.WriteLine($"--force-secret={name} is set, will rotate.");
+                    _console.WriteLine($"--force-secret={name} is set, will rotate secret {name}.");
                     summaryStatus = ("Forced-rotated", "🔁");
                     regenerate = true;
                 }
                 else if (existing.Any(e => e == null))
                 {
-                    _console.WriteLine("Secret not found in storage, will create.");
+                    _console.WriteLine($"Secret {name} not found in storage, will create.");
                     // secret is missing from storage (either completely missing or partially missing)
                     regenerate = true;
                     summaryStatus = ("New secret", "⭐");
                 }
                 else if (regeneratedSecrets.Overlaps(secretReferences))
                 {
-                    _console.WriteLine("Referenced secret was rotated, will rotate.");
+                    _console.WriteLine($"Referenced secret {name} was rotated, will rotate.");
                     regenerate = true;
-                    summaryStatus = ("Rotated through reference", "🔁");
+                    summaryStatus = ($"Rotated secret {name} through reference", "🔁");
                 }
                 else
                 {
@@ -169,7 +169,7 @@ public class SynchronizeCommand : Command
 
                     if (nextRotation <= now)
                     {
-                        _console.WriteLine($"Secret scheduled for rotation on {nextRotation}, will rotate.");
+                        _console.WriteLine($"Secret {name} scheduled for rotation on {nextRotation}, will rotate.");
                         // we have hit the rotation time, rotate
                         regenerate = true;
 
@@ -180,7 +180,7 @@ public class SynchronizeCommand : Command
                         // the verification mode is to catch the "the rotation hasn't happened in months" case
                         if (_verifyOnly && nextRotation > now.AddDays(-7))
                         {
-                            _console.WriteLine("Secret is within verification grace period.");
+                            _console.WriteLine($"Secret {name} is within verification grace period.");
                             regenerate = false;
                         }
                         else
@@ -199,7 +199,7 @@ public class SynchronizeCommand : Command
 
                 if (!regenerate)
                 {
-                    _console.WriteLine("Secret is fine.");
+                    _console.WriteLine($"Secret {name} is fine.");
                     summaryStatus = ("OK", "✅");
                 }
 
@@ -250,11 +250,11 @@ public class SynchronizeCommand : Command
                 foreach (var (name, value) in existingSecrets)
                 {
                     _console.LogWarning($"Extra secret '{name}' consider deleting it.");
-                    table.AddRow(name, string.Empty, "⚠️", "Extra secret");
+                    table.AddRow(name, string.Empty, "❔", "Untracked secret");
                 }
             }
 
-            _console.WriteLine(Environment.NewLine + Environment.NewLine + "🔎 Summary:" + Environment.NewLine);
+            _console.WriteLine(Environment.NewLine + Environment.NewLine + $"🔎 Summary for {_manifestFile}:" + Environment.NewLine);
             _console.WriteLine(table.ToMinimalString());
 
             if (problems.Any())
