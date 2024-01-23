@@ -20,8 +20,9 @@ public class SynchronizeCommand : Command
     private readonly ISystemClock _clock;
     private readonly IConsole _console;
     private bool _force = false;
+    private bool _skipUntracked = false;
     private bool _verifyOnly = false;
-    private List<string> _forcedSecrets = new List<string>();
+    private readonly List<string> _forcedSecrets = new();
 
     public SynchronizeCommand(StorageLocationTypeRegistry storageLocationTypeRegistry, SecretTypeRegistry secretTypeRegistry, ISystemClock clock, IConsole console)
     {
@@ -44,7 +45,8 @@ public class SynchronizeCommand : Command
         return new OptionSet
         {
             {"f|force", "Force rotate all secrets", f => _force = !string.IsNullOrEmpty(f)},
-            {"force-secret=", "Force rotate the specified secret", f => _forcedSecrets.Add(f)},
+            {"force-secret=", "Force rotate the specified secret", _forcedSecrets.Add},
+            {"skip-untracked", "Skip untracked secrets", f => _skipUntracked = !string.IsNullOrEmpty(f)},
             {"verify-only", "Does not rotate any secrets, instead, produces an error for every secret that needs to be rotated.", v => _verifyOnly = !string.IsNullOrEmpty(v)},
         };
     }
@@ -247,10 +249,13 @@ public class SynchronizeCommand : Command
                     await storage.EnsureKeyAsync(name, key);
                 }
 
-                foreach (var (name, value) in existingSecrets)
+                if (!_skipUntracked)
                 {
-                    _console.LogWarning($"Extra secret '{name}' consider deleting it.");
-                    table.AddRow(name, string.Empty, "❔", "Untracked secret");
+                    foreach (var (name, value) in existingSecrets)
+                    {
+                        _console.LogWarning($"Extra secret '{name}' consider deleting it.");
+                        table.AddRow(name, string.Empty, "❔", "Untracked secret");
+                    }
                 }
             }
 
