@@ -9,11 +9,11 @@
     <UsingToolNetFrameworkReferenceAssemblies>true</UsingToolNetFrameworkReferenceAssemblies>
     <MicrosoftNetFrameworkReferenceAssembliesVersion>1.0.0-preview.1</MicrosoftNetFrameworkReferenceAssembliesVersion>
     <!-- Libs -->
-    <MicrosoftDotNetSignToolVersion>6.0.0-beta.24061.1</MicrosoftDotNetSignToolVersion>
-    <MicrosoftDotNetBuildTasksFeedVersion>6.0.0-beta.24061.1</MicrosoftDotNetBuildTasksFeedVersion>
-    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>6.0.0-beta.24061.1</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
-    <MicrosoftDotNetGitIssueManagerVersion>6.0.0-beta.24061.1</MicrosoftDotNetGitIssueManagerVersion>
-    <MicrosoftDotNetVersionToolsVersion>6.0.0-beta.24061.1</MicrosoftDotNetVersionToolsVersion>
+    <MicrosoftDotNetSignToolVersion>6.0.0-beta.24113.1</MicrosoftDotNetSignToolVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion>6.0.0-beta.24113.1</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>6.0.0-beta.24113.1</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
+    <MicrosoftDotNetGitIssueManagerVersion>6.0.0-beta.24113.1</MicrosoftDotNetGitIssueManagerVersion>
+    <MicrosoftDotNetVersionToolsVersion>6.0.0-beta.24113.1</MicrosoftDotNetVersionToolsVersion>
     <MicrosoftNetTestSdkVersion>17.4.1</MicrosoftNetTestSdkVersion>
     <MicrosoftDncEngCommandLineLibVersion>1.1.0-beta.24066.2</MicrosoftDncEngCommandLineLibVersion>
     <MicrosoftDncEngConfigurationExtensionsVersion>1.1.0-beta.24066.2</MicrosoftDncEngConfigurationExtensionsVersion>
