@@ -657,11 +657,10 @@ public partial class AzurePipelinesControllerTests
                     $"Build failed: {buildData["definition"]["name"].ToString()}/{buildData["sourceBranch"].ToString().Substring("refs/heads/".Length)} " :
                     "";
 
-            Octokit.Issue mockIssue = new Issue(
-                "url", "html", "comments", "events", 123456, ItemState.Open, title,
-                "body", null, null, null, null, null, null, 1, null, null, DateTimeOffset.MinValue,
-                null, 123456, "nodeid", false, null, null);
-                    
+            Octokit.Issue mockIssue = new Issue("url", "html", "comments", "events", 123456, ItemState.Open, title,
+                "body", default, default, default, default, default, default, 1, default, DateTimeOffset.MinValue,
+                DateTimeOffset.MinValue, default, 123456, "nodeId", default, default, default, default, default);
+
             var issueOwners = new List<string>();
             var issueNames = new List<string>();
             var mockGithubIssues = new Mock<IIssuesClient>();
@@ -675,7 +674,8 @@ public partial class AzurePipelinesControllerTests
                 .Setup(m => m.GetAllForRepository(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<RepositoryIssueRequest>()))
                 .Returns(Task.FromResult((IReadOnlyList<Issue>)(new List<Issue> {mockIssue})));
 
-            Octokit.GitHubApp mockGithubApp = new GitHubApp(12345, "app", null, "desc", "url", "url", DateTimeOffset.MinValue, DateTimeOffset.MinValue);
+            Octokit.GitHubApp mockGithubApp = new GitHubApp(12345, default, "app", default, "desc", "url", "url",
+                DateTimeOffset.MinValue, DateTimeOffset.MinValue, default, default);
 
             var mockGithubAppsClient = new Mock<IGitHubAppsClient>();
             mockGithubAppsClient.Setup(m => m.GetCurrent()).Returns(Task.FromResult(mockGithubApp));
