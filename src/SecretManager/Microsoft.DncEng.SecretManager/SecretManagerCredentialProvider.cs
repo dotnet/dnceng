@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Azure.Core;
 using Azure.Identity;
+using Microsoft.DncEng.Configuration.Extensions;
 
 namespace Microsoft.DncEng.SecretManager;
 
@@ -11,8 +12,8 @@ public sealed class SecretManagerCredentialProvider : ITokenCredentialProvider
     // Use InteractiveBrowserCredential as a fallback for local dev environments.
     private readonly Lazy<TokenCredential> _credential = new(() =>
         new ChainedTokenCredential(
-            new AzureCliCredential(new AzureCliCredentialOptions { TenantId = "72f988bf-86f1-41af-91ab-2d7cd011db47" }),
-            new InteractiveBrowserCredential(new InteractiveBrowserCredentialOptions() { TenantId = "72f988bf-86f1-41af-91ab-2d7cd011db47" })
+            new AzureCliCredential(new AzureCliCredentialOptions { TenantId = ConfigurationConstants.MsftAdTenantId }),
+            new InteractiveBrowserCredential(new InteractiveBrowserCredentialOptions() { TenantId = ConfigurationConstants.MsftAdTenantId })
         ));
 
     public Task<TokenCredential> GetCredentialAsync()
