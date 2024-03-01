@@ -14,6 +14,7 @@ public class Program : DependencyInjectedConsoleApp
 
     protected override void ConfigureServices(IServiceCollection services)
     {
+        services.AddSingleton<ITokenCredentialProvider, SecretManagerCredentialProvider>();
         services.AddSingleton<SecretTypeRegistry>();
         services.AddSingleton<StorageLocationTypeRegistry>();
         services.AddSingleton<SettingsFileValidator>();
