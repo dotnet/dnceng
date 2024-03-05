@@ -16,10 +16,7 @@ trigger:
     include:
     - main
     - production
-pr:
-- main
-- production
-
+    
 stages:
 - stage: GitHub_Issue_Verification
   displayName: GitHub Issue Verification
