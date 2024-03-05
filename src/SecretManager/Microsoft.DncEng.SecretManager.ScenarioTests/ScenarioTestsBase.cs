@@ -21,6 +21,11 @@ namespace Microsoft.DncEng.SecretManager.Tests
         protected const string SubscriptionId = "a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1";
         protected const string NextRotationOnTag = "next-rotation-on";
         protected const string KeyVaultName = "SecretManagerTestsKv";
+
+        // Expect credentials for the Service Principal used in these tests to be set
+        // in enviornment variables.
+        private readonly TokenCredential _tokenCredential = new EnvironmentCredential();
+
         protected async Task ExecuteSynchronizeCommand(string manifest)
         {
             ServiceCollection services = new ServiceCollection();
