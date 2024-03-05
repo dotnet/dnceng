@@ -5,9 +5,6 @@ pr:
     include:
     - main
     - production
-  paths:
-    include:
-    - azure-pipelines.yml
 
 stages:
 - stage: GitHub_Issue_Verification
@@ -33,7 +30,7 @@ stages:
       enablePublishBuildArtifacts: true
       enablePublishTestResults: false
       enablePublishBuildAssets: false
-      enablePublishUsingPipelines: true
+      enablePublishUsingPipelines: false
       enableTelemetry: true
       jobs:
       - job: Windows_NT
