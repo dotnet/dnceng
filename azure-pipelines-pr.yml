@@ -1,17 +1,13 @@
-variables:
-  # Cannot use key:value syntax in root defined variables
-  - name: _TeamName
-    value: DotNetCore
-  - name: _PublishUsingPipelines
-    value: true
-  - name: _DotNetArtifactsCategory
-    value: .NETCore
-  - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-    - group: SDL_Settings
+trigger: none
 
 pr:
-- main
-- production
+  branches:
+    include:
+    - main
+    - production
+  paths:
+    include:
+    - azure-pipelines.yml
 
 stages:
 - stage: GitHub_Issue_Verification
@@ -36,8 +32,8 @@ stages:
       enableMicrobuild: false
       enablePublishBuildArtifacts: true
       enablePublishTestResults: false
-      enablePublishBuildAssets: true
-      enablePublishUsingPipelines: ${{ variables._PublishUsingPipelines }}
+      enablePublishBuildAssets: false
+      enablePublishUsingPipelines: true
       enableTelemetry: true
       jobs:
       - job: Windows_NT
@@ -50,9 +46,6 @@ stages:
             name: NetCore-Public          
             demands: ImageOverride -equals 1es-windows-2019-open
 
-        variables:
-        - _InternalBuildArgs: ''
-        - _ProductionArgs: ''
         
         strategy:
           matrix:
@@ -114,8 +107,6 @@ stages:
         - script: eng\common\cibuild.cmd
             -configuration $(_BuildConfig)
             -prepareMachine
-            $(_InternalBuildArgs)
-            $(_ProductionArgs)
             /p:Test=false
             /P:Sign=false
           name: Build
@@ -130,5 +121,4 @@ stages:
             dotnet run --project src/SecretManager/Microsoft.DncEng.SecretManager -- validate-all -b src @manifestArgs
           displayName: Verify Secret Usages
 
-        - ${{ if in(variables['Build.Reason'], 'PullRequest') }}:
-          - template: /eng/test.yaml
+        - template: /eng/test.yaml
