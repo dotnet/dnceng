@@ -22,12 +22,9 @@ namespace Microsoft.DncEng.SecretManager.Tests
         protected const string NextRotationOnTag = "next-rotation-on";
         protected const string KeyVaultName = "SecretManagerTestsKv";
 
-        // Token credentials that first try to get credentials from Azure CLI, then fall back to the default
-        private readonly TokenCredential _tokenCredential =
-            new DefaultAzureCredential(new DefaultAzureCredentialOptions
-            {
-                TenantId = ConfigurationConstants.MsftAdTenantId,
-            });
+        // Expect credentials for the Service Principal used in these tests to be set
+        // in enviornment variables.
+        private readonly TokenCredential _tokenCredential = new EnvironmentCredential();
 
         protected async Task ExecuteSynchronizeCommand(string manifest)
         {
