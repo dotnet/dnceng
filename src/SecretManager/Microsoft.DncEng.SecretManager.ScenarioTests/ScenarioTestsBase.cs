@@ -36,7 +36,7 @@ namespace Microsoft.DncEng.SecretManager.Tests
 
             // Use environment credentials
             services.RemoveAll<ITokenCredentialProvider>();
-            services.AddSingleton<ITokenCredentialProvider, ScenarioTestsTokenProvider>();
+            services.AddSingleton<ITokenCredentialProvider, WrappedTokenProvider>(_ => new WrappedTokenProvider(_tokenCredential));
 
             // Replace the console with a test console so that we don't get a bunch of errors/warnings
             // the command line when running these tests
