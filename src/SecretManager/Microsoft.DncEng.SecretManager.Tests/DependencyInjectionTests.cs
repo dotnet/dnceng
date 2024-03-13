@@ -22,7 +22,7 @@ public class DependencyInjectionTests
                 collection.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build());
             },
             out string errorMessage,
-            typeof(Program).Assembly.GetTypes().Where(t => t.GetCustomAttribute<CommandAttribute>() != null)
+            typeof(Program).Assembly.GetTypes().Where(t => t.GetCustomAttribute<CommandAttribute>() != null).ToList()
         );
 
         dependenciesCoherent.Should().BeTrue(errorMessage);

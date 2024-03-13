@@ -16,9 +16,14 @@ trigger:
     include:
     - main
     - production
+
 pr:
-- main
-- production
+  branches:
+    include:
+    - main
+  paths:
+    include:
+    - azure-pipelines.yml
 
 stages:
 - stage: GitHub_Issue_Verification
