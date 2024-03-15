@@ -15,20 +15,20 @@
     <MicrosoftDotNetGitIssueManagerVersion>6.0.0-beta.24163.13</MicrosoftDotNetGitIssueManagerVersion>
     <MicrosoftDotNetVersionToolsVersion>6.0.0-beta.24163.13</MicrosoftDotNetVersionToolsVersion>
     <MicrosoftNetTestSdkVersion>17.4.1</MicrosoftNetTestSdkVersion>
-    <MicrosoftDncEngCommandLineLibVersion>1.1.0-beta.24163.1</MicrosoftDncEngCommandLineLibVersion>
-    <MicrosoftDncEngConfigurationExtensionsVersion>1.1.0-beta.24163.1</MicrosoftDncEngConfigurationExtensionsVersion>
-    <MicrosoftDotNetAuthenticationAlgorithmsVersion>1.1.0-beta.24163.1</MicrosoftDotNetAuthenticationAlgorithmsVersion>
-    <MicrosoftDotNetGitHubAuthenticationVersion>1.1.0-beta.24163.1</MicrosoftDotNetGitHubAuthenticationVersion>
-    <MicrosoftDotNetInternalDependencyInjectionTestingVersion>1.1.0-beta.24163.1</MicrosoftDotNetInternalDependencyInjectionTestingVersion>
-    <MicrosoftDotNetInternalDependencyInjectionVersion>1.1.0-beta.24163.1</MicrosoftDotNetInternalDependencyInjectionVersion>
-    <MicrosoftDotNetInternalHealthVersion>1.1.0-beta.24163.1</MicrosoftDotNetInternalHealthVersion>
-    <MicrosoftDotNetInternalTestingDependencyInjectionAbstractionsVersion>1.1.0-beta.24163.1</MicrosoftDotNetInternalTestingDependencyInjectionAbstractionsVersion>
-    <MicrosoftDotNetInternalTestingDependencyInjectionCodeGenVersion>1.1.0-beta.24163.1</MicrosoftDotNetInternalTestingDependencyInjectionCodeGenVersion>
-    <MicrosoftDotNetInternalTestingUtilityVersion>1.1.0-beta.24163.1</MicrosoftDotNetInternalTestingUtilityVersion>
-    <MicrosoftDotNetKustoVersion>1.1.0-beta.24163.1</MicrosoftDotNetKustoVersion>
-    <MicrosoftDotNetServiceFabricServiceHostVersion>1.1.0-beta.24163.1</MicrosoftDotNetServiceFabricServiceHostVersion>
-    <MicrosoftDotNetServicesUtilityVersion>1.1.0-beta.24163.1</MicrosoftDotNetServicesUtilityVersion>
-    <MicrosoftDotNetWebAuthenticationVersion>1.1.0-beta.24163.1</MicrosoftDotNetWebAuthenticationVersion>
+    <MicrosoftDncEngCommandLineLibVersion>1.1.0-beta.24164.3</MicrosoftDncEngCommandLineLibVersion>
+    <MicrosoftDncEngConfigurationExtensionsVersion>1.1.0-beta.24164.3</MicrosoftDncEngConfigurationExtensionsVersion>
+    <MicrosoftDotNetAuthenticationAlgorithmsVersion>1.1.0-beta.24164.3</MicrosoftDotNetAuthenticationAlgorithmsVersion>
+    <MicrosoftDotNetGitHubAuthenticationVersion>1.1.0-beta.24164.3</MicrosoftDotNetGitHubAuthenticationVersion>
+    <MicrosoftDotNetInternalDependencyInjectionTestingVersion>1.1.0-beta.24164.3</MicrosoftDotNetInternalDependencyInjectionTestingVersion>
+    <MicrosoftDotNetInternalDependencyInjectionVersion>1.1.0-beta.24164.3</MicrosoftDotNetInternalDependencyInjectionVersion>
+    <MicrosoftDotNetInternalHealthVersion>1.1.0-beta.24164.3</MicrosoftDotNetInternalHealthVersion>
+    <MicrosoftDotNetInternalTestingDependencyInjectionAbstractionsVersion>1.1.0-beta.24164.3</MicrosoftDotNetInternalTestingDependencyInjectionAbstractionsVersion>
+    <MicrosoftDotNetInternalTestingDependencyInjectionCodeGenVersion>1.1.0-beta.24164.3</MicrosoftDotNetInternalTestingDependencyInjectionCodeGenVersion>
+    <MicrosoftDotNetInternalTestingUtilityVersion>1.1.0-beta.24164.3</MicrosoftDotNetInternalTestingUtilityVersion>
+    <MicrosoftDotNetKustoVersion>1.1.0-beta.24164.3</MicrosoftDotNetKustoVersion>
+    <MicrosoftDotNetServiceFabricServiceHostVersion>1.1.0-beta.24164.3</MicrosoftDotNetServiceFabricServiceHostVersion>
+    <MicrosoftDotNetServicesUtilityVersion>1.1.0-beta.24164.3</MicrosoftDotNetServicesUtilityVersion>
+    <MicrosoftDotNetWebAuthenticationVersion>1.1.0-beta.24164.3</MicrosoftDotNetWebAuthenticationVersion>
   </PropertyGroup>
   <!--Package names-->
   <PropertyGroup>
