@@ -57,7 +57,28 @@ extends:
           jobs:
           - job: Windows_NT
             timeoutInMinutes: 90
-
+            templateContext:
+              outputs:
+                - output: pipelineArtifact
+                  displayName: 'Publish TelemetryApplication'
+                  targetPath: $(Build.ArtifactStagingDirectory)\ServiceFabric\TelemetryApplication
+                  artifactName: TelemetryApplication
+                - output: pipelineArtifact
+                  displayName: 'Publish DotNet.Status.Web'
+                  targetPath: $(Build.ArtifactStagingDirectory)/DotNet.Status.Web/package
+                  artifactName: DotNetStatus
+                - output: pipelineArtifact
+                  displayName: 'Publish RolloutScorerAzureFunction'
+                  targetPath: $(Build.ArtifactStagingDirectory)/RolloutScorerAzureFunction/package
+                  artifactName: RolloutScorer
+                - output: pipelineArtifact
+                  displayName: 'Publish Release Utilities Artifact'
+                  targetPath: $(Build.ArtifactStagingDirectory)\eng
+                  artifactName: ReleaseUtilities
+                - output: pipelineArtifact
+                  displayName: 'Publish Secret Manager Scenario Tests'
+                  targetPath: $(Build.SourcesDirectory)\artifacts\bin\Microsoft.DncEng.SecretManager.ScenarioTests\$(_BuildConfig)\net6.0
+                  artifactName: Microsoft.DncEng.SecretManager.ScenarioTests
             variables:
             # DotNet-Blob-Feed provides: dotnetfeed-storage-access-key-1
             # DotNet-Symbol-Server-Pats provides: microsoft-symbol-server-pat, symweb-symbol-server-pat
@@ -163,12 +184,6 @@ extends:
                 robocopy src/Telemetry/TelemetryApplication/ApplicationPackageRoot $(Build.ArtifactStagingDirectory)\ServiceFabric\TelemetryApplication\projectartifacts\ApplicationPackageRoot /S *.xml
                 exit 0
               displayName: Copy Telemetry Project Artifacts
-
-            - task: 1ES.PublishPipelineArtifact@1
-              inputs:
-                path: $(Build.ArtifactStagingDirectory)\ServiceFabric\TelemetryApplication
-                artifact: TelemetryApplication
-              displayName: Publish TelemetryApplication
               
             - script: $(Build.SourcesDirectory)\.dotnet\dotnet publish -o $(Build.ArtifactStagingDirectory)\DotNet.Status.Web\publish -f net6.0
               workingDirectory: src\DotNet.Status.Web\DotNet.Status.Web
@@ -182,12 +197,6 @@ extends:
                 archiveFile: $(Build.ArtifactStagingDirectory)/DotNet.Status.Web/package/DotNetStatus.zip
                 replaceExistingArchive: true
 
-            - task: 1ES.PublishPipelineArtifact@1
-              inputs:
-                path: $(Build.ArtifactStagingDirectory)/DotNet.Status.Web/package
-                artifact: DotNetStatus
-              displayName: Publish DotNet.Status.Web
-
             - script: $(Build.SourcesDirectory)\.dotnet\dotnet publish -o $(Build.ArtifactStagingDirectory)\RolloutScorerAzureFunction\publish -f net6.0
               workingDirectory: src/RolloutScorer/RolloutScorerAzureFunction
               displayName: dotnet publish RolloutScorerAzureFunction
@@ -200,12 +209,6 @@ extends:
                 archiveFile: $(Build.ArtifactStagingDirectory)/RolloutScorerAzureFunction/package/RolloutScorer.zip
                 replaceExistingArchive: true
 
-            - task: 1ES.PublishPipelineArtifact@1
-              inputs:
-                path: $(Build.ArtifactStagingDirectory)/RolloutScorerAzureFunction/package
-                artifact: RolloutScorer
-              displayName: Publish RolloutScorerAzureFunction
-
             ## Prepare release utilities artifact
             - task: CopyFiles@2
               displayName: Prepare Release Utilities
@@ -213,18 +216,6 @@ extends:
                 sourceFolder: $(Build.SourcesDirectory)\eng
                 contents: '*'
                 targetFolder: $(Build.ArtifactStagingDirectory)\eng
-
-            - task: 1ES.PublishPipelineArtifact@1
-              inputs:
-                path: $(Build.ArtifactStagingDirectory)\eng
-                artifact: ReleaseUtilities
-              displayName: Publish Release Utilities Artifact
-
-            - task: 1ES.PublishPipelineArtifact@1
-              inputs:
-                path: $(Build.SourcesDirectory)\artifacts\bin\Microsoft.DncEng.SecretManager.ScenarioTests\$(_BuildConfig)\net6.0
-                artifact: Microsoft.DncEng.SecretManager.ScenarioTests
-              displayName: Publish Secret Manager Scenario Tests
 
     - template: /eng/common/templates-official/post-build/post-build.yml@self
       parameters:
