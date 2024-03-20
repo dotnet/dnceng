@@ -1827,6 +1827,46 @@
       "type": "timeseries"
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                100
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "A",
+                "5m",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "avg"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "keep_state",
+        "for": "5m",
+        "frequency": "10m",
+        "handler": 1,
+        "message": "High amount of Maestro exceptions detected.\n\nWiki link for investigation [here](https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki?wikiVersion=GBwikiMaster&pagePath=/FR%20Operations/Wiki%20for%20Grafana%20Alerts/%5BAlerts%5D%20Maestro%20High%20Number%20of%20Exceptions%20Alert&pageId=1217&_a=edit)",
+        "name": "Maestro High Number of Exceptions alert",
+        "noDataState": "keep_state",
+        "notifications": [
+          {
+            "uid": "statusHook"
+          }
+        ]
+      },
       "datasource": {
         "type": "grafana-azure-monitor-datasource",
         "uid": "F2XodEi7z"
