@@ -30,7 +30,7 @@ public class DomainAccount : SecretType<DomainAccount.Parameters>
             throw new HumanInterventionRequiredException($"User intervention required for creation or rotation of a Domain Account.");
         }
 
-        string generatedPassword = PasswordGenerator.GenerateRandomPassword(15, false);
+        string generatedPassword = PasswordGenerator.GenerateRandomPassword(20, false);
         string password = await context.GetSecretValue(new SecretReference(context.SecretName));
         if (!string.IsNullOrEmpty(password))
             _console.WriteLine($"Current password for account {parameters.AccountName}: {password}");
