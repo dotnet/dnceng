@@ -1825,6 +1825,160 @@
       ],
       "title": "Helix AutoScaler Service Traces",
       "type": "timeseries"
+    },
+    {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                100
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "A",
+                "5m",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "avg"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "keep_state",
+        "for": "5m",
+        "frequency": "10m",
+        "handler": 1,
+        "message": "High amount of Maestro exceptions detected.\n\nWiki link for investigation [here](https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki?wikiVersion=GBwikiMaster&pagePath=/FR%20Operations/Wiki%20for%20Grafana%20Alerts/%5BAlerts%5D%20Maestro%20High%20Number%20of%20Exceptions%20Alert&pageId=1217&_a=edit)",
+        "name": "Maestro High Number of Exceptions alert",
+        "noDataState": "keep_state",
+        "notifications": [
+          {
+            "uid": "statusHook"
+          }
+        ]
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "F2XodEi7z"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 46,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "azureMonitor": {
+            "aggregation": "Count",
+            "dimensionFilters": [],
+            "metricDefinition": "Microsoft.Insights/components",
+            "metricName": "exceptions/count",
+            "metricNamespace": "Microsoft.Insights/components",
+            "resourceGroup": "[parameter(maestro-appinsights-resourcegroup)]",
+            "resourceName": "[parameter(maestro-appinsights-resourcename)]",
+            "timeGrain": "auto",
+            "top": "10"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "queryType": "Azure Monitor",
+          "refId": "A",
+          "subscription": "cab65fc3-d077-467d-931f-3932eabf36d3"
+        },
+        {
+          "azureLogAnalytics": {
+            "query": "exceptions\r\n| where $__timeFilter(timestamp)\r\n| summarize count=count() by bin(timestamp, $__interval), problemId\r\n| order by timestamp asc",
+            "resource": "[parameter(maestro-appinsights-resourcepath)]"
+          },
+          "azureMonitor": {
+            "dimensionFilters": [],
+            "timeGrain": "auto"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "hide": false,
+          "queryType": "Azure Log Analytics",
+          "refId": "A",
+          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
+        }
+      ],
+      "title": "Maestro Exceptions",
+      "type": "timeseries"
     }
   ],
   "refresh": "30s",
