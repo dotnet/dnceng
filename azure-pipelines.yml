@@ -89,7 +89,7 @@ extends:
             - _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
             - _BuildConfig: Release
             - _PublishType: blob
-            - _SignType: test
+            - _SignType: real
             - _DotNetPublishToBlobFeed: true
             - _InternalBuildArgs: /p:DotNetSignType=$(_SignType)
                 /p:TeamName=$(_TeamName)
