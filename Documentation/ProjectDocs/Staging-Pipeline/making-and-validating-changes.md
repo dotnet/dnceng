@@ -13,8 +13,8 @@ Additionally, any new operations will need to be added to [`Program.cs`](https:/
 
 The [Signing Extensions](https://dev.azure.com/dnceng/internal/_git/dotnet-release?path=%2Fsrc%2FMicrosoft.DotNet.Release%2FMicrosoft.DotNet.Signing.Extensions&version=GBmain) project is where all of our signing-related tasks live. If you need to make changes to the signing setup, modify this project.
 
-The Release CLI, Release Library, and Signing Extnesions already have tests alongside their code.
-Any new functionality should have test coverage added to it. 
+The Release CLI, Release Library, and Signing Extensions already have tests alongside their code.
+Any new functionality should have test coverage added to it.
 
 ## Validating Changes
 
@@ -44,24 +44,25 @@ there is a way to save time and test only a particular stage or set of stages.
 
 1. Find a previous, successful run of the test pipeline. Copy the Build ID (the bit after `buildId=` in the URI).
 2. Pull up the YAML file for the stage(s) you want to run. Add the following inputs to any `DownloadPipelineArtifact` tasks:
-```yaml
-          source: 'specific'
-          project: '7ea9116e-9fac-403d-b258-b31fcf1bb293'
-          pipeline: 799
-          preferTriggeringPipeline: true
-          runVersion: 'specific'
-          runId: the build ID copied from earlier
-          allowPartiallySucceededBuilds: true
-          allowFailedBuilds: true
-```
-Note: if you want to use artifacts from Stage-DotNet instead of Stage-DotNet-Test, set `pipeline` to `792` instead.
+
+   ```yaml
+             source: 'specific'
+             project: '7ea9116e-9fac-403d-b258-b31fcf1bb293'
+             pipeline: 799
+             preferTriggeringPipeline: true
+             runVersion: 'specific'
+             runId: the build ID copied from earlier
+             allowPartiallySucceededBuilds: true
+             allowFailedBuilds: true
+   ```
+
+   Note: if you want to use artifacts from Stage-DotNet instead of Stage-DotNet-Test, set `pipeline` to `792` instead.
 
 3. Open up [`eng/pipeline/stage_dotnet.yml`](https://dev.azure.com/dnceng/internal/_git/dotnet-release?path=%2Feng%2Fpipeline%2Fstage_dotnet.yml&version=GBmain&_a=contents) and comment out all of the stages prior to the one you're testing.
 Then make sure to comment out the dependencies on those stages.
 4. Running the pipeline now will skip the most time-consuming stages and go straight to the stage you want to test.
 
 Please still make sure to run the full test pipeline before checking in.
-
 
 <!-- Begin Generated Content: Doc Feedback -->
 <sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CStaging-Pipeline%5Cmaking-and-validating-changes.md)](https://helix.dot.net/f/p/5?p=Documentation%5CStaging-Pipeline%5Cmaking-and-validating-changes.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CStaging-Pipeline%5Cmaking-and-validating-changes.md)</sub>
