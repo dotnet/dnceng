@@ -1828,7 +1828,9 @@
     },
     {
       "alert": {
-        "alertRuleTags": {},
+        "alertRuleTags": {
+          "NotificationId": "yek1lyodx21u1kzlpa62iz7mws0wcwpt"
+        },
         "conditions": [
           {
             "evaluator": {
@@ -1901,7 +1903,7 @@
               "mode": "none"
             },
             "thresholdsStyle": {
-              "mode": "off"
+              "mode": "line"
             }
           },
           "mappings": [],
@@ -1914,7 +1916,7 @@
               },
               {
                 "color": "red",
-                "value": 80
+                "value": 100
               }
             ]
           }
