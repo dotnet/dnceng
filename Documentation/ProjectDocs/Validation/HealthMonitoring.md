@@ -22,27 +22,27 @@ Arcade-Services:
 
 MSENG:
 
-- [Helix-PR-Master](https://dev.azure.com/mseng/Tools/_pipeline/analytics/stageawareoutcome?definitionId=6216&contextType=build)
-- [Helix-CI](https://dev.azure.com/mseng/Tools/_build?definitionId=6171&_a=summary&view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics)
-- [Helix-Daily](https://dev.azure.com/mseng/Tools/_build?definitionId=6843&_a=summary&view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics)
-- [Helix Agents - CI](https://dev.azure.com/mseng/Tools/_build?definitionId=6707&_a=summary&view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics)
+- Helix-PR-Master
+- Helix-CI
+- Helix-Daily
+- Helix Agents - CI
 
 DNCENG (internal):
 
-- [Arcade-ci](https://dev.azure.com/dnceng/public/_build?definitionId=208&view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics)
-- [Arcade-extensions-ci](https://dev.azure.com/dnceng/public/_build?definitionId=386&view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics)
-- [Arcade-minimalci-sample-ci](https://dev.azure.com/dnceng/public/_build?definitionId=209&view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics)
-- [Arcade-pool-provider-ci](https://dev.azure.com/dnceng/public/_build?definitionId=411&view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics)
-- [Dotnet-arcade-service](https://dev.azure.com/dnceng/public/_build?definitionId=247&view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics)
-- [Arcade-validation-ci](https://dev.azure.com/dnceng/public/_build?definitionId=269&view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics)
+- Arcade-ci
+- Arcade-extensions-ci
+- Arcade-minimalci-sample-ci
+- Arcade-pool-provider-ci
+- Dotnet-arcade-service
+- Arcade-validation-ci
 - Helix-machines
-	- [Build-and-deploy-production](https://dev.azure.com/dnceng/internal/_build?definitionId=145&view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics)
-	- [Build-and-deploy-staging](https://dev.azure.com/dnceng/internal/_build?definitionId=103&view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics)
-	- [Pr](https://dev.azure.com/dnceng/internal/_build?definitionId=3&view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics)
-	- [Pr-prod-queues](https://dev.azure.com/dnceng/internal/_build?definitionId=129&view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics)
+	- Build-and-deploy-production
+	- Build-and-deploy-staging
+	- Pr
+	- Pr-prod-queues
 
 ## Existing Functionality and Processes
-[Availability and reliability monitoring](https://msit.powerbi.com/groups/de8c4cb8-b06d-4af8-8609-3182bb4bdc7c/reports/09be7698-941b-4df7-966e-d0e1ca96d656/ReportSection) for PROD services already exists in Power BI from data in AppInsights and Kusto. Our focus for Health Reporting will be based on tests and builds in AzDO. 
+Availability and reliability monitoring for PROD services already exists in Power BI from data in AppInsights and Kusto. Our focus for Health Reporting will be based on tests and builds in AzDO. 
 
 ## Assumptions
 All the builds and deployments we care about are either in mseng or dnceng in AzDO
