@@ -47,8 +47,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DncEng.SecretMana
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DncEng.Configuration.Bootstrap", "src\Microsoft.DncEng.Configuration.Bootstrap\Microsoft.DncEng.Configuration.Bootstrap.csproj", "{3412E203-3526-4266-AAE8-F20ECB7AAE82}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DncEng.DeployServiceFabricCluster", "src\Microsoft.DncEng.DeployServiceFabricCluster\Microsoft.DncEng.DeployServiceFabricCluster.csproj", "{74B10E61-B86E-4BA9-822B-5593F8C6DA55}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Internal.Tools.SynchronizePackageProps", "src\Microsoft.DotNet.Internal.Tools.SynchronizePackageProps\Microsoft.DotNet.Internal.Tools.SynchronizePackageProps.csproj", "{5B72F5E3-FB1C-4D36-8D32-51BBCA118E26}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RolloutScorer", "RolloutScorer", "{C77B1797-82F6-4AA9-A5EA-F466C4032067}"
@@ -189,14 +187,6 @@ Global
 		{3412E203-3526-4266-AAE8-F20ECB7AAE82}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3412E203-3526-4266-AAE8-F20ECB7AAE82}.Release|x64.ActiveCfg = Release|Any CPU
 		{3412E203-3526-4266-AAE8-F20ECB7AAE82}.Release|x64.Build.0 = Release|Any CPU
-		{74B10E61-B86E-4BA9-822B-5593F8C6DA55}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{74B10E61-B86E-4BA9-822B-5593F8C6DA55}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{74B10E61-B86E-4BA9-822B-5593F8C6DA55}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{74B10E61-B86E-4BA9-822B-5593F8C6DA55}.Debug|x64.Build.0 = Debug|Any CPU
-		{74B10E61-B86E-4BA9-822B-5593F8C6DA55}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{74B10E61-B86E-4BA9-822B-5593F8C6DA55}.Release|Any CPU.Build.0 = Release|Any CPU
-		{74B10E61-B86E-4BA9-822B-5593F8C6DA55}.Release|x64.ActiveCfg = Release|Any CPU
-		{74B10E61-B86E-4BA9-822B-5593F8C6DA55}.Release|x64.Build.0 = Release|Any CPU
 		{5B72F5E3-FB1C-4D36-8D32-51BBCA118E26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5B72F5E3-FB1C-4D36-8D32-51BBCA118E26}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5B72F5E3-FB1C-4D36-8D32-51BBCA118E26}.Debug|x64.ActiveCfg = Debug|Any CPU
