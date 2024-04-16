@@ -16,9 +16,7 @@
     <PackageVersion Include="Azure.Extensions.AspNetCore.DataProtection.Blobs" Version="1.2.3" />
     <PackageVersion Include="Azure.Extensions.AspNetCore.DataProtection.Keys" Version="1.1.0" />
     <PackageVersion Include="Azure.Identity" Version="1.10.3" />
-    <PackageVersion Include="Azure.ResourceManager" Version="1.11.0" />
     <PackageVersion Include="Azure.ResourceManager.EventHubs" Version="1.1.0-beta.3" />
-    <PackageVersion Include="Azure.ResourceManager.Network" Version="1.7.0" />
     <PackageVersion Include="Azure.Security.KeyVault.Keys" Version="4.4.0" />
     <PackageVersion Include="Azure.Security.KeyVault.Secrets" Version="4.4.0" />
     <PackageVersion Include="Azure.Storage.Blobs" Version="12.13.1" />
