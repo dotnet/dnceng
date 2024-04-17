@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Azure.Management.ResourceManager.Fluent.Core;
+using Azure.Core;
 using Microsoft.Azure.Management.Storage;
 using Microsoft.Azure.Management.Storage.Models;
 using Microsoft.DncEng.CommandLineLib.Authentication;
@@ -26,7 +26,7 @@ public static class StorageUtils
         }
 
         string currentKey = context.GetValue("currentKey", "key1");
-        ResourceId id = ResourceId.FromString(account.Id);
+        ResourceIdentifier id = ResourceIdentifier.Parse(account.Id);
         StorageAccountListKeysResult keys;
         string keyToReturn;
         switch (currentKey)
