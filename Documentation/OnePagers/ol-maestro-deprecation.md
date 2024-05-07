@@ -60,7 +60,7 @@ A GitHub Action should be developed that replaces the inter-branch merge functio
 
 * How will the components that make up this epic be tested?
 
-The code mirror should have xunit tests written for it. These should follow a standard mockup model to avoid actual git operations. The inter-branch merge functionality may be tested in the maestro-auth-test org if necessary.
+The code mirror should have unit tests written for it. These should follow a standard mockup model to avoid actual git operations. The inter-branch merge functionality may be tested in the maestro-auth-test org if necessary.
 
 * How will we have confidence in the deployments/shipping of the components of this work?
 
