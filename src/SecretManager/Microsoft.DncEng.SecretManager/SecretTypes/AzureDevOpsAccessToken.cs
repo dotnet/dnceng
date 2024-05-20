@@ -113,7 +113,7 @@ public class AzureDevOpsAccessToken : SecretType<AzureDevOpsAccessToken.Paramete
 
         var me = await profileClient.GetProfileAsync(new ProfileQueryContext(AttributesScope.Core), cancellationToken: cancellationToken);
         var accounts = await accountClient.GetAccountsByMemberAsync(me.Id, cancellationToken: cancellationToken);
-        var accountGuidMap = accounts.ToDictionary(account => account.AccountName, account => account.AccountId);
+        var accountGuidMap = accounts.ToDictionary(account => account.AccountName, account => account.AccountId, StringComparer.OrdinalIgnoreCase);
 
         var orgIds = orgs.Select(name => accountGuidMap[name]).ToArray();
         var now = Clock.UtcNow;
