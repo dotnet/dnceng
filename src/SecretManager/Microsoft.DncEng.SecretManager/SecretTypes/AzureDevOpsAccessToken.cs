@@ -21,7 +21,7 @@ namespace Microsoft.DncEng.SecretManager.SecretTypes;
 [Name("azure-devops-access-token")]
 public class AzureDevOpsAccessToken : SecretType<AzureDevOpsAccessToken.Parameters>
 {
-    private readonly TimeSpan _rotateBeforeExpiration = TimeSpan.FromDays(-8);
+    private readonly TimeSpan _rotateBeforeExpiration = TimeSpan.FromDays(-4);
 
     public class Parameters
     {
@@ -124,7 +124,7 @@ public class AzureDevOpsAccessToken : SecretType<AzureDevOpsAccessToken.Paramete
             .ToArray();
 
         Console.WriteLine($"Creating new pat in orgs '{string.Join(" ", orgIds)}' with scopes '{string.Join(" ", scopes)}'");
-        var expiresOn = now.AddDays(30);
+        var expiresOn = now.AddDays(7);
         var newToken = await tokenClient.CreateSessionTokenAsync(new SessionToken
         {
             DisplayName = $"{context.SecretName} {now:u}",
