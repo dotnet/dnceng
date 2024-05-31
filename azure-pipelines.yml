@@ -237,28 +237,16 @@ extends:
           -TsaCodebaseName "Dnceng"
           -TsaPublish $True
           -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)/eng/PoliCheckExclusions.xml")'
-    - ${{ if in(variables['Build.SourceBranch'], 'refs/heads/main', 'refs/heads/production')}}:
-      - template: /eng/deploy.yaml@self
-        parameters:
-          ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/production') }}:
-            DeploymentEnvironment: Staging
-            DotNetStatusAppName: dotneteng-status-staging
-            DotNetStatusEndpoint: .NET Engineering Deployment Notification - Staging
-            PublishProfile: Int
-            RolloutScorerAppName: rollout-scorer-int
-            Subscription: NetHelixStaging
-            StatusVariableGroup: DotNetStatus Staging
-            GrafanaHost: https://dotnet-eng-grafana-staging.westus2.cloudapp.azure.com
-            GrafanaKeyVault: dotnet-grafana-staging
-            GrafanaVariableGroup: Dotnet-Grafana-Staging
-          ${{ else }}:
-            DeploymentEnvironment: Production
-            DotNetStatusAppName: dotneteng-status
-            DotNetStatusEndpoint: .NET Engineering Deployment Notification - Production
-            PublishProfile: Prod
-            RolloutScorerAppName: rollout-scorer-prod
-            Subscription: NetHelix
-            StatusVariableGroup: DotNetStatus Production
-            GrafanaHost: https://dotnet-eng-grafana.westus2.cloudapp.azure.com
-            GrafanaKeyVault: dotnet-grafana
-            GrafanaVariableGroup: Dotnet-Grafana-Production
+
+    - template: /eng/deploy.yaml@self
+      parameters:
+        DeploymentEnvironment: Staging
+        DotNetStatusAppName: dotneteng-status-staging
+        DotNetStatusEndpoint: .NET Engineering Deployment Notification - Staging
+        PublishProfile: Int
+        RolloutScorerAppName: rollout-scorer-int
+        Subscription: NetHelixStaging
+        StatusVariableGroup: DotNetStatus Staging
+        GrafanaHost: https://dotnet-eng-grafana-staging.westus2.cloudapp.azure.com
+        GrafanaKeyVault: dotnet-grafana-staging
+        GrafanaVariableGroup: Dotnet-Grafana-Staging
