@@ -49,17 +49,9 @@ extends:
             templateContext:
               outputs:
                 - output: pipelineArtifact
-                  displayName: 'Publish TelemetryApplication'
-                  targetPath: $(Build.ArtifactStagingDirectory)\ServiceFabric\TelemetryApplication
-                  artifactName: TelemetryApplication
-                - output: pipelineArtifact
                   displayName: 'Publish DotNet.Status.Web'
                   targetPath: $(Build.ArtifactStagingDirectory)/DotNet.Status.Web/package
                   artifactName: DotNetStatus
-                - output: pipelineArtifact
-                  displayName: 'Publish RolloutScorerAzureFunction'
-                  targetPath: $(Build.ArtifactStagingDirectory)/RolloutScorerAzureFunction/package
-                  artifactName: RolloutScorer
                 - output: pipelineArtifact
                   displayName: 'Publish Release Utilities Artifact'
                   targetPath: $(Build.ArtifactStagingDirectory)\eng
