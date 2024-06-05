@@ -1,8 +1,8 @@
 trigger: none
 
 schedules:
-- cron: 0 12 * * 1
-  displayName: Weekly Monday build
+- cron: 0 12 * * *
+  displayName: Nightly build
   branches:
     include:
     - main
