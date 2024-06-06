@@ -294,7 +294,7 @@ public class Startup
             b =>
             {
                 b.AddLogging();
-                b.AddAzureTable((o, p) => o.WriteSasUri = p.GetRequiredService<IConfiguration>()["HealthTableUri"]);
+                b.AddAzureTable((o, p) => o.StorageAccountTablesUri = p.GetRequiredService<IConfiguration>()["HealthReportSettings"]);
             });
 
         services.AddScoped<ITeamMentionForwarder, TeamMentionForwarder>();

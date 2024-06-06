@@ -34,11 +34,15 @@ public class TelemetryController : ControllerBase
     {
         KustoOptions options = _options.Value;
 
-        if (string.IsNullOrEmpty(options.IngestConnectionString))
+        if (string.IsNullOrEmpty(options.KustoIngestionUri))
         {
-            throw new InvalidOperationException("No IngestConnectionString set");
+            throw new InvalidOperationException("No IngestionUri set");
         }
 
+        if (string.IsNullOrEmpty(options.KustoClusterUri))
+        {
+            throw new InvalidOperationException("No ClusterUri set");
+        }
         List<ArcadeValidationData> arcadeValidationDatas = new List<ArcadeValidationData>{ data };
 
         await KustoHelpers.WriteDataToKustoInMemoryAsync(
