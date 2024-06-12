@@ -21,7 +21,7 @@ namespace Microsoft.DncEng.SecretManager.SecretTypes;
 [Name("azure-devops-access-token")]
 public class AzureDevOpsAccessToken : SecretType<AzureDevOpsAccessToken.Parameters>
 {
-    private readonly TimeSpan _rotateBeforeExpiration = TimeSpan.FromDays(-8);
+    private readonly TimeSpan _rotateBeforeExpiration = TimeSpan.FromDays(-4);
 
     public class Parameters
     {
@@ -113,7 +113,7 @@ public class AzureDevOpsAccessToken : SecretType<AzureDevOpsAccessToken.Paramete
 
         var me = await profileClient.GetProfileAsync(new ProfileQueryContext(AttributesScope.Core), cancellationToken: cancellationToken);
         var accounts = await accountClient.GetAccountsByMemberAsync(me.Id, cancellationToken: cancellationToken);
-        var accountGuidMap = accounts.ToDictionary(account => account.AccountName, account => account.AccountId);
+        var accountGuidMap = accounts.ToDictionary(account => account.AccountName, account => account.AccountId, StringComparer.OrdinalIgnoreCase);
 
         var orgIds = orgs.Select(name => accountGuidMap[name]).ToArray();
         var now = Clock.UtcNow;
@@ -124,7 +124,7 @@ public class AzureDevOpsAccessToken : SecretType<AzureDevOpsAccessToken.Paramete
             .ToArray();
 
         Console.WriteLine($"Creating new pat in orgs '{string.Join(" ", orgIds)}' with scopes '{string.Join(" ", scopes)}'");
-        var expiresOn = now.AddDays(30);
+        var expiresOn = now.AddDays(7);
         var newToken = await tokenClient.CreateSessionTokenAsync(new SessionToken
         {
             DisplayName = $"{context.SecretName} {now:u}",
