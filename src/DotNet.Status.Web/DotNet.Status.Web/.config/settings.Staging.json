@@ -4,7 +4,7 @@
   "GitHub": {
     "Organization": "dotnet",
     "Repository": "dnceng",
-    "NotificationTarget": "dotnet/dnceng",
+    "NotificationTargets": [ "dotnet/dnceng", "dotnet/prodconsvcs" ],
     "AlertLabels": [ "Ops - First Responder" ],
     "EnvironmentLabels": [ "Staging" ],
     "TitlePrefix": "Staging - "
