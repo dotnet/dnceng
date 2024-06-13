@@ -36,7 +36,6 @@ jobs:
     runs-on: windows-latest
     permissions:
       contents: write
-      issues: write
       pull-requests: write
     env: 
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -59,6 +58,51 @@ Work to do:
 - Provide proper documentation for users to onboard 
 
 This approach will require more time on implementation, however not exluding this right now in case some blockers will be met during the journey of reusing ps script.
+
+## Update (13  June 2024)
+In order to provide better UX to onboard and making changes into the configuration module. 
+The changes include: 
+- Introduce the step to read the configuration from the json file which should be presented in repository.
+- The name and the path of the cofiguration file is configurable
+- The workflow parameters changed to have config_file_path and config_file_branch
+
+### Configuration example file
+{
+    "merge-flow-configurations": {
+        // The key of the object is source branch
+        "release/8.0.3xx": {
+           // The branch to which PR should be created
+            "MergeToBranch": "release/8.0.4xx",
+            // extra switches similar to the https://github.com/dotnet/versions/blob/main/Maestro/subscriptions.json file
+            "ExtraSwitches": "-QuietComments"
+        },
+        "release/8.0.4xx": {
+            "MergeToBranch": "main",
+            "ExtraSwitches": "-QuietComments"
+        }
+    }
+}
+
+### Workflow file example
+```YML
+name: Usage of Inter-branch merge workflow
+on: 
+  push:
+    branches:
+      - 'main'
+      - 'releases/**'
+
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-script:
+    uses: dotnet/arcade/.github/workflows/inter-branch-merge-base.yml@main
+    with:
+      configuration_file_path: '.config/merge-flow.json'
+```
 
 ### POC
 Proof of Concept in progress, links to the runs will be provided
