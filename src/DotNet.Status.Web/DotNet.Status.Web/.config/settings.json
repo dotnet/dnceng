@@ -1,5 +1,8 @@
 {
-  "HealthTableUri": "[vault(health-report-table-sas-uri)]",
+  "HealthReportSettings": {
+    "StorageAccountTablesUri": "https://helixstagescripts2.table.core.windows.net",
+    "TableName": "healthreports"
+  },
   "GitHubAuthentication": {
     "ClientId": "[vault(github-oauth-id)]",
     "ClientSecret": "[vault(github-oauth-secret)]",
@@ -243,10 +246,6 @@
         "default": "[vault(github-app-webhook-secret)]"
       }
     }
-  },
-  "Kusto": {
-    "Database": "engineeringdata",
-    "IngestConnectionString": "[vault(nethelix-engsrv-kusto-connection-string-ingest)]"
   },
   "IssueMentionForwarding": {
     "WatchedTeam": "dotnet/dnceng",
