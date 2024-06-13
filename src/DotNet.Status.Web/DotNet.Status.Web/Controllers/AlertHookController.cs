@@ -173,7 +173,7 @@ public class AlertHookController : ControllerBase
 
 [Go to rule]({notification.RuleUrl})
 
-{string.Join(',', options.NotificationTargets.Select(target => $"@{target}"))}, please investigate
+{string.Join(", ", options.NotificationTargets.Select(target => $"@{target}"))}, please investigate
 
 {options.SupplementalBodyText}
 
