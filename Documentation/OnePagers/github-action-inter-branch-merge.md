@@ -60,7 +60,8 @@ Work to do:
 This approach will require more time on implementation, however not exluding this right now in case some blockers will be met during the journey of reusing ps script.
 
 ## Update (13  June 2024)
-In order to provide better UX to onboard and making changes into the configuration module. 
+In order to provide better UX to onboard and making changes into the configuration module the modifications were done. This will allow to have less ocnfigurations in workflow file in different branches.
+
 The changes include: 
 - Introduce the step to read the configuration from the json file which should be presented in repository.
 - The name and the path of the cofiguration file is configurable
