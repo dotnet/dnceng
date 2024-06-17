@@ -46,7 +46,10 @@
     "TableUri": ""
   },
   "Kusto": {
-    "QueryConnectionString": ""
+    "Database": "engineeringdata",
+    "KustoClusterUri": "https://engdata.westus2.kusto.windows.net",
+    "KustoIngestionUri": "https://ingest-engdata.westus2.kusto.windows.net",
+    "UseAzCliAuthentication": true
   },
   "IssueMentionForwarding": {
     "TeamsWebHookUri": ""
