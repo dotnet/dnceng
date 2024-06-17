@@ -64,9 +64,10 @@ In order to provide better UX to onboard and making changes into the configurati
 The changes include: 
 - Introduce the step to read the configuration from the json file which should be presented in repository.
 - The name and the path of the cofiguration file is configurable
-- The workflow parameters changed to have config_file_path and config_file_branch
+- The workflow parameters changed to have configuration_file_path and configuration_file_branch
 
 ### Configuration example file
+```JS
 {
     "merge-flow-configurations": {
         // The key of the object is source branch
@@ -82,6 +83,7 @@ The changes include:
         }
     }
 }
+```
 
 ### Workflow file example
 ```YML
@@ -91,7 +93,6 @@ on:
     branches:
       - 'main'
       - 'releases/**'
-
 
 permissions:
   contents: write
