@@ -224,7 +224,7 @@
   "GitHub": {
     "Organization": "maestro-auth-test",
     "Repository": "status-test",
-    "NotificationTarget": "",
+    "NotificationTargets": [],
     "AlertLabels": [],
     "EnvironmentLabels": [],
     "SupplementalBodyText": "",

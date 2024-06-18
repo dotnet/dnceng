@@ -8,7 +8,7 @@ public class GitHubConnectionOptions
 {
     public string Organization { get; set; }
     public string Repository { get; set; }
-    public string NotificationTarget { get; set; }
+    public string[] NotificationTargets { get; set; }
     public string[] AlertLabels { get; set; }
     public string[] EnvironmentLabels { get; set; }
     public string TitlePrefix { get; set; }
