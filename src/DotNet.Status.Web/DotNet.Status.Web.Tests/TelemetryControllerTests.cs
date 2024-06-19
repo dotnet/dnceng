@@ -35,12 +35,14 @@ public partial class TelemetryControllerTests
             return s => s.GetRequiredService<TelemetryController>();
         }
 
-        public static void KustoClient(IServiceCollection collection, string connectionString, string database)
+        public static void KustoClient(IServiceCollection collection, string ingestionuri, string clusteruri, string database)
         {
             collection.Configure<KustoOptions>(options =>
             {
-                options.IngestConnectionString = connectionString ?? "fakekustoconnectionstring";
+                options.KustoClusterUri = clusteruri ?? "fakeclusteruri";
+                options.KustoIngestionUri = ingestionuri ?? "fakekustoconnectionstring";
                 options.Database = database ?? "fakekustodatbase";
+                options.UseAzCliAuthentication = false;
             });
                 
             var kustoIngestClientMock = new Mock<IKustoIngestClient>();
@@ -79,7 +81,7 @@ public partial class TelemetryControllerTests
     public async Task TestArcadeValidationTelemetryCollectionWithMissingKustoConnectionString()
     {
         using TestData testData = TestData.Default
-            .WithConnectionString("")
+            .WithIngestionuri("")
             .Build();
         await (((Func<Task>) (() => testData.Controller.CollectArcadeValidation(new ArcadeValidationData()))))
             .Should().ThrowExactlyAsync<InvalidOperationException>();
