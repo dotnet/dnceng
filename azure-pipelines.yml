@@ -31,6 +31,17 @@ extends:
       os: windows
    
     stages:
+    - stage: GitHub_Issue_Verification
+      displayName: GitHub Issue Verification
+      condition: and(eq(variables['Build.Reason'], 'PullRequest'), notIn(variables['System.PullRequest.TargetBranch'], 'refs/heads/production', 'production'), notIn(variables['System.PullRequest.SourceBranch'], 'refs/heads/production', 'production'))
+      jobs:
+      - job: VerifyGitHubIssue
+        displayName: Verify GitHub Issue Link included in all PRs
+        steps:
+        - checkout: self
+        - powershell: eng/enforce-issue.ps1 -PullRequestNumber $(System.PullRequest.PullRequestNumber) -RepositoryName $(Build.Repository.Name)
+          displayName: Enforce GitHub issue link presence
+
     - stage: build
       dependsOn: []
       displayName: Build
@@ -49,9 +60,17 @@ extends:
             templateContext:
               outputs:
                 - output: pipelineArtifact
+                  displayName: 'Publish TelemetryApplication'
+                  targetPath: $(Build.ArtifactStagingDirectory)\ServiceFabric\TelemetryApplication
+                  artifactName: TelemetryApplication
+                - output: pipelineArtifact
                   displayName: 'Publish DotNet.Status.Web'
                   targetPath: $(Build.ArtifactStagingDirectory)/DotNet.Status.Web/package
                   artifactName: DotNetStatus
+                - output: pipelineArtifact
+                  displayName: 'Publish RolloutScorerAzureFunction'
+                  targetPath: $(Build.ArtifactStagingDirectory)/RolloutScorerAzureFunction/package
+                  artifactName: RolloutScorer
                 - output: pipelineArtifact
                   displayName: 'Publish Release Utilities Artifact'
                   targetPath: $(Build.ArtifactStagingDirectory)\eng
@@ -115,6 +134,14 @@ extends:
             - powershell: eng\set-version-parameters.ps1
               displayName: Calculate release version variables
 
+            - powershell: |
+                [xml]$manifest = Get-Content src\Telemetry\TelemetryApplication\ApplicationPackageRoot\ApplicationManifest.xml
+                $manifest.SelectSingleNode("/*[local-name()='ApplicationManifest']/*[local-name()='Policies']").RemoveAll()
+                $manifest.SelectSingleNode("/*[local-name()='ApplicationManifest']/*[local-name()='Principals']").RemoveAll()
+                $manifest.Save("src\Telemetry\TelemetryApplication\ApplicationPackageRoot\ApplicationManifest.xml")
+                git diff
+              displayName: Remove Service Fabric RunAsPolicy from TelemetryApplication
+
             - script: eng\common\cibuild.cmd
                 -configuration $(_BuildConfig)
                 -prepareMachine
@@ -133,6 +160,9 @@ extends:
                 dotnet run --project src/SecretManager/Microsoft.DncEng.SecretManager -- validate-all -b src @manifestArgs
               displayName: Verify Secret Usages
 
+            - powershell: src\Monitoring\ComponentGovernance\generate-cgmanifest.ps1
+              displayName: Generate cgmanifest.json for Grafana
+
             - task: ComponentGovernanceComponentDetection@0
               inputs:
                 # `.packages` directory is used by some tools running during build.
@@ -142,6 +172,18 @@ extends:
                 # that we are interested in will be found by the tool
                 # when scanning .csproj and package.json files.
                 ignoreDirectories: '.packages'
+
+            ## Prepare service fabric artifact
+            - task: ServiceFabricUpdateManifests@2
+              inputs:
+                applicationPackagePath: $(Build.ArtifactStagingDirectory)\ServiceFabric\TelemetryApplication\applicationpackage
+
+            - powershell: |
+                robocopy src/Telemetry/TelemetryApplication/PublishProfiles $(Build.ArtifactStagingDirectory)\ServiceFabric\TelemetryApplication\projectartifacts\PublishProfiles /S *.xml
+                robocopy src/Telemetry/TelemetryApplication/ApplicationParameters $(Build.ArtifactStagingDirectory)\ServiceFabric\TelemetryApplication\projectartifacts\ApplicationParameters /S *.xml
+                robocopy src/Telemetry/TelemetryApplication/ApplicationPackageRoot $(Build.ArtifactStagingDirectory)\ServiceFabric\TelemetryApplication\projectartifacts\ApplicationPackageRoot /S *.xml
+                exit 0
+              displayName: Copy Telemetry Project Artifacts
               
             - script: $(Build.SourcesDirectory)\.dotnet\dotnet publish -o $(Build.ArtifactStagingDirectory)\DotNet.Status.Web\publish -f net6.0
               workingDirectory: src\DotNet.Status.Web\DotNet.Status.Web
@@ -155,6 +197,18 @@ extends:
                 archiveFile: $(Build.ArtifactStagingDirectory)/DotNet.Status.Web/package/DotNetStatus.zip
                 replaceExistingArchive: true
 
+            - script: $(Build.SourcesDirectory)\.dotnet\dotnet publish -o $(Build.ArtifactStagingDirectory)\RolloutScorerAzureFunction\publish -f net6.0
+              workingDirectory: src/RolloutScorer/RolloutScorerAzureFunction
+              displayName: dotnet publish RolloutScorerAzureFunction
+
+            - task: ArchiveFiles@2
+              inputs:
+                rootFolderOrFile: $(Build.ArtifactStagingDirectory)/RolloutScorerAzureFunction/publish
+                includeRootFolder: false
+                archiveType: zip
+                archiveFile: $(Build.ArtifactStagingDirectory)/RolloutScorerAzureFunction/package/RolloutScorer.zip
+                replaceExistingArchive: true
+
             ## Prepare release utilities artifact
             - task: CopyFiles@2
               displayName: Prepare Release Utilities
@@ -163,15 +217,48 @@ extends:
                 contents: '*'
                 targetFolder: $(Build.ArtifactStagingDirectory)\eng
 
-    - template: /eng/deploy.yaml@self
+    - template: /eng/common/templates-official/post-build/post-build.yml@self
       parameters:
-        DeploymentEnvironment: Staging
-        DotNetStatusAppName: dotneteng-status-staging
-        DotNetStatusEndpoint: .NET Engineering Deployment Notification - Staging
-        PublishProfile: Int
-        RolloutScorerAppName: rollout-scorer-int
-        Subscription: NetHelixStaging
-        StatusVariableGroup: DotNetStatus Staging
-        GrafanaHost: https://dotnet-eng-grafana-staging.westus2.cloudapp.azure.com
-        GrafanaKeyVault: dotnet-grafana-staging
-        GrafanaVariableGroup: Dotnet-Grafana-Staging
+        enableSymbolValidation: false
+        enableSigningValidation: false
+        artifactsPublishingAdditionalParameters: '/p:CheckEolTargetFramework=false'
+        symbolPublishingAdditionalParameters: '/p:CheckEolTargetFramework=false'
+        # This is to enable SDL runs part of Post-Build Validation Stage
+        SDLValidationParameters:
+          enable: true
+          params: '-SourceToolsList @("policheck","credscan") 
+          -TsaInstanceURL $(_TsaInstanceURL)
+          -TsaProjectName $(_TsaProjectName)
+          -TsaNotificationEmail $(_TsaNotificationEmail)
+          -TsaCodebaseAdmin $(_TsaCodebaseAdmin)
+          -TsaBugAreaPath $(_TsaBugAreaPath)
+          -TsaIterationPath $(_TsaIterationPath)
+          -TsaRepositoryName "Dnceng"
+          -TsaCodebaseName "Dnceng"
+          -TsaPublish $True
+          -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)/eng/PoliCheckExclusions.xml")'
+    - ${{ if in(variables['Build.SourceBranch'], 'refs/heads/main', 'refs/heads/production')}}:
+      - template: /eng/deploy.yaml@self
+        parameters:
+          ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/production') }}:
+            DeploymentEnvironment: Staging
+            DotNetStatusAppName: dotneteng-status-staging
+            DotNetStatusEndpoint: .NET Engineering Deployment Notification - Staging
+            PublishProfile: Int
+            RolloutScorerAppName: rollout-scorer-int
+            Subscription: NetHelixStaging
+            StatusVariableGroup: DotNetStatus Staging
+            GrafanaHost: https://dotnet-eng-grafana-staging.westus2.cloudapp.azure.com
+            GrafanaKeyVault: dotnet-grafana-staging
+            GrafanaVariableGroup: Dotnet-Grafana-Staging
+          ${{ else }}:
+            DeploymentEnvironment: Production
+            DotNetStatusAppName: dotneteng-status
+            DotNetStatusEndpoint: .NET Engineering Deployment Notification - Production
+            PublishProfile: Prod
+            RolloutScorerAppName: rollout-scorer-prod
+            Subscription: NetHelix
+            StatusVariableGroup: DotNetStatus Production
+            GrafanaHost: https://dotnet-eng-grafana.westus2.cloudapp.azure.com
+            GrafanaKeyVault: dotnet-grafana
+            GrafanaVariableGroup: Dotnet-Grafana-Production
