@@ -3,8 +3,3 @@ storageLocation:
   parameters:
     subscription: a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1
     name: engkeyvault
-
-secrets:
-  # Principal used in secret-manager scenario testing
-  secret-manager-scenario-tests:
-    type: ad-application
