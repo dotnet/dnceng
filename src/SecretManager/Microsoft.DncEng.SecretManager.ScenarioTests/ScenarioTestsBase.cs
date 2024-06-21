@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Azure.Core;
 using Azure.Identity;
+using Azure.ResourceManager;
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.DncEng.CommandLineLib;
 using Microsoft.DncEng.Configuration.Extensions;

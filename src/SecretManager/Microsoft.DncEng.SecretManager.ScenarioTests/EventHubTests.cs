@@ -1,17 +1,14 @@
 
+using Azure;
+using Azure.Core;
+using Azure.ResourceManager.EventHubs;
+using Azure.ResourceManager.EventHubs.Models;
+using Azure.Security.KeyVault.Secrets;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Azure;
-using Azure.Core;
-using Azure.ResourceManager;
-using Azure.ResourceManager.EventHubs;
-using Azure.ResourceManager.ServiceBus.Models;
-using Azure.ResourceManager.ServiceBus;
-using Azure.Security.KeyVault.Secrets;
-using NUnit.Framework;
-using Azure.ResourceManager.EventHubs.Models;
 
 namespace Microsoft.DncEng.SecretManager.Tests
 {
@@ -86,10 +83,8 @@ secrets:
         [OneTimeTearDown]
         public async Task Cleanup()
         {
-            ArmClient client = new(_tokenCredential, SubscriptionId);
-
             ResourceIdentifier eventHubResourceId = EventHubResource.CreateResourceIdentifier(SubscriptionId, ResourceGroup, Namespace, Name);
-            EventHubResource eventHub = client.GetEventHubResource(eventHubResourceId);
+            EventHubResource eventHub = _armClient.GetEventHubResource(eventHubResourceId);
             IAsyncEnumerable<EventHubAuthorizationRuleResource> rules = eventHub.GetEventHubAuthorizationRules().GetAllAsync();
 
             await foreach (EventHubAuthorizationRuleResource rule in rules)
@@ -102,11 +97,10 @@ secrets:
 
         private async Task<HashSet<string>> GetAccessKeys(string secretName)
         {
-            ArmClient client = new(_tokenCredential, SubscriptionId);
             string accessPolicyName = secretName + "-access-policy";
 
             ResourceIdentifier ruleResourceId = EventHubAuthorizationRuleResource.CreateResourceIdentifier(SubscriptionId, ResourceGroup, Namespace, Name, accessPolicyName);
-            EventHubAuthorizationRuleResource ruleResource = await client.GetEventHubAuthorizationRuleResource(ruleResourceId).GetAsync();
+            EventHubAuthorizationRuleResource ruleResource = await _armClient.GetEventHubAuthorizationRuleResource(ruleResourceId).GetAsync();
             EventHubsAccessKeys result = await ruleResource.GetKeysAsync();
 
             return new HashSet<string>(new[] { result.PrimaryConnectionString, result.SecondaryConnectionString });

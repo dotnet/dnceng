@@ -1,15 +1,14 @@
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Azure;
 using Azure.Core;
-using Azure.ResourceManager;
 using Azure.ResourceManager.ServiceBus;
 using Azure.ResourceManager.ServiceBus.Models;
 using Azure.Security.KeyVault.Secrets;
 using NUnit.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Microsoft.DncEng.SecretManager.Tests
 {
@@ -86,9 +85,9 @@ secrets:
         [OneTimeTearDown]
         public async Task Cleanup()
         {
-            ArmClient client = new(_tokenCredential, SubscriptionId);
+            //ArmClient client = new(_tokenCredential, SubscriptionId);
             ResourceIdentifier serviceBusNamespaceId = ServiceBusNamespaceResource.CreateResourceIdentifier(SubscriptionId, ResourceGroup, Namespace);
-            IAsyncEnumerable<ServiceBusNamespaceAuthorizationRuleResource> rules = client.GetServiceBusNamespaceResource(serviceBusNamespaceId).GetServiceBusNamespaceAuthorizationRules().GetAllAsync();
+            IAsyncEnumerable<ServiceBusNamespaceAuthorizationRuleResource> rules = _armClient.GetServiceBusNamespaceResource(serviceBusNamespaceId).GetServiceBusNamespaceAuthorizationRules().GetAllAsync();
 
             await foreach (ServiceBusNamespaceAuthorizationRuleResource rule in rules)
             {
@@ -105,11 +104,11 @@ secrets:
 
         private async Task<HashSet<string>> GetAccessKeys(string secretName)
         {
-            ArmClient client = new(_tokenCredential, SubscriptionId);
+            //ArmClient client = new(_tokenCredential, SubscriptionId);
             string authorizationRuleName = secretName + AccessPolicySufix;
 
             ResourceIdentifier ruleResourceId = ServiceBusNamespaceAuthorizationRuleResource.CreateResourceIdentifier(SubscriptionId, ResourceGroup, Namespace, authorizationRuleName);
-            ServiceBusNamespaceAuthorizationRuleResource ruleResource = await client.GetServiceBusNamespaceAuthorizationRuleResource(ruleResourceId).GetAsync();
+            ServiceBusNamespaceAuthorizationRuleResource ruleResource = await _armClient.GetServiceBusNamespaceAuthorizationRuleResource(ruleResourceId).GetAsync();
             ServiceBusAccessKeys result = await ruleResource.GetKeysAsync();
 
             return new HashSet<string>(new[] { result.PrimaryConnectionString, result.SecondaryConnectionString });

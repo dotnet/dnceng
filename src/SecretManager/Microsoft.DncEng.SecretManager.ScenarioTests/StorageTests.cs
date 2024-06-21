@@ -220,10 +220,10 @@ secrets:
 
         private async Task<HashSet<string>> GetAccessKeys()
         {
-            ArmClient armClient = new (_tokenCredential);
+            //ArmClient armClient = new (_tokenCredential);
 
             ResourceIdentifier storageAccountResourceId = StorageAccountResource.CreateResourceIdentifier(SubscriptionId, ResourceGroup, AccountName);
-            StorageAccountResource storageAccount = armClient.GetStorageAccountResource(storageAccountResourceId);
+            StorageAccountResource storageAccount = _armClient.GetStorageAccountResource(storageAccountResourceId);
             List<StorageAccountKey> result = await storageAccount.GetKeysAsync().ToListAsync();
             
             return result.Select(l => l.Value).ToHashSet();
