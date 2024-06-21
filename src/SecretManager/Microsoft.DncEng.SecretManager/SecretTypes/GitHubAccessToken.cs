@@ -27,7 +27,7 @@ public class GitHubAccessToken : GitHubAccountInteractiveSecretType<GitHubAccess
         }
 
         const string helpUrl = "https://github.com/settings/tokens";
-        Console.WriteLine("When creating the new token, please set the expiration date in 6 months, this is what the SecretManager metadata will be set to");
+        Console.WriteLine($"When creating the new token, please set the expiration date to at least {Clock.UtcNow.AddMonths(6).ToString("yyyy-MM-dd")} this is what the SecretManager metadata will be set to");
         await ShowGitHubLoginInformation(context, parameters.GitHubBotAccountSecret, helpUrl, parameters.GitHubBotAccountName);
 
         var pat = await Console.PromptAndValidateAsync("PAT",
