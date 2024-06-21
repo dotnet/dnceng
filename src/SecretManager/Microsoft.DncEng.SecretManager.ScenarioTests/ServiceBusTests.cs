@@ -4,12 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Azure;
+using Azure.Core;
+using Azure.ResourceManager;
+using Azure.ResourceManager.ServiceBus;
+using Azure.ResourceManager.ServiceBus.Models;
 using Azure.Security.KeyVault.Secrets;
-using Microsoft.Azure.Management.EventHub;
-using Microsoft.Azure.Management.ServiceBus;
-using Microsoft.Azure.Management.ServiceBus.Models;
-using Microsoft.Rest;
-using Microsoft.Rest.Azure;
 using NUnit.Framework;
 
 namespace Microsoft.DncEng.SecretManager.Tests
@@ -87,13 +86,17 @@ secrets:
         [OneTimeTearDown]
         public async Task Cleanup()
         {
-            ServiceBusManagementClient client = await GetServiceBusManagementClient();
-            IPage<SBAuthorizationRule> rules = await client.Namespaces.ListAuthorizationRulesAsync(ResourceGroup, Namespace);
+            ArmClient client = new(_tokenCredential, SubscriptionId);
+            ResourceIdentifier serviceBusNamespaceId = ServiceBusNamespaceResource.CreateResourceIdentifier(SubscriptionId, ResourceGroup, Namespace);
+            IAsyncEnumerable<ServiceBusNamespaceAuthorizationRuleResource> rules = client.GetServiceBusNamespaceResource(serviceBusNamespaceId).GetServiceBusNamespaceAuthorizationRules().GetAllAsync();
 
-            foreach (var rule in rules)
+            await foreach (ServiceBusNamespaceAuthorizationRuleResource rule in rules)
             {
-                if (rule.Name.EndsWith(AccessPolicySufix))
-                    await client.Namespaces.DeleteAuthorizationRuleAsync(ResourceGroup, Namespace, rule.Name);
+                
+                if (rule.Data.Name.EndsWith(AccessPolicySufix))
+                {
+                    await rule.DeleteAsync(WaitUntil.Completed);
+                }
             }
 
             await PurgeAllSecrets();
@@ -102,22 +105,14 @@ secrets:
 
         private async Task<HashSet<string>> GetAccessKeys(string secretName)
         {
-            var client = await GetServiceBusManagementClient();
-            var authotizationRuleName = secretName + AccessPolicySufix;
-            var result = await client.Namespaces.ListKeysAsync(ResourceGroup, Namespace, authotizationRuleName);
+            ArmClient client = new(_tokenCredential, SubscriptionId);
+            string authorizationRuleName = secretName + AccessPolicySufix;
+
+            ResourceIdentifier ruleResourceId = ServiceBusNamespaceAuthorizationRuleResource.CreateResourceIdentifier(SubscriptionId, ResourceGroup, Namespace, authorizationRuleName);
+            ServiceBusNamespaceAuthorizationRuleResource ruleResource = await client.GetServiceBusNamespaceAuthorizationRuleResource(ruleResourceId).GetAsync();
+            ServiceBusAccessKeys result = await ruleResource.GetKeysAsync();
 
             return new HashSet<string>(new[] { result.PrimaryConnectionString, result.SecondaryConnectionString });
-        }
-
-        private async Task<ServiceBusManagementClient> GetServiceBusManagementClient()
-        {
-            TokenCredentials credentials = await GetServiceClientCredentials();
-            var client = new ServiceBusManagementClient(credentials)
-            {
-                SubscriptionId = SubscriptionId,
-            };
-
-            return client;
         }
     }
 }

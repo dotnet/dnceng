@@ -4,12 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Azure;
+using Azure.Core;
+using Azure.ResourceManager;
+using Azure.ResourceManager.EventHubs;
+using Azure.ResourceManager.ServiceBus.Models;
+using Azure.ResourceManager.ServiceBus;
 using Azure.Security.KeyVault.Secrets;
-using Microsoft.Azure.Management.EventHub;
-using Microsoft.Azure.Management.EventHub.Models;
-using Microsoft.Rest;
-using Microsoft.Rest.Azure;
 using NUnit.Framework;
+using Azure.ResourceManager.EventHubs.Models;
 
 namespace Microsoft.DncEng.SecretManager.Tests
 {
@@ -84,12 +86,15 @@ secrets:
         [OneTimeTearDown]
         public async Task Cleanup()
         {
-            EventHubManagementClient client = await GetEventHubManagementClient();
-            IPage<AuthorizationRule> rules = await client.EventHubs.ListAuthorizationRulesAsync(ResourceGroup, Namespace, Name);
+            ArmClient client = new(_tokenCredential, SubscriptionId);
 
-            foreach (var rule in rules)
+            ResourceIdentifier eventHubResourceId = EventHubResource.CreateResourceIdentifier(SubscriptionId, ResourceGroup, Namespace, Name);
+            EventHubResource eventHub = client.GetEventHubResource(eventHubResourceId);
+            IAsyncEnumerable<EventHubAuthorizationRuleResource> rules = eventHub.GetEventHubAuthorizationRules().GetAllAsync();
+
+            await foreach (EventHubAuthorizationRuleResource rule in rules)
             {
-                await client.EventHubs.DeleteAuthorizationRuleAsync(ResourceGroup, Namespace, Name, rule.Name);
+                await rule.DeleteAsync(WaitUntil.Completed);
             }
 
             await PurgeAllSecrets();
@@ -97,22 +102,14 @@ secrets:
 
         private async Task<HashSet<string>> GetAccessKeys(string secretName)
         {
-            EventHubManagementClient client = await GetEventHubManagementClient();
+            ArmClient client = new(_tokenCredential, SubscriptionId);
             string accessPolicyName = secretName + "-access-policy";
-            AccessKeys result = await client.EventHubs.ListKeysAsync(ResourceGroup, Namespace, Name, accessPolicyName);
+
+            ResourceIdentifier ruleResourceId = EventHubAuthorizationRuleResource.CreateResourceIdentifier(SubscriptionId, ResourceGroup, Namespace, Name, accessPolicyName);
+            EventHubAuthorizationRuleResource ruleResource = await client.GetEventHubAuthorizationRuleResource(ruleResourceId).GetAsync();
+            EventHubsAccessKeys result = await ruleResource.GetKeysAsync();
 
             return new HashSet<string>(new[] { result.PrimaryConnectionString, result.SecondaryConnectionString });
-        }
-
-        private async Task<EventHubManagementClient> GetEventHubManagementClient()
-        {
-            TokenCredentials credentials = await GetServiceClientCredentials();
-            var client = new EventHubManagementClient(credentials)
-            {
-                SubscriptionId = SubscriptionId,
-            };
-
-            return client;
         }
     }
 }

@@ -11,7 +11,6 @@ using Microsoft.DncEng.Configuration.Extensions;
 using Microsoft.DncEng.SecretManager.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Rest;
 
 namespace Microsoft.DncEng.SecretManager.Tests
 {
@@ -70,16 +69,6 @@ namespace Microsoft.DncEng.SecretManager.Tests
                 if (manifestFile != null)
                     File.Delete(manifestFile);
             }
-        }
-
-        protected async Task<TokenCredentials> GetServiceClientCredentials()
-        {
-            AccessToken token = await _tokenCredential.GetTokenAsync(new TokenRequestContext(new[]
-            {
-                "https://management.azure.com/.default",
-            }, tenantId: ConfigurationConstants.MsftAdTenantId), default);
-
-            return new TokenCredentials(token.Token);
         }
 
         protected SecretClient GetSecretClient()
