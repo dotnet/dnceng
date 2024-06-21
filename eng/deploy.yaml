@@ -8,7 +8,6 @@ parameters:
 
   # --- Secret Variable group requirements ---
   # dotnet-build-bot-dotnet-eng-status-token
-  # secret-manager-scenario-tests-client-secret
 
 stages:
 - stage: ValidateSecrets
