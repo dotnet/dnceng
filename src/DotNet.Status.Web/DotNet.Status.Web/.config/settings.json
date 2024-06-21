@@ -78,6 +78,30 @@
         },
         {
           "Project": "internal",
+          "DefinitionPath": "\\dotnet\\arcade\\dotnet-arcade-daily",
+          "Branches": [ "main" ],
+          "IssuesId": "dotnet-dnceng-first-responder"
+        },
+        {
+          "Project": "internal",
+          "DefinitionPath": "\\dotnet\\helix-service\\dotnet-helix-service-daily",
+          "Branches": [ "main" ],
+          "IssuesId": "dotnet-dnceng-first-responder"
+        },
+        {
+          "Project": "internal",
+          "DefinitionPath": "\\dotnet\\helix-machines\\dotnet-helix-machines-daily",
+          "Branches": [ "main" ],
+          "IssuesId": "dotnet-dnceng-first-responder"
+        },
+        {
+          "Project": "internal",
+          "DefinitionPath": "\\dotnet\\dnceng\\dotnet-dnceng-daily",
+          "Branches": [ "main" ],
+          "IssuesId": "dotnet-dnceng-first-responder"
+        },
+        {
+          "Project": "internal",
           "DefinitionPath": "\\dotnet\\helix-machines\\dotnet-helix-machines-matrix-of-truth",
           "Branches": [ "main" ],
           "IssuesId": "dotnet-dnceng-first-responder"
