@@ -12,16 +12,13 @@
   "withCredentials": false,
   "isDefault": false,
   "jsonData": {
-    "azureCloud": "azuremonitor",
-    "clientId": "a2541735-8225-40af-9c8a-2ae233203739",
+    "azureCredentials": {
+        "authType": "msi"
+    },
     "clusterUrl": "https://engdata.kusto.windows.net",
     "dataConsistency": "strongconsistency",
     "defaultDatabase": "engineeringdata",
-    "defaultEditorMode": "visual",
-    "tenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47"
+    "defaultEditorMode": "visual"
   },
-  "readOnly": false,
-  "secureJsonData": {
-    "clientSecret": "[vault(helix-grafana-app-secret)]"
-  }
+  "readOnly": false
 }
