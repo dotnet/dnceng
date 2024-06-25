@@ -14,7 +14,7 @@ Fundamentally, all Maestro does is launch build pipelines with prescribed parame
 
 * .NET Core Engineering Services team (contact: @dnceng)
 * .NET Product teams
-* Go team (mirror only AFAIK)
+* Go team (mirror only)
 
 ## Risks
 
