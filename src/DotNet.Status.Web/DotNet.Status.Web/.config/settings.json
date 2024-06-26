@@ -60,13 +60,55 @@
         },
         {
           "Project": "internal",
+          "DefinitionPath": "\\dotnet\\arcade\\dotnet-arcade-ci",
+          "Branches": [ "main" ],
+          "IssuesId": "dotnet-dnceng-first-responder"
+        },
+        {
+          "Project": "internal",
+          "DefinitionPath": "\\dotnet\\arcade\\dotnet-arcade-daily",
+          "Branches": [ "main" ],
+          "IssuesId": "dotnet-dnceng-first-responder"
+        },
+        {
+          "Project": "internal",
           "DefinitionPath": "\\dotnet\\arcade\\dotnet-arcade-weekly",
           "Branches": [ "main" ],
           "IssuesId": "dotnet-dnceng-first-responder"
         },
         {
           "Project": "internal",
+          "DefinitionPath": "\\dotnet\\helix-service\\dotnet-helix-service-CI",
+          "Branches": [ "main" ],
+          "IssuesId": "dotnet-dnceng-first-responder"
+        },
+        {
+          "Project": "internal",
+          "DefinitionPath": "\\dotnet\\helix-service\\dotnet-helix-service-daily",
+          "Branches": [ "main" ],
+          "IssuesId": "dotnet-dnceng-first-responder"
+        },
+        {
+          "Project": "internal",
           "DefinitionPath": "\\dotnet\\helix-service\\dotnet-helix-service-weekly",
+          "Branches": [ "main" ],
+          "IssuesId": "dotnet-dnceng-first-responder"
+        },
+        {
+          "Project": "internal",
+          "DefinitionPath": "\\dotnet\\helix-machines\\dotnet-helix-machines-ci",
+          "Branches": [ "main" ],
+          "IssuesId": "dotnet-dnceng-first-responder"
+        },
+        {
+          "Project": "internal",
+          "DefinitionPath": "\\dotnet\\helix-machines\\dotnet-helix-machines-daily",
+          "Branches": [ "main" ],
+          "IssuesId": "dotnet-dnceng-first-responder"
+        },
+        {
+          "Project": "internal",
+          "DefinitionPath": "\\dotnet\\helix-machines\\dotnet-helix-machines-image-generation",
           "Branches": [ "main" ],
           "IssuesId": "dotnet-dnceng-first-responder"
         },
@@ -152,6 +194,12 @@
         },
         {
           "Project": "internal",
+          "DefinitionPath": "\\dotnet\\dnceng\\dotnet-dnceng-daily",
+          "Branches": [ "main" ],
+          "IssuesId": "dotnet-dnceng-build-failed"
+        },
+        {
+          "Project": "internal",
           "DefinitionPath": "\\dotnet\\dnceng\\dotnet-dnceng-weekly",
           "Branches": [ "main" ],
           "IssuesId": "dotnet-dnceng-first-responder"
@@ -224,7 +272,7 @@
   "GitHub": {
     "Organization": "maestro-auth-test",
     "Repository": "status-test",
-    "NotificationTarget": "",
+    "NotificationTargets": [],
     "AlertLabels": [],
     "EnvironmentLabels": [],
     "SupplementalBodyText": "",

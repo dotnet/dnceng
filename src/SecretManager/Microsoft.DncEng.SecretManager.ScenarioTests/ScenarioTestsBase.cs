@@ -24,8 +24,11 @@ namespace Microsoft.DncEng.SecretManager.Tests
 
         // Expect credentials for the Service Principal used in these tests to be set
         // in enviornment variables.
-        private readonly TokenCredential _tokenCredential = new EnvironmentCredential();
-
+        private readonly TokenCredential _tokenCredential = new DefaultAzureCredential(
+            new DefaultAzureCredentialOptions { 
+                ManagedIdentityClientId = Environment.GetEnvironmentVariable("ARM_CLIENT_ID")
+            });
+            
         protected async Task ExecuteSynchronizeCommand(string manifest)
         {
             ServiceCollection services = new ServiceCollection();
