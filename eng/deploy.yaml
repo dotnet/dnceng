@@ -26,7 +26,6 @@ parameters:
 
   # --- Secret Variable group requirements ---
   # dotnet-build-bot-dotnet-eng-status-token
-  # secret-manager-scenario-tests-client-secret
 
 stages:
 - stage: ValidateSecrets
@@ -225,11 +224,6 @@ stages:
     demands: ImageOverride -equals 1es-windows-2019
   dependsOn:
   - deploy
-  variables:
-  # Secret-Manager-Scenario-Tests provides: 
-  #   - secret-manager-scenario-tests-app-id
-  #   - secret-manager-scenario-tests-app-secret
-  - group: Secret-Manager-Scenario-Tests
   jobs:
   - job: scenario
     displayName: Scenario tests
@@ -250,6 +244,21 @@ stages:
       inputs:
         useGlobalJson: true
 
+    - task: AzureCLI@2
+      inputs:
+        azureSubscription: 'secret-manager-scenario-tests'
+        addSpnToEnvironment: true
+        scriptType: 'ps'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          echo "##vso[task.setvariable variable=ARM_CLIENT_ID;isSecret=true]$env:servicePrincipalId" 
+          echo "##vso[task.setvariable variable=ARM_TENANT_ID;isSecret=true]$env:tenantId"
+          echo "##vso[task.setvariable variable=ARM_ID_TOKEN;isSecret=true]$env:idToken"
+  
+    - script: |
+        az login --service-principal -u $(ARM_CLIENT_ID) --tenant $(ARM_TENANT_ID) --allow-no-subscriptions --federated-token $(ARM_ID_TOKEN)
+      displayName: "Login to Azure"
+
     - task: VSTest@2
       displayName: Secret Manager Scenario Tests
       inputs:
@@ -257,7 +266,3 @@ stages:
         testAssemblyVer2: |
           Microsoft.DncEng.SecretManager.ScenarioTests.dll
         searchFolder: $(Pipeline.Workspace)/Microsoft.DncEng.SecretManager.ScenarioTests
-      env:
-        AZURE_TENANT_ID: 72f988bf-86f1-41af-91ab-2d7cd011db47
-        AZURE_CLIENT_ID: $(secret-manager-scenario-tests-app-id)
-        AZURE_CLIENT_SECRET: $(secret-manager-scenario-tests-app-secret)

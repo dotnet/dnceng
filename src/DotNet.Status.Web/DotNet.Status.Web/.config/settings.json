@@ -1,5 +1,8 @@
 {
-  "HealthTableUri": "[vault(health-report-table-sas-uri)]",
+  "HealthReportSettings": {
+    "StorageAccountTablesUri": "https://helixstagescripts2.table.core.windows.net",
+    "TableName": "healthreports"
+  },
   "GitHubAuthentication": {
     "ClientId": "[vault(github-oauth-id)]",
     "ClientSecret": "[vault(github-oauth-secret)]",
@@ -57,13 +60,55 @@
         },
         {
           "Project": "internal",
+          "DefinitionPath": "\\dotnet\\arcade\\dotnet-arcade-ci",
+          "Branches": [ "main" ],
+          "IssuesId": "dotnet-dnceng-first-responder"
+        },
+        {
+          "Project": "internal",
+          "DefinitionPath": "\\dotnet\\arcade\\dotnet-arcade-daily",
+          "Branches": [ "main" ],
+          "IssuesId": "dotnet-dnceng-first-responder"
+        },
+        {
+          "Project": "internal",
           "DefinitionPath": "\\dotnet\\arcade\\dotnet-arcade-weekly",
           "Branches": [ "main" ],
           "IssuesId": "dotnet-dnceng-first-responder"
         },
         {
           "Project": "internal",
+          "DefinitionPath": "\\dotnet\\helix-service\\dotnet-helix-service-CI",
+          "Branches": [ "main" ],
+          "IssuesId": "dotnet-dnceng-first-responder"
+        },
+        {
+          "Project": "internal",
+          "DefinitionPath": "\\dotnet\\helix-service\\dotnet-helix-service-daily",
+          "Branches": [ "main" ],
+          "IssuesId": "dotnet-dnceng-first-responder"
+        },
+        {
+          "Project": "internal",
           "DefinitionPath": "\\dotnet\\helix-service\\dotnet-helix-service-weekly",
+          "Branches": [ "main" ],
+          "IssuesId": "dotnet-dnceng-first-responder"
+        },
+        {
+          "Project": "internal",
+          "DefinitionPath": "\\dotnet\\helix-machines\\dotnet-helix-machines-ci",
+          "Branches": [ "main" ],
+          "IssuesId": "dotnet-dnceng-first-responder"
+        },
+        {
+          "Project": "internal",
+          "DefinitionPath": "\\dotnet\\helix-machines\\dotnet-helix-machines-daily",
+          "Branches": [ "main" ],
+          "IssuesId": "dotnet-dnceng-first-responder"
+        },
+        {
+          "Project": "internal",
+          "DefinitionPath": "\\dotnet\\helix-machines\\dotnet-helix-machines-image-generation",
           "Branches": [ "main" ],
           "IssuesId": "dotnet-dnceng-first-responder"
         },
@@ -149,6 +194,12 @@
         },
         {
           "Project": "internal",
+          "DefinitionPath": "\\dotnet\\dnceng\\dotnet-dnceng-daily",
+          "Branches": [ "main" ],
+          "IssuesId": "dotnet-dnceng-build-failed"
+        },
+        {
+          "Project": "internal",
           "DefinitionPath": "\\dotnet\\dnceng\\dotnet-dnceng-weekly",
           "Branches": [ "main" ],
           "IssuesId": "dotnet-dnceng-first-responder"
@@ -221,7 +272,7 @@
   "GitHub": {
     "Organization": "maestro-auth-test",
     "Repository": "status-test",
-    "NotificationTarget": "",
+    "NotificationTargets": [],
     "AlertLabels": [],
     "EnvironmentLabels": [],
     "SupplementalBodyText": "",
@@ -243,10 +294,6 @@
         "default": "[vault(github-app-webhook-secret)]"
       }
     }
-  },
-  "Kusto": {
-    "Database": "engineeringdata",
-    "IngestConnectionString": "[vault(nethelix-engsrv-kusto-connection-string-ingest)]"
   },
   "IssueMentionForwarding": {
     "WatchedTeam": "dotnet/dnceng",
