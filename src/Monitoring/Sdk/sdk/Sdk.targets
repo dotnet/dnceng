@@ -53,6 +53,8 @@
       ClientId="$(ClientId)"
       ServiceConnectionId="$(ServiceConnectionId)"
       SystemAccessToken="$(SystemAccessToken)"
+	  KeyVaultServicePrincipalId="$(GrafanaKeyVaultServicePrincipalId)"
+      KeyVaultServicePrincipalSecret="$(GrafanaKeyVaultServicePrincipalSecret)"
       Tag="$(GrafanaDashboardTag)"
       Environment="$(GrafanaEnvironment)"
       ParametersFile="$(ParametersFile)"
