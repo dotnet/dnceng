@@ -2,10 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Diagnostics;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
+using Azure.Core;
+using Azure.Identity;
 using Microsoft.Build.Framework;
 using BuildTask = Microsoft.Build.Utilities.Task;
 
@@ -31,10 +32,13 @@ public class MonitoringPublish : BuildTask
     [Required]
     public string KeyVaultName { get; set; }
 
-    [Required]
-    public string KeyVaultServicePrincipalId { get; set; }
+    // For azure pipeline service connection authentication
+    public string ClientId { get; set; }
+    public string ServiceConnectionId { get; set; }
+    public string SystemAccessToken { get; set; }
 
-    [Required]
+    //  For client secret authentication
+    public string KeyVaultServicePrincipalId { get; set; }
     public string KeyVaultServicePrincipalSecret { get; set; }
 
     [Required]
@@ -54,17 +58,53 @@ public class MonitoringPublish : BuildTask
 
     private async Task<bool> ExecuteAsync()
     {
+        string msftTenantId = "72f988bf-86f1-41af-91ab-2d7cd011db47";
+        TokenCredential tokenCredential;
+
+        if (ClientId == null && ServiceConnectionId == null && SystemAccessToken == null && KeyVaultServicePrincipalId == null && KeyVaultServicePrincipalSecret == null)
+        {
+            tokenCredential = new DefaultAzureCredential(
+                new DefaultAzureCredentialOptions()
+                {
+                    TenantId = msftTenantId
+                }
+            );
+        }
+        else if (ClientId != null || ServiceConnectionId != null || SystemAccessToken != null)
+        {
+            if (ClientId == null || ServiceConnectionId == null || SystemAccessToken == null)
+            {
+                Log.LogError("Invalid login combination. Set ClientId, ServiceConnectionId and SystemAccessToken for CI, or none for local user authentication.");
+                return false;
+            }
+            else
+            {
+                tokenCredential = new AzurePipelinesCredential(msftTenantId, ClientId, ServiceConnectionId, SystemAccessToken);
+            }
+        }
+        else
+        {
+            if (KeyVaultServicePrincipalId == null || KeyVaultServicePrincipalSecret == null)
+            {
+                Log.LogError("Invalid login combination. Set KeyVaultServicePrincipalId and KeyVaultServicePrincipalSecret for Client Secret authentication.");
+                return false;
+            }
+            else
+            {
+                tokenCredential = new ClientSecretCredential(msftTenantId, KeyVaultServicePrincipalId, KeyVaultServicePrincipalSecret);
+            }
+        }
+
         using (var client = new GrafanaClient(Host, AccessToken))
         using (var deploy = new DeployPublisher(
                    grafanaClient: client,
                    keyVaultName: KeyVaultName,
-                   servicePrincipalId: KeyVaultServicePrincipalId,
-                   servicePrincipalSecret: KeyVaultServicePrincipalSecret,
+                   tokenCredential: tokenCredential,
                    sourceTagValue: Tag,
                    dashboardDirectory: DashboardDirectory,
                    datasourceDirectory: DataSourceDirectory,
                    notificationDirectory: NotificationDirectory,
-                   environment: Environment, 
+                   environment: Environment,
                    parametersFile: ParametersFile,
                    log: Log))
         {
