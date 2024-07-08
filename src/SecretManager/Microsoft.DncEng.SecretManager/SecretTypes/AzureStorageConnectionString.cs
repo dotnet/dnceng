@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Azure.Management.Storage.Models;
 using Microsoft.DncEng.CommandLineLib;
 using Microsoft.DncEng.CommandLineLib.Authentication;
 

@@ -7,7 +7,6 @@ using Azure;
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.Azure.Management.EventHub;
 using Microsoft.Azure.Management.EventHub.Models;
-using Microsoft.Azure.Management.Storage;
 using Microsoft.Rest;
 using Microsoft.Rest.Azure;
 using NUnit.Framework;

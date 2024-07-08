@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Azure;
+using Azure.Core;
+using Azure.ResourceManager;
+using Azure.ResourceManager.Storage;
+using Azure.ResourceManager.Storage.Models;
 using Azure.Security.KeyVault.Secrets;
-using Microsoft.Azure.Management.Storage;
-using Microsoft.DncEng.CommandLineLib;
-using Microsoft.Rest;
 using NUnit.Framework;
 
 namespace Microsoft.DncEng.SecretManager.Tests
@@ -219,14 +220,13 @@ secrets:
 
         private async Task<HashSet<string>> GetAccessKeys()
         {
-            TokenCredentials credentials = await GetServiceClientCredentials();
-            var client = new StorageManagementClient(credentials)
-            {
-                SubscriptionId = SubscriptionId,
-            };
+            ArmClient armClient = new (_tokenCredential);
 
-            var result = await client.StorageAccounts.ListKeysAsync(ResourceGroup, AccountName);
-            return result.Keys.Select(l => l.Value).ToHashSet();
+            ResourceIdentifier storageAccountResourceId = StorageAccountResource.CreateResourceIdentifier(SubscriptionId, ResourceGroup, AccountName);
+            StorageAccountResource storageAccount = armClient.GetStorageAccountResource(storageAccountResourceId);
+            List<StorageAccountKey> result = await storageAccount.GetKeysAsync().ToListAsync();
+            
+            return result.Select(l => l.Value).ToHashSet();
         }
     }
 }
