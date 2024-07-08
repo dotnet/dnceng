@@ -674,8 +674,19 @@ public partial class AzurePipelinesControllerTests
                 .Setup(m => m.GetAllForRepository(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<RepositoryIssueRequest>()))
                 .Returns(Task.FromResult((IReadOnlyList<Issue>)(new List<Issue> {mockIssue})));
 
-            Octokit.GitHubApp mockGithubApp = new GitHubApp(12345, default, "app", default, "desc", "url", "url",
-                DateTimeOffset.MinValue, DateTimeOffset.MinValue, default, default);
+            Octokit.GitHubApp mockGithubApp = new GitHubApp(
+                id: 12345, 
+                slug: default,
+                nodeId: default,
+                name: "app", 
+                owner: default, 
+                description: "desc", 
+                externalUrl: "url",
+                htmlUrl: "url",
+                createdAt: DateTimeOffset.MinValue,
+                updatedAt: DateTimeOffset.MinValue, 
+                permissions: default, 
+                events: default);
 
             var mockGithubAppsClient = new Mock<IGitHubAppsClient>();
             mockGithubAppsClient.Setup(m => m.GetCurrent()).Returns(Task.FromResult(mockGithubApp));
