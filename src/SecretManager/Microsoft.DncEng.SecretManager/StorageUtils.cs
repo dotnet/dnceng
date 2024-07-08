@@ -27,7 +27,8 @@ public static class StorageUtils
 {
     public static async Task<string> RotateStorageAccountKey(string subscriptionId, string accountName, RotationContext context, TokenCredentialProvider tokenCredentialProvider, CancellationToken cancellationToken)
     {
-        ArmClient armClient = new ArmClient(new DefaultAzureCredential());
+        TokenCredential credential = await tokenCredentialProvider.GetCredentialAsync();
+        ArmClient armClient = new ArmClient(credential);
 
         ResourceIdentifier subscriptionResourceId = SubscriptionResource.CreateResourceIdentifier(subscriptionId);
         SubscriptionResource subscriptionResource = armClient.GetSubscriptionResource(subscriptionResourceId);
