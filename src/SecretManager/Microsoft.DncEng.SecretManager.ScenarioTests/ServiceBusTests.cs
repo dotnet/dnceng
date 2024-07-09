@@ -85,7 +85,6 @@ secrets:
         [OneTimeTearDown]
         public async Task Cleanup()
         {
-            //ArmClient client = new(_tokenCredential, SubscriptionId);
             ResourceIdentifier serviceBusNamespaceId = ServiceBusNamespaceResource.CreateResourceIdentifier(SubscriptionId, ResourceGroup, Namespace);
             IAsyncEnumerable<ServiceBusNamespaceAuthorizationRuleResource> rules = _armClient.GetServiceBusNamespaceResource(serviceBusNamespaceId).GetServiceBusNamespaceAuthorizationRules().GetAllAsync();
 
@@ -104,7 +103,6 @@ secrets:
 
         private async Task<HashSet<string>> GetAccessKeys(string secretName)
         {
-            //ArmClient client = new(_tokenCredential, SubscriptionId);
             string authorizationRuleName = secretName + AccessPolicySufix;
 
             ResourceIdentifier ruleResourceId = ServiceBusNamespaceAuthorizationRuleResource.CreateResourceIdentifier(SubscriptionId, ResourceGroup, Namespace, authorizationRuleName);
