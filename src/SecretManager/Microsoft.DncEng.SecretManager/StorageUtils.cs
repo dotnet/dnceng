@@ -1,6 +1,5 @@
 using Azure.Core;
 using Azure.Data.Tables.Sas;
-using Azure.Identity;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
 using Azure.ResourceManager.Storage;
@@ -8,7 +7,6 @@ using Azure.ResourceManager.Storage.Models;
 using Azure.Storage;
 using Azure.Storage.Blobs;
 using Azure.Storage.Sas;
-using Microsoft.DncEng.CommandLineLib.Authentication;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -25,7 +23,7 @@ namespace Microsoft.DncEng.SecretManager;
 
 public static class StorageUtils
 {
-    public static async Task<string> RotateStorageAccountKey(string subscriptionId, string accountName, RotationContext context, TokenCredentialProvider tokenCredentialProvider, CancellationToken cancellationToken)
+    public static async Task<string> RotateStorageAccountKey(string subscriptionId, string accountName, RotationContext context, ITokenCredentialProvider tokenCredentialProvider, CancellationToken cancellationToken)
     {
         TokenCredential credential = await tokenCredentialProvider.GetCredentialAsync();
         ArmClient armClient = new ArmClient(credential);

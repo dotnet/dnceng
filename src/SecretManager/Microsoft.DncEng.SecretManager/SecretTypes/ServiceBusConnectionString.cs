@@ -9,7 +9,6 @@ using Azure.ResourceManager;
 using Azure.ResourceManager.ServiceBus;
 using Azure.ResourceManager.ServiceBus.Models;
 using Microsoft.DncEng.CommandLineLib;
-using Microsoft.DncEng.CommandLineLib.Authentication;
 
 namespace Microsoft.DncEng.SecretManager.SecretTypes;
 
@@ -24,10 +23,10 @@ public class ServiceBusConnectionString : SecretType<ServiceBusConnectionString.
         public string Permissions { get; set; }
     }
 
-    private readonly TokenCredentialProvider _tokenCredentialProvider;
+    private readonly ITokenCredentialProvider _tokenCredentialProvider;
     private readonly ISystemClock _clock;
 
-    public ServiceBusConnectionString(TokenCredentialProvider tokenCredentialProvider, ISystemClock clock)
+    public ServiceBusConnectionString(ITokenCredentialProvider tokenCredentialProvider, ISystemClock clock)
     {
         _tokenCredentialProvider = tokenCredentialProvider;
         _clock = clock;
