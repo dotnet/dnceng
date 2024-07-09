@@ -5,8 +5,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Azure.Core;
 using Azure.Identity;
+using Azure.ResourceManager;
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.DncEng.CommandLineLib;
+using Microsoft.DncEng.Configuration.Extensions;
 using Microsoft.DncEng.SecretManager.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -20,13 +22,23 @@ namespace Microsoft.DncEng.SecretManager.Tests
         protected const string NextRotationOnTag = "next-rotation-on";
         protected const string KeyVaultName = "SecretManagerTestsKv";
 
-        // Expect credentials for the Service Principal used in these tests to be set
-        // in enviornment variables.
-        private readonly TokenCredential _tokenCredential = new DefaultAzureCredential(
-            new DefaultAzureCredentialOptions { 
-                ManagedIdentityClientId = Environment.GetEnvironmentVariable("ARM_CLIENT_ID")
-            });
-            
+        protected readonly TokenCredential _tokenCredential;
+
+        // Shared ARM client for tests to use
+        protected readonly ArmClient _armClient;
+
+        public ScenarioTestsBase()
+        {
+            _tokenCredential = new DefaultAzureCredential(
+                new DefaultAzureCredentialOptions
+                {
+                    TenantId = ConfigurationConstants.MsftAdTenantId,
+                    ManagedIdentityClientId = Environment.GetEnvironmentVariable("ARM_CLIENT_ID")
+                });
+
+            _armClient = new(_tokenCredential, SubscriptionId);
+        }
+
         protected async Task ExecuteSynchronizeCommand(string manifest)
         {
             ServiceCollection services = new ServiceCollection();
