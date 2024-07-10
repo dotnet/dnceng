@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Azure.Core;
 using Microsoft.DncEng.CommandLineLib;
-using Microsoft.DncEng.CommandLineLib.Authentication;
 
 namespace Microsoft.DncEng.SecretManager;
 
@@ -11,9 +10,9 @@ namespace Microsoft.DncEng.SecretManager;
 class TestCommand : Command
 {
     private readonly IConsole _console;
-    private readonly TokenCredentialProvider _tokenProvider;
+    private readonly ITokenCredentialProvider _tokenProvider;
 
-    public TestCommand(IConsole console, TokenCredentialProvider tokenProvider)
+    public TestCommand(IConsole console, ITokenCredentialProvider tokenProvider)
     {
         _console = console;
         _tokenProvider = tokenProvider;
