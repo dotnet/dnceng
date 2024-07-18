@@ -20,6 +20,7 @@ using OpenAI;
 using OpenAI.Chat;
 using System.Text.Json.Nodes;
 using static System.Environment;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Chatbot
 {
@@ -111,7 +112,6 @@ namespace Chatbot
                     await SendSuggestedActionsAsync(followup, turnContext, cancellationToken);
                     break;
                 default:
-                    // TODO replace the line below with a call to OpenAI
                     var aiResponse = AskOpenAI(userRequest);
                     await turnContext.SendActivityAsync(MessageFactory.Text(aiResponse), cancellationToken);
                     await SendSuggestedActionsAsync(followup, turnContext, cancellationToken);
@@ -133,42 +133,21 @@ namespace Chatbot
 
         private static String AskOpenAI(String question)
         {
-            // For chat client
-            var openAIEndpoint = GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
-            var openAIKey = GetEnvironmentVariable("AZURE_OPENAI_API_KEY");
-            var openAIDeploymentName = GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_ID");
-
-            // Search service constants
-            var searchEndpoint = GetEnvironmentVariable("AZURE_AI_SEARCH_ENDPOINT");
-            var searchKey = GetEnvironmentVariable("AZURE_AI_SEARCH_API_KEY");
-            var searchIndex = GetEnvironmentVariable("AZURE_AI_SEARCH_INDEX");
-
-            var servicePrompt = "You are an AI assistant for Microsoft’s Dotnet Core Engineering team" +
-                                "that helps the team and other Microsoft employees find information using " +
-                                "Dotnet’s repositories on GitHub. You like to give examples whenever possible.";
-
-
             /* 
-             * Creates Azure OpenAI Client, the line below disables the warning 
-             * because the.AddDataSource is an experimental feature a part of the newest release
+             * The line below disables the warning because the.AddDataSource
+             * is an experimental feature a part of the newest release.
              *
              * Source: https://learn.microsoft.com/en-us/azure/ai-services/openai/use-your-data-quickstart?tabs=command-line%2Cpython-new&pivots=programming-language-csharp
              */
 
 #pragma warning disable AOAI001
-            AzureOpenAIClient azureClient = new(new Uri(openAIEndpoint), new ApiKeyCredential(openAIKey));
 
-            // Creates OpenAI Chat completions client
-            var chatClient = azureClient.GetChatClient(openAIDeploymentName);
+            var servicePrompt = "You are an AI assistant for Microsoft’s Dotnet Core Engineering team" +
+                                "that helps the team and other Microsoft employees find information using " +
+                                "Dotnet’s repositories on GitHub. You like to give examples whenever possible.";
 
-            // Configure the chat completions options to use our data
-            var chatCompletionsOptions = new ChatCompletionOptions();
-            chatCompletionsOptions.AddDataSource(new AzureSearchChatDataSource()
-            {
-                Endpoint = new Uri(searchEndpoint),
-                IndexName = searchIndex,
-                Authentication = DataSourceAuthentication.FromApiKey(searchKey),
-            });
+            var chatClient = CreateChatClient();
+            var chatCompletionsOptions = ConfigChatOptions();
 
             // Format the chat completion and send the request 
             var messages = new List<ChatMessage>
@@ -180,11 +159,60 @@ namespace Chatbot
                 new UserChatMessage(question),
             };
 
+            // Gets the AI generated response
             ChatCompletion completion = chatClient.CompleteChat(messages, chatCompletionsOptions);
 
-            Console.WriteLine($"{completion.Role}: {completion.Content[0].Text}");
+            // Gets the message context: contains the citations, convo intent, and info about retrieved docs
+            var messageContext = completion.GetAzureMessageContext();
+            var citations = messageContext.Citations;
+
+            // Format each citation to send to the user
+            foreach (var citation in citations)
+            {
+                Console.WriteLine(citation.Title);
+                Console.WriteLine(citation.Content);
+                Console.WriteLine(citation.Filepath);
+                Console.WriteLine(citation.Url);
+            }
+
             return completion.Content[0].Text;
 
         }
+
+        private static ChatClient CreateChatClient()
+        {
+            // For chat client
+            var openAIEndpoint = GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
+            var openAIKey = GetEnvironmentVariable("AZURE_OPENAI_API_KEY");
+            var openAIDeploymentName = GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_ID");
+
+            AzureOpenAIClient azureClient = new(new Uri(openAIEndpoint), new ApiKeyCredential(openAIKey));
+
+            // Creates OpenAI Chat completions client
+            var chatClient = azureClient.GetChatClient(openAIDeploymentName);
+
+            return chatClient;
+        }
+
+        private static ChatCompletionOptions ConfigChatOptions()
+        {
+            // Search service variables
+            var searchEndpoint = GetEnvironmentVariable("AZURE_AI_SEARCH_ENDPOINT");
+            var searchKey = GetEnvironmentVariable("AZURE_AI_SEARCH_API_KEY");
+            var searchIndex = GetEnvironmentVariable("AZURE_AI_SEARCH_INDEX");
+
+            // Configure the chat completions options to use our data
+            var chatCompletionsOptions = new ChatCompletionOptions();
+            chatCompletionsOptions.AddDataSource(new AzureSearchChatDataSource()
+            {
+                Endpoint = new Uri(searchEndpoint),
+                IndexName = searchIndex,
+                Authentication = DataSourceAuthentication.FromApiKey(searchKey),
+            });
+
+            return chatCompletionsOptions;
+
+        }
+
     }
 }
