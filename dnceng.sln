@@ -65,7 +65,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Monitoring
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Chatbot", "Chatbot", "{1FA9A0E7-8004-4D99-BC23-4A070F48DF7A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chatbot", "src\Chatbot\Chatbot\Chatbot.csproj", "{BD596A93-1B93-41DB-BB53-E10512D3B34F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chatbot", "src\Chatbot\Chatbot\Chatbot.csproj", "{BD596A93-1B93-41DB-BB53-E10512D3B34F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
