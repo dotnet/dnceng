@@ -11,7 +11,9 @@
     <!-- Note: These libraries can be loaded by Arcade SDK clients, which may already have a
          newer copy of this package loaded. When updating one, be aware of the other to prevent runtime issues
          See: https://github.com/dotnet/arcade/blob/main/eng/Versions.props -->
-    <PackageVersion Include="Azure.Core" Version="1.40.0" />
+	<PackageVersion Include="AdaptiveCards" Version="3.1.0" />
+	<PackageVersion Include="Azure.AI.OpenAI" Version="2.0.0-beta.2" />
+	<PackageVersion Include="Azure.Core" Version="1.40.0" />
     <PackageVersion Include="Azure.Data.Tables" Version="12.8.3" />
     <PackageVersion Include="Azure.Extensions.AspNetCore.DataProtection.Blobs" Version="1.2.3" />
     <PackageVersion Include="Azure.Extensions.AspNetCore.DataProtection.Keys" Version="1.1.0" />
@@ -80,8 +82,10 @@
     <PackageVersion Include="NUnit" Version="3.13.3" />
     <PackageVersion Include="NUnit3TestAdapter" Version="3.16.1" />
     <PackageVersion Include="Octokit" Version="13.0.1" />
+	<PackageVersion Include="OpenAI" Version="2.0.0-beta.5" />
     <PackageVersion Include="ServiceFabricMocks" Version="$(ServiceFabricMocksVersion)" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta1.21308.1" />
+	<PackageVersion Include="System.ClientModel" Version="1.1.0-beta.4" />
     <PackageVersion Include="System.Data.SqlClient" Version="4.8.6" />
     <PackageVersion Include="System.Drawing.Common" Version="7.0.0" />
     <PackageVersion Include="System.Linq.Async" Version="6.0.1" />

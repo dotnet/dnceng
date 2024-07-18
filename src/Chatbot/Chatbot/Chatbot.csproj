@@ -7,8 +7,13 @@
 	
 	
 	<ItemGroup>
+		<PackageReference Include="AdaptiveCards" />
+		<PackageReference Include="Azure.AI.OpenAI" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" />
 		<PackageReference Include="Microsoft.Bot.Builder.Integration.AspNet.Core" />
+		<PackageReference Include="Microsoft.Extensions.Configuration" />
+		<PackageReference Include="OpenAI" />
+		<PackageReference Include="System.ClientModel" />
 	</ItemGroup>
 
 
