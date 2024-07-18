@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Chatbot
 {
-    public class EmptyBot : ActivityHandler
+    public class ChatbotForDNCEng : ActivityHandler
     {
         protected override async Task OnMembersAddedAsync(IList<ChannelAccount> membersAdded, ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
         {
