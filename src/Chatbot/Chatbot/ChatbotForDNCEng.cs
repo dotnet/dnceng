@@ -170,16 +170,17 @@ namespace Chatbot
                 Authentication = DataSourceAuthentication.FromApiKey(searchKey),
             });
 
-            // Format the chat completion and send the request
-            ChatCompletion completion = chatClient.CompleteChat(
-                [
-                    // If there is old chat history that you want to include, you would do it here
-                    // Adds the service prompt, gives context to the bot on how it should respond
-                    new SystemChatMessage(servicePrompt),
-                    // Adds the user's question
-                    new UserChatMessage(question),
+            // Format the chat completion and send the request 
+            var messages = new List<ChatMessage>
+            { 
+                // If there is old chat history that you want to include, you would do it here
+                // Adds the service prompt, gives context to the bot on how it should respond
+                new SystemChatMessage(servicePrompt),
+                // Adds the user's question
+                new UserChatMessage(question),
+            };
 
-                ], chatCompletionsOptions);
+            ChatCompletion completion = chatClient.CompleteChat(messages, chatCompletionsOptions);
 
             Console.WriteLine($"{completion.Role}: {completion.Content[0].Text}");
             return completion.Content[0].Text;
