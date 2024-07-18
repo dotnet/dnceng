@@ -36,6 +36,7 @@
     <PackageVersion Include="Microsoft.AspNetCore.WebHooks.Receivers.GitHub" Version="1.0.0-preview2-final" />
     <PackageVersion Include="Microsoft.Azure.Kusto.Ingest" Version="12.2.1" />
     <PackageVersion Include="Microsoft.Azure.WebJobs.Extensions.Storage" Version="5.0.1" />
+	<PackageVersion Include="Microsoft.Bot.Builder.Integration.AspNet.Core" Version="4.22.0" />
     <PackageVersion Include="Microsoft.Build" Version="17.1.0" />
     <PackageVersion Include="Microsoft.Build.Framework" Version="17.1.0" />
     <PackageVersion Include="Microsoft.Build.Tasks.Core" Version="17.1.0" />
