@@ -21,6 +21,8 @@ using OpenAI.Chat;
 using System.Text.Json.Nodes;
 using static System.Environment;
 using static System.Net.Mime.MediaTypeNames;
+using AdaptiveCards;
+using System.Reflection;
 
 namespace Chatbot
 {
@@ -86,34 +88,38 @@ namespace Chatbot
             }
 
             // Get user input
+            var option = turnContext.Activity.Text.ToLower();
             var userRequest = turnContext.Activity.Text;
 
             // Constants -> Predefined responses
             const String response = "Please contact the First Responder's channel.";
             const String followup = "Is there anything else I can help you with today?";
 
-            switch (userRequest)
+            switch (option)
             {
                 case "exit":
                 case "q":
                 case "quit":
                 case "bye":
+                case "no":
+                case "nope":
+                case "n/a":
                     var cardAttachment = CreateAdaptiveCardAttachment(_cards[0]);
                     await turnContext.SendActivityAsync(MessageFactory.Attachment(cardAttachment), cancellationToken);
                     break;
-                case "Contact":
+                case "contact":
                     var contactAttachment = CreateAdaptiveCardAttachment(_cards[1]);
                     await turnContext.SendActivityAsync(MessageFactory.Attachment(contactAttachment), cancellationToken);
                     await SendSuggestedActionsAsync(followup, turnContext, cancellationToken);
                     break;
-                case "Permissions":
-                case "PAT":
+                case "permissions":
+                case "pat":
                     await turnContext.SendActivityAsync(MessageFactory.Text(response), cancellationToken);
                     await SendSuggestedActionsAsync(followup, turnContext, cancellationToken);
                     break;
                 default:
                     var aiResponse = AskOpenAI(userRequest);
-                    await turnContext.SendActivityAsync(MessageFactory.Text(aiResponse), cancellationToken);
+                    await turnContext.SendActivityAsync(MessageFactory.Attachment(aiResponse), cancellationToken);
                     await SendSuggestedActionsAsync(followup, turnContext, cancellationToken);
                     break;
             }
@@ -131,7 +137,39 @@ namespace Chatbot
             return adaptiveCardAttachment;
         }
 
-        private static String AskOpenAI(String question)
+        private static Attachment FormatLinks(String response, List<(String, String)>links)
+        {
+            AdaptiveCard card = new AdaptiveCard(new AdaptiveSchemaVersion(1, 0));
+
+            card.Body.Add(new AdaptiveTextBlock()
+            {
+                Text = response,
+                Size = AdaptiveTextSize.Default,
+                Wrap = true,
+            });
+
+            foreach (var link in links) 
+            {
+                var action = new AdaptiveOpenUrlAction()
+                {
+                    Title = link.Item1,
+                    Url = new Uri(link.Item2),
+                };
+                card.Actions.Add(action);
+            }
+
+            string adaptiveCardJson = card.ToJson();
+
+            var adaptiveCardAttachment = new Attachment()
+            {
+                ContentType = "application/vnd.microsoft.card.adaptive",
+                Content = JsonConvert.DeserializeObject(adaptiveCardJson),
+            };
+
+            return adaptiveCardAttachment;
+        }
+
+        private static Attachment AskOpenAI(String question)
         {
             /* 
              * The line below disables the warning because the.AddDataSource
@@ -167,15 +205,19 @@ namespace Chatbot
             var citations = messageContext.Citations;
 
             // Format each citation to send to the user
+            /*
+             * TODO for now keep citation url, but eventually when we get full paths from github we can get the github link
+             * from a search on the file path and use that link instead
+             */
+
+           var citationInfo = new List<(String, String)>();
             foreach (var citation in citations)
             {
-                Console.WriteLine(citation.Title);
-                Console.WriteLine(citation.Content);
-                Console.WriteLine(citation.Filepath);
-                Console.WriteLine(citation.Url);
+                citationInfo.Add((citation.Filepath, citation.Url));
             }
 
-            return completion.Content[0].Text;
+            var responseCard = FormatLinks(completion.Content[0].Text, citationInfo);
+            return responseCard;
 
         }
 
