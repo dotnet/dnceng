@@ -209,11 +209,13 @@ namespace Chatbot
              * TODO for now keep citation url, but eventually when we get full paths from github we can get the github link
              * from a search on the file path and use that link instead
              */
-
-           var citationInfo = new List<(String, String)>();
+            var currentCitation = 1;
+            var citationInfo = new List<(String, String)>();
             foreach (var citation in citations)
             {
-                citationInfo.Add((citation.Filepath, citation.Url));
+                var citationTitle = "Doc " + currentCitation.ToString() + ": " + citation.Filepath;
+                citationInfo.Add((citationTitle, citation.Url));
+                currentCitation++;
             }
 
             var responseCard = FormatLinks(completion.Content[0].Text, citationInfo);
@@ -254,6 +256,8 @@ namespace Chatbot
 
             return chatCompletionsOptions;
 
+            // TODO maybe change the n because model might by default be generating more than 1 answer
+            // and it might be collecting more citations because of the other answers
         }
 
     }
