@@ -258,6 +258,9 @@ namespace Chatbot
 
             // TODO maybe change the n because model might by default be generating more than 1 answer
             // and it might be collecting more citations because of the other answers
+
+            // Maybe it could be the retrieved docs that changes the number of citations?
+            // Use regex matching to see which docs we need to link as a citation?
         }
 
     }
