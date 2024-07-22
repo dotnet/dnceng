@@ -10,19 +10,20 @@ using Microsoft.Bot.Schema;
 using Newtonsoft.Json;
 using Microsoft.Bot.Builder.Integration;
 
-// For working with Azure OpenAI
+using AdaptiveCards;
 using Azure;
 using Azure.AI.OpenAI;
 using Azure.AI.OpenAI.Chat;
+using Azure.Security.KeyVault.Secrets;
 using Microsoft.Extensions.Configuration;
-using System.ClientModel;
 using OpenAI;
 using OpenAI.Chat;
-using System.Text.Json.Nodes;
+using System.ClientModel;
 using static System.Environment;
 using static System.Net.Mime.MediaTypeNames;
-using AdaptiveCards;
+using System.Text.Json.Nodes;
 using System.Reflection;
+using Azure.Identity;
 
 namespace Chatbot
 {
@@ -182,7 +183,8 @@ namespace Chatbot
 
             var servicePrompt = "You are an AI assistant for Microsoft’s Dotnet Core Engineering team" +
                                 "that helps the team and other Microsoft employees find information using " +
-                                "Dotnet’s repositories on GitHub. You like to give examples whenever possible.";
+                                "Dotnet’s repositories on GitHub. You like to give examples whenever possible." +
+                                "You cite your references with the filepath in the format of [filepath].";
 
             var chatClient = CreateChatClient();
             var chatCompletionsOptions = ConfigChatOptions();
@@ -208,6 +210,8 @@ namespace Chatbot
             /*
              * TODO for now keep citation url, but eventually when we get full paths from github we can get the github link
              * from a search on the file path and use that link instead
+             * 
+             * Citations - repetitive bc referencing different chunks of the same file
              */
             var currentCitation = 1;
             var citationInfo = new List<(String, String)>();
@@ -227,10 +231,10 @@ namespace Chatbot
         {
             // For chat client
             var openAIEndpoint = GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
-            var openAIKey = GetEnvironmentVariable("AZURE_OPENAI_API_KEY");
+            var openAIKey = GetSecrets("AzureOpenAiApiKey");
             var openAIDeploymentName = GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_ID");
 
-            AzureOpenAIClient azureClient = new(new Uri(openAIEndpoint), new ApiKeyCredential(openAIKey));
+            AzureOpenAIClient azureClient = new(new Uri(openAIEndpoint), new ApiKeyCredential(openAIKey.Result));
 
             // Creates OpenAI Chat completions client
             var chatClient = azureClient.GetChatClient(openAIDeploymentName);
@@ -242,7 +246,7 @@ namespace Chatbot
         {
             // Search service variables
             var searchEndpoint = GetEnvironmentVariable("AZURE_AI_SEARCH_ENDPOINT");
-            var searchKey = GetEnvironmentVariable("AZURE_AI_SEARCH_API_KEY");
+            var searchKey = GetSecrets("AiSearchApiKey");
             var searchIndex = GetEnvironmentVariable("AZURE_AI_SEARCH_INDEX");
 
             // Configure the chat completions options to use our data
@@ -251,7 +255,7 @@ namespace Chatbot
             {
                 Endpoint = new Uri(searchEndpoint),
                 IndexName = searchIndex,
-                Authentication = DataSourceAuthentication.FromApiKey(searchKey),
+                Authentication = DataSourceAuthentication.FromApiKey(searchKey.Result),
             });
 
             return chatCompletionsOptions;
@@ -261,6 +265,16 @@ namespace Chatbot
 
             // Maybe it could be the retrieved docs that changes the number of citations?
             // Use regex matching to see which docs we need to link as a citation?
+        }
+
+        private static async Task<String> GetSecrets(String secretName)
+        {
+            String keyVaultName = "DncengChatbotKV";
+            var kvUri = "https://" + keyVaultName + ".vault.azure.net";
+            var client = new SecretClient(new Uri(kvUri), new DefaultAzureCredential());
+
+            var secret = await client.GetSecretAsync(secretName);
+            return secret.Value.Value;
         }
 
     }
