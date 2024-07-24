@@ -1,9 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Azure.Management.Storage.Models;
 using Microsoft.DncEng.CommandLineLib;
-using Microsoft.DncEng.CommandLineLib.Authentication;
 
 namespace Microsoft.DncEng.SecretManager.SecretTypes;
 
@@ -17,10 +15,10 @@ public class AzureStorageConnectionString : SecretType<AzureStorageConnectionStr
         public string Account { get; set; }
     }
 
-    private readonly TokenCredentialProvider _tokenCredentialProvider;
+    private readonly ITokenCredentialProvider _tokenCredentialProvider;
     private readonly ISystemClock _clock;
 
-    public AzureStorageConnectionString(TokenCredentialProvider tokenCredentialProvider, ISystemClock clock)
+    public AzureStorageConnectionString(ITokenCredentialProvider tokenCredentialProvider, ISystemClock clock)
     {
         _tokenCredentialProvider = tokenCredentialProvider;
         _clock = clock;

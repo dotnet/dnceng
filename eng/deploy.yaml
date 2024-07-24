@@ -1,10 +1,28 @@
 parameters:
-  Subscription: ''
-  PublishProfile: ''
-  DotNetStatusAppName: ''
-  DeploymentEnvironment: ''
-  DotNetStatusEndpoint: ''
-  StatusVariableGroup: ''
+- name: ServiceConnectionName
+  type: string
+- name: ServiceConnectionClientId
+  type: string
+- name: ServiceConnectionId
+  type: string
+- name: PublishProfile
+  type: string
+- name: DotNetStatusAppName
+  type: string
+- name: DeploymentEnvironment
+  type: string
+- name: DotNetStatusEndpoint
+  type: string
+- name: StatusVariableGroup
+  type: string
+- name: RolloutScorerAppName
+  type: string
+- name: GrafanaHost
+  type: string
+- name: GrafanaKeyVault
+  type: string
+- name: GrafanaVariableGroup
+  type: string
 
   # --- Secret Variable group requirements ---
   # dotnet-build-bot-dotnet-eng-status-token
@@ -80,8 +98,7 @@ stages:
     displayName: Deploy telemetry service fabric application
     pool:
       name: NetCore1ESPool-Internal-NoMSI
-      demands: ImageOverride -equals 1es-windows-2019    
-    dependsOn:
+      demands: ImageOverride -equals 1es-windows-2019
     steps:
     - download: current
       artifact: TelemetryApplication
@@ -90,7 +107,7 @@ stages:
     - task: AzurePowerShell@5
       displayName: Deploy Service Fabric Application (Telemetry)
       inputs:
-        azureSubscription: ${{ parameters.Subscription }}
+        azureSubscription: ${{ parameters.ServiceConnectionName }}
         scriptType: inlineScript
         azurePowerShellVersion: LatestVersion
         inline: |
@@ -111,14 +128,13 @@ stages:
     pool:
       name: NetCore1ESPool-Internal-NoMSI
       demands: ImageOverride -equals 1es-windows-2019
-    dependsOn:
     steps:
     - download: current
       artifact: DotNetStatus
     - task: AzureRmWebAppDeployment@4
       inputs:
         ConnectionType: AzureRM
-        azureSubscription: ${{ parameters.Subscription }}
+        azureSubscription: ${{ parameters.ServiceConnectionName }}
         appType: webApp
         WebAppName: ${{ parameters.DotNetStatusAppName }}
         deployToSlotOrASE: true
@@ -134,14 +150,13 @@ stages:
     pool:
       name: NetCore1ESPool-Internal-NoMSI
       demands: ImageOverride -equals 1es-windows-2019
-    dependsOn:
     steps:
     - download: current
       artifact: RolloutScorer
     - task: AzureFunctionApp@1
       displayName: Deploy RolloutScorer
       inputs:
-        azureSubscription: ${{ parameters.Subscription }}
+        azureSubscription: ${{ parameters.ServiceConnectionName }}
         ${{ if ne(parameters.DeploymentEnvironment, 'Production') }}:
           appSettings: >
             -DeploymentEnvironment Staging
@@ -173,6 +188,10 @@ stages:
     value: ${{ parameters.GrafanaHost }}
   - name: GrafanaKeyVault
     value: ${{ parameters.GrafanaKeyVault }}
+  - name: GrafanaClientId
+    value: ${{ parameters.ServiceConnectionClientId }}
+  - name: GrafanaServiceConnectionId
+    value: ${{ parameters.ServiceConnectionId }}
   jobs:
   - job: notifyEndDeployment
     displayName: Notify deployment end
@@ -188,14 +207,15 @@ stages:
         urlSuffix: /dnceng/$(Build.BuildNumber)/end
   - job: updateMetrics
     displayName: Update Grafana Metrics
-    dependsOn:
     steps:
     - task: UseDotNet@2
       displayName: Install Correct .NET Version
       inputs:
         useGlobalJson: true
     - script: dotnet publish $(Build.SourcesDirectory)\src\Monitoring\Sdk\Microsoft.DotNet.Monitoring.Sdk.csproj -f net6.0
-    - script: dotnet build $(Build.SourcesDirectory)\src\Monitoring\Monitoring.ArcadeServices\Monitoring.ArcadeServices.proj -t:PublishGrafana -p:GrafanaAccessToken=$(grafana-admin-api-key) -p:GrafanaHost=$(GrafanaHost) -p:GrafanaKeyVaultName=$(GrafanaKeyVault) -p:GrafanaKeyVaultServicePrincipalId=$(engineering-services-app-id) -p:GrafanaKeyVaultServicePrincipalSecret=$(engineering-services-app-secret) -p:GrafanaEnvironment=$(DeploymentEnvironment) -p:ParametersFile=parameters.json -v:normal
+      displayName: Build Monitoring SDK
+    - script: dotnet build $(Build.SourcesDirectory)\src\Monitoring\Monitoring.ArcadeServices\Monitoring.ArcadeServices.proj -t:PublishGrafana -p:GrafanaAccessToken=$(grafana-admin-api-key) -p:GrafanaHost=$(GrafanaHost) -p:GrafanaKeyVaultName=$(GrafanaKeyVault) -p:ClientId=$(GrafanaClientId) -p:ServiceConnectionId=$(GrafanaServiceConnectionId) -p:SystemAccessToken=$(System.AccessToken) -p:GrafanaEnvironment=$(DeploymentEnvironment) -p:ParametersFile=parameters.json -v:normal
+      displayName: Publish Grafana Dashboards
 
 - stage: validateDeployment
   displayName: Validate deployment

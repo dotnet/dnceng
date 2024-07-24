@@ -2,14 +2,11 @@ using Azure;
 using Azure.Core;
 using Azure.ResourceManager;
 using Azure.ResourceManager.EventHubs;
+using Azure.ResourceManager.EventHubs.Models;
 using Microsoft.DncEng.CommandLineLib;
-using Microsoft.DncEng.CommandLineLib.Authentication;
 using System;
-using System.Linq;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Azure.ResourceManager.EventHubs.Models;
 
 namespace Microsoft.DncEng.SecretManager.SecretTypes;
 
@@ -25,10 +22,10 @@ public class EventHubConnectionString : SecretType<EventHubConnectionString.Para
         public string Permissions { get; set; }
     }
 
-    private readonly TokenCredentialProvider _tokenCredentialProvider;
+    private readonly ITokenCredentialProvider _tokenCredentialProvider;
     private readonly ISystemClock _clock;
 
-    public EventHubConnectionString(TokenCredentialProvider tokenCredentialProvider, ISystemClock clock)
+    public EventHubConnectionString(ITokenCredentialProvider tokenCredentialProvider, ISystemClock clock)
     {
         _tokenCredentialProvider = tokenCredentialProvider;
         _clock = clock;
