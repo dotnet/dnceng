@@ -1,5 +1,4 @@
 ﻿// Generated with Bot Builder V4 SDK Template for Visual Studio CoreBot v4.22.0
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,6 +9,7 @@ using Microsoft.Bot.Schema;
 using Newtonsoft.Json;
 using Microsoft.Bot.Builder.Integration;
 
+// For AI and Adaptive cards
 using AdaptiveCards;
 using Azure;
 using Azure.AI.OpenAI;
@@ -25,6 +25,14 @@ using System.Text.Json.Nodes;
 using System.Reflection;
 using Azure.Identity;
 
+// For logging
+using Microsoft.ApplicationInsights.Channel;
+using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.ApplicationInsights;
+using System.Runtime;
+
 namespace Chatbot
 {
     public class ChatbotForDNCEng : ActivityHandler
@@ -35,14 +43,25 @@ namespace Chatbot
             Path.Combine(".", "Resources", "ContactSheet.json"),
         };
 
+        const String _clientId = "ed9b4931-f097-4f9b-ae95-cec8c7f06dd8";
+
+        private readonly ILogger<ChatbotForDNCEng> _logger;
+
+        public ChatbotForDNCEng(ILogger<ChatbotForDNCEng> logger)
+        {
+            _logger = logger;
+        }
+
         protected override async Task OnMembersAddedAsync(IList<ChannelAccount> membersAdded, ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Member has been added!");
             // Send a welcome message to the user and tell them what actions they may perform to use this bot
             await SendWelcomeMessageAsync(turnContext, cancellationToken);
         }
 
-        private static async Task SendWelcomeMessageAsync(ITurnContext turnContext, CancellationToken cancellationToken)
+        private async Task SendWelcomeMessageAsync(ITurnContext turnContext, CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Sending welcome message!");
             const String Greeting = "Welcome! My name is DaniBob. How may I help you today?";
             const String HowToQuitInstructions = "Enter q, Q, quit, exit, or bye to end this chat.";
             const String HelpString = "Ask me a question or select one of the suggested options.";
@@ -62,7 +81,7 @@ namespace Chatbot
 
         // Predefined Options
         // From bot framework samples
-        private static async Task SendSuggestedActionsAsync(string parentMessage, ITurnContext turnContext, CancellationToken cancellationToken)
+        private async Task SendSuggestedActionsAsync(string parentMessage, ITurnContext turnContext, CancellationToken cancellationToken)
         {
             var reply = MessageFactory.Text(parentMessage);
 
@@ -77,11 +96,13 @@ namespace Chatbot
                 },
             };
             await turnContext.SendActivityAsync(reply, cancellationToken);
+            _logger.LogInformation("Suggested actions have been sent!");
         }
 
         // This method allows the bot to respond to a user message
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Responding to message activity!");
             // Error handling
             if (turnContext == null)
             {
@@ -119,7 +140,7 @@ namespace Chatbot
                     await SendSuggestedActionsAsync(followup, turnContext, cancellationToken);
                     break;
                 default:
-                    var aiResponse = AskOpenAI(userRequest);
+                    var aiResponse = await AskOpenAI(userRequest);
                     await turnContext.SendActivityAsync(MessageFactory.Attachment(aiResponse), cancellationToken);
                     await SendSuggestedActionsAsync(followup, turnContext, cancellationToken);
                     break;
@@ -170,8 +191,9 @@ namespace Chatbot
             return adaptiveCardAttachment;
         }
 
-        private static Attachment AskOpenAI(String question)
+        private async Task<Attachment> AskOpenAI(String question)
         {
+            _logger.LogInformation("Making request to Azure OpenAI!");
             /* 
              * The line below disables the warning because the.AddDataSource
              * is an experimental feature a part of the newest release.
@@ -186,8 +208,8 @@ namespace Chatbot
                                 "Dotnet’s repositories on GitHub. You like to give examples whenever possible." +
                                 "You cite your references with the filepath in the format of [filepath].";
 
-            var chatClient = CreateChatClient();
-            var chatCompletionsOptions = ConfigChatOptions();
+            var chatClient = await CreateChatClient();
+            var chatCompletionsOptions = await ConfigChatOptions();
 
             // Format the chat completion and send the request 
             var messages = new List<ChatMessage>
@@ -227,14 +249,14 @@ namespace Chatbot
 
         }
 
-        private static ChatClient CreateChatClient()
+        private async Task<ChatClient> CreateChatClient()
         {
             // For chat client
-            var openAIEndpoint = GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
-            var openAIKey = GetSecrets("AzureOpenAiApiKey");
-            var openAIDeploymentName = GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_ID");
+            var openAIEndpoint = "https://testing-bot.openai.azure.com/";
+            var openAIKey = await GetSecrets("AzureOpenAiApiKey");
+            var openAIDeploymentName = "explorers-test";
 
-            AzureOpenAIClient azureClient = new(new Uri(openAIEndpoint), new ApiKeyCredential(openAIKey.Result));
+            AzureOpenAIClient azureClient = new(new Uri(openAIEndpoint), new ApiKeyCredential(openAIKey)); //TODO: PASS MI CLIENT IT!
 
             // Creates OpenAI Chat completions client
             var chatClient = azureClient.GetChatClient(openAIDeploymentName);
@@ -242,12 +264,12 @@ namespace Chatbot
             return chatClient;
         }
 
-        private static ChatCompletionOptions ConfigChatOptions()
+        private async Task<ChatCompletionOptions> ConfigChatOptions()
         {
             // Search service variables
-            var searchEndpoint = GetEnvironmentVariable("AZURE_AI_SEARCH_ENDPOINT");
-            var searchKey = GetSecrets("AiSearchApiKey");
-            var searchIndex = GetEnvironmentVariable("AZURE_AI_SEARCH_INDEX");
+            var searchEndpoint = "https://testingbot-search.search.windows.net";
+            var searchKey = await GetSecrets("AiSearchApiKey");
+            var searchIndex = "all-data-auto-uploaded";
 
             // Configure the chat completions options to use our data
             var chatCompletionsOptions = new ChatCompletionOptions();
@@ -255,7 +277,7 @@ namespace Chatbot
             {
                 Endpoint = new Uri(searchEndpoint),
                 IndexName = searchIndex,
-                Authentication = DataSourceAuthentication.FromApiKey(searchKey.Result),
+                Authentication = DataSourceAuthentication.FromApiKey(searchKey),
             });
 
             return chatCompletionsOptions;
@@ -267,15 +289,75 @@ namespace Chatbot
             // Use regex matching to see which docs we need to link as a citation?
         }
 
-        private static async Task<String> GetSecrets(String secretName)
+        private async Task<String> GetSecrets(String secretName)
         {
+            _logger.LogInformation("Getting secrets!");
+            //THIS 
             String keyVaultName = "DncengChatbotKV";
             var kvUri = "https://" + keyVaultName + ".vault.azure.net";
-            var client = new SecretClient(new Uri(kvUri), new DefaultAzureCredential());
+
+            var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions()
+            {
+                ManagedIdentityClientId = _clientId,
+            });
+            var client = new SecretClient(new Uri(kvUri), credential); //TODO: PASS THE MI TO THE DEFAULT AZURE CREDENTIAL!!
 
             var secret = await client.GetSecretAsync(secretName);
             return secret.Value.Value;
         }
 
+        //private static void LogInfo(String message)
+        //{
+        //    const String connectionString = "InstrumentationKey=46677757-d540-439f-ac78-60b1febb522b;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/;ApplicationId=ea887a61-9d47-436c-ae63-8517d57d7872";
+
+        //    //using var channel = new InMemoryChannel();
+        //    //try
+        //    //{
+        //    //    IServiceCollection services = new ServiceCollection();
+        //    //    services.Configure<TelemetryConfiguration>(config => config.TelemetryChannel = channel);
+        //    //    services.AddLogging(builder =>
+        //    //    {
+        //    //        // Only Application Insights is registered as a logger provider
+        //    //        builder.AddApplicationInsights(
+        //    //            configureTelemetryConfiguration: (config) => config.ConnectionString = "InstrumentationKey=46677757-d540-439f-ac78-60b1febb522b;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/;ApplicationId=ea887a61-9d47-436c-ae63-8517d57d7872",
+        //    //            configureApplicationInsightsLoggerOptions: (options) => { }
+        //    //        );
+        //    //    });
+
+        //    //    IServiceProvider serviceProvider = services.BuildServiceProvider();
+        //    //    ILogger<Program> logger = serviceProvider.GetRequiredService<ILogger<Program>>();
+
+        //    //    logger.LogInformation(message);
+        //    //    return 0;
+        //    //}
+        //    //finally
+        //    //{
+        //    //    // Explicitly call Flush() followed by Delay, as required in console apps.
+        //    //    // This ensures that even if the application terminates, telemetry is sent to the back end.
+        //    //    channel.Flush();
+
+        //    //    await Task.Delay(TimeSpan.FromMilliseconds(1000));
+        //    //}
+
+        //    var telemetryConfiguration = new TelemetryConfiguration() { ConnectionString = connectionString };
+        //    var _telemetryClient = new TelemetryClient(telemetryConfiguration);
+        //    _telemetryClient.TrackTrace(message);
+
+        //}
+
+        /*
+         * TODO: new method: create messages in order to get previous context 
+         * Retrieve previous user messages up to 10: 5 bot/assistnat responses and 5 user messages
+         * Then add the service prompt and all previous messages
+         * Add the current message
+         * Print what messages looks like
+         * 
+         */
+
+        /*
+         * Need to save Conversation state in order to save previous messages
+         * When do I delete the conversation and how do I restrict it to only a certain number of convos
+         * How do I know the convo is over?
+         */
     }
 }
