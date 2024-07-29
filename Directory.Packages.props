@@ -11,9 +11,9 @@
     <!-- Note: These libraries can be loaded by Arcade SDK clients, which may already have a
          newer copy of this package loaded. When updating one, be aware of the other to prevent runtime issues
          See: https://github.com/dotnet/arcade/blob/main/eng/Versions.props -->
-	<PackageVersion Include="AdaptiveCards" Version="3.1.0" />
-	<PackageVersion Include="Azure.AI.OpenAI" Version="2.0.0-beta.2" />
-	<PackageVersion Include="Azure.Core" Version="1.40.0" />
+    <PackageVersion Include="AdaptiveCards" Version="3.1.0" />
+    <PackageVersion Include="Azure.AI.OpenAI" Version="2.0.0-beta.2" />
+    <PackageVersion Include="Azure.Core" Version="1.40.0" />
     <PackageVersion Include="Azure.Data.Tables" Version="12.8.3" />
     <PackageVersion Include="Azure.Extensions.AspNetCore.DataProtection.Blobs" Version="1.2.3" />
     <PackageVersion Include="Azure.Extensions.AspNetCore.DataProtection.Keys" Version="1.1.0" />
@@ -38,7 +38,13 @@
     <PackageVersion Include="Microsoft.AspNetCore.WebHooks.Receivers.GitHub" Version="1.0.0-preview2-final" />
     <PackageVersion Include="Microsoft.Azure.Kusto.Ingest" Version="12.2.1" />
     <PackageVersion Include="Microsoft.Azure.WebJobs.Extensions.Storage" Version="5.0.1" />
-	<PackageVersion Include="Microsoft.Bot.Builder.Integration.AspNet.Core" Version="4.22.0" />
+	<PackageVersion Include="Microsoft.Bot.Builder" Version="4.22.0" />
+	<PackageVersion Include="Microsoft.Bot.Builder.AI.Luis" Version="4.22.0" />
+	<PackageVersion Include="Microsoft.Bot.Builder.ApplicationInsights" Version="4.22.0" />
+	<PackageVersion Include="Microsoft.Bot.Builder.Dialogs" Version="4.22.0" />
+	<PackageVersion Include="Microsoft.Bot.Builder.Integration.ApplicationInsights.Core" Version="4.22.0" />
+    <PackageVersion Include="Microsoft.Bot.Builder.Integration.AspNet.Core" Version="4.22.0" />
+	<PackageVersion Include="Microsoft.Bot.Connector" Version="4.22.0" />
     <PackageVersion Include="Microsoft.Build" Version="17.1.0" />
     <PackageVersion Include="Microsoft.Build.Framework" Version="17.1.0" />
     <PackageVersion Include="Microsoft.Build.Tasks.Core" Version="17.1.0" />
@@ -70,6 +76,7 @@
     <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Options" Version="6.0.0" />
     <PackageVersion Include="Microsoft.NET.Sdk.Functions" Version="4.1.1" />
+	<PackageVersion Include="Microsoft.Recognizers.Text.DataTypes.TimexExpression" Version="1.4.0" />
     <PackageVersion Include="Microsoft.ServiceFabric" Version="8.2.1571" />
     <PackageVersion Include="Microsoft.ServiceFabric.Services" Version="5.2.1571" />
     <PackageVersion Include="Microsoft.ServiceFabric.Services.Remoting" Version="5.2.1571" />
@@ -82,11 +89,12 @@
     <PackageVersion Include="NUnit" Version="3.13.3" />
     <PackageVersion Include="NUnit3TestAdapter" Version="3.16.1" />
     <PackageVersion Include="Octokit" Version="13.0.1" />
-	<PackageVersion Include="OpenAI" Version="2.0.0-beta.5" />
+    <PackageVersion Include="OpenAI" Version="2.0.0-beta.5" />
     <PackageVersion Include="ServiceFabricMocks" Version="$(ServiceFabricMocksVersion)" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta1.21308.1" />
-	<PackageVersion Include="System.ClientModel" Version="1.1.0-beta.4" />
+    <PackageVersion Include="System.ClientModel" Version="1.1.0-beta.4" />
     <PackageVersion Include="System.Data.SqlClient" Version="4.8.6" />
+    <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="8.0.1" />
     <PackageVersion Include="System.Drawing.Common" Version="7.0.0" />
     <PackageVersion Include="System.Linq.Async" Version="6.0.1" />
     <PackageVersion Include="System.Net.Http" Version="4.3.4" />
