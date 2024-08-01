@@ -1,13 +1,11 @@
 using Microsoft.Extensions.Logging;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Table;
-using Newtonsoft.Json;
 using Octokit;
 using System;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using Azure.Data.Tables;
+using Azure.Identity;
 
 namespace RolloutScorer;
 
@@ -72,13 +70,16 @@ public class Utilities
             return redirectUri.ToString();
         }
     }
-
-    public static CloudTable GetScorecardsCloudTable(string storageAccountKey)
+    public static TableClient GetScorecardsCloudTable()
     {
-        CloudStorageAccount storageAccount = CloudStorageAccount.Parse(
-            connectionString: $"DefaultEndpointsProtocol=https;AccountName={ScorecardsStorageAccount.Name};AccountKey={storageAccountKey};EndpointSuffix=core.windows.net");
-        CloudTableClient tableClient = storageAccount.CreateCloudTableClient();
-        return tableClient.GetTableReference(ScorecardsStorageAccount.ScorecardsTableName);
+        TableClient tableClient = new TableClient(GetStorageTableEndPoint(), ScorecardsStorageAccount.ScorecardsTableName, new DefaultAzureCredential());
+
+        return tableClient;
+    }
+
+    private static Uri GetStorageTableEndPoint()
+    {
+        return new Uri($"https://{ScorecardsStorageAccount.Name}.table.core.windows.net");
     }
 
     public static GitHubClient GetGithubClient(string githubPat)
@@ -183,8 +184,6 @@ public static class GithubLabelNames
 
 public static class ScorecardsStorageAccount
 {
-    public static string KeySecretName = 
-        Environment.GetEnvironmentVariable("ScorecardsStorageAccountKeySecretName") ?? "rolloutscorecards-storage-key";
     public static string Name = 
         Environment.GetEnvironmentVariable("ScorecardsStorageAccountName") ?? "rolloutscorecards";
     public static string ScorecardsTableName = 

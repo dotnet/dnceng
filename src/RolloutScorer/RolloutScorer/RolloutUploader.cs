@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.WindowsAzure.Storage.Table;
-using Microsoft.DotNet.Services.Utility;
+using Azure.Data.Tables;
 using Microsoft.Extensions.Logging;
+using RolloutScorer.Models;
 
 namespace RolloutScorer;
 
@@ -35,14 +35,14 @@ public class RolloutUploader
     /// <param name="githubClient">An authenticated Octokit.GitHubClient instance</param>
     /// <param name="storageAccountKey">A secret bundle containing the key to the rollout scorecards storage account</param>
     /// <returns>Exit code (0 = success, 1 = failure)</returns>
-    public async static Task<int> UploadResultsAsync(List<string> scorecardFiles, GitHubClient githubClient, string storageAccountKey, ILogger log = null, bool skipPr = false)
+    public static async Task<int> UploadResultsAsync(List<string> scorecardFiles, GitHubClient githubClient, ILogger log = null, bool skipPr = false)
     {
         try
         {
             await UploadResultsAsync(new List<Scorecard>(
                 await Task.WhenAll(scorecardFiles.Select(
                     file => Scorecard.ParseScorecardFromCsvAsync(file, StandardConfig.DefaultConfig)
-                ))), githubClient, storageAccountKey, StandardConfig.DefaultConfig.GithubConfig, skipPr);
+                ))), githubClient, StandardConfig.DefaultConfig.GithubConfig, skipPr);
         }
         catch (IOException e)
         {
@@ -71,7 +71,7 @@ public class RolloutUploader
     /// <param name="githubClient">An authenticated Octokit.GitHubClient instance</param>
     /// <param name="storageAccountKey">Key to the rollout scorecards storage account</param>
     /// <param name="githubConfig">GitHubConfig object representing config</param>
-    public async static Task UploadResultsAsync(List<Scorecard> scorecards, GitHubClient githubClient, string storageAccountKey, GithubConfig githubConfig, bool skipPr = false)
+    public static async Task UploadResultsAsync(List<Scorecard> scorecards, GitHubClient githubClient, GithubConfig githubConfig, bool skipPr = false)
     {
         // We batch the scorecards by date so they can be sorted into markdown files properly
         IEnumerable<ScorecardBatch> scorecardBatches = scorecards
@@ -162,7 +162,7 @@ public class RolloutUploader
         }
 
         // Upload the results to Azure Table Storage (will overwrite previous entries with new data if necessary)
-        CloudTable table = Utilities.GetScorecardsCloudTable(storageAccountKey);
+        TableClient table = Utilities.GetScorecardsCloudTable();
         foreach (Scorecard scorecard in scorecards)
         {
             ScorecardEntity scorecardEntity = new(scorecard.Date, scorecard.Repo.Repo)
@@ -180,7 +180,7 @@ public class RolloutUploader
                 RollbackScore = scorecard.RollbackScore,
                 DowntimeScore = scorecard.DowntimeScore,
             };
-            await table.ExecuteAsync(TableOperation.InsertOrReplace(scorecardEntity));
+            await table.UpsertEntityAsync(scorecardEntity);
         }
     }
 
