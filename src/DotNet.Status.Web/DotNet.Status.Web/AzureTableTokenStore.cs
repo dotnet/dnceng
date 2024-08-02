@@ -15,9 +15,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Auth;
-using Microsoft.WindowsAzure.Storage.Table;
+using Azure.Identity;
+using Azure.Data.Tables;
+using Azure;
+using System.Runtime.Serialization;
 
 namespace DotNet.Status.Web;
 
@@ -37,18 +38,18 @@ public class AzureTableTokenStore : ITokenStore, ITokenRevocationProvider
         _logger = logger;
     }
 
-    private async Task<CloudTable> GetCloudTable()
+    private async Task<TableClient> GetCloudTable()
     {
-        CloudTable table;
+        TableClient table;
+        AzureTableTokenStoreOptions options = _options.CurrentValue;
         if (_env.IsDevelopment())
         {
-            table = CloudStorageAccount.DevelopmentStorageAccount.CreateCloudTableClient().GetTableReference("githubtokens");
+            table = new TableClient("UseDevelopmentStorage=true", options.TableName);
             await table.CreateIfNotExistsAsync();
         }
         else
         {
-            AzureTableTokenStoreOptions options = _options.CurrentValue;
-            table = new CloudTable(new Uri(options.TableUri, UriKind.Absolute));
+            table = new TableClient(new Uri(options.TableUri, UriKind.Absolute), options.TableName, new DefaultAzureCredential());
         }
         return table;
     }
@@ -64,27 +65,25 @@ public class AzureTableTokenStore : ITokenStore, ITokenRevocationProvider
         return UpdateAsync(userId.ToString(), tokenId.ToString(), update);
     }
 
-    private async Task UpdateAsync<T>(string partitionKey, string rowKey, Action<T> update) where T : TableEntity
+    private async Task UpdateAsync<T>(string partitionKey, string rowKey, Action<T> update) where T : class, ITableEntity
     {
-        CloudTable table = await GetCloudTable();
+        TableClient table = await GetCloudTable();
         while (true)
         {
-            TableResult fetchResult = await table.ExecuteAsync(TableOperation.Retrieve<T>(partitionKey, rowKey));
-            if (fetchResult.HttpStatusCode != 200)
+            var fetchResult = await table.GetEntityIfExistsAsync<T>(partitionKey, rowKey);
+            if (!fetchResult.HasValue)
                 throw new KeyNotFoundException();
 
-            var entity = (T) fetchResult.Result;
+            var entity = (T) fetchResult.Value;
             update(entity);
 
-            try
-            {
-                await table.ExecuteAsync(TableOperation.Replace(entity));
-                return;
-            }
-            catch (StorageException e) when (e.RequestInformation.HttpStatusCode == (int) HttpStatusCode.PreconditionFailed)
+            var updateResult = await table.UpdateEntityAsync(entity, entity.ETag, mode: TableUpdateMode.Replace);
+            if (updateResult.Status == (int) HttpStatusCode.PreconditionFailed)
             {
                 _logger.LogInformation("Concurrent update failed, re-fetching and updating...");
+                continue;
             }
+            return;
         }
     }
 
@@ -102,7 +101,7 @@ public class AzureTableTokenStore : ITokenStore, ITokenRevocationProvider
 
     public async Task<StoredTokenData> IssueTokenAsync(long userId, DateTimeOffset expiration, string description)
     {
-        CloudTable table = await GetCloudTable();
+        TableClient table = await GetCloudTable();
 
         long MakeTokenId()
         {
@@ -124,11 +123,11 @@ public class AzureTableTokenStore : ITokenStore, ITokenRevocationProvider
                     RevocationStatus.Active
                 );
 
-                await table.ExecuteAsync(TableOperation.Insert(entity));
+                await table.AddEntityAsync(entity);
 
                 return Return(entity);
             }
-            catch (StorageException e) when (e.RequestInformation.HttpStatusCode == (int) HttpStatusCode.Conflict)
+            catch (RequestFailedException e) when (e.Status == (int) HttpStatusCode.Conflict)
             {
                 _logger.LogInformation("Duplicate token insertion attempted, generating new ID and retrying...");
             }
@@ -137,37 +136,24 @@ public class AzureTableTokenStore : ITokenStore, ITokenRevocationProvider
 
     public async Task<StoredTokenData> GetTokenAsync(long userId, long tokenId)
     {
-        CloudTable table = await GetCloudTable();
-        TableResult result = await table.ExecuteAsync(TableOperation.Retrieve<TokenEntity>(userId.ToString(), tokenId.ToString()));
-        if (result.HttpStatusCode != (int) HttpStatusCode.OK)
+        TableClient table = await GetCloudTable();
+        var result = await table.GetEntityIfExistsAsync<TokenEntity>(userId.ToString(), tokenId.ToString());
+        if (!result.HasValue)
         {
             return null;
         }
 
-        return Return((TokenEntity) result.Result);
+        return Return(result.Value);
     }
 
     public async Task<IEnumerable<StoredTokenData>> GetTokensForUserAsync(
         long userId,
         CancellationToken cancellationToken)
     {
-        CloudTable table = await GetCloudTable();
-        TableContinuationToken continuationToken = null;
-        TableQuery<TokenEntity> query = new TableQuery<TokenEntity>().Where(
-            TableQuery.GenerateFilterCondition(
-                nameof(TokenEntity.PartitionKey),
-                QueryComparisons.Equal,
-                userId.ToString()));
+        TableClient table = await GetCloudTable();
+        var results = table.QueryAsync<TokenEntity>(entity => entity.PartitionKey == userId.ToString());
 
-        List<StoredTokenData> tokens = new List<StoredTokenData>();
-        do
-        {
-            TableQuerySegment<TokenEntity> segment = await table.ExecuteQuerySegmentedAsync(query, continuationToken, requestOptions: null, operationContext: null, cancellationToken);
-            continuationToken = segment.ContinuationToken;
-            tokens.AddRange(segment.Results.Select(Return));
-        } while (continuationToken != null);
-
-        return tokens;
+        return await results.Select(t => Return(t)).ToListAsync();
     }
 
     private StoredTokenData Return(TokenEntity entity)
@@ -180,14 +166,14 @@ public class AzureTableTokenStore : ITokenStore, ITokenRevocationProvider
             entity.RevocationStatus);
     }
 
-    private class TokenEntity : TableEntity
+    private class TokenEntity : ITableEntity
     {
-        public TokenEntity() : base()
-        {
-        }
+        public TokenEntity() { }
 
-        public TokenEntity(long userId, long tokenId) : base(userId.ToString(), tokenId.ToString())
+        public TokenEntity(long userId, long tokenId)
         {
+            UserId = userId;
+            TokenId = tokenId;
         }
 
         public TokenEntity(
@@ -204,24 +190,24 @@ public class AzureTableTokenStore : ITokenStore, ITokenRevocationProvider
             RevocationStatus = revocationStatus;
         }
 
-        [IgnoreProperty]
+        [IgnoreDataMember]
         public long UserId
         {
             get => long.Parse(PartitionKey);
             set => PartitionKey = value.ToString();
         }
 
-        [IgnoreProperty]
+        [IgnoreDataMember]
         public long TokenId
         {
             get => long.Parse(RowKey);
-            set => PartitionKey = value.ToString();
+            set => RowKey = value.ToString();
         }
         public DateTimeOffset Issued { get; set; }
         public DateTimeOffset Expiration { get; set; }
         public string Description { get; set; }
 
-        [IgnoreProperty]
+        [IgnoreDataMember]
         public RevocationStatus RevocationStatus
         {
             get => Enum.Parse<RevocationStatus>(RevocationString);
@@ -229,6 +215,11 @@ public class AzureTableTokenStore : ITokenStore, ITokenRevocationProvider
         }
 
         public string RevocationString { get; set; }
+
+        public string PartitionKey { get; set; }
+        public string RowKey { get; set; }
+        public DateTimeOffset? Timestamp { get; set; }
+        public ETag ETag { get; set; }
     }
 }
 
