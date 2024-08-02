@@ -13,7 +13,7 @@ namespace Chatbot
     public class AdapterWithErrorHandler : CloudAdapter
     {
         
-        public AdapterWithErrorHandler(BotFrameworkAuthentication auth, ILogger<IBotFrameworkHttpAdapter> logger)
+        public AdapterWithErrorHandler(BotFrameworkAuthentication auth, ILogger<IBotFrameworkHttpAdapter> logger, TelemetryInitializerMiddleware telemetryInitializerMiddleware)
             : base(auth, logger)
         {
             OnTurnError = async (turnContext, exception) =>
@@ -28,6 +28,7 @@ namespace Chatbot
                 // Send a trace activity, which will be displayed in the Bot Framework Emulator
                 await turnContext.TraceActivityAsync("OnTurnError Trace", exception.Message, "https://www.botframework.com/schemas/error", "TurnError");
             };
+            Use(telemetryInitializerMiddleware);
         }
     }
 }

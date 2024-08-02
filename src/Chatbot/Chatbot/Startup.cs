@@ -13,6 +13,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Bot.Builder.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Bot.Builder.Integration.ApplicationInsights.Core;
+using Microsoft.DncEng.Configuration.Extensions;
+using Microsoft.Identity.Client.AppConfig;
+using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 
 
 namespace Chatbot
@@ -44,7 +47,11 @@ namespace Chatbot
             services.AddTransient<IBot, ChatbotForDNCEng>();
 
             // Add Application Insights services into service collection
-            services.AddApplicationInsightsTelemetry();
+            var options = new ApplicationInsightsServiceOptions
+            {
+                ConnectionString = Configuration.GetValue<string>("ApplicationInsightsConnectionString")
+            };
+            services.AddApplicationInsightsTelemetry(options);
 
             // Create the telemetry client.
             services.AddSingleton<IBotTelemetryClient, BotTelemetryClient>();
@@ -60,6 +67,7 @@ namespace Chatbot
 
             // Create the telemetry middleware (used by the telemetry initializer) to track conversation events
             services.AddSingleton<TelemetryLoggerMiddleware>();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
