@@ -162,7 +162,7 @@ public class RolloutUploader
         }
 
         // Upload the results to Azure Table Storage (will overwrite previous entries with new data if necessary)
-        TableClient table = Utilities.GetScorecardsCloudTable();
+        TableClient scoreTable = Utilities.GetTableClient(ScorecardsStorageAccount.Name, ScorecardsStorageAccount.ScorecardsTableName);
         foreach (Scorecard scorecard in scorecards)
         {
             ScorecardEntity scorecardEntity = new(scorecard.Date, scorecard.Repo.Repo)
@@ -180,7 +180,7 @@ public class RolloutUploader
                 RollbackScore = scorecard.RollbackScore,
                 DowntimeScore = scorecard.DowntimeScore,
             };
-            await table.UpsertEntityAsync(scorecardEntity);
+            await scoreTable.UpsertEntityAsync(scorecardEntity);
         }
     }
 
