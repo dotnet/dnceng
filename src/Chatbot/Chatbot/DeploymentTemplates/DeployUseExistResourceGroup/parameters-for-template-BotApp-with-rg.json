@@ -30,7 +30,7 @@
       "value": "UserAssignedMSI"
     },
     "appId": {
-      "value": "[vault(ChatbotAppId)]"
+      "value": "ed9b4931-f097-4f9b-ae95-cec8c7f06dd8"
     },
     "appSecret": {
       "value": ""
@@ -42,7 +42,7 @@
       "value": "cali-testingbot"
     },
     "tenantId": {
-      "value": "[vault(ChatbotTenantId)]"
+      "value": "72f988bf-86f1-41af-91ab-2d7cd011db47"
     }
   }
 }

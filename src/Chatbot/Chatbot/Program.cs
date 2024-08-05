@@ -21,15 +21,6 @@ namespace Chatbot
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureAppConfiguration((hostingContext, config) =>
-                {
-                    // Builds the appsettings.json and allows us to use KeyVaultName
-                    var builtConfig = config.Build();
-                    var secretClient = new SecretClient(
-                        new Uri($"https://{builtConfig["KeyVaultName"]}.vault.azure.net/"),
-                        new DefaultAzureCredential());
-                    config.AddAzureKeyVault(secretClient, new KeyVaultSecretManager());
-                })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
