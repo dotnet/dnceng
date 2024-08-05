@@ -107,9 +107,6 @@ public class ScoreCommand : Command
 
         _rolloutScorer.SetupGithubClient(githubPat);
 
-        KeyVaultSecret storageAccountConnectionStringVaultSecret = await githubPatSecretClient.GetSecretAsync(ScorecardsStorageAccount.KeySecretName);
-        string storageAccountConnectionString = storageAccountConnectionStringVaultSecret.Value;
-
         try
         {
             await _rolloutScorer.InitAsync();
@@ -137,7 +134,7 @@ public class ScoreCommand : Command
         if (_rolloutScorer.Upload)
         {
             Console.WriteLine("Directly uploading results.");
-            await RolloutUploader.UploadResultsAsync(new List<Scorecard> { scorecard }, Utilities.GetGithubClient(githubPat), storageAccountConnectionString, _rolloutScorer.GithubConfig);
+            await RolloutUploader.UploadResultsAsync(new List<Scorecard> { scorecard }, Utilities.GetGithubClient(githubPat), _rolloutScorer.GithubConfig);
         }
 
         if (_rolloutScorer.SkipOutput)
@@ -183,8 +180,7 @@ public class UploadCommand : Command
         // Get the GitHub PAT and storage account connection string from key vault
         SecretClient keyVaultClient = new(new Uri(Utilities.KeyVaultUri), new DefaultAzureCredential());
         KeyVaultSecret githubPatVaultSecret = (await keyVaultClient.GetSecretAsync(Utilities.GitHubPatSecretName)).Value;
-        KeyVaultSecret storageAccountVaultSecret = (await keyVaultClient.GetSecretAsync(ScorecardsStorageAccount.KeySecretName)).Value;
 
-        return await RolloutUploader.UploadResultsAsync(arguments.ToList(), Utilities.GetGithubClient(githubPatVaultSecret.Value), storageAccountVaultSecret.Value);
+        return await RolloutUploader.UploadResultsAsync(arguments.ToList(), Utilities.GetGithubClient(githubPatVaultSecret.Value));
     }
 }
