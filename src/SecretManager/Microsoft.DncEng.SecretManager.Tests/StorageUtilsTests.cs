@@ -59,4 +59,18 @@ public class StorageUtilsTests
 
         actualSas.Should().StartWith("?", "the query string separator is required for compatibility with standard set by Microsoft.WindowsAzure.Storage");
     }
+
+    [Test]
+    public void GenerateBlobAccountSasPrependsQueryStringSeparator()
+    {
+        string testConnectionString = "DefaultEndpointsProtocol=https;AccountName=PlaceholderAccountName;AccountKey=aaaaaaaaaaaaaaaabaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabPLACEHOLDER";
+
+        string testPermissionsString = "rl";
+        string testServiceName = "blob";
+        DateTimeOffset testExpiresOn = DateTimeOffset.UtcNow.AddMonths(1);
+
+        (string _, string actualSas) = StorageUtils.GenerateBlobAccountSas(testConnectionString, testPermissionsString, testServiceName, testExpiresOn);
+
+        actualSas.Should().StartWith("?", "the query string separator is required for compatibility with standard set by Microsoft.WindowsAzure.Storage");
+    }
 }

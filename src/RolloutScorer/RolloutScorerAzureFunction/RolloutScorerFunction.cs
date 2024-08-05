@@ -1,14 +1,15 @@
-using Azure.Identity;
-using Azure.Security.KeyVault.Secrets;
-using Microsoft.Azure.WebJobs;
-using Microsoft.DotNet.Services.Utility;
-using Microsoft.Extensions.Logging;
-using Microsoft.WindowsAzure.Storage.Table;
-using RolloutScorer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Azure;
+using Azure.Data.Tables;
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
+using Microsoft.Azure.WebJobs;
+using Microsoft.Extensions.Logging;
+using RolloutScorer;
+using RolloutScorer.Models;
 
 namespace RolloutScorerAzureFunction;
 
@@ -26,17 +27,13 @@ public static class RolloutScorerFunction
 
         log.LogInformation("INFO: Getting scorecard storage account key and deployment table's SAS URI from KeyVault...");
         SecretClient engKeyVaultClient = new(new Uri(Utilities.KeyVaultUri), tokenProvider);
-        SecretClient dotNetEngStatusVaultClient = new(new Uri("https://DotNetEng-Status-Prod.vault.azure.net"), tokenProvider);
-
-        KeyVaultSecret scorecardsStorageAccountKey = await engKeyVaultClient.GetSecretAsync(ScorecardsStorageAccount.KeySecretName);
-        KeyVaultSecret deploymentTableSasUriBundle = await dotNetEngStatusVaultClient.GetSecretAsync("deployment-table-sas-uri");
 
         log.LogInformation("INFO: Getting cloud tables...");
-        CloudTable scorecardsTable = Utilities.GetScorecardsCloudTable(scorecardsStorageAccountKey.Value);
-        CloudTable deploymentsTable = new(new Uri(deploymentTableSasUriBundle.Value));
+        TableClient scorecardsTable = Utilities.GetTableClient(ScorecardsStorageAccount.Name, ScorecardsStorageAccount.ScorecardsTableName);
+        TableClient deploymentsTable = Utilities.GetTableClient(DeploymentsStorageAccount.Name, DeploymentsStorageAccount.DeploymentsTableName);
 
-        List<ScorecardEntity> scorecardEntries = await GetAllTableEntriesAsync<ScorecardEntity>(scorecardsTable);
-        scorecardEntries.Sort((x, y) => x.Date.CompareTo(y.Date));
+        List<ScorecardEntity> scorecardEntries = (await GetAllTableEntriesAsync<ScorecardEntity>(scorecardsTable))
+            .OrderBy(s => DateTimeOffset.ParseExact(s.PartitionKey, "yyyy-MM-dd", null)).ToList();
         List<AnnotationEntity> deploymentEntries =
             await GetAllTableEntriesAsync<AnnotationEntity>(deploymentsTable);
         deploymentEntries.Sort((x, y) => (x.Ended ?? DateTimeOffset.MaxValue).CompareTo(y.Ended ?? DateTimeOffset.MaxValue));
@@ -44,8 +41,8 @@ public static class RolloutScorerFunction
                            $"(-1 indicates that null was returned.)");
 
         // The deployments we care about are ones that occurred after the last scorecard
-        IEnumerable<AnnotationEntity> relevantDeployments =
-            deploymentEntries.Where(d => (d.Ended ?? DateTimeOffset.MaxValue) > scorecardEntries.Last().Date.AddDays(ScoringBufferInDays));
+        IEnumerable<AnnotationEntity> relevantDeployments = deploymentEntries.Where(d =>
+            (d.Ended ?? DateTimeOffset.MaxValue) > scorecardEntries.Last().Timestamp?.AddDays(ScoringBufferInDays));
         log.LogInformation($"INFO: Found {relevantDeployments?.Count() ?? -1} relevant deployments (deployments which occurred " +
                            $"after the last scorecard). (-1 indicates that null was returned.)");
 
@@ -63,14 +60,14 @@ public static class RolloutScorerFunction
                 KeyVaultSecret githubPat = await engKeyVaultClient.GetSecretAsync(Utilities.GitHubPatSecretName);
 
                 // We'll score the deployments by service
-                foreach (var deploymentGroup in relevantDeployments.GroupBy(d => d.Service))
+                foreach (var deploymentGroup in relevantDeployments.GroupBy(d => d.PartitionKey))
                 {
                     foreach (var deployment in deploymentGroup)
                     {
                         if (deployment.Ended is null)
                         {
                             deployment.Ended = DateTimeOffset.UtcNow;
-                            await deploymentsTable.ExecuteAsync(TableOperation.Replace(deployment));
+                            await deploymentsTable.UpdateEntityAsync(deployment,ETag.All, TableUpdateMode.Replace);
                         }
                     }
 
@@ -115,36 +112,30 @@ public static class RolloutScorerFunction
                 }
 
                 log.LogInformation($"INFO: Uploading results for {string.Join(", ", scorecards.Select(s => s.Repo))}");
-                await RolloutUploader.UploadResultsAsync(scorecards, Utilities.GetGithubClient(githubPat.Value),
-                    scorecardsStorageAccountKey.Value, StandardConfig.DefaultConfig.GithubConfig, skipPr: deploymentEnvironment != "Production");
+                await RolloutUploader.UploadResultsAsync(scorecards, Utilities.GetGithubClient(githubPat.Value), StandardConfig.DefaultConfig.GithubConfig, skipPr: deploymentEnvironment != "Production");
             }
             else
             {
                 log.LogInformation(relevantDeployments.Last().Ended.HasValue ? $"INFO: Most recent rollout occurred less than two days ago " +
-                                                                               $"({relevantDeployments.Last().Service} on {relevantDeployments.Last().Ended.Value}); waiting to score." :
-                    $"Most recent rollout ({relevantDeployments.Last().Service}) is still in progress.");
+                                                                               $"({relevantDeployments.Last().PartitionKey} on {relevantDeployments.Last().Ended.Value}); waiting to score." :
+                    $"Most recent rollout ({relevantDeployments.Last().PartitionKey}) is still in progress.");
             }
         }
         else
         {
             log.LogInformation($"INFO: Found no rollouts which occurred after last recorded rollout " +
-                               $"({(scorecardEntries.Count > 0 ? $"date {scorecardEntries.Last().Date}" : "no rollouts in table")})");
+                               $"({(scorecardEntries.Count > 0 ? $"date {scorecardEntries.Last().PartitionKey}" : "no rollouts in table")})");
         }
     }
 
-    private static async Task<List<T>> GetAllTableEntriesAsync<T>(CloudTable table) where T : ITableEntity, new()
+    private static async Task<List<T>> GetAllTableEntriesAsync<T>(TableClient table) where T : class, ITableEntity, new()
     {
         List<T> items = new List<T>();
-        TableContinuationToken token = null;
-        do
+      
+        await foreach (Page<T> page in table.QueryAsync<T>().AsPages())
         {
-            var queryResult = await table.ExecuteQuerySegmentedAsync(new TableQuery<T>(), token);
-            foreach (var item in queryResult)
-            {
-                items.Add(item);
-            }
-            token = queryResult.ContinuationToken;
-        } while (token != null);
+            items.AddRange(page.Values);
+        }
         return items;
     }
 }

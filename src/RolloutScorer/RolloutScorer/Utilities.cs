@@ -1,13 +1,11 @@
 using Microsoft.Extensions.Logging;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Table;
-using Newtonsoft.Json;
 using Octokit;
 using System;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using Azure.Data.Tables;
+using Azure.Identity;
 
 namespace RolloutScorer;
 
@@ -72,13 +70,9 @@ public class Utilities
             return redirectUri.ToString();
         }
     }
-
-    public static CloudTable GetScorecardsCloudTable(string storageAccountKey)
+    public static TableClient GetTableClient(string storageAccount, string tableName)
     {
-        CloudStorageAccount storageAccount = CloudStorageAccount.Parse(
-            connectionString: $"DefaultEndpointsProtocol=https;AccountName={ScorecardsStorageAccount.Name};AccountKey={storageAccountKey};EndpointSuffix=core.windows.net");
-        CloudTableClient tableClient = storageAccount.CreateCloudTableClient();
-        return tableClient.GetTableReference(ScorecardsStorageAccount.ScorecardsTableName);
+        return new TableClient(new Uri($"https://{storageAccount}.table.core.windows.net"), tableName, new DefaultAzureCredential()); ;
     }
 
     public static GitHubClient GetGithubClient(string githubPat)
@@ -183,10 +177,16 @@ public static class GithubLabelNames
 
 public static class ScorecardsStorageAccount
 {
-    public static string KeySecretName = 
-        Environment.GetEnvironmentVariable("ScorecardsStorageAccountKeySecretName") ?? "rolloutscorecards-storage-key";
     public static string Name = 
         Environment.GetEnvironmentVariable("ScorecardsStorageAccountName") ?? "rolloutscorecards";
     public static string ScorecardsTableName = 
         Environment.GetEnvironmentVariable("ScorecardsStorageAccountTableName") ?? "scorecards";
+}
+
+public static class DeploymentsStorageAccount
+{
+    public static string Name =
+        Environment.GetEnvironmentVariable("DeploymentsStorageAccountName") ?? "dotnetengstatusprod";
+    public static string DeploymentsTableName =
+        Environment.GetEnvironmentVariable("DeploymentsTableName") ?? "deployments";
 }
