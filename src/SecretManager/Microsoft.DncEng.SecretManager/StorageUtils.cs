@@ -129,7 +129,8 @@ public static class StorageUtils
         sasBuilder.ResourceTypes = AccountSasResourceTypes.All;
         sasBuilder.Protocol = SasProtocol.Https;
 
-        string sas = sasBuilder.ToSasQueryParameters(
+        // Prepend the query string separator to match output from Microsoft.WindowsAzure.Storage 
+        string sas = '?' + sasBuilder.ToSasQueryParameters(
             sharedKeyCredential: new StorageSharedKeyCredential(accountName, accountKey)
         ).ToString();
 
