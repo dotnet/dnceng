@@ -7,9 +7,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using System;
 
-// Required to add Azure Key Vault as a config source
-using Azure.Extensions.AspNetCore.Configuration.Secrets;
-
 namespace Chatbot
 {
     public class Program
