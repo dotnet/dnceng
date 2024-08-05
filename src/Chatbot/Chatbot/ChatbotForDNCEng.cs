@@ -265,6 +265,7 @@ namespace Chatbot
 
             // Creates OpenAI Chat completions client
             var chatClient = azureClient.GetChatClient(openAIDeploymentName);
+            _telemetryClient.TrackTrace("Bot successfully created chat client.");
 
             return chatClient;
         }
@@ -286,6 +287,7 @@ namespace Chatbot
                 IndexName = searchIndex,
                 Authentication = DataSourceAuthentication.FromApiKey(searchKey),
             });
+            _telemetryClient.TrackTrace("Bot successfully created search options.");
 
             return chatCompletionsOptions;
 
@@ -305,12 +307,15 @@ namespace Chatbot
 
             var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions()
             {
-                ManagedIdentityClientId = _configuration["ChatbotAppId"]
+                ManagedIdentityClientId = _configuration["MicrosoftAppId"]
             }
             ); 
             var client = new SecretClient(new Uri(kvUri), credential);
+            _telemetryClient.TrackTrace("Bot created secret client.");
 
             var secret = await client.GetSecretAsync(secretName);
+            _telemetryClient.TrackTrace("Bot is retrieved secret successfully.");
+
             return secret.Value.Value;
         }
 
