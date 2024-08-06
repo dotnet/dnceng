@@ -7,7 +7,7 @@
   "GitHub": {
     "Organization": "dotnet",
     "Repository": "dnceng",
-    "NotificationTarget": "dotnet/dnceng",
+    "NotificationTargets": [ "dotnet/dnceng", "dotnet/prodconsvcs" ],
     "AlertLabels": [ "Ops - First Responder", "Critical" ],
     "EnvironmentLabels": [ "Production" ],
     "TitlePrefix": "Production - "

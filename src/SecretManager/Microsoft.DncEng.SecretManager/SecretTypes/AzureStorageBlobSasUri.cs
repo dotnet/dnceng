@@ -1,9 +1,9 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Azure.Storage.Blobs;
+using Azure.Storage.Sas;
 using Microsoft.DncEng.CommandLineLib;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace Microsoft.DncEng.SecretManager.SecretTypes;
 
@@ -28,17 +28,16 @@ public class AzureStorageBlobSasUri : SecretType<AzureStorageBlobSasUri.Paramete
     protected override async Task<SecretData> RotateValue(Parameters parameters, RotationContext context, CancellationToken cancellationToken)
     {
         DateTimeOffset now = _clock.UtcNow;
-        CloudStorageAccount account = CloudStorageAccount.Parse(await context.GetSecretValue(parameters.ConnectionString));
-        CloudBlobClient blobClient = account.CreateCloudBlobClient();
-        CloudBlobContainer container = blobClient.GetContainerReference(parameters.Container);
-        CloudBlob blob = container.GetBlobReference(parameters.Blob);
-        string sas = blob.GetSharedAccessSignature(new SharedAccessBlobPolicy
-        {
-            Permissions = SharedAccessBlobPolicy.PermissionsFromString(parameters.Permissions),
-            SharedAccessExpiryTime = now.AddMonths(1),
-        });
-        string result = blob.Uri.AbsoluteUri + sas;
+        DateTimeOffset expiration = now.AddMonths(1);
+        DateTimeOffset nextRotation = now.AddDays(15);
 
-        return new SecretData(result, now.AddMonths(1), now.AddDays(15));
+        string connectionString = await context.GetSecretValue(parameters.ConnectionString);
+        BlobClient blob = new(connectionString, parameters.Container, parameters.Blob);
+
+        BlobSasPermissions blobSasPermissions = StorageUtils.BlobSasPermissionsFromString(parameters.Permissions);
+
+        string result = blob.GenerateSasUri(blobSasPermissions, expiration).AbsoluteUri;
+
+        return new SecretData(result, expiration, nextRotation);
     }
 }

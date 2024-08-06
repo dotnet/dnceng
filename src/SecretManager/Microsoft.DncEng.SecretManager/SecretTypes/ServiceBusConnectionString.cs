@@ -1,14 +1,14 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Azure.Management.ServiceBus;
-using Microsoft.Azure.Management.ServiceBus.Models;
+using Azure;
+using Azure.Core;
+using Azure.ResourceManager;
+using Azure.ResourceManager.ServiceBus;
+using Azure.ResourceManager.ServiceBus.Models;
 using Microsoft.DncEng.CommandLineLib;
-using Microsoft.DncEng.CommandLineLib.Authentication;
-using Microsoft.Rest;
 
 namespace Microsoft.DncEng.SecretManager.SecretTypes;
 
@@ -23,83 +23,87 @@ public class ServiceBusConnectionString : SecretType<ServiceBusConnectionString.
         public string Permissions { get; set; }
     }
 
-    private readonly TokenCredentialProvider _tokenCredentialProvider;
+    private readonly ITokenCredentialProvider _tokenCredentialProvider;
     private readonly ISystemClock _clock;
 
-    public ServiceBusConnectionString(TokenCredentialProvider tokenCredentialProvider, ISystemClock clock)
+    public ServiceBusConnectionString(ITokenCredentialProvider tokenCredentialProvider, ISystemClock clock)
     {
         _tokenCredentialProvider = tokenCredentialProvider;
         _clock = clock;
     }
 
-    private async Task<ServiceBusManagementClient> CreateManagementClient(Parameters parameters, CancellationToken cancellationToken)
-    {
-        TokenCredentials serviceClientCredentials = await _tokenCredentialProvider.GetTokenCredentials(
-            cancellationToken: cancellationToken);
-
-        return new ServiceBusManagementClient(serviceClientCredentials)
-        {
-            SubscriptionId = parameters.Subscription.ToString(),
-        };
-    }
-
     protected override async Task<SecretData> RotateValue(Parameters parameters, RotationContext context, CancellationToken cancellationToken)
     {
-        var client = await CreateManagementClient(parameters, cancellationToken);
-        var accessPolicyName = context.SecretName + "-access-policy";
-        var rule = new SBAuthorizationRule(new List<AccessRights?>(), name: accessPolicyName);
+        TokenCredential credential = await _tokenCredentialProvider.GetCredentialAsync();
+        ArmClient client = new(credential, parameters.Subscription.ToString());
+
+        string accessPolicyName = context.SecretName + "-access-policy";
+
+        var rule = new ServiceBusAuthorizationRuleData();
+
         bool updateRule = false;
-        foreach (var c in parameters.Permissions)
+        foreach (char c in parameters.Permissions)
         {
             switch (c)
             {
                 case 's':
-                    rule.Rights.Add(AccessRights.Send);
+                    rule.Rights.Add(ServiceBusAccessRight.Send);
                     break;
                 case 'l':
-                    rule.Rights.Add(AccessRights.Listen);
+                    rule.Rights.Add(ServiceBusAccessRight.Listen);
                     break;
                 case 'm':
-                    rule.Rights.Add(AccessRights.Manage);
+                    rule.Rights.Add(ServiceBusAccessRight.Manage);
                     break;
                 default:
                     throw new ArgumentException($"Invalid permission specification '{c}'");
             }
         }
+
+        ResourceIdentifier ruleId = ServiceBusNamespaceAuthorizationRuleResource.CreateResourceIdentifier(parameters.Subscription.ToString(), parameters.ResourceGroup, parameters.Namespace, accessPolicyName);
+        ServiceBusNamespaceAuthorizationRuleResource existingRule = client.GetServiceBusNamespaceAuthorizationRuleResource(ruleId);
+
         try
         {
-            var existingRule = await client.Namespaces.GetAuthorizationRuleAsync(parameters.ResourceGroup, parameters.Namespace, accessPolicyName, cancellationToken);
-            if (existingRule.Rights.Count != rule.Rights.Count ||
-                existingRule.Rights.Zip(rule.Rights).Any((p) => p.First != p.Second))
+            existingRule = await existingRule.GetAsync(cancellationToken);
+
+            if (existingRule.Data.Rights.Count != rule.Rights.Count ||
+                existingRule.Data.Rights.Zip(rule.Rights).Any((p) => p.First != p.Second))
             {
                 updateRule = true;
             }
         }
-        catch (ErrorResponseException e) when (e.Response.StatusCode == HttpStatusCode.NotFound)
+        catch (RequestFailedException e) when (e.Status == (int)HttpStatusCode.NotFound)
         {
             updateRule = true;
         }
 
         if (updateRule)
         {
-            await client.Namespaces.CreateOrUpdateAuthorizationRuleAsync(parameters.ResourceGroup, parameters.Namespace,
-                accessPolicyName, rule, cancellationToken);
+            ResourceIdentifier serviceBusNamespaceId = ServiceBusNamespaceResource.CreateResourceIdentifier(parameters.Subscription.ToString(), parameters.ResourceGroup, parameters.Namespace);
+            ServiceBusNamespaceAuthorizationRuleCollection ruleCollection = client.GetServiceBusNamespaceResource(serviceBusNamespaceId).GetServiceBusNamespaceAuthorizationRules();
+
+            existingRule = (await ruleCollection.CreateOrUpdateAsync(WaitUntil.Completed, accessPolicyName, rule, cancellationToken)).Value;
         }
 
-        var currentKey = context.GetValue("currentKey", "primary");
-        AccessKeys keys;
+        ResourceIdentifier serviceBusNamespaceResourceId = ServiceBusNamespaceResource.CreateResourceIdentifier(parameters.Subscription.ToString(), parameters.ResourceGroup, parameters.Namespace);
+        ServiceBusNamespaceResource serviceBusNamespace = client.GetServiceBusNamespaceResource(serviceBusNamespaceResourceId);
+
+        string currentKey = context.GetValue("currentKey", "primary");
+        ServiceBusAccessKeys keys;
+
         string result;
         switch (currentKey)
         {
             case "primary":
-                keys = await client.Namespaces.RegenerateKeysAsync(parameters.ResourceGroup, parameters.Namespace, accessPolicyName,
-                    new RegenerateAccessKeyParameters(KeyType.SecondaryKey), cancellationToken);
+                ServiceBusRegenerateAccessKeyContent regenerateSecondaryAccessKeyContent = new (ServiceBusAccessKeyType.SecondaryKey);
+                keys = await existingRule.RegenerateKeysAsync(regenerateSecondaryAccessKeyContent, cancellationToken);
                 result = keys.SecondaryConnectionString;
                 context.SetValue("currentKey", "secondary");
                 break;
             case "secondary":
-                keys = await client.Namespaces.RegenerateKeysAsync(parameters.ResourceGroup, parameters.Namespace, accessPolicyName,
-                    new RegenerateAccessKeyParameters(KeyType.PrimaryKey), cancellationToken);
+                ServiceBusRegenerateAccessKeyContent regeneratePrimaryAccessKeyContent = new(ServiceBusAccessKeyType.PrimaryKey);
+                keys = await existingRule.RegenerateKeysAsync(regeneratePrimaryAccessKeyContent, cancellationToken);
                 result = keys.PrimaryConnectionString;
                 context.SetValue("currentKey", "primary");
                 break;

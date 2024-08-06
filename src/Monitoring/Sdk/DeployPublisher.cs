@@ -21,10 +21,9 @@ namespace Microsoft.DotNet.Monitoring.Sdk;
 
 public sealed class DeployPublisher : DeployToolBase, IDisposable
 {
-    private readonly string _tenantId = "72f988bf-86f1-41af-91ab-2d7cd011db47"; // microsoft.onmicrosoft.com
     private readonly string _keyVaultName;
-    private readonly string _servicePrincipalId;
-    private readonly string _servicePrincipalSecret;
+    private readonly TokenCredential _tokenCredential;
+
     private readonly Lazy<SecretClient> _keyVault;
     private readonly string _environment;
     private readonly string _parameterFile;
@@ -34,8 +33,7 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
     public DeployPublisher(
         GrafanaClient grafanaClient,
         string keyVaultName,
-        string servicePrincipalId,
-        string servicePrincipalSecret,
+        TokenCredential tokenCredential,
         string sourceTagValue,
         string dashboardDirectory,
         string datasourceDirectory,
@@ -46,8 +44,7 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
         grafanaClient, sourceTagValue, dashboardDirectory, datasourceDirectory, notificationDirectory, log)
     {
         _keyVaultName = keyVaultName;
-        _servicePrincipalId = servicePrincipalId;
-        _servicePrincipalSecret = servicePrincipalSecret;
+        _tokenCredential = tokenCredential;
         _environment = environment;
         _keyVault = new Lazy<SecretClient>(GetKeyVaultClient);
         _parameterFile = parametersFile;
@@ -280,7 +277,6 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
     private SecretClient GetKeyVaultClient()
     {
         Uri vaultUri = new($"https://{_keyVaultName}.vault.azure.net/");
-        TokenCredential credential = new ClientSecretCredential(_tenantId, _servicePrincipalId, _servicePrincipalSecret);
-        return new SecretClient(vaultUri, credential);
+        return new SecretClient(vaultUri, _tokenCredential);
     }
 }
