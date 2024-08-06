@@ -20,7 +20,7 @@ public static class Program
             .ConfigureWebHostDefaults(host =>
             {
                 host.UseStartup<Startup>()
-                    .UseUrls("http://localhost:5000/")
+                    .UseUrls("https://localhost:5000/")
                     .CaptureStartupErrors(true);
             })
             .UseContentRoot(Directory.GetCurrentDirectory())
