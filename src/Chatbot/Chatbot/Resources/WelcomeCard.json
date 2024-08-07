@@ -10,7 +10,7 @@
     },
     {
       "type": "TextBlock",
-      "text": "I can help you find information from the dnceng or arcade documenatation.",
+      "text": "I can help you find information from the [dnceng](https://github.com/dotnet/dnceng) or [arcade](https://github.com/dotnet/arcade) documenatation.",
       "wrap": true
     },
     {
@@ -25,19 +25,13 @@
     },
     {
       "type": "TextBlock",
-      "text": "If you need help with permissions or refreshing personal access tokens, please contact the FR channel.",
+      "text": "If you need help with permissions or refreshing personal access tokens, please contact the [FR channel](https://teams.microsoft.com/l/message/48:notes/1723073589539?context=%7B%22contextType%22%3A%22chat%22%7D).",
       "wrap": true
     },
     {
       "type": "TextBlock",
       "text": "What can I help you with today?",
       "wrap": true
-    },
-    {
-      "type": "TextBlock",
-      "text": "Ask me a question or select one of the suggested actions.",
-      "wrap": true
     }
-
   ]
 }
