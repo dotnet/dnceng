@@ -17,7 +17,6 @@ using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Configuration;
 using OpenAI.Chat;
-using Microsoft.Extensions.Logging;
 
 namespace Chatbot
 {
@@ -72,8 +71,7 @@ namespace Chatbot
             {
                 Actions = new List<CardAction>()
                 {
-                    new CardAction() { Title = "Request permissions and approval", Type = ActionTypes.ImBack, Value = "Permissions" },
-                    new CardAction() { Title = "Refresh personal access token", Type = ActionTypes.ImBack, Value = "PAT" } ,
+                    new CardAction() { Title = "Give feedback", Type = ActionTypes.ImBack, Value = "Feedback" } ,
                     new CardAction() { Title = "Who do I contact for...", Type = ActionTypes.ImBack, Value = "Contact" },
 
                 },
@@ -94,37 +92,24 @@ namespace Chatbot
             String userRequest = turnContext.Activity.Text;
 
             // Constants -> Predefined responses
-            const String response = "Please contact the First Responder's channel.";
             const String followup = "Is there anything else I can help you with today?";
 
             switch (option)
             {
-                case "exit":
-                case "q":
-                case "quit":
-                case "bye":
-                case "no":
-                case "nope":
-                case "n/a":
+                case "feedback":
                     Attachment cardAttachment = CreateAdaptiveCardAttachment(_cards["FeedbackCard"]);
                     await turnContext.SendActivityAsync(MessageFactory.Attachment(cardAttachment), cancellationToken);
                     break;
                 case "contact":
                     Attachment contactAttachment = CreateAdaptiveCardAttachment(_cards["ContactSheet"]);
                     await turnContext.SendActivityAsync(MessageFactory.Attachment(contactAttachment), cancellationToken);
-                    await SendSuggestedActionsAsync(followup, turnContext, cancellationToken);
-                    break;
-                case "permissions":
-                case "pat":
-                    await turnContext.SendActivityAsync(MessageFactory.Text(response), cancellationToken);
-                    await SendSuggestedActionsAsync(followup, turnContext, cancellationToken);
                     break;
                 default:
                     Attachment aiResponse = await AskOpenAI(userRequest);
                     await turnContext.SendActivityAsync(MessageFactory.Attachment(aiResponse), cancellationToken);
-                    await SendSuggestedActionsAsync(followup, turnContext, cancellationToken);
                     break;
             }
+            await SendSuggestedActionsAsync(followup, turnContext, cancellationToken);
         }
 
         // From bot framework samples
@@ -203,7 +188,7 @@ namespace Chatbot
             };
 
             // Gets the AI generated response
-            ChatCompletion completion = chatClient.CompleteChat(messages, chatCompletionsOptions);
+            ChatCompletion completion = await chatClient.CompleteChatAsync(messages, chatCompletionsOptions);
 
             // Gets the message context: contains the citations, convo intent, and info about retrieved docs
             AzureChatMessageContext messageContext = completion.GetAzureMessageContext();
