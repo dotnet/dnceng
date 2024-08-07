@@ -17,6 +17,7 @@ using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Configuration;
 using OpenAI.Chat;
+using Microsoft.Extensions.Logging;
 
 namespace Chatbot
 {
@@ -25,7 +26,8 @@ namespace Chatbot
         private readonly Dictionary<string, string> _cards = new Dictionary<string, string>()
         {
             {"FeedbackCard", Path.Combine(".", "Resources", "FeedbackCard.json")},
-            {"ContactSheet", Path.Combine(".", "Resources", "ContactSheet.json")}
+            {"ContactSheet", Path.Combine(".", "Resources", "ContactSheet.json")},
+            {"WelcomeCard", Path.Combine(".", "Resources", "WelcomeCard.json")}
         };
 
         private readonly TelemetryClient _telemetryClient;
@@ -48,18 +50,14 @@ namespace Chatbot
         private async Task SendWelcomeMessageAsync(ITurnContext turnContext, CancellationToken cancellationToken)
         {
             _telemetryClient.TrackTrace("Bot is sending welcome message.");
-            const String HelpString = "Ask me a question or select one of the suggested options.";
-            const String WelcomeMessage = @"Welcome! My name is DaniBob. How may I help you today?
-Enter q, Q, quit, exit, or bye to end this chat";
-
+            Attachment cardAttachment = CreateAdaptiveCardAttachment(_cards["WelcomeCard"]);
+            
             foreach (var member in turnContext.Activity.MembersAdded)
             {
                 if (member.Id != turnContext.Activity.Recipient.Id)
                 {
-                    await turnContext.SendActivityAsync(
-                        MessageFactory.Text(WelcomeMessage),
-                        cancellationToken: cancellationToken);
-                    await SendSuggestedActionsAsync(HelpString, turnContext, cancellationToken);
+                    await turnContext.SendActivityAsync(MessageFactory.Attachment(cardAttachment), cancellationToken);
+                    await SendSuggestedActionsAsync("", turnContext, cancellationToken);
                 }
             }
         }

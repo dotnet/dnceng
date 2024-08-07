@@ -1,0 +1,43 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.0",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "Welcome! My name is DncengBot.",
+      "wrap": true
+    },
+    {
+      "type": "TextBlock",
+      "text": "I can help you find information from the dnceng or arcade documenatation.",
+      "wrap": true
+    },
+    {
+      "type": "TextBlock",
+      "text": "Some example questions you can ask me are:",
+      "wrap": true
+    },
+    {
+      "type": "TextBlock",
+      "text": "- What is Helix job sender? What are the steps to use it? \r- How do I use Known issues? \r - How can I add a package to the public feed?",
+      "wrap": true
+    },
+    {
+      "type": "TextBlock",
+      "text": "If you need help with permissions or refreshing personal access tokens, please contact the FR channel.",
+      "wrap": true
+    },
+    {
+      "type": "TextBlock",
+      "text": "What can I help you with today?",
+      "wrap": true
+    },
+    {
+      "type": "TextBlock",
+      "text": "Ask me a question or select one of the suggested actions.",
+      "wrap": true
+    }
+
+  ]
+}
