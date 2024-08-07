@@ -1,22 +1,17 @@
 ﻿// Generated with Bot Builder V4 SDK Template for Visual Studio EmptyBot v4.22.0
 
+using Microsoft.ApplicationInsights.AspNetCore.Extensions;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Bot.Builder;
+using Microsoft.Bot.Builder.ApplicationInsights;
+using Microsoft.Bot.Builder.Integration.ApplicationInsights.Core;
 using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Bot.Connector.Authentication;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
-// For telemetry
-using Microsoft.Bot.Builder.ApplicationInsights;
-using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.Bot.Builder.Integration.ApplicationInsights.Core;
-using Microsoft.DncEng.Configuration.Extensions;
-using Microsoft.Identity.Client.AppConfig;
-using Microsoft.ApplicationInsights.AspNetCore.Extensions;
-
 
 namespace Chatbot
 {

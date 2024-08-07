@@ -1,47 +1,31 @@
 ﻿// Generated with Bot Builder V4 SDK Template for Visual Studio CoreBot v4.22.0
+using Newtonsoft.Json;
 using System;
+using System.ClientModel;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Bot.Builder;
-using Microsoft.Bot.Schema;
-using Newtonsoft.Json;
-using Microsoft.Bot.Builder.Integration;
 
-// For AI and Adaptive cards
 using AdaptiveCards;
-using Azure;
 using Azure.AI.OpenAI;
 using Azure.AI.OpenAI.Chat;
-using Azure.Security.KeyVault.Secrets;
-using Microsoft.Extensions.Configuration;
-using OpenAI;
-using OpenAI.Chat;
-using System.ClientModel;
-using static System.Environment;
-using static System.Net.Mime.MediaTypeNames;
-using System.Text.Json.Nodes;
-using System.Reflection;
 using Azure.Identity;
-
-// For logging
-using Microsoft.ApplicationInsights.Channel;
-using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Azure.Security.KeyVault.Secrets;
 using Microsoft.ApplicationInsights;
-using System.Runtime;
-using Microsoft.Extensions.Options;
+using Microsoft.Bot.Builder;
+using Microsoft.Bot.Schema;
+using Microsoft.Extensions.Configuration;
+using OpenAI.Chat;
 
 namespace Chatbot
 {
     public class ChatbotForDNCEng : ActivityHandler
     {
-        private readonly string[] _cards =
+        private readonly Dictionary<string, string> _cards = new Dictionary<string, string>()
         {
-            Path.Combine(".", "Resources", "FeedbackCard.json"),
-            Path.Combine(".", "Resources", "ContactSheet.json"),
+            {"FeedbackCard", Path.Combine(".", "Resources", "FeedbackCard.json")},
+            {"ContactSheet", Path.Combine(".", "Resources", "ContactSheet.json")}
         };
 
         private readonly TelemetryClient _telemetryClient;
@@ -64,17 +48,16 @@ namespace Chatbot
         private async Task SendWelcomeMessageAsync(ITurnContext turnContext, CancellationToken cancellationToken)
         {
             _telemetryClient.TrackTrace("Bot is sending welcome message.");
-            const String Greeting = "Welcome! My name is DaniBob. How may I help you today?";
-            const String HowToQuitInstructions = "Enter q, Q, quit, exit, or bye to end this chat.";
             const String HelpString = "Ask me a question or select one of the suggested options.";
+            const String WelcomeMessage = @"Welcome! My name is DaniBob. How may I help you today?
+Enter q, Q, quit, exit, or bye to end this chat";
 
-            var OnMemberAddedMessage = Greeting + System.Environment.NewLine + HowToQuitInstructions;
             foreach (var member in turnContext.Activity.MembersAdded)
             {
                 if (member.Id != turnContext.Activity.Recipient.Id)
                 {
                     await turnContext.SendActivityAsync(
-                        MessageFactory.Text(OnMemberAddedMessage),
+                        MessageFactory.Text(WelcomeMessage),
                         cancellationToken: cancellationToken);
                     await SendSuggestedActionsAsync(HelpString, turnContext, cancellationToken);
                 }
@@ -85,7 +68,7 @@ namespace Chatbot
         // From bot framework samples
         private async Task SendSuggestedActionsAsync(string parentMessage, ITurnContext turnContext, CancellationToken cancellationToken)
         {
-            var reply = MessageFactory.Text(parentMessage);
+            Activity reply = MessageFactory.Text(parentMessage);
 
             reply.SuggestedActions = new SuggestedActions()
             {
@@ -106,14 +89,11 @@ namespace Chatbot
         {
             _telemetryClient.TrackTrace("Bot is handling message activity.");
             // Error handling
-            if (turnContext == null)
-            {
-                throw new ArgumentNullException(nameof(turnContext));
-            }
+            ArgumentNullException.ThrowIfNull(turnContext);
 
             // Get user input
-            var option = turnContext.Activity.Text.ToLower();
-            var userRequest = turnContext.Activity.Text;
+            String option = turnContext.Activity.Text.ToLower();
+            String userRequest = turnContext.Activity.Text;
 
             // Constants -> Predefined responses
             const String response = "Please contact the First Responder's channel.";
@@ -128,11 +108,11 @@ namespace Chatbot
                 case "no":
                 case "nope":
                 case "n/a":
-                    var cardAttachment = CreateAdaptiveCardAttachment(_cards[0]);
+                    Attachment cardAttachment = CreateAdaptiveCardAttachment(_cards["FeedbackCard"]);
                     await turnContext.SendActivityAsync(MessageFactory.Attachment(cardAttachment), cancellationToken);
                     break;
                 case "contact":
-                    var contactAttachment = CreateAdaptiveCardAttachment(_cards[1]);
+                    Attachment contactAttachment = CreateAdaptiveCardAttachment(_cards["ContactSheet"]);
                     await turnContext.SendActivityAsync(MessageFactory.Attachment(contactAttachment), cancellationToken);
                     await SendSuggestedActionsAsync(followup, turnContext, cancellationToken);
                     break;
@@ -142,7 +122,7 @@ namespace Chatbot
                     await SendSuggestedActionsAsync(followup, turnContext, cancellationToken);
                     break;
                 default:
-                    var aiResponse = await AskOpenAI(userRequest);
+                    Attachment aiResponse = await AskOpenAI(userRequest);
                     await turnContext.SendActivityAsync(MessageFactory.Attachment(aiResponse), cancellationToken);
                     await SendSuggestedActionsAsync(followup, turnContext, cancellationToken);
                     break;
@@ -152,8 +132,8 @@ namespace Chatbot
         // From bot framework samples
         private static Attachment CreateAdaptiveCardAttachment(string filePath)
         {
-            var adaptiveCardJson = File.ReadAllText(filePath);
-            var adaptiveCardAttachment = new Attachment()
+            String adaptiveCardJson = File.ReadAllText(filePath);
+            Attachment adaptiveCardAttachment = new Attachment()
             {
                 ContentType = "application/vnd.microsoft.card.adaptive",
                 Content = JsonConvert.DeserializeObject(adaptiveCardJson),
@@ -161,7 +141,7 @@ namespace Chatbot
             return adaptiveCardAttachment;
         }
 
-        private static Attachment FormatLinks(String response, List<(String, String)>links)
+        private static Attachment FormatLinks(String response, List<(String, String)> links)
         {
             // This method formats the Azure OpenAI answer as an attachment to send back to the user
             AdaptiveCard card = new AdaptiveCard(new AdaptiveSchemaVersion(1, 0));
@@ -175,7 +155,7 @@ namespace Chatbot
 
             foreach (var link in links) 
             {
-                var action = new AdaptiveOpenUrlAction()
+                AdaptiveOpenUrlAction action = new AdaptiveOpenUrlAction()
                 {
                     Title = link.Item1,
                     Url = new Uri(link.Item2),
@@ -185,7 +165,7 @@ namespace Chatbot
 
             string adaptiveCardJson = card.ToJson();
 
-            var adaptiveCardAttachment = new Attachment()
+            Attachment adaptiveCardAttachment = new Attachment()
             {
                 ContentType = "application/vnd.microsoft.card.adaptive",
                 Content = JsonConvert.DeserializeObject(adaptiveCardJson),
@@ -206,16 +186,16 @@ namespace Chatbot
 
 #pragma warning disable AOAI001
 
-            var servicePrompt = "You are an AI assistant for Microsoft’s Dotnet Core Engineering team" +
+            String servicePrompt = "You are an AI assistant for Microsoft’s .NET Engineering team" +
                                 "that helps the team and other Microsoft employees find information using " +
-                                "Dotnet’s repositories on GitHub. You like to give examples whenever possible." +
+                                ".NET’s repositories on GitHub. You like to give examples whenever possible." +
                                 "You cite your references with the filepath in the format of [filepath].";
 
-            var chatClient = await CreateChatClient();
-            var chatCompletionsOptions = await ConfigChatOptions();
+            ChatClient chatClient = await CreateChatClient();
+            ChatCompletionOptions chatCompletionsOptions = await ConfigChatOptions();
 
             // Format the chat completion and send the request 
-            var messages = new List<ChatMessage>
+            List<ChatMessage> messages = new List<ChatMessage>
             { 
                 // If there is old chat history that you want to include, you would do it here
                 // Adds the service prompt, gives context to the bot on how it should respond
@@ -228,8 +208,8 @@ namespace Chatbot
             ChatCompletion completion = chatClient.CompleteChat(messages, chatCompletionsOptions);
 
             // Gets the message context: contains the citations, convo intent, and info about retrieved docs
-            var messageContext = completion.GetAzureMessageContext();
-            var citations = messageContext.Citations;
+            AzureChatMessageContext messageContext = completion.GetAzureMessageContext();
+            IReadOnlyList<AzureChatCitation> citations = messageContext.Citations;
 
             // Format each citation to send to the user
             /*
@@ -238,16 +218,16 @@ namespace Chatbot
              * 
              * Citations - repetitive bc referencing different chunks of the same file
              */
-            var currentCitation = 1;
-            var citationInfo = new List<(String, String)>();
+            int currentCitation = 1;
+            List<(String, String)> citationInfo = new List<(String, String)>();
             foreach (var citation in citations)
             {
-                var citationTitle = "Doc " + currentCitation.ToString() + ": " + citation.Filepath;
+                String citationTitle = "Doc " + currentCitation.ToString() + ": " + citation.Filepath;
                 citationInfo.Add((citationTitle, citation.Url));
                 currentCitation++;
             }
 
-            var responseCard = FormatLinks(completion.Content[0].Text, citationInfo);
+            Attachment responseCard = FormatLinks(completion.Content[0].Text, citationInfo);
             return responseCard;
 
         }
@@ -257,14 +237,14 @@ namespace Chatbot
             // This method creates the chat client so the bot can get answers from Azure OpenAI
             // For chat client
             _telemetryClient.TrackTrace("Bot is creating chat client.");
-            var openAIEndpoint = "https://testing-bot.openai.azure.com/";
-            var openAIKey = await GetSecrets("AzureOpenAiApiKey");
-            var openAIDeploymentName = "explorers-test";
+            String openAIEndpoint = "https://testing-bot.openai.azure.com/";
+            String openAIKey = await GetSecrets("AzureOpenAiApiKey");
+            String openAIDeploymentName = "explorers-test";
 
             AzureOpenAIClient azureClient = new(new Uri(openAIEndpoint), new ApiKeyCredential(openAIKey));
 
             // Creates OpenAI Chat completions client
-            var chatClient = azureClient.GetChatClient(openAIDeploymentName);
+            ChatClient chatClient = azureClient.GetChatClient(openAIDeploymentName);
             _telemetryClient.TrackTrace("Bot successfully created chat client.");
 
             return chatClient;
@@ -275,12 +255,12 @@ namespace Chatbot
             // This method creates the search client so that the bot can use our data instead of ChatGPT's training data
             // Search service variables
             _telemetryClient.TrackTrace("Bot is configuring search options.");
-            var searchEndpoint = "https://testingbot-search.search.windows.net";
-            var searchKey = await GetSecrets("AiSearchApiKey");
-            var searchIndex = "all-data-auto-uploaded";
+            String searchEndpoint = "https://testingbot-search.search.windows.net";
+            String searchKey = await GetSecrets("AiSearchApiKey");
+            String searchIndex = "all-data-auto-uploaded";
 
             // Configure the chat completions options to use our data
-            var chatCompletionsOptions = new ChatCompletionOptions();
+            ChatCompletionOptions chatCompletionsOptions = new ChatCompletionOptions();
             chatCompletionsOptions.AddDataSource(new AzureSearchChatDataSource()
             {
                 Endpoint = new Uri(searchEndpoint),
@@ -302,21 +282,21 @@ namespace Chatbot
         {
             // This method gets secrets needed to make the chat client and the search client
             _telemetryClient.TrackTrace("Bot is getting secrets.");
-            var keyVaultName = _configuration["KeyVaultName"];
-            var kvUri = "https://" + keyVaultName + ".vault.azure.net";
+            String keyVaultName = _configuration["KeyVaultName"];
+            String kvUri = "https://" + keyVaultName + ".vault.azure.net";
 
-            var credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions()
+            DefaultAzureCredential credential = new DefaultAzureCredential(new DefaultAzureCredentialOptions()
             {
                 ManagedIdentityClientId = _configuration["MicrosoftAppId"]
             }
             ); 
-            var client = new SecretClient(new Uri(kvUri), credential);
+            SecretClient client = new SecretClient(new Uri(kvUri), credential);
             _telemetryClient.TrackTrace("Bot created secret client.");
 
-            var secret = await client.GetSecretAsync(secretName);
+            KeyVaultSecret secret = await client.GetSecretAsync(secretName);
             _telemetryClient.TrackTrace("Bot is retrieved secret successfully.");
 
-            return secret.Value.Value;
+            return secret.Value;
         }
 
         // Notes
