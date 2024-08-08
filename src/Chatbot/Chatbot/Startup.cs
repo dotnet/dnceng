@@ -12,6 +12,7 @@ using Microsoft.Bot.Connector.Authentication;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Chatbot
 {
@@ -47,6 +48,16 @@ namespace Chatbot
                 ConnectionString = Configuration.GetValue<string>("ApplicationInsightsConnectionString")
             };
             services.AddApplicationInsightsTelemetry(options);
+
+            // Configure logger to send to app insights
+            services.AddLogging(builder =>
+            {
+                // Only Application Insights is registered as a logger provider
+                builder.AddApplicationInsights(
+                    configureTelemetryConfiguration: (config) => config.ConnectionString = Configuration.GetValue<string>("ApplicationInsightsConnectionString"),
+                    configureApplicationInsightsLoggerOptions: (options) => { }
+                );
+            });
 
             // Create the telemetry client.
             services.AddSingleton<IBotTelemetryClient, BotTelemetryClient>();

@@ -12,11 +12,11 @@ using Azure.AI.OpenAI;
 using Azure.AI.OpenAI.Chat;
 using Azure.Identity;
 using Azure.Security.KeyVault.Secrets;
-using Microsoft.ApplicationInsights;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Configuration;
 using OpenAI.Chat;
+using Microsoft.Extensions.Logging;
 
 namespace Chatbot
 {
@@ -29,26 +29,26 @@ namespace Chatbot
             {"WelcomeCard", Path.Combine(".", "Resources", "WelcomeCard.json")}
         };
 
-        private readonly TelemetryClient _telemetryClient;
+        private readonly ILogger _logger;
         private readonly IConfiguration _configuration;
 
 
-        public ChatbotForDNCEng(TelemetryClient telemetryClient, IConfiguration configuration)
+        public ChatbotForDNCEng(ILogger<ChatbotForDNCEng> logger, IConfiguration configuration)
         {
+            _logger = logger;
             _configuration = configuration;
-            _telemetryClient = telemetryClient;
         }
 
         protected override async Task OnMembersAddedAsync(IList<ChannelAccount> membersAdded, ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
         {
-            _telemetryClient.TrackTrace("Bot is handling member added.");
+            _logger.LogInformation("Bot is handling member added.");
             // Send a welcome message to the user and tell them what actions they may perform to use this bot
             await SendWelcomeMessageAsync(turnContext, cancellationToken);
         }
 
-        private async Task SendWelcomeMessageAsync(ITurnContext turnContext, CancellationToken cancellationToken)
+        public async Task SendWelcomeMessageAsync(ITurnContext turnContext, CancellationToken cancellationToken)
         {
-            _telemetryClient.TrackTrace("Bot is sending welcome message.");
+            _logger.LogInformation("Bot is sending welcome message.");
             Attachment cardAttachment = CreateAdaptiveCardAttachment(_cards["WelcomeCard"]);
             
             foreach (var member in turnContext.Activity.MembersAdded)
@@ -63,7 +63,7 @@ namespace Chatbot
 
         // Predefined Options
         // From bot framework samples
-        private async Task SendSuggestedActionsAsync(string parentMessage, ITurnContext turnContext, CancellationToken cancellationToken)
+        public async Task SendSuggestedActionsAsync(string parentMessage, ITurnContext turnContext, CancellationToken cancellationToken)
         {
             Activity reply = MessageFactory.Text(parentMessage);
 
@@ -77,13 +77,13 @@ namespace Chatbot
                 },
             };
             await turnContext.SendActivityAsync(reply, cancellationToken);
-            _telemetryClient.TrackTrace("Bot has sent Suggestion Actions.");
+            _logger.LogInformation("Bot has sent Suggestion Actions.");
         }
 
         // This method allows the bot to respond to a user message
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
-            _telemetryClient.TrackTrace("Bot is handling message activity.");
+            _logger.LogInformation("Bot is handling message activity.");
             // Error handling
             ArgumentNullException.ThrowIfNull(turnContext);
 
@@ -113,7 +113,7 @@ namespace Chatbot
         }
 
         // From bot framework samples
-        private static Attachment CreateAdaptiveCardAttachment(string filePath)
+        public static Attachment CreateAdaptiveCardAttachment(string filePath)
         {
             String adaptiveCardJson = File.ReadAllText(filePath);
             Attachment adaptiveCardAttachment = new Attachment()
@@ -124,7 +124,7 @@ namespace Chatbot
             return adaptiveCardAttachment;
         }
 
-        private static Attachment FormatLinks(String response, List<(String, String)> links)
+        public static Attachment FormatLinks(String response, List<(String, String)> links)
         {
             // This method formats the Azure OpenAI answer as an attachment to send back to the user
             AdaptiveCard card = new AdaptiveCard(new AdaptiveSchemaVersion(1, 0));
@@ -157,9 +157,9 @@ namespace Chatbot
             return adaptiveCardAttachment;
         }
 
-        private async Task<Attachment> AskOpenAI(String question)
+        public async Task<Attachment> AskOpenAI(String question)
         {
-            _telemetryClient.TrackTrace("Bot is making a request to Azure OpenAI.");
+            _logger.LogInformation("Bot is making a request to Azure OpenAI.");
             /* 
              * The line below disables the warning because the.AddDataSource
              * is an experimental feature a part of the newest release.
@@ -215,11 +215,11 @@ namespace Chatbot
 
         }
 
-        private async Task<ChatClient> CreateChatClient()
+        public async Task<ChatClient> CreateChatClient()
         {
             // This method creates the chat client so the bot can get answers from Azure OpenAI
             // For chat client
-            _telemetryClient.TrackTrace("Bot is creating chat client.");
+            _logger.LogInformation("Bot is creating chat client.");
             String openAIEndpoint = "https://testing-bot.openai.azure.com/";
             String openAIKey = await GetSecrets("AzureOpenAiApiKey");
             String openAIDeploymentName = "explorers-test";
@@ -228,16 +228,16 @@ namespace Chatbot
 
             // Creates OpenAI Chat completions client
             ChatClient chatClient = azureClient.GetChatClient(openAIDeploymentName);
-            _telemetryClient.TrackTrace("Bot successfully created chat client.");
+            _logger.LogInformation("Bot successfully created chat client.");
 
             return chatClient;
         }
 
-        private async Task<ChatCompletionOptions> ConfigChatOptions()
+        public async Task<ChatCompletionOptions> ConfigChatOptions()
         {
             // This method creates the search client so that the bot can use our data instead of ChatGPT's training data
             // Search service variables
-            _telemetryClient.TrackTrace("Bot is configuring search options.");
+            _logger.LogInformation("Bot is configuring search options.");
             String searchEndpoint = "https://testingbot-search.search.windows.net";
             String searchKey = await GetSecrets("AiSearchApiKey");
             String searchIndex = "all-data-auto-uploaded-daily";
@@ -250,7 +250,7 @@ namespace Chatbot
                 IndexName = searchIndex,
                 Authentication = DataSourceAuthentication.FromApiKey(searchKey),
             });
-            _telemetryClient.TrackTrace("Bot successfully created search options.");
+            _logger.LogInformation("Bot successfully created search options.");
 
             return chatCompletionsOptions;
 
@@ -264,7 +264,7 @@ namespace Chatbot
         private async Task<String> GetSecrets(String secretName)
         {
             // This method gets secrets needed to make the chat client and the search client
-            _telemetryClient.TrackTrace("Bot is getting secrets.");
+            _logger.LogInformation("Bot is getting secrets.");
             String keyVaultName = _configuration["KeyVaultName"];
             String kvUri = "https://" + keyVaultName + ".vault.azure.net";
 
@@ -274,10 +274,10 @@ namespace Chatbot
             }
             ); 
             SecretClient client = new SecretClient(new Uri(kvUri), credential);
-            _telemetryClient.TrackTrace("Bot created secret client.");
+            _logger.LogInformation("Bot created secret client.");
 
             KeyVaultSecret secret = await client.GetSecretAsync(secretName);
-            _telemetryClient.TrackTrace("Bot is retrieved secret successfully.");
+            _logger.LogInformation("Bot is retrieved secret successfully.");
 
             return secret.Value;
         }
