@@ -281,12 +281,12 @@
     "RcaLabel": "RCA"
   },
   "AzureTableTokenStore": {
-    "TableUri": "[vault(token-table-sas-uri)]"
+    "TableName": "tokens"
   },
   "Grafana": {
     "BaseUrl": "https://dotnet-eng-grafana-staging.westus2.cloudapp.azure.com",
     "ApiToken": "[vault(grafana-api-token)]",
-    "TableUri": "[vault(deployment-table-sas-uri)]"
+    "TableName": "deployments"
   },
   "WebHooks": {
     "github": {

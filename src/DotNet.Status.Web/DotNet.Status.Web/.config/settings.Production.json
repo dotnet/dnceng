@@ -16,8 +16,12 @@
     "KeyBlobUri": "https://dotnetengstatusprod.blob.core.windows.net/site/keys.xml",
     "DataProtectionKeyUri": "https://dotneteng-status-prod.vault.azure.net/keys/dotnet-status-data-protection/"
   },
+  "AzureTableTokenStore": {
+    "TableUri": "https://dotnetengstatusprod.table.core.windows.net"
+  },
   "Grafana": {
-    "BaseUrl": "https://dotnet-eng-grafana.westus2.cloudapp.azure.com"
+    "BaseUrl": "https://dotnet-eng-grafana.westus2.cloudapp.azure.com",
+    "TableUri": "https://dotnetengstatusprod.table.core.windows.net"
   },
   "Kusto": {
     "Database": "engineeringdata",
