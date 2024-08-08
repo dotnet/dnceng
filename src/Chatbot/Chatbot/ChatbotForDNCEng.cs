@@ -240,7 +240,7 @@ namespace Chatbot
             _telemetryClient.TrackTrace("Bot is configuring search options.");
             String searchEndpoint = "https://testingbot-search.search.windows.net";
             String searchKey = await GetSecrets("AiSearchApiKey");
-            String searchIndex = "all-data-auto-uploaded";
+            String searchIndex = "all-data-auto-uploaded-daily";
 
             // Configure the chat completions options to use our data
             ChatCompletionOptions chatCompletionsOptions = new ChatCompletionOptions();
