@@ -13,7 +13,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Telemetry", "Telemetry", "{
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9F97FEC5-78AB-467B-8FE4-BB8E4381BE19}"
 	ProjectSection(SolutionItems) = preProject
-		src\Chatbot\Chatbot\AdapterWithErrorHandler.cs = src\Chatbot\Chatbot\AdapterWithErrorHandler.cs
 		Directory.Build.props = Directory.Build.props
 		Directory.Build.targets = Directory.Build.targets
 		Directory.Packages.props = Directory.Packages.props
@@ -68,7 +67,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Chatbot", "Chatbot", "{1FA9
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chatbot", "src\Chatbot\Chatbot\Chatbot.csproj", "{BD596A93-1B93-41DB-BB53-E10512D3B34F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Chatbot.Tests", "src\Chatbot\Chatbot.Tests\Chatbot.Tests.csproj", "{FCC9EFB6-80A0-405A-AE2A-0E554DAAD568}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chatbot.Tests", "src\Chatbot\Chatbot.Tests\Chatbot.Tests.csproj", "{FCC9EFB6-80A0-405A-AE2A-0E554DAAD568}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
