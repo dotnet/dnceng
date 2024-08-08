@@ -41,14 +41,14 @@ namespace Chatbot
 
         protected override async Task OnMembersAddedAsync(IList<ChannelAccount> membersAdded, ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Bot is handling member added.");
+            _logger.LogDebug("Bot is handling member added.");
             // Send a welcome message to the user and tell them what actions they may perform to use this bot
             await SendWelcomeMessageAsync(turnContext, cancellationToken);
         }
 
         public async Task SendWelcomeMessageAsync(ITurnContext turnContext, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Bot is sending welcome message.");
+            _logger.LogDebug("Bot is sending welcome message.");
             Attachment cardAttachment = CreateAdaptiveCardAttachment(_cards["WelcomeCard"]);
             
             foreach (var member in turnContext.Activity.MembersAdded)
@@ -77,13 +77,13 @@ namespace Chatbot
                 },
             };
             await turnContext.SendActivityAsync(reply, cancellationToken);
-            _logger.LogInformation("Bot has sent Suggestion Actions.");
+            _logger.LogDebug("Bot has sent Suggestion Actions.");
         }
 
         // This method allows the bot to respond to a user message
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Bot is handling message activity.");
+            _logger.LogDebug("Bot is handling message activity.");
             // Error handling
             ArgumentNullException.ThrowIfNull(turnContext);
 
@@ -159,7 +159,7 @@ namespace Chatbot
 
         public async Task<Attachment> AskOpenAI(String question)
         {
-            _logger.LogInformation("Bot is making a request to Azure OpenAI.");
+            _logger.LogDebug("Bot is making a request to Azure OpenAI.");
             /* 
              * The line below disables the warning because the.AddDataSource
              * is an experimental feature a part of the newest release.
@@ -219,7 +219,7 @@ namespace Chatbot
         {
             // This method creates the chat client so the bot can get answers from Azure OpenAI
             // For chat client
-            _logger.LogInformation("Bot is creating chat client.");
+            _logger.LogDebug("Bot is creating chat client.");
             String openAIEndpoint = "https://testing-bot.openai.azure.com/";
             String openAIKey = await GetSecrets("AzureOpenAiApiKey");
             String openAIDeploymentName = "explorers-test";
@@ -228,7 +228,7 @@ namespace Chatbot
 
             // Creates OpenAI Chat completions client
             ChatClient chatClient = azureClient.GetChatClient(openAIDeploymentName);
-            _logger.LogInformation("Bot successfully created chat client.");
+            _logger.LogDebug("Bot successfully created chat client.");
 
             return chatClient;
         }
@@ -237,7 +237,7 @@ namespace Chatbot
         {
             // This method creates the search client so that the bot can use our data instead of ChatGPT's training data
             // Search service variables
-            _logger.LogInformation("Bot is configuring search options.");
+            _logger.LogDebug("Bot is configuring search options.");
             String searchEndpoint = "https://testingbot-search.search.windows.net";
             String searchKey = await GetSecrets("AiSearchApiKey");
             String searchIndex = "all-data-auto-uploaded-daily";
@@ -250,7 +250,7 @@ namespace Chatbot
                 IndexName = searchIndex,
                 Authentication = DataSourceAuthentication.FromApiKey(searchKey),
             });
-            _logger.LogInformation("Bot successfully created search options.");
+            _logger.LogDebug("Bot successfully created search options.");
 
             return chatCompletionsOptions;
 
@@ -264,7 +264,7 @@ namespace Chatbot
         private async Task<String> GetSecrets(String secretName)
         {
             // This method gets secrets needed to make the chat client and the search client
-            _logger.LogInformation("Bot is getting secrets.");
+            _logger.LogDebug("Bot is getting secrets.");
             String keyVaultName = _configuration["KeyVaultName"];
             String kvUri = "https://" + keyVaultName + ".vault.azure.net";
 
@@ -274,10 +274,10 @@ namespace Chatbot
             }
             ); 
             SecretClient client = new SecretClient(new Uri(kvUri), credential);
-            _logger.LogInformation("Bot created secret client.");
+            _logger.LogDebug("Bot created secret client.");
 
             KeyVaultSecret secret = await client.GetSecretAsync(secretName);
-            _logger.LogInformation("Bot is retrieved secret successfully.");
+            _logger.LogDebug("Bot is retrieved secret successfully.");
 
             return secret.Value;
         }
