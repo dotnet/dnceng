@@ -161,7 +161,7 @@ public class DeploymentController : ControllerBase
         }
         else
         {
-            table = new TableClient(new Uri(options.TableUri, UriKind.Absolute), options.TableName, new DefaultAzureCredential());
+            table = new TableClient(new Uri(options.TableUri, UriKind.Absolute), options.TableName, new ManagedIdentityCredential());
         }
         return table;
     }
