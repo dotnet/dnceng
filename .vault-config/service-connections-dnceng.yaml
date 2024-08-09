@@ -1,0 +1,117 @@
+storageLocation:
+  type: azure-devops-project
+  parameters:
+    organization: dnceng
+    project: internal
+
+references:
+  helixkv:
+    type: azure-key-vault
+    parameters:
+      subscription: a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1
+      name: helixkv
+
+secrets:
+  devdiv/dotnet-core-internal-tooling:
+    type: azure-devops-service-endpoint
+    parameters:
+      authorization:
+        type: azure-devops-access-token
+        parameters:
+          domainAccountName: dn-bot
+          domainAccountSecret:
+            location: helixkv
+            name: dn-bot-account-redmond
+          organizations: devdiv
+          scopes: package-rw
+
+  DevDiv - VS package feed:
+    type: azure-devops-service-endpoint
+    parameters:
+      authorization:
+        type: azure-devops-access-token
+        parameters:
+          domainAccountName: dn-bot
+          domainAccountSecret:
+            location: helixkv
+            name: dn-bot-account-redmond
+          organizations: devdiv
+          scopes: package-rw
+
+  devdiv/engineering-tools-feed:
+    type: azure-devops-service-endpoint
+    parameters:
+      authorization:
+        type: azure-devops-access-token
+        parameters:
+          domainAccountName: dn-bot
+          domainAccountSecret:
+            location: helixkv
+            name: dn-bot-account-redmond
+          organizations: devdiv
+          scopes: package-r
+
+  DevDiv Org - Repo Access:
+    type: azure-devops-service-endpoint
+    parameters:
+      authorization:
+        type: azure-devops-access-token
+        parameters:
+          domainAccountName: dn-bot
+          domainAccountSecret:
+            location: helixkv
+            name: dn-bot-account-redmond
+          organizations: devdiv
+          scopes: build-execute code-write
+
+  azure-public/vssdk:
+    type: azure-devops-service-endpoint
+    parameters:
+      authorization:
+        type: azure-devops-access-token
+        parameters:
+          domainAccountName: dn-bot
+          domainAccountSecret:
+            location: helixkv
+            name: dn-bot-account-redmond
+          organizations: azure-public
+          scopes: package-rw
+
+  azure-public/vs-impl:
+    type: azure-devops-service-endpoint
+    parameters:
+      authorization:
+        type: azure-devops-access-token
+        parameters:
+          domainAccountName: dn-bot
+          domainAccountSecret:
+            location: helixkv
+            name: dn-bot-account-redmond
+          organizations: azure-public
+          scopes: package-rw
+
+  dotnet-security-partners-dotnet-dotnet feed:
+    type: azure-devops-service-endpoint
+    parameters:
+      authorization:
+        type: azure-devops-access-token
+        parameters:
+          domainAccountName: dn-bot
+          domainAccountSecret:
+            location: helixkv
+            name: dn-bot-account-redmond
+          organizations: dnceng devdiv microsoft dotnet-security-partners
+          scopes: package-rw
+
+  dotnet-sb-validation feed:
+    type: azure-devops-service-endpoint
+    parameters:
+      authorization:
+        type: azure-devops-access-token
+        parameters:
+          domainAccountName: dn-bot
+          domainAccountSecret:
+            location: helixkv
+            name: dn-bot-account-redmond
+          organizations: dnceng devdiv microsoft dotnet-security-partners
+          scopes: package-rw
