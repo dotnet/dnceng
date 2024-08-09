@@ -14,8 +14,8 @@
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" />
-		<!--<PackageReference Include="Microsoft.Bot.Builder.Testing" />-->
-		<!--<PackageReference Include="Microsoft.Bot.Builder.Dialogs" />-->
+		<PackageReference Include="Microsoft.Bot.Builder.Testing" />
+		<PackageReference Include="Microsoft.Bot.Builder.Dialogs" />
 
 	</ItemGroup>
 	

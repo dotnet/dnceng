@@ -1,21 +1,28 @@
-// Based off Bot Builder V4 SDK Template for Visual Studio CoreBot v4.22.0
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 
-//using Chatbot.Tests.Bots;
-//using Chatbot.Tests.Common;
-using Microsoft.Bot.Builder;
-using Microsoft.Bot.Schema;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Moq;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Bot.Builder;
+using Microsoft.Bot.Builder.Adapters;
+using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Connector;
+using Microsoft.Bot.Schema;
 using Xunit;
 
-namespace Chatbot.Tests.Bots
+using CoreBot.Tests.Common;
+using Chatbot;
+using Microsoft.Extensions.Logging;
+using Moq;
+
+using Microsoft.Extensions.Configuration;
+
+
+namespace CoreBot.Tests.Bots
 {
-    public class GreetingTests
+    public class DialogAndWelcomeBotTests
     {
         private readonly Dictionary<string, string> _cards = new Dictionary<string, string>()
         {
@@ -25,40 +32,37 @@ namespace Chatbot.Tests.Bots
         };
 
         [Fact]
-        public async Task TestGreetingSent()
+        public async Task ReturnsWelcomeCardOnConversationUpdate()
         {
-            // Set up: Mock telemetry client, configuration, turn context
+            // Arrange
             Mock<ILogger<ChatbotForDNCEng>> mockLogger = new Mock<ILogger<ChatbotForDNCEng>>();
             Mock<IConfiguration> mockConfiguration = new Mock<IConfiguration>();
-            Mock<ITurnContext> mockTurnContext = new Mock<ITurnContext>();
-            Activity activity = new Activity
-            {
-                Type = ActivityTypes.ConversationUpdate,
-                MembersAdded = new List<ChannelAccount> { new ChannelAccount() { Id="user1", Name="User one", Role="user"} },
-                Recipient = new ChannelAccount() { Id = "bot1", Name = "Bot one", Role = "bot" }
-            };
-            mockTurnContext.Setup(tc => tc.Activity).Returns(activity);
-
-            CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-            CancellationToken cancellationToken = cancellationTokenSource.Token;
-
             ChatbotForDNCEng bot = new ChatbotForDNCEng(mockLogger.Object, mockConfiguration.Object);
 
-            // Expected value
-            Attachment expectedCard = ChatbotForDNCEng.CreateAdaptiveCardAttachment(_cards["WelcomeCard"]);
+            // Create conversationUpdate activity
+            var conversationUpdateActivity = new Activity
+            {
+                Type = ActivityTypes.ConversationUpdate,
+                MembersAdded = new List<ChannelAccount>
+                {
+                    new ChannelAccount { Id = "theUser" },
+                },
+                Recipient = new ChannelAccount { Id = "theBot" },
+            };
+            var testAdapter = new TestAdapter(Channels.Test);
 
             // Act
             // Send the conversation update activity to the bot.
-            //await bot.SendWelcomeMessageAsync(mockTurnContext.Object, cancellationToken);
-            await bot.OnTurnAsync(mockTurnContext.Object, cancellationToken);
+            await testAdapter.ProcessActivityAsync(conversationUpdateActivity, bot.OnTurnAsync, CancellationToken.None);
 
-            // Verify
-            // I think it should be twice, once for the bot to enter the channel and once for the user
-            var expectedActivity = MessageFactory.Attachment(expectedCard);
-            mockTurnContext.Verify(context => context.SendActivityAsync(expectedActivity,
-            It.IsAny<CancellationToken>()), Times.Once);
+            // Expected response
+            Attachment expected =  ChatbotForDNCEng.CreateAdaptiveCardAttachment(_cards["WelcomeCard"]);
 
-
+            // Assert we got the welcome card
+            var reply = (IMessageActivity)testAdapter.GetNextReply();
+            Assert.Equal(1, reply.Attachments.Count);
+            Assert.Equal("application/vnd.microsoft.card.adaptive", reply.Attachments.FirstOrDefault()?.ContentType);
+            Assert.Equal(expected.Content, reply.Attachments.FirstOrDefault()?.Content);
         }
     }
 }
