@@ -55,19 +55,18 @@ namespace Chatbot
             {
                 if (member.Id != turnContext.Activity.Recipient.Id)
                 {
-                    await turnContext.SendActivityAsync(MessageFactory.Attachment(cardAttachment), cancellationToken);
-                    await SendSuggestedActionsAsync("", turnContext, cancellationToken);
+                    IMessageActivity welcomeMessage = MessageFactory.Attachment(cardAttachment);
+                    welcomeMessage.SuggestedActions = CreateSuggestedActions();
+                    await turnContext.SendActivityAsync(welcomeMessage, cancellationToken);
                 }
             }
         }
 
         // Predefined Options
         // From bot framework samples
-        public async Task SendSuggestedActionsAsync(string parentMessage, ITurnContext turnContext, CancellationToken cancellationToken)
+        public static SuggestedActions CreateSuggestedActions()
         {
-            Activity reply = MessageFactory.Text(parentMessage);
-
-            reply.SuggestedActions = new SuggestedActions()
+            SuggestedActions actions = new SuggestedActions()
             {
                 Actions = new List<CardAction>()
                 {
@@ -76,8 +75,7 @@ namespace Chatbot
 
                 },
             };
-            await turnContext.SendActivityAsync(reply, cancellationToken);
-            _logger.LogDebug("Bot has sent Suggestion Actions.");
+            return actions;
         }
 
         // This method allows the bot to respond to a user message
@@ -109,7 +107,9 @@ namespace Chatbot
                     await turnContext.SendActivityAsync(MessageFactory.Attachment(aiResponse), cancellationToken);
                     break;
             }
-            await SendSuggestedActionsAsync(followup, turnContext, cancellationToken);
+            IMessageActivity followupActions = MessageFactory.Text(followup);
+            followupActions.SuggestedActions = CreateSuggestedActions();
+            await turnContext.SendActivityAsync(followupActions, cancellationToken);
         }
 
         // From bot framework samples
