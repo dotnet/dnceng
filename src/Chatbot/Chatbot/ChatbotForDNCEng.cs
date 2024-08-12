@@ -42,7 +42,6 @@ namespace Chatbot
         protected override async Task OnMembersAddedAsync(IList<ChannelAccount> membersAdded, ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
         {
             _logger.LogDebug("Bot is handling member added.");
-            // Send a welcome message to the user and tell them what actions they may perform to use this bot
             await SendWelcomeMessageAsync(turnContext, cancellationToken);
         }
 
@@ -62,7 +61,6 @@ namespace Chatbot
             }
         }
 
-        // Predefined Options
         // From bot framework samples
         public static SuggestedActions CreateSuggestedActions()
         {
@@ -89,7 +87,6 @@ namespace Chatbot
             String option = turnContext.Activity.Text.ToLower();
             String userRequest = turnContext.Activity.Text;
 
-            // Constants -> Predefined responses
             const String followup = "Is there anything else I can help you with today?";
 
             switch (option)
@@ -126,7 +123,7 @@ namespace Chatbot
 
         public static Attachment FormatLinks(String response, List<(String, String)> links)
         {
-            // This method formats the Azure OpenAI answer as an attachment to send back to the user
+            // This method formats the Azure OpenAI answer and citations as an attachment to send back to the user
             AdaptiveCard card = new AdaptiveCard(new AdaptiveSchemaVersion(1, 0));
 
             card.Body.Add(new AdaptiveTextBlock()
@@ -177,7 +174,6 @@ namespace Chatbot
             ChatClient chatClient = await CreateChatClient();
             ChatCompletionOptions chatCompletionsOptions = await ConfigChatOptions();
 
-            // Format the chat completion and send the request 
             List<ChatMessage> messages = new List<ChatMessage>
             { 
                 // If there is old chat history that you want to include, you would do it here
@@ -187,20 +183,12 @@ namespace Chatbot
                 new UserChatMessage(question),
             };
 
-            // Gets the AI generated response
             ChatCompletion completion = await chatClient.CompleteChatAsync(messages, chatCompletionsOptions);
 
             // Gets the message context: contains the citations, convo intent, and info about retrieved docs
             AzureChatMessageContext messageContext = completion.GetAzureMessageContext();
             IReadOnlyList<AzureChatCitation> citations = messageContext.Citations;
 
-            // Format each citation to send to the user
-            /*
-             * TODO for now keep citation url, but eventually when we get full paths from github we can get the github link
-             * from a search on the file path and use that link instead
-             * 
-             * Citations - repetitive bc referencing different chunks of the same file
-             */
             int currentCitation = 1;
             List<(String, String)> citationInfo = new List<(String, String)>();
             foreach (var citation in citations)
@@ -217,8 +205,6 @@ namespace Chatbot
 
         public async Task<ChatClient> CreateChatClient()
         {
-            // This method creates the chat client so the bot can get answers from Azure OpenAI
-            // For chat client
             _logger.LogDebug("Bot is creating chat client.");
             String openAIEndpoint = "https://testing-bot.openai.azure.com/";
             String openAIKey = await GetSecrets("AzureOpenAiApiKey");
@@ -226,7 +212,6 @@ namespace Chatbot
 
             AzureOpenAIClient azureClient = new(new Uri(openAIEndpoint), new ApiKeyCredential(openAIKey));
 
-            // Creates OpenAI Chat completions client
             ChatClient chatClient = azureClient.GetChatClient(openAIDeploymentName);
             _logger.LogDebug("Bot successfully created chat client.");
 
@@ -235,14 +220,12 @@ namespace Chatbot
 
         public async Task<ChatCompletionOptions> ConfigChatOptions()
         {
-            // This method creates the search client so that the bot can use our data instead of ChatGPT's training data
-            // Search service variables
             _logger.LogDebug("Bot is configuring search options.");
             String searchEndpoint = "https://testingbot-search.search.windows.net";
             String searchKey = await GetSecrets("AiSearchApiKey");
             String searchIndex = "all-data-auto-uploaded-daily";
 
-            // Configure the chat completions options to use our data
+            // Configure the chat completions options to use our data instead of ChatGPT's training data
             ChatCompletionOptions chatCompletionsOptions = new ChatCompletionOptions();
             chatCompletionsOptions.AddDataSource(new AzureSearchChatDataSource()
             {
@@ -253,17 +236,10 @@ namespace Chatbot
             _logger.LogDebug("Bot successfully created search options.");
 
             return chatCompletionsOptions;
-
-            // TODO maybe change the n because model might by default be generating more than 1 answer
-            // and it might be collecting more citations because of the other answers
-
-            // Maybe it could be the retrieved docs that changes the number of citations?
-            // Use regex matching to see which docs we need to link as a citation?
         }
 
         private async Task<String> GetSecrets(String secretName)
         {
-            // This method gets secrets needed to make the chat client and the search client
             _logger.LogDebug("Bot is getting secrets.");
             String keyVaultName = _configuration["KeyVaultName"];
             String kvUri = "https://" + keyVaultName + ".vault.azure.net";
@@ -281,21 +257,5 @@ namespace Chatbot
 
             return secret.Value;
         }
-
-        // Notes
-        /*
-         * TODO: new method: create messages in order to get previous context 
-         * Retrieve previous user messages up to 10: 5 bot/assistnat responses and 5 user messages
-         * Then add the service prompt and all previous messages
-         * Add the current message
-         * Print what messages looks like
-         * 
-         */
-
-        /*
-         * Need to save Conversation state in order to save previous messages
-         * When do I delete the conversation and how do I restrict it to only a certain number of convos
-         * How do I know the convo is over?
-         */
     }
 }
