@@ -85,7 +85,7 @@ namespace CoreBot.Tests.Bots
             // Expected response
             Attachment expected = ChatbotForDNCEng.CreateAdaptiveCardAttachment(_cards[expectdCard]);
 
-            // Assert we got the feedback card
+            // Assert we got the correct card
             IMessageActivity reply = (IMessageActivity)testAdapter.GetNextReply();
             Assert.Equal(1, reply.Attachments.Count);
             Assert.Equal("application/vnd.microsoft.card.adaptive", reply.Attachments.FirstOrDefault()?.ContentType);
@@ -119,7 +119,7 @@ namespace CoreBot.Tests.Bots
             // Expected response
             string notExpected = "The requested information is not available in the retrieved data. Please try another query or topic.";
 
-            // Assert we got the welcome card
+            // Assert the response doesn't contain "I don't know"
             IMessageActivity reply = (IMessageActivity)testAdapter.GetNextReply();
             Assert.Equal(1, reply.Attachments.Count);
             Assert.Equal("application/vnd.microsoft.card.adaptive", reply.Attachments.FirstOrDefault()?.ContentType);
@@ -153,7 +153,7 @@ namespace CoreBot.Tests.Bots
             // Expected response
             string expected = "The requested information is not available in the retrieved data. Please try another query or topic.";
 
-            // Assert we got the welcome card
+            // Assert we got "I don't know"
             IMessageActivity reply = (IMessageActivity)testAdapter.GetNextReply();
             Assert.Equal(1, reply.Attachments.Count);
             Assert.Equal("application/vnd.microsoft.card.adaptive", reply.Attachments.FirstOrDefault()?.ContentType);
