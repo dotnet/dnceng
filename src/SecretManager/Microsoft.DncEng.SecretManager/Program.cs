@@ -5,6 +5,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Microsoft.DncEng.CommandLineLib;
 using Microsoft.DncEng.SecretManager.ServiceConnections;
+using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http;
 
@@ -46,6 +47,7 @@ public class Program : DependencyInjectedConsoleApp
             });
         });
 
+        services.Configure<ServiceEndpointClient.Configuration>(config => {});
         services.AddSingleton<ServiceEndpointClient>();
     }
 }
