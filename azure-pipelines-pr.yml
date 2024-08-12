@@ -71,9 +71,9 @@ stages:
             useGlobalJson: true
 
         - task: UseDotNet@2
-          displayName: Install .NET Version 3.1
+          displayName: Install .NET 6
           inputs:
-            version: 3.1.x
+            version: 6
 
         - task: NuGetToolInstaller@0
           inputs:
