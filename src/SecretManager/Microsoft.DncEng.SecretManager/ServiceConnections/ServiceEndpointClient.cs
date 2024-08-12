@@ -20,6 +20,7 @@ namespace Microsoft.DncEng.SecretManager.ServiceConnections;
 
 public class ServiceEndpointClient
 {
+    #nullable disable
     public class Configuration
     {
         public string Organization { get; set; }
@@ -33,6 +34,7 @@ public class ServiceEndpointClient
             Project = project;
         }
     }
+    #nullable enable
 
     private static readonly string _apiVersion = "7.2-preview.4";
 
@@ -58,11 +60,11 @@ public class ServiceEndpointClient
             // 499b84ac-1321-427f-aa17-267ca6975798 is the Azure DevOps API application
             // https://ms.portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/71dba5a0-a77c-4b64-bcc4-f5f98be267fe/appId/499b84ac-1321-427f-aa17-267ca6975798
             TokenRequestContext requestContext = new(["499b84ac-1321-427f-aa17-267ca6975798"]);
-            AccessToken _currentAccessToken = await tokenCredential.GetTokenAsync(requestContext, cancellationToken);
+            _currentAccessToken = await tokenCredential.GetTokenAsync(requestContext, cancellationToken);
 
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic",
             Convert.ToBase64String(
-                Encoding.ASCII.GetBytes($":{_currentAccessToken.Token}")));
+                Encoding.ASCII.GetBytes($":{_currentAccessToken.Value.Token}")));
         }
     }
 

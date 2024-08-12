@@ -16,7 +16,7 @@ internal class AdoServiceEndpoint
 
     public ServiceEndpointProjectReference[] ServiceEndpointProjectReferences { get; set; }
 
-    public EndpointAuthorization Authorization { get; set; }
+    public EndpointAuthorization? Authorization { get; set; }
 
     [JsonExtensionData]
     public IDictionary<string, object>? AdditionalData { get; set; }
