@@ -73,7 +73,7 @@ stages:
         - task: UseDotNet@2
           displayName: Install .NET 6
           inputs:
-            version: 6
+            version: 6.x
 
         - task: NuGetToolInstaller@0
           inputs:
