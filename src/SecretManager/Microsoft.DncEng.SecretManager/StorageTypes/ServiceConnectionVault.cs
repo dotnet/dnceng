@@ -37,8 +37,6 @@ public class ServiceConnectionVault : StorageLocationType<ServiceConnectionVault
     {
         _logger = logger;
         _serviceProvider = serviceProvider;
-
-        
     }
 
     public override Task EnsureKeyAsync(ServiceConnectionVaultParameters parameters, string name, SecretManifest.Key config) => throw new NotImplementedException();
