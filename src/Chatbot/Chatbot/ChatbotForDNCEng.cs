@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-
 using AdaptiveCards;
 using Azure.AI.OpenAI;
 using Azure.AI.OpenAI.Chat;
@@ -185,6 +184,31 @@ namespace Chatbot
 
             ChatCompletion completion = await chatClient.CompleteChatAsync(messages, chatCompletionsOptions);
 
+            //// Gets the message context: contains the citations, convo intent, and info about retrieved docs
+            //AzureChatMessageContext messageContext = completion.GetAzureMessageContext();
+            //IReadOnlyList<AzureChatCitation> citations = messageContext.Citations;
+
+            //int currentCitation = 1;
+            //List<(String, String)> citationInfo = new List<(String, String)>();
+            //foreach (var citation in citations)
+            //{
+            //    String citationTitle = "Doc " + currentCitation.ToString() + ": " + citation.Filepath;
+            //    citationInfo.Add((citationTitle, GetGithubUrl(citation.Url)));
+            //    currentCitation++;
+            //}
+            List<(String, String)> citationInfo = GetCitations(completion);
+
+            Attachment responseCard = FormatLinks(completion.Content[0].Text, citationInfo);
+            return responseCard;
+
+        }
+
+        public List<(String, String)> GetCitations(ChatCompletion completion)
+        {
+            if (completion.Content[0].Text.Contains("The requested information is not available in the retrieved data. Please try another query or topic."))
+            {
+                return new List<(string, string)> { };
+            }
             // Gets the message context: contains the citations, convo intent, and info about retrieved docs
             AzureChatMessageContext messageContext = completion.GetAzureMessageContext();
             IReadOnlyList<AzureChatCitation> citations = messageContext.Citations;
@@ -194,13 +218,25 @@ namespace Chatbot
             foreach (var citation in citations)
             {
                 String citationTitle = "Doc " + currentCitation.ToString() + ": " + citation.Filepath;
-                citationInfo.Add((citationTitle, citation.Url));
+                citationInfo.Add((citationTitle, GetGithubUrl(citation.Url)));
                 currentCitation++;
             }
+            return citationInfo;
+        }
 
-            Attachment responseCard = FormatLinks(completion.Content[0].Text, citationInfo);
-            return responseCard;
+        public String GetGithubUrl(string blobUrl)
+        {
+            if (string.IsNullOrEmpty(blobUrl))
+            {
+                return "";
+            }
+            
+            String githubPath = blobUrl.Split("https://explorerstestdata.blob.core.windows.net/automationdemo/")[1];
+            String[] pathParts = githubPath.Split("/", 2);
+            String repo = pathParts[0];
+            String path = pathParts[1];
 
+            return $"https://github.com/dotnet/{repo}/blob/main/{path}";
         }
 
         public async Task<ChatClient> CreateChatClient()

@@ -1,11 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Chatbot;
 using Microsoft.Bot.Builder.Adapters;
 using Microsoft.Bot.Connector;
@@ -22,10 +23,24 @@ namespace CoreBot.Tests.Bots
     {
         private readonly Dictionary<string, string> _cards = new Dictionary<string, string>()
         {
-            {"FeedbackCard", @"C:\Users\t-calikuang\source\repos\dnceng\src\Chatbot\Chatbot\Resources\FeedbackCard.json"},
-            {"ContactSheet", @"C:\Users\t-calikuang\source\repos\dnceng\src\Chatbot\Chatbot\Resources\ContactSheet.json"},
-            {"WelcomeCard", @"C:\Users\t-calikuang\source\repos\dnceng\src\Chatbot\Chatbot\Resources\WelcomeCard.json"}
+            //{"FeedbackCard", @"C:\Users\t-calikuang\source\repos\dnceng\src\Chatbot\Chatbot\Resources\FeedbackCard.json"},
+            //{"ContactSheet", @"C:\Users\t-calikuang\source\repos\dnceng\src\Chatbot\Chatbot\Resources\ContactSheet.json"},
+            //{"WelcomeCard", @"C:\Users\t-calikuang\source\repos\dnceng\src\Chatbot\Chatbot\Resources\WelcomeCard.json"}
         };
+        public DialogAndWelcomeBotTests() 
+        {
+            
+            var basePath = Path.GetDirectoryName(typeof(ChatbotForDNCEng).Assembly.Location);
+            basePath ??= "";
+
+            string resourcesPath = Path.GetFullPath(Path.Combine(basePath, "Resources"));
+
+            foreach (string filePath in Directory.EnumerateFiles(resourcesPath, "*.json", SearchOption.AllDirectories))
+            {
+                _cards.Add(Path.GetFileNameWithoutExtension(filePath), filePath);
+            }
+
+        }
 
         [Fact]
         public async Task ReturnsWelcomeCardOnConversationUpdate()
