@@ -254,7 +254,7 @@ extends:
           -TsaPublish $True
           -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)/eng/PoliCheckExclusions.xml")'
     - template: /eng/deploy.yaml@self
-    parameters:
+      parameters:
         ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/production') }}:
         DeploymentEnvironment: Staging
         DotNetStatusAppName: dotneteng-status-staging
