@@ -256,15 +256,15 @@ extends:
     - template: /eng/deploy.yaml@self
       parameters:
         ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/production') }}:
-        DeploymentEnvironment: Staging
-        DotNetStatusAppName: dotneteng-status-staging
-        DotNetStatusEndpoint: .NET Engineering Deployment Notification - Staging
-        PublishProfile: Int
-        RolloutScorerAppName: rollout-scorer-int
-        ServiceConnectionName: NetHelixStaging
-        StatusVariableGroup: DotNetStatus Staging
-        GrafanaHost: https://dotnet-eng-grafana-staging.westus2.cloudapp.azure.com
-        GrafanaKeyVault: dotnet-grafana-staging
-        GrafanaVariableGroup: Dotnet-Grafana-Staging
-        ServiceConnectionClientId: 57f299da-15de-4117-b8f6-7c10451926f0
-        ServiceConnectionId: 7829de7e-fb4e-4118-8370-475d6bc61905
+          DeploymentEnvironment: Staging
+          DotNetStatusAppName: dotneteng-status-staging
+          DotNetStatusEndpoint: .NET Engineering Deployment Notification - Staging
+          PublishProfile: Int
+          RolloutScorerAppName: rollout-scorer-int
+          ServiceConnectionName: NetHelixStaging
+          StatusVariableGroup: DotNetStatus Staging
+          GrafanaHost: https://dotnet-eng-grafana-staging.westus2.cloudapp.azure.com
+          GrafanaKeyVault: dotnet-grafana-staging
+          GrafanaVariableGroup: Dotnet-Grafana-Staging
+          ServiceConnectionClientId: 57f299da-15de-4117-b8f6-7c10451926f0
+          ServiceConnectionId: 7829de7e-fb4e-4118-8370-475d6bc61905
