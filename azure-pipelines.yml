@@ -268,15 +268,3 @@ extends:
         GrafanaVariableGroup: Dotnet-Grafana-Staging
         ServiceConnectionClientId: 57f299da-15de-4117-b8f6-7c10451926f0
         ServiceConnectionId: 7829de7e-fb4e-4118-8370-475d6bc61905
-        DeploymentEnvironment: Production
-        DotNetStatusAppName: dotneteng-status
-        DotNetStatusEndpoint: .NET Engineering Deployment Notification - Production
-        PublishProfile: Prod
-        RolloutScorerAppName: rollout-scorer-prod
-        ServiceConnectionName: NetHelix
-        StatusVariableGroup: DotNetStatus Production
-        GrafanaHost: https://dotnet-eng-grafana.westus2.cloudapp.azure.com
-        GrafanaKeyVault: dotnet-grafana
-        GrafanaVariableGroup: Dotnet-Grafana-Production
-        ServiceConnectionClientId: fc1eb341-aea4-4a11-8f80-d14b8775b2ba
-        ServiceConnectionId: 4a511f6f-b538-48e6-a389-207e430634d1
