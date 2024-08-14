@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Azure;
 using System;
 using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
@@ -11,17 +12,18 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Azure.Data.Tables;
 using DotNet.Status.Web.Options;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.DotNet.Services.Utility;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Auth;
-using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using StatusWebAnnotationEntity = DotNet.Status.Web.Models.AnnotationEntity;
+using Microsoft.WindowsAzure.Storage.Table;
+using Azure.Identity;
 
 namespace DotNet.Status.Web.Controllers;
 
@@ -86,15 +88,11 @@ public class DeploymentController : ControllerBase
         }
         _logger.LogInformation("Created annotation {annotationId}, inserting into table", annotation.Id);
 
-        CloudTable table = await GetCloudTable();
-        await table.ExecuteAsync(
-            TableOperation.InsertOrReplace(
-                new AnnotationEntity(service, id, annotation.Id)
-                {
-                    ETag = "*"
-                }
-            )
-        );
+        TableClient table = await GetCloudTable();
+        await table.UpsertEntityAsync(new DotNet.Status.Web.Models.AnnotationEntity(service, id, annotation.Id)
+        {
+            ETag = new Azure.ETag("*")
+        });
         return NoContent();
     }
 
@@ -102,19 +100,22 @@ public class DeploymentController : ControllerBase
     public async Task<IActionResult> MarkEnd([Required] string service, [Required] string id)
     {
         _logger.LogInformation("Recording end of deployment of '{service}' with id '{id}'", service, id);
-        CloudTable table = await GetCloudTable();
+        TableClient table = await GetCloudTable();
         _logger.LogInformation("Looking for existing deployment");
-        var tableResult = await table.ExecuteAsync(TableOperation.Retrieve<AnnotationEntity>(service, id));
-        _logger.LogTrace("Table response code {responseCode}", tableResult.HttpStatusCode);
-        if (!(tableResult.Result is AnnotationEntity annotation))
+        var getResult = await table.GetEntityIfExistsAsync<StatusWebAnnotationEntity>(service, id);
+        _logger.LogTrace("Table response code {responseCode}", getResult.GetRawResponse().Status);
+        if (!getResult.HasValue)
         {
             return NotFound();
         }
 
+        var annotation = getResult.Value;
+
         _logger.LogTrace("Updating end time of deployment...");
         annotation.Ended = DateTimeOffset.UtcNow;
-        tableResult = await table.ExecuteAsync(TableOperation.Replace(annotation));
-        _logger.LogInformation("Update response code {responseCode}", tableResult.HttpStatusCode);
+       
+        var updateResult = await table.UpdateEntityAsync(annotation, annotation.ETag, TableUpdateMode.Replace);
+        _logger.LogInformation("Update response code {responseCode}", updateResult.Status);
             
         var content = new NewGrafanaAnnotationRequest
         {
@@ -149,18 +150,18 @@ public class DeploymentController : ControllerBase
         return NoContent();
     }
 
-    private async Task<CloudTable> GetCloudTable()
+    private async Task<TableClient> GetCloudTable()
     {
-        CloudTable table;
+        TableClient table;
+        GrafanaOptions options = _grafanaOptions.CurrentValue;
         if (_env.IsDevelopment())
         {
-            table = CloudStorageAccount.DevelopmentStorageAccount.CreateCloudTableClient().GetTableReference("deployments");
+            table = new TableClient("UseDevelopmentStorage=true", options.TableName);
             await table.CreateIfNotExistsAsync();
         }
         else
         {
-            GrafanaOptions options = _grafanaOptions.CurrentValue;
-            table = new CloudTable(new Uri(options.TableUri, UriKind.Absolute));
+            table = new TableClient(new Uri(options.TableUri, UriKind.Absolute), options.TableName, new ManagedIdentityCredential());
         }
         return table;
     }
