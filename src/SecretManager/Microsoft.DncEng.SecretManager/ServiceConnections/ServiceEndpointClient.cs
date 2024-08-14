@@ -71,8 +71,6 @@ public class ServiceEndpointClient
     // https://learn.microsoft.com/en-us/rest/api/azure/devops/serviceendpoint/endpoints/get?view=azure-devops-rest-7.2&tabs=HTTP
     public async Task<ServiceEndpoint> Get(Guid id, CancellationToken cancellationToken = default)
     {
-        Console.WriteLine("Whoa!");
-
         Uri endpoint = CreateGetUri(config, id, _apiVersion);
 
         AdoServiceEndpoint? responseBody;
