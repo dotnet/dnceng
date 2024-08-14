@@ -14,8 +14,9 @@ using Azure.Security.KeyVault.Secrets;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Configuration;
-using OpenAI.Chat;
 using Microsoft.Extensions.Logging;
+using OpenAI.Chat;
+
 
 namespace Chatbot
 {
