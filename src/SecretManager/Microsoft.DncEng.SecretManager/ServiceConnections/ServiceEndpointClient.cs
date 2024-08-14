@@ -155,7 +155,6 @@ public class ServiceEndpointClient
 
         }
 
-        // TODO: Should I validate the JsonNode schema? If so, do it everywhere.
         if (data.AccessToken is not null)
         {
             if (getResponseBody["authorization"]!["parameters"]!.AsObject().ContainsKey("nugetkey"))
@@ -174,7 +173,6 @@ public class ServiceEndpointClient
 
         Uri updateEndpoint = CreateUpdateUri(config, id, _apiVersion);
 
-        //using HttpResponseMessage postResponseBody = await _httpClient.PutAsJsonAsync(updateEndpoint, getResponseBody, cancellationToken);
         using HttpResponseMessage postResponseBody = await HttpClientJsonExtensions.PutAsJsonAsync(_httpClient, updateEndpoint, getResponseBody, cancellationToken);
 
         try
