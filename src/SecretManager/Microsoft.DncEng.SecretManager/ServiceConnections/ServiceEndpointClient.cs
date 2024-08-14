@@ -58,7 +58,7 @@ public class ServiceEndpointClient
         {
             TokenCredential tokenCredential = await _tokenCredentialProvider.GetCredentialAsync();
             // 499b84ac-1321-427f-aa17-267ca6975798 is the Azure DevOps API application
-            // https://ms.portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/71dba5a0-a77c-4b64-bcc4-f5f98be267fe/appId/499b84ac-1321-427f-aa17-267ca6975798
+            // https://learn.microsoft.com/en-us/rest/api/azure/devops/tokens/?view=azure-devops-rest-7.1&tabs=powershell 
             TokenRequestContext requestContext = new(["499b84ac-1321-427f-aa17-267ca6975798"]);
             _currentAccessToken = await tokenCredential.GetTokenAsync(requestContext, cancellationToken);
 
