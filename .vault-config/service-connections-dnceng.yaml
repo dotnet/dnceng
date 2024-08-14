@@ -100,7 +100,7 @@ secrets:
           domainAccountSecret:
             location: helixkv
             name: dn-bot-account-redmond
-          organizations: dnceng devdiv microsoft dotnet-security-partners
+          organizations: dotnet-security-partners
           scopes: package-rw
 
   dotnet-sb-validation feed:
@@ -113,5 +113,5 @@ secrets:
           domainAccountSecret:
             location: helixkv
             name: dn-bot-account-redmond
-          organizations: dnceng devdiv microsoft dotnet-security-partners
+          organizations: dnceng
           scopes: package-rw
