@@ -21,12 +21,7 @@ namespace CoreBot.Tests.Bots
 {
     public class DialogAndWelcomeBotTests
     {
-        private readonly Dictionary<string, string> _cards = new Dictionary<string, string>()
-        {
-            //{"FeedbackCard", @"C:\Users\t-calikuang\source\repos\dnceng\src\Chatbot\Chatbot\Resources\FeedbackCard.json"},
-            //{"ContactSheet", @"C:\Users\t-calikuang\source\repos\dnceng\src\Chatbot\Chatbot\Resources\ContactSheet.json"},
-            //{"WelcomeCard", @"C:\Users\t-calikuang\source\repos\dnceng\src\Chatbot\Chatbot\Resources\WelcomeCard.json"}
-        };
+        private readonly Dictionary<string, string> _cards = new Dictionary<string, string>();
         public DialogAndWelcomeBotTests() 
         {
             
