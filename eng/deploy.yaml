@@ -184,7 +184,7 @@ stages:
       inputs:
         azureSubscription: ${{ parameters.ServiceConnectionName }}
         appType: 'webApp'
-        appName: 'explore24chatbot'
+        appName: 'Explore24Chatbot'
         package: '$(Build.ArtifactStagingDirectory)/Chatbot/package/Chatbot.zip'
 
 - stage: postdeploy
