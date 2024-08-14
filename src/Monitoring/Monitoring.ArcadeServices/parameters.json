@@ -164,7 +164,7 @@
     "Name": "chatbot-storageaccount-resourcename",
     "Values": {
       "Staging": "explorerstestdata",
-      "Production": "PLACEHOLDER"
+      "Production": "explorerstestdata"
     }
   },
   {
