@@ -185,18 +185,6 @@ namespace Chatbot
 
             ChatCompletion completion = await chatClient.CompleteChatAsync(messages, chatCompletionsOptions);
 
-            //// Gets the message context: contains the citations, convo intent, and info about retrieved docs
-            //AzureChatMessageContext messageContext = completion.GetAzureMessageContext();
-            //IReadOnlyList<AzureChatCitation> citations = messageContext.Citations;
-
-            //int currentCitation = 1;
-            //List<(String, String)> citationInfo = new List<(String, String)>();
-            //foreach (var citation in citations)
-            //{
-            //    String citationTitle = "Doc " + currentCitation.ToString() + ": " + citation.Filepath;
-            //    citationInfo.Add((citationTitle, GetGithubUrl(citation.Url)));
-            //    currentCitation++;
-            //}
             List<(String, String)> citationInfo = GetCitations(completion);
 
             Attachment responseCard = FormatLinks(completion.Content[0].Text, citationInfo);
