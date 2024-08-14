@@ -182,7 +182,7 @@ stages:
       artifact: Chatbot
     - task: AzureWebApp@1
       inputs:
-        azureSubscription: ${{ parameters.ServiceConnectionName }}
+        azureSubscription: dnceng-internaltooling
         appType: 'webApp'
         appName: 'Explore24Chatbot'
         package: '$(Build.ArtifactStagingDirectory)/Chatbot/package/Chatbot.zip'
