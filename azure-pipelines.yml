@@ -213,16 +213,16 @@ extends:
                 archiveFile: $(Build.ArtifactStagingDirectory)/RolloutScorerAzureFunction/package/RolloutScorer.zip
                 replaceExistingArchive: true
                 
-            - script: $(Build.SourcesDirectory)\.dotnet\dotnet publish -c Release -o $(Build.ArtifactStagingDirectory)\Chatbot\publish
+            - script: $(Build.SourcesDirectory)\.dotnet\dotnet publish -c Release -o $(Build.ArtifactStagingDirectory)\Chatbot\publish -f net6.0
               workingDirectory: src/Chatbot/Chatbot
               displayName: dotnet publish Chatbot
 
             - task: ArchiveFiles@2
               inputs:
-                rootFolderOrFile: $(Build.ArtifactStagingDirectory)\Chatbot\publish
+                rootFolderOrFile: $(Build.ArtifactStagingDirectory)/Chatbot/publish
                 includeRootFolder: false
                 archiveType: zip
-                archiveFile: $(Build.ArtifactStagingDirectory)/Chatbot/package/Chatbot.zip
+                archiveFile: $(Build.ArtifactStagingDirectory)/Chatbot/Chatbot.zip
                 replaceExistingArchive: true
 
             ## Prepare release utilities artifact
