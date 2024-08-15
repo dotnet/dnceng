@@ -7,6 +7,8 @@ using Azure;
 
 public class Program
 {
+    private const int GitHubLimitMaxRecords = 1000; // Define a constant for the maximum number of records
+
     public async Task<List<BlobItem>> GetBlobItemsAsync(BlobContainerClient containerClient)
     {
         var blobItems = new List<BlobItem>();
@@ -31,15 +33,16 @@ public class Program
             string githubToken = (await client.GetSecretAsync("githubToken")).Value.Value;
             string connectionString = (await client.GetSecretAsync("connectionString")).Value.Value;
             string containerName = "automationdemo";
+            string accountName = "explorerstestdata";
 
             // Initialize program instance
             Program program = new Program();
 
             // Upload files from Arcade Repo
-            await program.UploadMDFilesToBlob(githubToken, connectionString, "dotnet", "arcade", containerName);
+            await program.UploadMDFilesToBlob(githubToken, connectionString, "dotnet", "arcade", containerName, accountName);
 
             // Upload files from dnceng Repo
-            await program.UploadMDFilesToBlob(githubToken, connectionString, "dotnet", "dnceng", containerName);
+            await program.UploadMDFilesToBlob(githubToken, connectionString, "dotnet", "dnceng", containerName, accountName);
         }
         catch (Exception ex)
         {
@@ -48,39 +51,50 @@ public class Program
         }
     }
 
-    public async Task UploadMDFilesToBlob(string githubToken, string connectionString, string owner, string repo, string containerName)
+    public async Task UploadMDFilesToBlob(string githubToken, string connectionString, string owner, string repo, string containerName, string accountName)
     {
         try
         {
             // Initialize GitHub client
-            var githubClient = new GitHubClient(new ProductHeaderValue($"{repo}-md-uploader"));
-            githubClient.Credentials = new Credentials(githubToken);
+            var githubClient = new GitHubClient(new ProductHeaderValue($"{repo}-md-uploader"))
+            {
+                Credentials = new Credentials(githubToken)
+            };
 
             // Initialize Azure Blob Storage client
-            BlobServiceClient blobServiceClient = new BlobServiceClient(new DefaultAzureCredential());
-            BlobContainerClient containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+            var containerEndpoint = $"https://{accountName}.blob.core.windows.net/{containerName}";
+            var containerClient = new BlobContainerClient(new Uri(containerEndpoint), new DefaultAzureCredential());
 
             // Retrieve existing blobs
             var existingBlobs = await GetBlobItemsAsync(containerClient);
             var existingBlobPaths = new HashSet<string>(existingBlobs.Select(b => b.Name));
 
-            // Define the maximum number of pages for pagination (GitHub API limit)
-            int maxPages = 10;
+            // Counters for tracking
+            int uploadedFilesCount = 0;
+            // int deletedFilesCount = 0; // Counter for deleted files removed
+
+            int recordsPerPage = 100;
+            int page = 1;
+            int totalResults = 0;
             var newBlobPaths = new HashSet<string>();
 
-            // Loop through pages of results from GitHub API
-            for (int page = 1; page <= maxPages; page++)
+            SearchCodeResult result = null;
+
+            do
             {
-                var request = new SearchCodeRequest("extension:md repo:" + owner + "/" + repo)
+                int recordsToRetrieve = Math.Min(recordsPerPage, GitHubLimitMaxRecords - totalResults);
+
+                var request = new SearchCodeRequest($"extension:md repo:{owner}/{repo}")
                 {
-                    PerPage = 100,
+                    PerPage = recordsToRetrieve,
                     Page = page
                 };
-                var result = await githubClient.Search.SearchCode(request);
+
+                result = await githubClient.Search.SearchCode(request);
 
                 if (result.Items == null || !result.Items.Any())
                 {
-                    break; // Exit loop if no more items are returned
+                    break;
                 }
 
                 // Upload each Markdown file to Azure Blob Storage
@@ -91,55 +105,34 @@ public class Program
 
                     var blobClient = containerClient.GetBlobClient(newPath);
                     var rawContent = await githubClient.Repository.Content.GetRawContent(owner, repo, file.Path);
+
                     using var ms = new MemoryStream(rawContent);
                     await blobClient.UploadAsync(ms, overwrite: true);
 
+                    uploadedFilesCount++;
                     Console.WriteLine($"Uploaded {repo}/{file.Path}");
                 }
-            }
 
-            // Delete blobs that are no longer present in the GitHub repository
-            // Iterate through each existing blob path retrieved from the Azure Blob Storage container
-            foreach (var existingBlobPath in existingBlobPaths)
-            {
-                // Check if the current blob path is not present in the list of new blob paths (i.e., it has been removed from the GitHub repository)
-                if (!newBlobPaths.Contains(existingBlobPath))
-                {
-                    // Create a BlobClient for the current blob path, allowing operations like deletion on that specific blob
-                    var blobClient = containerClient.GetBlobClient(existingBlobPath);
+                totalResults += result.Items.Count;
+                page++;
 
-                    try
-                    {
-                        // Attempt to delete the blob if it exists. This method returns true if the blob was deleted or false if it did not exist
-                        await blobClient.DeleteIfExistsAsync();
+            } while (totalResults < GitHubLimitMaxRecords && result.Items.Any());
 
-                        // Log the successful deletion of the blob
-                        Console.WriteLine($"Deleted {existingBlobPath}");
-                    }
-                    catch (RequestFailedException ex) when (ex.ErrorCode == BlobErrorCode.BlobNotFound)
-                    {
-                        // This block is executed if the deletion fails because the blob was not found (e.g., it was already deleted or never existed)
-                        Console.WriteLine($"Blob not found for deletion: {existingBlobPath}");
-                    }
-                    catch (Exception ex)
-                    {
-                        // This block catches any other exceptions that might occur during the deletion process
-                        // For example, network issues or permission problems might cause this exception
-                        // log the error message to help diagnose the issue
-                        Console.WriteLine($"Error deleting blob {existingBlobPath}: {ex.Message}");
-                    }
-                }
-            }
+            // NOTE: Code for deleting files from blob storage that were deleted in GitHub has been removed
+            // due to issues with file mismatches and unintended deletions.
 
-
-            Console.WriteLine($"Uploaded and cleaned up files for repository {repo}.");
+            // Report results
+            Console.WriteLine($"Total files uploaded: {uploadedFilesCount}");
+            Console.WriteLine($"Uploaded files for repository {repo}.");
         }
         catch (Exception ex)
         {
             Console.WriteLine($"An error occurred: {ex.Message}");
-            throw; // Rethrow to ensure that exceptions are visible in tests
+            throw;
         }
     }
+
+
 
 
 

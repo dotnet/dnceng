@@ -67,7 +67,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UploadDocs", "UploadDocs", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UploadDocs", "src\Chatbot\UploadDocs\UploadDocs.csproj", "{1941D6A2-CAA3-4452-A9CD-3E8D35475697}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UploadDocs.Tests", "UploadDocs.Tests\UploadDocs.Tests.csproj", "{34498E49-DBDB-4FAE-B40E-131801FC2B65}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UploadDocs.Tests", "src\Chatbot\UploadDocs.Tests\UploadDocs.Tests.csproj", "{34498E49-DBDB-4FAE-B40E-131801FC2B65}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
