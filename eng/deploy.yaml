@@ -172,20 +172,21 @@ stages:
         package: $(Pipeline.Workspace)/RolloutScorer/RolloutScorer.zip
         appName: ${{ parameters.RolloutScorerAppName }}
 
-  - job: deployChatbot
-    displayName: Deploy chatbot
-    pool:
-      name: NetCore1ESPool-Internal-NoMSI
-      demands: ImageOverride -equals 1es-windows-2019
-    steps:
-    - download: current
-      artifact: Chatbot
-    - task: AzureWebApp@1
-      inputs:
-        azureSubscription: dnceng-internaltooling
-        appType: 'webApp'
-        appName: 'Explore24Chatbot'
-        package: '$(Build.ArtifactStagingDirectory)/Chatbot/package/Chatbot.zip'
+  - ${{ if eq(parameters.DeploymentEnvironment, 'Staging') }}:
+      - job: deployChatbot
+        displayName: Deploy chatbot
+        pool:
+          name: NetCore1ESPool-Internal-NoMSI
+          demands: ImageOverride -equals 1es-windows-2019
+        steps:
+        - download: current
+          artifact: Chatbot
+        - task: AzureWebApp@1
+          inputs:
+            azureSubscription: dnceng-internaltooling
+            appType: 'webApp'
+            appName: 'Explore24Chatbot'
+            package: '$(Pipeline.Workspace)/Chatbot/Chatbot.zip'
 
 - stage: postdeploy
   displayName: Post-Deployment
