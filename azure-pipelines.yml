@@ -81,7 +81,7 @@ extends:
                   artifactName: Microsoft.DncEng.SecretManager.ScenarioTests
                 - output: pipelineArtifact
                   displayName: 'Publish Chatbot'
-                  targetPath: $(Build.SourcesDirectory)\artifacts\bin\Chatbot\$(_BuildConfig)\net6.0
+                  targetPath: $(Build.ArtifactStagingDirectory)/Chatbot/package
                   artifactName: Chatbot
             variables:
             # DotNet-Blob-Feed provides: dotnetfeed-storage-access-key-1
@@ -222,7 +222,7 @@ extends:
                 rootFolderOrFile: $(Build.ArtifactStagingDirectory)/Chatbot/publish
                 includeRootFolder: false
                 archiveType: zip
-                archiveFile: $(Build.ArtifactStagingDirectory)/Chatbot/Chatbot.zip
+                archiveFile: $(Build.ArtifactStagingDirectory)/Chatbot/package/Chatbot.zip
                 replaceExistingArchive: true
 
             ## Prepare release utilities artifact
