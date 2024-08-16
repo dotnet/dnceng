@@ -166,12 +166,5 @@
       "Staging": "explorerstestdata",
       "Production": "explorerstestdata"
     }
-  },
-  {
-    "Name": "PLACEHOLDER:a125b15a-7109-45b6-aa71-ddf4cfa05770",
-    "Values": {
-      "Staging": "84a65c9a-787d-45da-b10a-3a1cefce8060",
-      "Production": "PLACEHOLDER"
-    }
   }
 ]
