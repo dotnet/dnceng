@@ -30,3 +30,21 @@ stages:
           scriptLocation: inlineScript
           inlineScript: |
             Get-ChildItem .vault-config/*.yaml |% { dotnet run --project src/SecretManager/Microsoft.DncEng.SecretManager -- synchronize --skip-untracked $_}
+    
+    - job: UploadMarkdownFiles
+      pool:
+        name: NetCore1ESPool-Internal-NoMSI
+        demands: ImageOverride -equals 1es-windows-2022
+      steps:
+      - checkout: git://dotnet/Arcade
+      - checkout: git://dotnet/dnceng/src/Chatbot/UploadDocs@dev/internship
+
+      - task: AzureCLI@2
+        displayName: 'Run UploadDocs Console App'
+        inputs:
+          azureSubscription: $(dnceng-internaltooling)
+          scriptType: ps
+          scriptLocation: 'inlineScript'
+          inlineScript: >
+            dotnet build $(Pipeline.Workspace)/Binaries/UploadDocs/UploadDocs.csproj -c Release
+            dotnet $(Pipeline.Workspace)/Binaries/UploadDocs/Release/net6.0/publish/UploadDocs.dll
