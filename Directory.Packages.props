@@ -53,7 +53,7 @@
     <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="17.1.0" />
     <PackageVersion Include="Microsoft.Data.SqlClient" Version="2.1.7" />
     <PackageVersion Include="Microsoft.DncEng.CommandLineLib" Version="$(MicrosoftDncEngCommandLineLibVersion)" />
-	<PackageVersion Include="Microsoft.DncEng.Configuration.Extensions" Version="$(MicrosoftDncEngConfigurationExtensionsVersion)" />
+    <PackageVersion Include="Microsoft.DncEng.Configuration.Extensions" Version="$(MicrosoftDncEngConfigurationExtensionsVersion)" />
     <PackageVersion Include="Microsoft.DotNet.Authentication.Algorithms" Version="$(MicrosoftDotNetAuthenticationAlgorithmsVersion)" />
     <PackageVersion Include="Microsoft.DotNet.GitHub.Authentication" Version="$(MicrosoftDotNetGitHubAuthenticationVersion)" />
     <PackageVersion Include="Microsoft.DotNet.Internal.DependencyInjection" Version="$(MicrosoftDotNetInternalDependencyInjectionVersion)" />
