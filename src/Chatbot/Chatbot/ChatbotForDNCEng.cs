@@ -100,7 +100,6 @@ namespace Chatbot
                     await turnContext.SendActivityAsync(MessageFactory.Attachment(contactAttachment), cancellationToken);
                     break;
                 default:
-                    await turnContext.SendActivityAsync(MessageFactory.Text("Hmm let me think..."), cancellationToken);
                     Attachment aiResponse = await AskOpenAI(userRequest);
                     await turnContext.SendActivityAsync(MessageFactory.Attachment(aiResponse), cancellationToken);
                     break;
