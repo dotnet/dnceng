@@ -42,7 +42,7 @@ stages:
       - task: AzureCLI@2
         displayName: 'Run UploadDocs Console App'
         inputs:
-          azureSubscription: $(dnceng-internaltooling)
+          azureSubscription: 'dnceng-internaltooling'
           scriptType: ps
           scriptLocation: 'inlineScript'
           inlineScript: >
