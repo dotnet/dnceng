@@ -36,8 +36,8 @@ stages:
         name: NetCore1ESPool-Internal-NoMSI
         demands: ImageOverride -equals 1es-windows-2022
       steps:
+      - checkout: self
       - checkout: git://internal/dotnet-arcade
-      - checkout: git://internal/dotnet-dnceng/src/Chatbot/UploadDocs@dev/internship
 
       - task: AzureCLI@2
         displayName: 'Run UploadDocs Console App'
