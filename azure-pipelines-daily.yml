@@ -39,6 +39,11 @@ stages:
       - checkout: self
       - checkout: git://internal/dotnet-arcade
 
+      - task: UseDotNet@2
+        displayName: Install Correct .NET Version
+        inputs:
+          useGlobalJson: true
+
       - task: AzureCLI@2
         displayName: 'Run UploadDocs Console App'
         inputs:
