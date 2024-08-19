@@ -127,7 +127,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "Server Requests",
@@ -223,7 +223,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "Failed Requests",
@@ -319,7 +319,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "Exceptions",
@@ -395,7 +395,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "Server Response Time",
@@ -471,7 +471,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "Server Request Rate",
@@ -580,7 +580,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060g)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "Requests",
@@ -677,7 +677,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "Connections",
@@ -754,7 +754,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "Response Time",
@@ -850,7 +850,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "Data In",
@@ -946,7 +946,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "Data Out",
@@ -1042,7 +1042,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "CPU Time",
@@ -1138,7 +1138,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "http server errors",
@@ -1234,7 +1234,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "http 2xx",
@@ -1331,7 +1331,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "http 3xx",
@@ -1427,7 +1427,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "http 403",
@@ -1524,7 +1524,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "http 404",
@@ -1620,7 +1620,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "http 4xx",
@@ -1729,7 +1729,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "Availability Rate",
@@ -1825,7 +1825,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "Azure OpenAi Requests ",
@@ -1921,7 +1921,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "Total Calls",
@@ -2017,7 +2017,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "Successful Calls ",
@@ -2113,7 +2113,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "Total Errors",
@@ -2222,7 +2222,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "Availability",
@@ -2318,7 +2318,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "Transactions",
@@ -2415,7 +2415,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "Ingress",
@@ -2512,7 +2512,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "[parameter(84a65c9a-787d-45da-b10a-3a1cefce8060)]"
+          "subscription": "[parameter(chatbot-appinsights-subscriptionid)]"
         }
       ],
       "title": "Egress",

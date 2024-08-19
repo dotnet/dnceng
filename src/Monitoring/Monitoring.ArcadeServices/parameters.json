@@ -166,5 +166,12 @@
       "Staging": "explorerstestdata",
       "Production": "explorerstestdata"
     }
-  }
+    },
+    {
+      "Name": "chatbot-appinsights-subscriptionid",
+      "Values": {
+        "Staging": "84a65c9a-787d-45da-b10a-3a1cefce8060",
+        "Production": "84a65c9a-787d-45da-b10a-3a1cefce8060"
+      }
+    }
 ]
