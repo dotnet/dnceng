@@ -46,7 +46,5 @@ stages:
           scriptType: ps
           scriptLocation: 'inlineScript'
           inlineScript: |
-            # Build the project
-            dotnet build src/UploadDocs/UploadDocs.csproj -c Release
-            # Run the application
-            dotnet src/UploadDocs/Release/net6.0/publish/UploadDocs.dll
+            dotnet build --project src/UploadDocs/UploadDocs.csproj
+            dotnet run --project src/UploadDocs/UploadDocs.dll
