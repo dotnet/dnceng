@@ -45,6 +45,6 @@ stages:
           azureSubscription: 'dnceng-internaltooling'
           scriptType: ps
           scriptLocation: 'inlineScript'
-          inlineScript: |
-            dotnet build --project src/UploadDocs/UploadDocs.csproj
-            dotnet run --project src/UploadDocs/UploadDocs.dll
+          inlineScript: >
+            dotnet build src/UploadDocs/UploadDocs
+            dotnet run --project src/UploadDocs/UploadDocs
