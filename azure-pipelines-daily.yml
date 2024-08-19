@@ -48,6 +48,5 @@ stages:
           inlineScript: |
             # Build the project
             dotnet build src/UploadDocs/UploadDocs.csproj -c Release
-            
             # Run the application
             dotnet src/UploadDocs/Release/net6.0/publish/UploadDocs.dll
