@@ -46,4 +46,5 @@ stages:
           scriptType: ps
           scriptLocation: 'inlineScript'
           inlineScript: >
+            dotnet build --project src/UploadDocs/UploadDocs
             dotnet run --project src/UploadDocs/UploadDocs
