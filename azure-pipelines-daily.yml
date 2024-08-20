@@ -46,7 +46,7 @@ stages:
       - task: AzureCLI@2
         displayName: 'Run UploadDocs Console App'
         inputs:
-          azureSubscription: 'dnceng-internaltooling'
+          azureSubscription: 'dnceng-chatbot'
           scriptType: ps
           scriptLocation: 'inlineScript'
           inlineScript: >
