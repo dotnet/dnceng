@@ -37,7 +37,6 @@ stages:
         demands: ImageOverride -equals 1es-windows-2022
       steps:
       - checkout: self
-      - checkout: git://internal/dotnet-arcade
 
       - task: UseDotNet@2
         displayName: Install Correct .NET Version
@@ -51,5 +50,4 @@ stages:
           scriptType: ps
           scriptLocation: 'inlineScript'
           inlineScript: >
-            dotnet build src/UploadDocs/UploadDocs
-            dotnet run --project src/UploadDocs/UploadDocs
+            dotnet run --project src/Chatbot/UploadDocs
