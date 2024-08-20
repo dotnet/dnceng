@@ -47,7 +47,7 @@ public class Program
         catch (Exception ex)
         {
             Console.WriteLine($"An error occurred: {ex.Message}");
-            // Handle or log the exception as necessary
+            throw;
         }
     }
 
