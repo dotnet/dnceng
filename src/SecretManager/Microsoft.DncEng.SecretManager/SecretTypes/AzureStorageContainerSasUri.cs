@@ -2,8 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DncEng.CommandLineLib;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace Microsoft.DncEng.SecretManager.SecretTypes;
 
@@ -25,9 +23,10 @@ public class AzureStorageContainerSasUri : SecretType<AzureStorageContainerSasUr
     }
 
     protected override async Task<SecretData> RotateValue(Parameters parameters, RotationContext context, CancellationToken cancellationToken)
-    {            
-        DateTimeOffset expiresOn = _clock.UtcNow.AddMonths(1);
-        DateTimeOffset nextRotationOn = _clock.UtcNow.AddDays(15);
+    {
+        DateTimeOffset now = _clock.UtcNow;
+        DateTimeOffset expiresOn = now.AddMonths(1);
+        DateTimeOffset nextRotationOn = now.AddDays(15);
 
         string connectionString = await context.GetSecretValue(parameters.ConnectionString);
         (string containerUri, string sas) containerUriAndSas = StorageUtils.GenerateBlobContainerSas(connectionString, parameters.Container, parameters.Permissions, expiresOn);

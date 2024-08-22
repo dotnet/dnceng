@@ -1,10 +1,12 @@
 {
-  "HealthTableUri": "",
+  "HealthReportSettings": {
+    "ManagedIdentityClientId": "e9d81917-4c98-44cc-8a6e-601311ac3c07"
+  },
   "KeyVaultUri": "https://DotNetEng-Status-Staging.vault.azure.net/",
   "GitHub": {
     "Organization": "dotnet",
     "Repository": "dnceng",
-    "NotificationTarget": "dotnet/dnceng",
+    "NotificationTargets": [ "dotnet/dnceng", "dotnet/prodconsvcs" ],
     "AlertLabels": [ "Ops - First Responder" ],
     "EnvironmentLabels": [ "Staging" ],
     "TitlePrefix": "Staging - "
@@ -15,5 +17,18 @@
   },
   "MilestoneManagement": {
     "ReposEnabledFor": [ "maestro-auth-test/webhook-test" ]
+  },
+  "AzureTableTokenStore": {
+    "TableUri": "https://dotnetengstatusstaging.table.core.windows.net"
+  },
+  "Grafana": {
+    "TableUri": "https://dotnetengstatusstaging.table.core.windows.net"
+  },
+  "Kusto": {
+    "Database": "engineeringdata",
+    "KustoClusterUri": "https://engdata.westus2.kusto.windows.net",
+    "KustoIngestionUri": "https://ingest-engdata.westus2.kusto.windows.net",
+    "ManagedIdentityId": "ed1bc3ba-3d3f-4303-a16b-741869c753bb",
+    "UseAzCliAuthentication": false
   }
 }

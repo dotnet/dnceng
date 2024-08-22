@@ -27,7 +27,6 @@
     <PackageReference Include="Microsoft.AspNetCore.WebHooks.Receivers" />
     <PackageReference Include="Microsoft.Extensions.Http" />
     <PackageReference Include="Octokit" />
-    <PackageReference Include="WindowsAzure.Storage" />
     <PackageReference Include="Microsoft.DncEng.Configuration.Extensions" />
     <PackageReference Include="Microsoft.DotNet.GitHub.Authentication" />
     <PackageReference Include="Microsoft.DotNet.Internal.Health" />

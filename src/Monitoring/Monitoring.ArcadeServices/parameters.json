@@ -131,5 +131,47 @@
       "Staging": "a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1",
       "Production": "a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1"
     }
-  }
+  },
+  {
+    "Name": "chatbot-resourcegroup",
+    "Values": {
+      "Staging": "cali-testingbot",
+      "Production": "cali-testingbot"
+    }
+  },
+  {
+    "Name": "chatbot-appinsights-resourcename",
+    "Values": {
+      "Staging": "ChatBotAppInsights",
+      "Production": "ChatBotAppInsights"
+    }
+  },
+  {
+    "Name": "chatbot-appservice-resourcename",
+    "Values": {
+      "Staging": "Explore24Chatbot",
+      "Production": "Explore24Chatbot"
+    }
+  },
+  {
+    "Name": "chatbot-cognativeservices-resourcename",
+    "Values": {
+      "Staging": "testing-bot",
+      "Production": "testing-bot"
+    }
+  },
+  {
+    "Name": "chatbot-storageaccount-resourcename",
+    "Values": {
+      "Staging": "explorerstestdata",
+      "Production": "explorerstestdata"
+    }
+    },
+    {
+      "Name": "chatbot-appinsights-subscriptionid",
+      "Values": {
+        "Staging": "84a65c9a-787d-45da-b10a-3a1cefce8060",
+        "Production": "84a65c9a-787d-45da-b10a-3a1cefce8060"
+      }
+    }
 ]

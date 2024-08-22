@@ -1,10 +1,13 @@
 {
-  "HealthTableUri": "",
+  "HealthReportSettings": {
+    "StorageAccountTablesUri": "https://helixexecution.table.core.windows.net",
+    "ManagedIdentityClientId": "d2580e46-e758-4778-a864-18f909438b45"
+  },
   "KeyVaultUri": "https://DotNetEng-Status-Prod.vault.azure.net/",
   "GitHub": {
     "Organization": "dotnet",
     "Repository": "dnceng",
-    "NotificationTarget": "dotnet/dnceng",
+    "NotificationTargets": [ "dotnet/dnceng", "dotnet/prodconsvcs" ],
     "AlertLabels": [ "Ops - First Responder", "Critical" ],
     "EnvironmentLabels": [ "Production" ],
     "TitlePrefix": "Production - "
@@ -13,7 +16,18 @@
     "KeyBlobUri": "https://dotnetengstatusprod.blob.core.windows.net/site/keys.xml",
     "DataProtectionKeyUri": "https://dotneteng-status-prod.vault.azure.net/keys/dotnet-status-data-protection/"
   },
+  "AzureTableTokenStore": {
+    "TableUri": "https://dotnetengstatusprod.table.core.windows.net"
+  },
   "Grafana": {
-    "BaseUrl": "https://dotnet-eng-grafana.westus2.cloudapp.azure.com"
+    "BaseUrl": "https://dotnet-eng-grafana.westus2.cloudapp.azure.com",
+    "TableUri": "https://dotnetengstatusprod.table.core.windows.net"
+  },
+  "Kusto": {
+    "Database": "engineeringdata",
+    "KustoClusterUri": "https://engsrvprod.westus.kusto.windows.net",
+    "KustoIngestionUri": "https://ingest-engsrvprod.westus.kusto.windows.net",
+    "ManagedIdentityId": "f50325b8-f039-418d-90c6-6c13cafffb86",
+    "UseAzCliAuthentication": false
   }
 }
