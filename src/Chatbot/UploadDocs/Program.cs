@@ -9,6 +9,8 @@ public class Program
 {
     private const int GitHubLimitMaxRecords = 1000; // Define a constant for the maximum number of records
 
+
+
     public async Task<List<BlobItem>> GetBlobItemsAsync(BlobContainerClient containerClient)
     {
         var blobItems = new List<BlobItem>();
@@ -26,22 +28,30 @@ public class Program
         
         try
         {
+            Console.WriteLine("Starting the program");
             String keyVaultName = "DncengChatbotKV";
             var vaultUrl = $"https://{keyVaultName}.vault.azure.net";
-            var client = new SecretClient(vaultUri: new Uri(vaultUrl), credential: new DefaultAzureCredential());
+            
+            var options = new DefaultAzureCredentialOptions
+            {
+                ManagedIdentityClientId = "ed9b4931-f097-4f9b-ae95-cec8c7f06dd8",
+                TenantId = "72f988bf-86f1-41af-91ab-2d7cd011db47"
+            };
+            var client = new SecretClient(vaultUri: new Uri(vaultUrl), credential: new DefaultAzureCredential(options));
 
+            Console.WriteLine("Getting secret github");
             string githubToken = (await client.GetSecretAsync("githubToken")).Value.Value;
             string connectionString = (await client.GetSecretAsync("connectionString")).Value.Value;
             string containerName = "automationdemo";
             string accountName = "explorerstestdata";
 
-            // Initialize program instance
+            Console.WriteLine("Initialize program instance");
             Program program = new Program();
 
-            // Upload files from Arcade Repo
+            Console.WriteLine("Upload files from Arcade Repo");
             await program.UploadMDFilesToBlob(githubToken, connectionString, "dotnet", "arcade", containerName, accountName);
 
-            // Upload files from dnceng Repo
+            Console.WriteLine("Upload files from dnceng Repo");
             await program.UploadMDFilesToBlob(githubToken, connectionString, "dotnet", "dnceng", containerName, accountName);
         }
         catch (Exception ex)
@@ -55,23 +65,27 @@ public class Program
     {
         try
         {
-            // Initialize GitHub client
+            Console.WriteLine("Initialize GitHub client");
             var githubClient = new GitHubClient(new ProductHeaderValue($"{repo}-md-uploader"))
             {
                 Credentials = new Credentials(githubToken)
             };
 
-            // Initialize Azure Blob Storage client
+            Console.WriteLine("Initialize Azure Blob Storage client");
+            var options = new DefaultAzureCredentialOptions
+            {
+                ManagedIdentityClientId = "ed9b4931-f097-4f9b-ae95-cec8c7f06dd8",
+                TenantId = "72f988bf-86f1-41af-91ab-2d7cd011db47"
+            };
             var containerEndpoint = $"https://{accountName}.blob.core.windows.net/{containerName}";
-            var containerClient = new BlobContainerClient(new Uri(containerEndpoint), new DefaultAzureCredential());
+            var containerClient = new BlobContainerClient(new Uri(containerEndpoint), new DefaultAzureCredential(options));
 
-            // Retrieve existing blobs
+            Console.WriteLine("Retrieve existing blobs");
             var existingBlobs = await GetBlobItemsAsync(containerClient);
             var existingBlobPaths = new HashSet<string>(existingBlobs.Select(b => b.Name));
 
-            // Counters for tracking
             int uploadedFilesCount = 0;
-            // int deletedFilesCount = 0; // Counter for deleted files removed
+            
 
             int recordsPerPage = 100;
             int page = 1;
@@ -89,7 +103,8 @@ public class Program
                     PerPage = recordsToRetrieve,
                     Page = page
                 };
-
+                
+                Console.WriteLine("SearchCodeRequest");
                 result = await githubClient.Search.SearchCode(request);
 
                 if (result.Items == null || !result.Items.Any())
@@ -97,7 +112,7 @@ public class Program
                     break;
                 }
 
-                // Upload each Markdown file to Azure Blob Storage
+                Console.WriteLine("Upload each Markdown file to Azure Blob Storage");
                 foreach (var file in result.Items)
                 {
                     string newPath = $"{repo}/{file.Path}";
