@@ -1,0 +1,37 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.0",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "Welcome! My name is DNCEngBot.",
+      "wrap": true
+    },
+    {
+      "type": "TextBlock",
+      "text": "I can help you find information from the [dnceng](https://github.com/dotnet/dnceng) or [arcade](https://github.com/dotnet/arcade) documenatation.",
+      "wrap": true
+    },
+    {
+      "type": "TextBlock",
+      "text": "Some example questions you can ask me are:",
+      "wrap": true
+    },
+    {
+      "type": "TextBlock",
+      "text": "- What is Helix job sender? What are the steps to use it? \r- How do I use Known issues? \r - How can I add a package to the public feed?",
+      "wrap": true
+    },
+    {
+      "type": "TextBlock",
+      "text": "If you need help with permissions or refreshing personal access tokens, please contact the [FR channel](https://teams.microsoft.com/l/channel/19%3Aafba3d1545dd45d7b79f34c1821f6055%40thread.skype/First%20Responders?groupId=4d73664c-9f2f-450d-82a5-c2f02756606d&tenantId=).",
+      "wrap": true
+    },
+    {
+      "type": "TextBlock",
+      "text": "What can I help you with today?",
+      "wrap": true
+    }
+  ]
+}
