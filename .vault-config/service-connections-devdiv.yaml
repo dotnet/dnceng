@@ -23,7 +23,7 @@ secrets:
             location: helixkv
             name: dn-bot-account-redmond
           organizations: dnceng
-          scopes: package-rw
+          scopes: packaging_write
           
   dnceng-test-tools-feed:
     type: azure-devops-service-endpoint
@@ -36,7 +36,7 @@ secrets:
             location: helixkv
             name: dn-bot-account-redmond
           organizations: dnceng
-          scopes: package-rw
+          scopes: packaging_write
 
   dnceng-dotnet9:
     type: azure-devops-service-endpoint
@@ -49,7 +49,7 @@ secrets:
             location: helixkv
             name: dn-bot-account-redmond
           organizations: dnceng
-          scopes: package-rw
+          scopes: packaging_write
 
   dnceng-dotnet8:
     type: azure-devops-service-endpoint
@@ -62,4 +62,4 @@ secrets:
             location: helixkv
             name: dn-bot-account-redmond
           organizations: dnceng
-          scopes: package-rw
+          scopes: packaging_write
