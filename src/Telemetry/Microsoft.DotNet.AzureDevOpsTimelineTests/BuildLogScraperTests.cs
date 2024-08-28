@@ -4,7 +4,6 @@ using Microsoft.DotNet.Internal.Testing.Utility;
 using Microsoft.DotNet.Services.Utility;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using NUnit.Framework;
 using System;
 using System.Net.Http;
@@ -72,7 +71,7 @@ public partial class BuildLogScraperTests
             _project,
             MockAzureClient.OneESLogUrl,
             CancellationToken.None);
-        Assert.AreEqual(MockAzureClient.OneESImageName, imageName);
+        Assert.That(MockAzureClient.OneESImageName, Is.EqualTo(imageName));
     }
 
     [Test]
@@ -86,7 +85,7 @@ public partial class BuildLogScraperTests
             _project,
             MockAzureClient.MicrosoftHostedAgentLogUrl,
             CancellationToken.None);
-        Assert.AreEqual(MockAzureClient.MicrosoftHostedAgentImageName, imageName);
+        Assert.That(MockAzureClient.MicrosoftHostedAgentImageName, Is.EqualTo(imageName));
     }
 
     [Test]
@@ -100,7 +99,7 @@ public partial class BuildLogScraperTests
                        _project,
                         MockAzureClient.MmsOneESLogUrl,
                         CancellationToken.None);
-        Assert.AreEqual(MockAzureClient.MmsOneESImageName, imageName);
+        Assert.That(MockAzureClient.MmsOneESImageName, Is.EqualTo(imageName));
     }
 
     [Test]
@@ -114,7 +113,7 @@ public partial class BuildLogScraperTests
             _project,
             MockAzureClient.DockerLogUrl,
             CancellationToken.None);
-        Assert.AreEqual(MockAzureClient.DockerImageName, imageName);
+        Assert.That(MockAzureClient.DockerImageName, Is.EqualTo(imageName));
     }
 
     [Test]
@@ -126,8 +125,7 @@ public partial class BuildLogScraperTests
             .WithMockRequest((EmptyUrl, string.Empty))
             .BuildAsync();
 
-        Assert.IsNull(await testData.Controller.ExtractOneESHostedPoolImageNameAsync(_project, EmptyUrl, cancellationTokenSource.Token));
-        Assert.IsNull(await testData.Controller.ExtractMicrosoftHostedPoolImageNameAsync(_project, EmptyUrl, cancellationTokenSource.Token));
-
+        Assert.That(await testData.Controller.ExtractOneESHostedPoolImageNameAsync(_project, EmptyUrl, cancellationTokenSource.Token), Is.Null);
+        Assert.That(await testData.Controller.ExtractMicrosoftHostedPoolImageNameAsync(_project, EmptyUrl, cancellationTokenSource.Token), Is.Null);
     }
 }

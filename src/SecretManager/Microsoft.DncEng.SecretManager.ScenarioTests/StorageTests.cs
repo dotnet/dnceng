@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Azure;
 using Azure.Core;
-using Azure.ResourceManager;
 using Azure.ResourceManager.Storage;
 using Azure.ResourceManager.Storage.Models;
 using Azure.Security.KeyVault.Secrets;
@@ -111,8 +110,8 @@ secrets:
             HashSet<string> connectionStringAccessKeys = await GetAccessKeys();
 
             string extractedAccountKey = ExtractKeyFromConnectionString(connectionStringSecret.Value);
-            Assert.IsTrue(connectionStringAccessKeys.Contains(extractedAccountKey));
-            Assert.AreEqual(keySecret.Value.Value, extractedAccountKey);
+            Assert.That(connectionStringAccessKeys, Contains.Item(extractedAccountKey));
+            Assert.That(keySecret.Value.Value, Is.EqualTo(extractedAccountKey));
 
             Response<KeyVaultSecret> blobSasSecret = await client.GetSecretAsync(blobSasSecretName);
             AssertValidSasUri(blobSasSecret.Value.Value);
@@ -166,15 +165,15 @@ secrets:
             accessKeysRotated.ExceptWith(accessKeys);
 
 
-            Assert.AreEqual(1, accessKeysRotated.Count);
+            Assert.That(accessKeysRotated, Has.Count.EqualTo(1));
             var rotatedAccountKey = accessKeysRotated.First();
 
             keySecret = await client.GetSecretAsync(keySecretName);
             connectionStringSecret = await client.GetSecretAsync(connectionStringSecretName);
             string accountKeyFromConnectionString = ExtractKeyFromConnectionString(connectionStringSecret.Value);
 
-            Assert.AreEqual(rotatedAccountKey, accountKeyFromConnectionString);
-            Assert.AreEqual(keySecret.Value.Value, accountKeyFromConnectionString);
+            Assert.That(rotatedAccountKey, Is.EqualTo(accountKeyFromConnectionString));
+            Assert.That(keySecret.Value.Value, Is.EqualTo(accountKeyFromConnectionString));
 
             blobSasSecret = await client.GetSecretAsync(blobSasSecretName);
             AssertValidSasUri(blobSasSecret.Value.Value);
@@ -203,7 +202,7 @@ secrets:
         private static void AssertValidSas(string sas)
         {            
             var query = System.Web.HttpUtility.ParseQueryString(sas);
-            Assert.IsNotNull(query["sig"]);
+            Assert.That(query["sig"], Is.Not.Null);
         }
 
         private static string ExtractKeyFromConnectionString(KeyVaultSecret secret)
