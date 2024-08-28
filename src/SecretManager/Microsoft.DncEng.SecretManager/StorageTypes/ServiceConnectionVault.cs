@@ -116,6 +116,5 @@ public class ServiceConnectionVault : StorageLocationType<ServiceConnectionVault
         };
 
         await serviceEndpointClient.Update(endpointToUpdate.Id, updateData);
-        Console.WriteLine("Would have updated endpoint \"{endpointToUpdate.Name}\"");
     }
 }
