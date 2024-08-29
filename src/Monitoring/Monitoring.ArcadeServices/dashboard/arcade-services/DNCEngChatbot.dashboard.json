@@ -937,7 +937,7 @@
             "metricName": "BytesSent",
             "metricNamespace": "Microsoft.Web/sites",
             "resourceGroup": "[parameter(chatbot-resourcegroup)]",
-            "resourceName": "[parameter(chatbot-appservice-resourcegroup)]",
+            "resourceName": "[parameter(chatbot-appservice-resourcename)]",
             "timeGrain": "auto"
           },
           "datasource": {
@@ -1322,7 +1322,7 @@
             "metricName": "Http3xx",
             "metricNamespace": "Microsoft.Web/sites",
             "resourceGroup": "[parameter(chatbot-resourcegroup)]",
-            "resourceName": "[parameter(chabot-appservice-resourcename)]",
+            "resourceName": "[parameter(chatbot-appservice-resourcename)]",
             "timeGrain": "auto"
           },
           "datasource": {
