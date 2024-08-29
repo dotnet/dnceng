@@ -52,9 +52,9 @@ stages:
         versionSpec: 5.3.x
 
     - task: UseDotNet@2
-      displayName: Install Correct .NET Version
+      displayName: Install .NET 6
       inputs:
-        useGlobalJson: true
+        version: 6.x
 
     - task: AzureCLI@2
       inputs:
