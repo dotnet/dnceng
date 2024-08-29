@@ -5,7 +5,7 @@ using NUnit.Framework;
 
 namespace Microsoft.DncEng.SecretManager.Tests;
 
-public class ServiceConnectionMagicStringTests
+public class ServiceConnectionDescriptionBuilderTests
 {
     private static readonly string[] invalidTestMagicStrings = [
         "Do not edit authentication. This is managed by secret-manager. Expires on 2019-13-03. Next rotation on 2019-12-01.",
@@ -24,7 +24,7 @@ public class ServiceConnectionMagicStringTests
     [Test]
     public void CanFormatValidDates()
     {
-        string actualMagicString = ServiceConnectionMagicString.CreateMagicString(validExpirationDate, validNextRotationDate);
+        string actualMagicString = ServiceConnectionDescriptionBuilder.CreateMagicString(validExpirationDate, validNextRotationDate);
 
         actualMagicString.Should().Be(validMagicString);
     }
@@ -32,7 +32,7 @@ public class ServiceConnectionMagicStringTests
     [Test]
     public void CanParseValidDates()
     {
-        (DateOnly ExpirationDate, DateOnly NextRotationDate)? actualResult = ServiceConnectionMagicString.ParseMagicString(validMagicString);
+        (DateOnly ExpirationDate, DateOnly NextRotationDate)? actualResult = ServiceConnectionDescriptionBuilder.ParseMagicString(validMagicString);
 
         actualResult.Should().NotBeNull();
         actualResult.Value.ExpirationDate.Should().Be(validExpirationDate);
@@ -42,14 +42,14 @@ public class ServiceConnectionMagicStringTests
     [TestCaseSource(nameof(invalidTestMagicStrings))]
     public void DoesNotThrow(string testString)
     {
-        Action act = () => ServiceConnectionMagicString.ParseMagicString(testString);
+        Action act = () => ServiceConnectionDescriptionBuilder.ParseMagicString(testString);
         act.Should().NotThrow();
     }
 
     [TestCaseSource(nameof(invalidTestMagicStrings))]
     public void ReturnsNullWithInvalidStrings(string testString)
     {
-        (DateOnly, DateOnly)? actual = ServiceConnectionMagicString.ParseMagicString(testString);
+        (DateOnly, DateOnly)? actual = ServiceConnectionDescriptionBuilder.ParseMagicString(testString);
         actual.Should().BeNull();
     }
 }

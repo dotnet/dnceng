@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace Microsoft.DncEng.SecretManager.StorageTypes;
 
-public class ServiceConnectionMagicString
+public class ServiceConnectionDescriptionBuilder
 {
     private static readonly string stringFormat = "Do not edit authentication. This is managed by secret-manager. Expires on {0}. Next rotation on {1}.";
 

@@ -60,7 +60,7 @@ public class ServiceConnectionVault : StorageLocationType<ServiceConnectionVault
         {
             totalEndpointCount++;
 
-            (DateOnly ExpirationDate, DateOnly NextRotationDate)? parseDescriptionResult = ServiceConnectionMagicString.ParseMagicString(endpoint.Description);
+            (DateOnly ExpirationDate, DateOnly NextRotationDate)? parseDescriptionResult = ServiceConnectionDescriptionBuilder.ParseMagicString(endpoint.Description);
 
             if (parseDescriptionResult is not null)
             {
@@ -107,7 +107,7 @@ public class ServiceConnectionVault : StorageLocationType<ServiceConnectionVault
 
         DateOnly expiresOnDate = DateOnly.FromDateTime(value.ExpiresOn.DateTime);
         DateOnly nextRotationDate = DateOnly.FromDateTime(value.NextRotationOn.DateTime);
-        string description = ServiceConnectionMagicString.CreateMagicString(expiresOnDate, nextRotationDate);
+        string description = ServiceConnectionDescriptionBuilder.CreateMagicString(expiresOnDate, nextRotationDate);
 
         ServiceEndpointUpdateData updateData = new()
         {
