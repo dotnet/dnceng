@@ -361,5 +361,3 @@ MigrationBackup/
 
 # some ide stuff
 .idea
-/src/Chatbot/UploadDocs/Properties/ServiceDependencies/UploadDocsConsoleApp - Web Deploy/profile.arm.json
-/src/Chatbot/UploadDocs/Settings.job
