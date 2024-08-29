@@ -21,7 +21,7 @@ public class ServiceEndpoint
 
     internal static ServiceEndpoint Create(AdoServiceEndpoint adoServiceEndpoint)
     {
-        // The JSON schema allows more flexibility than used for the application model. We assume that there is only one element in the serviceEndpointProjectReferences array. We assume that the "name" and "description" elements in that array are what drive the info shown in the AzDO UI and are 
+        // The JSON schema allows more flexibility than used for the application model. We assume that there is only one element in the serviceEndpointProjectReferences array. We assume that the "name" and "description" elements in that array are what drive the info shown in the AzDO UI.
 
         return new ServiceEndpoint(
             adoServiceEndpoint.Id,
