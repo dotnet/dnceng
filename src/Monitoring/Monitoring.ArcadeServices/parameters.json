@@ -154,7 +154,7 @@
     }
   },
   {
-    "Name": "chatbot-cognativeservices-resourcename",
+    "Name": "chatbot-cognitiveservices-resourcename",
     "Values": {
       "Staging": "testing-bot",
       "Production": "testing-bot"
