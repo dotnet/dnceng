@@ -30,6 +30,11 @@
     },
     {
       "type": "TextBlock",
+      "text": "Please note that the dnceng and arcade documentation is not updated often. If updates are made, the search indexer runs daily so changes will not be reflected in the bot until the day after.",
+      "wrap": true
+    },
+    {
+      "type": "TextBlock",
       "text": "What can I help you with today?",
       "wrap": true
     }
