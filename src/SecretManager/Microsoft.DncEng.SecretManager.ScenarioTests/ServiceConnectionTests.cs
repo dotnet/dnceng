@@ -1,4 +1,4 @@
-﻿using Azure.Core;
+using Azure.Core;
 using FluentAssertions;
 using Microsoft.DncEng.SecretManager.ServiceConnections;
 using Microsoft.Extensions.Options;
@@ -124,7 +124,7 @@ namespace Microsoft.DncEng.SecretManager.Tests
 
                 ServiceEndpointClient serviceEndpointClient = new(httpClient, serviceEndpointClientOptions, new WrappedTokenProvider(_tokenCredential));
 
-                ServiceEndpointUpdateData updateData = new() { Description = string.Empty };
+                ServiceEndpointUpdateData updateData = new() { Description = string.Empty, AccessToken = "placeholder" };
                 await serviceEndpointClient.Update(scenarioTestServiceEndpointId, updateData, cancellationToken);
 
                 // Verify that the endpoint was cleared
