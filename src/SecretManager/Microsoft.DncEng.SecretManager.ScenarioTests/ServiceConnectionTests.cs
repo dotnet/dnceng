@@ -13,17 +13,15 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DncEng.SecretManager.Tests
 {
-    /* These tests use the Azure DevOps instance 'dnceng-stage'.
-     * The service principal used by the secenario tests needs to be in the "Endpoint Administrator" group in the 'internal' project. 
-     * 
-     */
-
     [TestFixture]
     [Category("PostDeployment")]
+    [Explicit("requires restricted resources, see inline comments")]
     public class ServiceConnectionTests : ScenarioTestsBase
     {
         /// <summary>
         /// This performs an end-to-end of service connection support by generating a new token, applying it to the service connection, and queuing a build that uses the service connection. The result of the build determines the result of this test.
+        /// 
+        /// Note: This test is marked "Explicit" so it does not run in regular CI. It requires access to dn-bot's credentials, which, to reduce security footprint, is not available to the scenario-test identity. This may be run locally by any developer with access to the necessary vaults.
         /// </summary>
         /// 
         /// <remarks>
