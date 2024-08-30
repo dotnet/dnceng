@@ -154,7 +154,7 @@
     }
   },
   {
-    "Name": "chatbot-cognativeservices-resourcename",
+    "Name": "chatbot-cognitiveservices-resourcename",
     "Values": {
       "Staging": "testing-bot",
       "Production": "testing-bot"
@@ -167,11 +167,11 @@
       "Production": "explorerstestdata"
     }
     },
-    {
-      "Name": "chatbot-appinsights-subscriptionid",
-      "Values": {
-        "Staging": "84a65c9a-787d-45da-b10a-3a1cefce8060",
-        "Production": "84a65c9a-787d-45da-b10a-3a1cefce8060"
-      }
+  {
+    "Name": "chatbot-appinsights-subscriptionid",
+    "Values": {
+      "Staging": "84a65c9a-787d-45da-b10a-3a1cefce8060",
+      "Production": "84a65c9a-787d-45da-b10a-3a1cefce8060"
     }
+  }
 ]
