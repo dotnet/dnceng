@@ -79,6 +79,10 @@ extends:
                   displayName: 'Publish Secret Manager Scenario Tests'
                   targetPath: $(Build.SourcesDirectory)\artifacts\bin\Microsoft.DncEng.SecretManager.ScenarioTests\$(_BuildConfig)\net6.0
                   artifactName: Microsoft.DncEng.SecretManager.ScenarioTests
+                - output: pipelineArtifact
+                  displayName: 'Publish Chatbot'
+                  targetPath: $(Build.ArtifactStagingDirectory)/Chatbot/package
+                  artifactName: Chatbot
             variables:
             # DotNet-Blob-Feed provides: dotnetfeed-storage-access-key-1
             # DotNet-Symbol-Server-Pats provides: microsoft-symbol-server-pat, symweb-symbol-server-pat
@@ -207,6 +211,18 @@ extends:
                 includeRootFolder: false
                 archiveType: zip
                 archiveFile: $(Build.ArtifactStagingDirectory)/RolloutScorerAzureFunction/package/RolloutScorer.zip
+                replaceExistingArchive: true
+                
+            - script: $(Build.SourcesDirectory)\.dotnet\dotnet publish -c Release -o $(Build.ArtifactStagingDirectory)\Chatbot\publish -f net6.0
+              workingDirectory: src/Chatbot/Chatbot
+              displayName: dotnet publish Chatbot
+
+            - task: ArchiveFiles@2
+              inputs:
+                rootFolderOrFile: $(Build.ArtifactStagingDirectory)/Chatbot/publish
+                includeRootFolder: false
+                archiveType: zip
+                archiveFile: $(Build.ArtifactStagingDirectory)/Chatbot/package/Chatbot.zip
                 replaceExistingArchive: true
 
             ## Prepare release utilities artifact
