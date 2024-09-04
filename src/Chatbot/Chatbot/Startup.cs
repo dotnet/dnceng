@@ -39,6 +39,11 @@ namespace Chatbot
             // Create the Bot Adapter with error handling enabled.
             services.AddSingleton<IBotFrameworkHttpAdapter, AdapterWithErrorHandler>();
 
+            // Add storage for saving conversation state
+            var storage = new MemoryStorage();
+            var conversationState = new ConversationState(storage);
+            services.AddSingleton(conversationState);
+
             // Create the bot as a transient. In this case the ASP Controller is expecting an IBot.
             services.AddTransient<IBot, ChatbotForDNCEng>();
 

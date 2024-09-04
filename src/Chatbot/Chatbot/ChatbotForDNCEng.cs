@@ -22,6 +22,7 @@ namespace Chatbot
 {
     public class ChatbotForDNCEng : ActivityHandler
     {
+        
         private readonly Dictionary<string, string> _cards = new Dictionary<string, string>()
         {
             {"FeedbackCard", Path.Combine(".", "Resources", "FeedbackCard.json")},
@@ -32,11 +33,21 @@ namespace Chatbot
         private readonly ILogger _logger;
         private readonly IConfiguration _configuration;
 
+        private BotState _conversationState;
 
-        public ChatbotForDNCEng(ILogger<ChatbotForDNCEng> logger, IConfiguration configuration)
+        public ChatbotForDNCEng(ILogger<ChatbotForDNCEng> logger, IConfiguration configuration, ConversationState conversationState)
         {
             _logger = logger;
             _configuration = configuration;
+            _conversationState = conversationState;
+        }
+
+        public override async Task OnTurnAsync(ITurnContext turnContext, CancellationToken cancellationToken)
+        {
+            await base.OnTurnAsync(turnContext, cancellationToken);
+
+            // Save any state changes that might have occurred during the turn.
+            await _conversationState.SaveChangesAsync(turnContext, false, cancellationToken);
         }
 
         protected override async Task OnMembersAddedAsync(IList<ChannelAccount> membersAdded, ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
@@ -100,8 +111,19 @@ namespace Chatbot
                     await turnContext.SendActivityAsync(MessageFactory.Attachment(contactAttachment), cancellationToken);
                     break;
                 default:
-                    Attachment aiResponse = await AskOpenAI(userRequest);
-                    await turnContext.SendActivityAsync(MessageFactory.Attachment(aiResponse), cancellationToken);
+                    // Get conversation history to pass to ChatGPT
+                    IStatePropertyAccessor<ConversationData> conversationStateAccessors = _conversationState.CreateProperty<ConversationData>(nameof(ConversationData));
+                    ConversationData conversationData = await conversationStateAccessors.GetAsync(turnContext, () => new ConversationData());
+                    
+                    ChatCompletion completion = await AskOpenAI(userRequest, conversationData.ConversationHistory);
+                    String aiResponse = completion.Content[0].Text;
+                    List<(String, String)> citationInfo = GetCitations(completion);
+                    Attachment responseCard = FormatLinks(aiResponse, citationInfo);
+                    await turnContext.SendActivityAsync(MessageFactory.Attachment(responseCard), cancellationToken);
+
+                    // Add the user's question and the bot's reponse
+                    conversationData.ConversationHistory.Add(("user", userRequest));
+                    conversationData.ConversationHistory.Add(("bot", aiResponse));
                     break;
             }
             IMessageActivity followupActions = MessageFactory.Text(followup);
@@ -154,7 +176,7 @@ namespace Chatbot
             return adaptiveCardAttachment;
         }
 
-        public async Task<Attachment> AskOpenAI(String question)
+        public async Task<ChatCompletion> AskOpenAI(String question, List<(string, string)> conversationHistory)
         {
             _logger.LogDebug("Bot is making a request to Azure OpenAI.");
             /* 
@@ -175,21 +197,24 @@ namespace Chatbot
             ChatCompletionOptions chatCompletionsOptions = await ConfigChatOptions();
 
             List<ChatMessage> messages = new List<ChatMessage>
-            { 
-                // If there is old chat history that you want to include, you would do it here
-                // Adds the service prompt, gives context to the bot on how it should respond
+            {
                 new SystemChatMessage(servicePrompt),
-                // Adds the user's question
-                new UserChatMessage(question),
             };
 
+            foreach (var message in conversationHistory)
+            {
+                if (message.Item1 == "user") {
+                    messages.Add(new UserChatMessage(message.Item2));
+                }
+                if (message.Item1 == "bot")
+                {
+                    messages.Add(new AssistantChatMessage(message.Item2));
+                }
+            }
+            messages.Add(new UserChatMessage(question));
+
             ChatCompletion completion = await chatClient.CompleteChatAsync(messages, chatCompletionsOptions);
-
-            List<(String, String)> citationInfo = GetCitations(completion);
-
-            Attachment responseCard = FormatLinks(completion.Content[0].Text, citationInfo);
-            return responseCard;
-
+            return completion;
         }
 
         public List<(String, String)> GetCitations(ChatCompletion completion)
