@@ -69,6 +69,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chatbot", "src\Chatbot\Chat
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chatbot.Tests", "src\Chatbot\Chatbot.Tests\Chatbot.Tests.csproj", "{FCC9EFB6-80A0-405A-AE2A-0E554DAAD568}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebAPI", "src\Chatbot\WebAPI\WebAPI.csproj", "{DEA82945-5797-432D-AC8D-B408CC2BFAE0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -257,6 +259,14 @@ Global
 		{FCC9EFB6-80A0-405A-AE2A-0E554DAAD568}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FCC9EFB6-80A0-405A-AE2A-0E554DAAD568}.Release|x64.ActiveCfg = Release|Any CPU
 		{FCC9EFB6-80A0-405A-AE2A-0E554DAAD568}.Release|x64.Build.0 = Release|Any CPU
+		{DEA82945-5797-432D-AC8D-B408CC2BFAE0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DEA82945-5797-432D-AC8D-B408CC2BFAE0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DEA82945-5797-432D-AC8D-B408CC2BFAE0}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{DEA82945-5797-432D-AC8D-B408CC2BFAE0}.Debug|x64.Build.0 = Debug|Any CPU
+		{DEA82945-5797-432D-AC8D-B408CC2BFAE0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DEA82945-5797-432D-AC8D-B408CC2BFAE0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DEA82945-5797-432D-AC8D-B408CC2BFAE0}.Release|x64.ActiveCfg = Release|Any CPU
+		{DEA82945-5797-432D-AC8D-B408CC2BFAE0}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -282,6 +292,7 @@ Global
 		{02046914-EAB2-4128-BD3E-06C8730B9D9F} = {4614FF66-8594-4D7E-BEF8-31611B6087C5}
 		{BD596A93-1B93-41DB-BB53-E10512D3B34F} = {1FA9A0E7-8004-4D99-BC23-4A070F48DF7A}
 		{FCC9EFB6-80A0-405A-AE2A-0E554DAAD568} = {1FA9A0E7-8004-4D99-BC23-4A070F48DF7A}
+		{DEA82945-5797-432D-AC8D-B408CC2BFAE0} = {1FA9A0E7-8004-4D99-BC23-4A070F48DF7A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C72EF6D0-2510-41EB-87F3-7739C6C6D53B}
