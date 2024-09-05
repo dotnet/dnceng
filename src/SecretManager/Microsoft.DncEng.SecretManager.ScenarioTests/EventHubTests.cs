@@ -51,7 +51,7 @@ secrets:
             Response<KeyVaultSecret> connectionStringSecret = await client.GetSecretAsync(connectionStringSecretName);
             HashSet<string> connectionStringAccessKeys = await GetAccessKeys(connectionStringSecretName);
 
-            Assert.IsTrue(connectionStringAccessKeys.Contains(connectionStringSecret.Value.Value));
+            Assert.That(connectionStringAccessKeys, Contains.Item(connectionStringSecret.Value.Value));
         }
 
         [Test]
@@ -75,9 +75,9 @@ secrets:
 
             accessKeysRotated.ExceptWith(accessKeys);
 
-            Assert.AreEqual(1, accessKeysRotated.Count);
+            Assert.That(accessKeysRotated, Has.Count.EqualTo(1));
             connectionStringSecret = await client.GetSecretAsync(connectionStringSecretName);
-            Assert.AreEqual(connectionStringSecret.Value.Value, accessKeysRotated.First());
+            Assert.That(connectionStringSecret.Value.Value, Is.EqualTo(accessKeysRotated.First()));
         }
 
         [OneTimeTearDown]

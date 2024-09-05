@@ -2,7 +2,7 @@
 This tool is used to track and rotate the secrets in one or more key vaults, and to validate the usages of the same. This is done through a yaml manifest file for each vault, and json settings files for each service.
 
 ## Manifest Files
-A manifest file describes the expected state of a single secret store (currently only Azure Key Vault, but support for other stores can be added easily). The manifest contains an inventory of all secrets and the information required to generate/rotate them. The format is as follows.
+A manifest file describes the expected state of a single secret store (for example, Azure Key Vault). The manifest contains an inventory of all secrets and the information required to generate/rotate them. The format is as follows.
 ```yaml
 # The destination secret store. All the secrets described in this document will be placed in here.
 storageLocation:
@@ -192,6 +192,34 @@ These must be run in a context that can resolve the .net cli tool secret-manager
 
 ## Creating new secrets
 New secrets can be created by adding new entries to the manifest file, then running synchronize. The tool will then create the new secret and add it to the secret store.
+
+## Secret Stores
+
+Each secret manifest file specifies a single `storageLocation` field that determines where the secrets are stored. There are two valid options.
+
+### Azure Key Vault
+
+```yaml
+  type: azure-key-vault
+  parameters:
+    name: <Name of the Azure Key Vault>
+    subscription: <The Azure subscription ID where the vault is located>
+```
+
+This is the most common option, and is used to store secrets in an Azure Key Vault.
+
+### Azure DevOps Service Connections
+
+```yaml
+      type: azure-devops-project
+      parameters:
+        organization: <Name of the Azure DevOps Organization>
+        project: <Name of the Azure DevOps Project>
+```
+
+This location represents service connections in an Azure DevOps instance. This is designed to support strictly support connections that require Azure DevOps PATs (secret type `azure-devops-access-token`) to operate (all other service connections should be using SFI-compliant patterns).
+
+Note that it is not possible to read secrets generated for this storage location. 
 
 ## Secret Types
 Each secret in the manifest has a specified type, and these types determine what parameters are required, and what ends up in the secret store. Some secret types require human interaction to generate and/or rotate. For such secrets the tool will prompt the user or fail if in a build context. Some secret types also produce multiple values. These values are all stored with additional suffixes in the secret store. Each type is documented below.
@@ -409,16 +437,19 @@ parameters:
 ```
 
 ### Service Connection
-This type is designed to help manage secrets backing Azure DevOps service connections. 
-
-Secret manager does not store the actual secret in the vault. The Key Vault entry is used only to track rotation.
+This type represents a PAT-backed service endpoint in Azure DevOps. It is expected to use with the `azure-devops-service-endpoint` storage location.
 
 ```yaml
-type: service-connection
-parameters:
-  description: This service connection is for doin' stuff
-  organization: dnceng
-  project: internal
-  id: 02878e8e-af59-4dad-96c1-341e4a1c0524
-  name: .NET Engineering Deployment Notification - Production
+  dnceng-dotnet8:
+    type: azure-devops-service-endpoint
+    parameters:
+      authorization:
+        type: azure-devops-access-token
+        parameters:
+          domainAccountName: dn-bot
+          domainAccountSecret:
+            location: helixkv
+            name: dn-bot-account-redmond
+          organizations: dnceng
+          scopes: package-rw
 ```
