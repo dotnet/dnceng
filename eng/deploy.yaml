@@ -38,11 +38,17 @@ stages:
       demands: ImageOverride -equals 1es-windows-2022
     steps:
     - task: UseDotNet@2
-      displayName: Install Correct .NET Version
+      displayName: Install .NET from global.json
       inputs:
         useGlobalJson: true
+        
+    - task: UseDotNet@2
+      displayName: Install .NET 6
+      inputs:
+        version: 6.x
 
     - task: AzureCLI@2
+      displayName: Synchronize Secrets
       inputs:
         azureSubscription: DotNet Eng Services Secret Manager
         scriptType: ps
