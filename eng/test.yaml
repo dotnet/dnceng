@@ -16,6 +16,7 @@ steps:
       --
       "RunConfiguration.ResultsDirectory=$(Build.ArtifactStagingDirectory)\TestResults"
       RunConfiguration.MapCpuCount=4
+      NUnit.ConsoleOut=0
   env:
     NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
   condition: succeededOrFailed()
