@@ -156,7 +156,8 @@
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\arcade\\Maestro Build Promotion",
           "Branches": [ "main" ],
-          "IssuesId": "dotnet-dnceng-first-responder"
+          "IssuesId": "dotnet-arcade-services",
+          "Assignee": "dotnet/prodconsvcs"
         },
         {
           "Project": "internal",
