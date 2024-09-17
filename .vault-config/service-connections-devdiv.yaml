@@ -114,4 +114,4 @@ secrets:
             location: helixkv
             name: dn-bot-account-redmond
           organizations: dnceng
-          scopes: packaging_write
+          scopes: code
