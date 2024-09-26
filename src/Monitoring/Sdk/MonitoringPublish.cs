@@ -41,6 +41,8 @@ public class MonitoringPublish : BuildTask
     public string KeyVaultServicePrincipalId { get; set; }
     public string KeyVaultServicePrincipalSecret { get; set; }
 
+    public string ManagedIdentityId { get; set; }
+
     [Required]
     public string Tag { get; set; }
 
@@ -58,43 +60,7 @@ public class MonitoringPublish : BuildTask
 
     private async Task<bool> ExecuteAsync()
     {
-        string msftTenantId = "72f988bf-86f1-41af-91ab-2d7cd011db47";
-        TokenCredential tokenCredential;
-
-        if (ClientId == null && ServiceConnectionId == null && SystemAccessToken == null && KeyVaultServicePrincipalId == null && KeyVaultServicePrincipalSecret == null)
-        {
-            tokenCredential = new DefaultAzureCredential(
-                new DefaultAzureCredentialOptions()
-                {
-                    TenantId = msftTenantId
-                }
-            );
-        }
-        else if (ClientId != null || ServiceConnectionId != null || SystemAccessToken != null)
-        {
-            if (ClientId == null || ServiceConnectionId == null || SystemAccessToken == null)
-            {
-                Log.LogError("Invalid login combination. Set ClientId, ServiceConnectionId and SystemAccessToken for CI, or none for local user authentication.");
-                return false;
-            }
-            else
-            {
-                tokenCredential = new AzurePipelinesCredential(msftTenantId, ClientId, ServiceConnectionId, SystemAccessToken);
-            }
-        }
-        else
-        {
-            if (KeyVaultServicePrincipalId == null || KeyVaultServicePrincipalSecret == null)
-            {
-                Log.LogError("Invalid login combination. Set KeyVaultServicePrincipalId and KeyVaultServicePrincipalSecret for Client Secret authentication.");
-                return false;
-            }
-            else
-            {
-                tokenCredential = new ClientSecretCredential(msftTenantId, KeyVaultServicePrincipalId, KeyVaultServicePrincipalSecret);
-            }
-        }
-
+         ChainedTokenCredential tokenCredential = TokenCredentialHelper.GetChainedTokenCredential(ManagedIdentityId);
         using (var client = new GrafanaClient(Host, AccessToken))
         using (var deploy = new DeployPublisher(
                    grafanaClient: client,
