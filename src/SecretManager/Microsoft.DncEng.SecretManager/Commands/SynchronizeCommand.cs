@@ -7,13 +7,14 @@ using System.Threading.Tasks;
 using ConsoleTables;
 using Microsoft.DncEng.CommandLineLib;
 using Microsoft.DncEng.SecretManager.StorageTypes;
+using Microsoft.VisualStudio.Services.Common;
 using Mono.Options;
 using Command = Microsoft.DncEng.CommandLineLib.Command;
 
 namespace Microsoft.DncEng.SecretManager.Commands;
 
 [Command("synchronize")]
-public class SynchronizeCommand : Command
+public class SynchronizeCommand : ProjectBaseCommand
 {
     private readonly StorageLocationTypeRegistry _storageLocationTypeRegistry;
     private readonly SecretTypeRegistry _secretTypeRegistry;
@@ -24,7 +25,7 @@ public class SynchronizeCommand : Command
     private bool _verifyOnly = false;
     private readonly List<string> _forcedSecrets = new();
 
-    public SynchronizeCommand(StorageLocationTypeRegistry storageLocationTypeRegistry, SecretTypeRegistry secretTypeRegistry, ISystemClock clock, IConsole console)
+    public SynchronizeCommand(GlobalCommand globalCommand, StorageLocationTypeRegistry storageLocationTypeRegistry, SecretTypeRegistry secretTypeRegistry, ISystemClock clock, IConsole console) : base(globalCommand)
     {
         _storageLocationTypeRegistry = storageLocationTypeRegistry;
         _secretTypeRegistry = secretTypeRegistry;
@@ -42,19 +43,22 @@ public class SynchronizeCommand : Command
 
     public override OptionSet GetOptions()
     {
-        return new OptionSet
+        return base.GetOptions().AddRange(new OptionSet()
         {
             {"f|force", "Force rotate all secrets", f => _force = !string.IsNullOrEmpty(f)},
             {"force-secret=", "Force rotate the specified secret", _forcedSecrets.Add},
             {"skip-untracked", "Skip untracked secrets", f => _skipUntracked = !string.IsNullOrEmpty(f)},
             {"verify-only", "Does not rotate any secrets, instead, produces an error for every secret that needs to be rotated.", v => _verifyOnly = !string.IsNullOrEmpty(v)},
-        };
+        });
     }
 
     public override async Task RunAsync(CancellationToken cancellationToken)
     {
         try
         {
+            // Provides a curtisy warning message if the ServiceTreeId option is set to a empty guid
+            ValidateServiceTreeIdOption();
+
             _console.WriteLine($"🔁 Synchronizing secrets contained in {_manifestFile}");
             if (_force || _forcedSecrets.Any())
             {

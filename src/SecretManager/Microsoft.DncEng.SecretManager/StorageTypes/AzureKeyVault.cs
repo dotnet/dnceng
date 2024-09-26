@@ -3,6 +3,8 @@ using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Secrets;
 using JetBrains.Annotations;
 using Microsoft.DncEng.CommandLineLib;
+using Microsoft.DncEng.CommandLineLib.Authentication;
+using OpenTelemetry.Audit.Geneva;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -23,11 +25,13 @@ public class AzureKeyVault : StorageLocationType<AzureKeyVaultParameters>
     public const string NextRotationOnTag = "next-rotation-on";
     private readonly ITokenCredentialProvider _tokenCredentialProvider;
     private readonly IConsole _console;
+    private readonly SecurityAuditLogger _auditLogger;
 
-    public AzureKeyVault(ITokenCredentialProvider tokenCredentialProvider, IConsole console)
+    public AzureKeyVault(ITokenCredentialProvider tokenCredentialProvider, IConsole console, SecurityAuditLogger auditLogger)
     {
         _tokenCredentialProvider = tokenCredentialProvider;
         _console = console;
+        _auditLogger = auditLogger;
     }
 
     private async Task<SecretClient> CreateSecretClient(AzureKeyVaultParameters parameters)
@@ -107,20 +111,46 @@ public class AzureKeyVault : StorageLocationType<AzureKeyVaultParameters>
 
     public override async Task SetSecretValueAsync(AzureKeyVaultParameters parameters, string name, SecretValue value)
     {
-        SecretClient client = await CreateSecretClient(parameters);
-        var createdSecret = await client.SetSecretAsync(name, value.Value ?? "");
-        var properties = createdSecret.Value.Properties;
-        foreach (var (k, v) in value.Tags)
+        // The default audit state should alwasy be failure and overwritten with success at the end of the operation.
+        var operationAuditResult = OperationResult.Failure;
+        // Place holder for the operation result message which will cuase a default message to be logged on success.
+        // Custom messages only need to be defined on failure
+        var operationResultMessage = "";
+        try
         {
-            properties.Tags[k] = v;
+            SecretClient client = await CreateSecretClient(parameters);
+            var createdSecret = await client.SetSecretAsync(name, value.Value ?? "");
+            var properties = createdSecret.Value.Properties;
+            foreach (var (k, v) in value.Tags)
+            {
+                properties.Tags[k] = v;
+            }
+            properties.Tags[NextRotationOnTag] = value.NextRotationOn.ToString("O");
+            properties.Tags["ChangedBy"] = "secret-manager.exe";
+            // Tags to appease the old secret management system
+            properties.Tags["Owner"] = "secret-manager.exe";
+            properties.Tags["SecretType"] = "MANAGED";
+            properties.ExpiresOn = value.ExpiresOn;
+            await client.UpdateSecretPropertiesAsync(properties);
+            operationAuditResult = OperationResult.Success;
         }
-        properties.Tags[NextRotationOnTag] = value.NextRotationOn.ToString("O");
-        properties.Tags["ChangedBy"] = "secret-manager.exe";
-        // Tags to appease the old secret management system
-        properties.Tags["Owner"] = "secret-manager.exe";
-        properties.Tags["SecretType"] = "MANAGED";
-        properties.ExpiresOn = value.ExpiresOn;
-        await client.UpdateSecretPropertiesAsync(properties);
+        catch(Exception e)
+        {
+           operationResultMessage = e.Message;
+           throw;
+        }
+        finally
+        {
+            // Record an audit log for the secret update operation
+            _auditLogger.LogSecretUpdate(
+                credentialProvider: _tokenCredentialProvider,
+                secretName: name,
+                secretStoreType: "AzureKeyVault",
+                secretLocation: GetAzureKeyVaultUri(parameters),
+                result: operationAuditResult,
+                resultMessage: operationResultMessage
+                );
+        }
     }
 
     public override async Task EnsureKeyAsync(AzureKeyVaultParameters parameters, string name, SecretManifest.Key config)
