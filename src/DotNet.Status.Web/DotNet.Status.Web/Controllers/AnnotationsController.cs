@@ -1,8 +1,10 @@
 using Azure.Data.Tables;
+using Azure.Identity;
 using DotNet.Status.Web.Models;
 using DotNet.Status.Web.Options;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.DotNet.Services.Utility;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
@@ -27,11 +29,32 @@ public class AnnotationsController : ControllerBase
     private const int _maximumServerCount = 10; // Safety limit on query complexity
     private readonly ILogger<AnnotationsController> _logger;
     private readonly IOptionsMonitor<GrafanaOptions> _options;
+    private readonly IHostEnvironment _env;
 
-    public AnnotationsController(ILogger<AnnotationsController> logger, IOptionsMonitor<GrafanaOptions> options)
+    public AnnotationsController(
+        ILogger<AnnotationsController> logger,
+        IOptionsMonitor<GrafanaOptions> options,
+        IHostEnvironment env)
     {
         _logger = logger;
         _options = options;
+        _env = env;
+    }
+
+    private async Task<TableClient> GetCloudTable()
+    {
+        TableClient table;
+        var options = _options.CurrentValue;
+        if (_env.IsDevelopment())
+        {
+            table = new TableClient("UseDevelopmentStorage=true", options.TableName);
+            await table.CreateIfNotExistsAsync();
+        }
+        else
+        {
+            table = new TableClient(new Uri(options.TableUri, UriKind.Absolute), options.TableName, new ManagedIdentityCredential());
+        }
+        return table;
     }
 
     [HttpGet]
@@ -79,7 +102,7 @@ public class AnnotationsController : ControllerBase
         string filter = filterBuilder.ToString();
         _logger.LogTrace("Compiled filter query: {Query}", filter);
 
-        TableClient tableClient = new TableClient(new Uri(_options.CurrentValue.TableUri));
+        TableClient tableClient = await GetCloudTable();
         IAsyncEnumerable<DeploymentEntity> entityQuery = tableClient.QueryAsync<DeploymentEntity>(
             filter: filter,
             cancellationToken: cancellationToken);

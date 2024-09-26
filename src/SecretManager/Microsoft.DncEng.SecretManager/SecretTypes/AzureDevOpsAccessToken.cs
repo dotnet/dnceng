@@ -1,11 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Azure.Core;
+using Azure.Identity;
 using Microsoft.DncEng.CommandLineLib;
 using Microsoft.VisualStudio.Services.Account.Client;
 using Microsoft.VisualStudio.Services.Common;
@@ -15,6 +13,7 @@ using Microsoft.VisualStudio.Services.OAuth;
 using Microsoft.VisualStudio.Services.Profile;
 using Microsoft.VisualStudio.Services.Profile.Client;
 using Microsoft.VisualStudio.Services.WebApi;
+using AzureCore = Azure.Core;
 
 namespace Microsoft.DncEng.SecretManager.SecretTypes;
 
@@ -40,45 +39,21 @@ public class AzureDevOpsAccessToken : SecretType<AzureDevOpsAccessToken.Paramete
         Console = console;
     }
 
+    private const string msftTenantId = "72f988bf-86f1-41af-91ab-2d7cd011db47";
     // Note that the below two GUIDs are for VSTS resource ID and Azure Powershell Client ID. Do not modify.
     private const string ClientId = "1950a258-227b-4e31-a9cf-717495945fc2";
     private const string VstsResourceId = "499b84ac-1321-427f-aa17-267ca6975798";
 
-    private record OauthAccessTokenResponse
-    {
-        [JsonPropertyName("access_token")]
-        public string AccessToken { get; init; }
-        
-    }
-
     private static async Task<VssConnection> ConnectToAzDo(string userName, string password, CancellationToken cancellationToken)
     {
-        using var oauthClient = new HttpClient();
-        var values = new Dictionary<string, string>
-        {
-            ["grant_type"] = "password",
-            ["resource"] = VstsResourceId,
-            ["username"] = userName,
-            ["password"] = password,
-            ["client_id"] = ClientId,
-        };
+        UsernamePasswordCredential credential = new(userName, password, msftTenantId, ClientId);
+        TokenRequestContext requestContext = new([VstsResourceId + "/.default"]);
+        AzureCore.AccessToken result = await credential.GetTokenAsync(requestContext, cancellationToken);
 
-        using var content = new FormUrlEncodedContent(values);
-        using var response = await oauthClient.PostAsync(new Uri("https://login.microsoftonline.com/microsoft.onmicrosoft.com/oauth2/token"), content, cancellationToken);
-        if (!response.IsSuccessStatusCode)
-        {
-            var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
-            if (errorContent.Contains("AADSTS50079"))
-            {
-                throw new Exception("Failed to get a token from AzDO. Please connect to CORPNET and try again." + Environment.NewLine + Environment.NewLine + errorContent);
-            }
-
-            throw new Exception(errorContent);
-        }
-
-        var result = await response.Content.ReadFromJsonAsync<OauthAccessTokenResponse>(cancellationToken: cancellationToken);
         string baseUri = "https://app.vssps.visualstudio.com";
-        return new VssConnection(new Uri(baseUri), new VssCredentials(new VssOAuthAccessTokenCredential(result.AccessToken)));
+        VssConnection connection = new (new Uri(baseUri), new VssCredentials(new VssOAuthAccessTokenCredential(result.Token)));
+
+        return connection;
     }
 
     protected override async Task<SecretData> RotateValue(Parameters parameters, RotationContext context, CancellationToken cancellationToken)

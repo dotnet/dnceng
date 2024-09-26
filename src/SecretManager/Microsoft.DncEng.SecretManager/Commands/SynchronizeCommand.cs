@@ -59,6 +59,7 @@ public class SynchronizeCommand : ProjectBaseCommand
             // Provides a curtisy warning message if the ServiceTreeId option is set to a empty guid
             ValidateServiceTreeIdOption();
 
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
             _console.WriteLine($"🔁 Synchronizing secrets contained in {_manifestFile}");
             if (_force || _forcedSecrets.Any())
             {
@@ -70,7 +71,6 @@ public class SynchronizeCommand : ProjectBaseCommand
                 }
             }
 
-            Console.OutputEncoding = System.Text.Encoding.UTF8;
             var problems = new List<(string SecretName, string Problem)>();
             var table = new ConsoleTable(new ConsoleTableOptions()
             {

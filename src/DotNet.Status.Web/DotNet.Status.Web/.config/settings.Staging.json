@@ -18,6 +18,12 @@
   "MilestoneManagement": {
     "ReposEnabledFor": [ "maestro-auth-test/webhook-test" ]
   },
+  "AzureTableTokenStore": {
+    "TableUri": "https://dotnetengstatusstaging.table.core.windows.net"
+  },
+  "Grafana": {
+    "TableUri": "https://dotnetengstatusstaging.table.core.windows.net"
+  },
   "Kusto": {
     "Database": "engineeringdata",
     "KustoClusterUri": "https://engdata.westus2.kusto.windows.net",

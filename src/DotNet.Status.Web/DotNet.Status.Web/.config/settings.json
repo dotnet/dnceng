@@ -156,7 +156,8 @@
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\arcade\\Maestro Build Promotion",
           "Branches": [ "main" ],
-          "IssuesId": "dotnet-dnceng-first-responder"
+          "IssuesId": "dotnet-arcade-services",
+          "Assignee": "dotnet/prodconsvcs"
         },
         {
           "Project": "internal",
@@ -190,13 +191,13 @@
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\dnceng\\dotnet-dnceng-ci",
           "Branches": [ "main" ],
-          "IssuesId": "dotnet-dnceng-build-failed"
+          "IssuesId": "dotnet-dnceng-first-responder"
         },
         {
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\dnceng\\dotnet-dnceng-daily",
           "Branches": [ "main" ],
-          "IssuesId": "dotnet-dnceng-build-failed"
+          "IssuesId": "dotnet-dnceng-first-responder"
         },
         {
           "Project": "internal",
@@ -281,12 +282,12 @@
     "RcaLabel": "RCA"
   },
   "AzureTableTokenStore": {
-    "TableUri": "[vault(token-table-sas-uri)]"
+    "TableName": "tokens"
   },
   "Grafana": {
     "BaseUrl": "https://dotnet-eng-grafana-staging.westus2.cloudapp.azure.com",
     "ApiToken": "[vault(grafana-api-token)]",
-    "TableUri": "[vault(deployment-table-sas-uri)]"
+    "TableName": "deployments"
   },
   "WebHooks": {
     "github": {
