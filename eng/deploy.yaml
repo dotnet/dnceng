@@ -1,10 +1,6 @@
 parameters:
 - name: ServiceConnectionName
   type: string
-- name: ServiceConnectionClientId
-  type: string
-- name: ServiceConnectionId
-  type: string
 - name: PublishProfile
   type: string
 - name: DotNetStatusAppName
@@ -194,10 +190,6 @@ stages:
     value: ${{ parameters.GrafanaHost }}
   - name: GrafanaKeyVault
     value: ${{ parameters.GrafanaKeyVault }}
-  - name: GrafanaClientId
-    value: ${{ parameters.ServiceConnectionClientId }}
-  - name: GrafanaServiceConnectionId
-    value: ${{ parameters.ServiceConnectionId }}
   jobs:
   - job: notifyEndDeployment
     displayName: Notify deployment end
@@ -220,7 +212,7 @@ stages:
         useGlobalJson: true
     - script: dotnet publish $(Build.SourcesDirectory)\src\Monitoring\Sdk\Microsoft.DotNet.Monitoring.Sdk.csproj -f net6.0
       displayName: Build Monitoring SDK
-    - script: dotnet build $(Build.SourcesDirectory)\src\Monitoring\Monitoring.ArcadeServices\Monitoring.ArcadeServices.proj -t:PublishGrafana -p:GrafanaAccessToken=$(grafana-admin-api-key) -p:GrafanaHost=$(GrafanaHost) -p:GrafanaKeyVaultName=$(GrafanaKeyVault) -p:ClientId=$(GrafanaClientId) -p:ServiceConnectionId=$(GrafanaServiceConnectionId) -p:SystemAccessToken=$(System.AccessToken) -p:GrafanaEnvironment=$(DeploymentEnvironment) -p:ParametersFile=parameters.json -v:normal
+    - script: dotnet build $(Build.SourcesDirectory)\src\Monitoring\Monitoring.ArcadeServices\Monitoring.ArcadeServices.proj -t:PublishGrafana -p:GrafanaAccessToken=$(grafana-admin-api-key) -p:GrafanaHost=$(GrafanaHost) -p:GrafanaKeyVaultName=$(GrafanaKeyVault) -p:GrafanaEnvironment=$(DeploymentEnvironment) -p:ParametersFile=parameters.json -v:normal
       displayName: Publish Grafana Dashboards
 
 - stage: validateDeployment

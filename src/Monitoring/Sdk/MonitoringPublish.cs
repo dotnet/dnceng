@@ -32,15 +32,6 @@ public class MonitoringPublish : BuildTask
     [Required]
     public string KeyVaultName { get; set; }
 
-    // For azure pipeline service connection authentication
-    public string ClientId { get; set; }
-    public string ServiceConnectionId { get; set; }
-    public string SystemAccessToken { get; set; }
-
-    //  For client secret authentication
-    public string KeyVaultServicePrincipalId { get; set; }
-    public string KeyVaultServicePrincipalSecret { get; set; }
-
     public string ManagedIdentityId { get; set; }
 
     [Required]
