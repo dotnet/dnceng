@@ -1,15 +1,14 @@
-using Azure;
-using Azure.Security.KeyVault.Keys;
-using Azure.Security.KeyVault.Secrets;
-using JetBrains.Annotations;
-using Microsoft.DncEng.CommandLineLib;
-using Microsoft.DncEng.CommandLineLib.Authentication;
-using OpenTelemetry.Audit.Geneva;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using Azure;
+using Azure.Security.KeyVault.Keys;
+using Azure.Security.KeyVault.Secrets;
+using JetBrains.Annotations;
+using Microsoft.DncEng.CommandLineLib;
+using OpenTelemetry.Audit.Geneva;
 
 namespace Microsoft.DncEng.SecretManager.StorageTypes;
 

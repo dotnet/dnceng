@@ -8,7 +8,9 @@ using ConsoleTables;
 using Microsoft.DncEng.CommandLineLib;
 using Microsoft.DncEng.SecretManager.StorageTypes;
 using Microsoft.VisualStudio.Services.Common;
+
 using Mono.Options;
+
 using Command = Microsoft.DncEng.CommandLineLib.Command;
 
 namespace Microsoft.DncEng.SecretManager.Commands;

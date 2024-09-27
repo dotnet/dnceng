@@ -1,7 +1,7 @@
 ﻿
+using System;
 using Microsoft.DncEng.CommandLineLib;
 using Mono.Options;
-using System;
 
 namespace Microsoft.DncEng.SecretManager.Commands
 {

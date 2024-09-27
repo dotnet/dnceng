@@ -1,9 +1,9 @@
-using Microsoft.DncEng.CommandLineLib;
-using Microsoft.DncEng.SecretManager.Commands;
 using System.Diagnostics;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DncEng.CommandLineLib;
+using Microsoft.DncEng.SecretManager.Commands;
 
 namespace Microsoft.DncEng.SecretManager;
 
