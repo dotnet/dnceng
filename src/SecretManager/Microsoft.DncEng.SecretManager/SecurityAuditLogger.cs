@@ -1,13 +1,10 @@
-﻿using Azure.Core;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using OpenTelemetry.Audit.Geneva;
 using System;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
-using System.Net.Sockets;
 using System.Net;
+using System.Net.Sockets;
 using System.Runtime.CompilerServices;
-using System.Threading;
 
 namespace Microsoft.DncEng.SecretManager
 {

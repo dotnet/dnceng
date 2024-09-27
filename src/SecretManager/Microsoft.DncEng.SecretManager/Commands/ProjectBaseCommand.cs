@@ -50,13 +50,12 @@ namespace Microsoft.DncEng.SecretManager.Commands
                         {
                             ServiceTreeId = guid;
                         }
-                        // If running in Azure DevOps and the value for the argument 'ServiceTreeId' is not a valid Guid,
-                        // write a warning to the console using Azure DevOps warning comment pattern syntax.
+                        // If running in Azure DevOps use VSO tagging in the console output to the warning message will be handled by the Azure DevOps build system
                         else if (RunningInAzureDevOps)
                         {
                             WriteWarningMessage($"##vso[task.logissue type=warning]Failed to parse a valid Guid value from ServiceTreeId value '{id}'! Security Audit logging will be suppressed!");
                         }
-                        // Write a general warning messgae to console if the value for the argument 'ServiceTreeId' is not a valid Guid
+                        // Else write a general warning messgae to console
                         else
                         {
                             WriteWarningMessage($"Failed to parse a valid Guid value from ServiceTreeId value '{id}'! Security Audit logging will be suppressed!");
@@ -68,14 +67,16 @@ namespace Microsoft.DncEng.SecretManager.Commands
 
         /// <summary>
         /// Provides a non-volitie warning message if the ServiceTreeId option is set to a empty guid value and argments have been parsed
-        public void ValidateServiceTreeIdOption()
+        internal void ValidateServiceTreeIdOption()
         {
             if (!Quiet && ServiceTreeId == Guid.Empty)
             {
+                // If running in Azure DevOps use VSO tagging in the console output to the warning message will be handled by the Azure DevOps build system
                 if (RunningInAzureDevOps)
                 {
                     WriteWarningMessage("##vso[task.logissue type=warning]ServiceTreeId is set to an Empty Guid! Security Audit logging will be suppressed!");
                 }
+                // Else write a general warning messgae to console
                 else
                 {
                     WriteWarningMessage("ServiceTreeId is set to an Empty Guid! Security Audit logging will be suppressed!");

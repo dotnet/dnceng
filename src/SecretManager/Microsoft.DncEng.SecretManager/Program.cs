@@ -13,21 +13,31 @@ namespace Microsoft.DncEng.SecretManager;
 
 public class Program : DependencyInjectedConsoleApp
 {
-    // The ProjectBaseCommand is stored so it can be used to pass data to the depdency injection instructions
-    private static ProjectBaseCommand _projectGlobalCommand;
+    /// <summary>
+    /// Object stores global command setting as parsed from the command line at the main method
+    /// </summary>
+    private static GlobalCommand _globalCommand;
+
+
+    /// <summary>
+    /// Object to extract the service tree as parsed from the command line at the main method
+    /// This value is needed for dependency injection operations for security audit logging
+    /// </summary>
+    private static ProjectBaseCommand _projectBaselCommand;
 
     public static Task<int> Main(string[] args)
     {
+
         // The GlobalCommand must be pre-parsed before passing to the  ProjectBaseCommand object or the base global settings will be lost
-        var globalCommand = new GlobalCommand();
-        var options = globalCommand.GetOptions();
+        _globalCommand = new GlobalCommand();
+        var options = _globalCommand.GetOptions();
         options.Parse(args);
 
-        // We then parse the ProjectBaseCommand to ensure we collect the project spacific for the service tree id at the start of the progress
-        // so it can be used for dependency ingjection processes
-        // The global option seting are stored and passed to all other command objects that inhearit from the ProjectBaseCommand
-        _projectGlobalCommand = new ProjectBaseCommand(globalCommand);
-        options = _projectGlobalCommand.GetOptions();
+        // We then parse the ProjectBaseCommand to ensure we collect the service tree id at the start of the progress
+        // so it can be used for dependency ingjection
+        // The global option setings are passed to all other command objects that inhearit from the ProjectBaseCommand
+        _projectBaselCommand = new ProjectBaseCommand(_globalCommand);
+        options = _projectBaselCommand.GetOptions();
         options.Parse(args);
 
         return new Program().RunAsync(args);
@@ -35,8 +45,9 @@ public class Program : DependencyInjectedConsoleApp
 
     protected override void ConfigureServices(IServiceCollection services)
     {
-        services.AddSingleton(new SecurityAuditLogger(_projectGlobalCommand.ServiceTreeId));
-        services.AddSingleton<GlobalCommand>(_projectGlobalCommand);
+        // The injected service is needed to allow commands to consume global options set at the command line
+        services.AddSingleton(_globalCommand);
+        services.AddSingleton(new SecurityAuditLogger(_projectBaselCommand.ServiceTreeId));          
         services.AddSingleton<ITokenCredentialProvider, SecretManagerCredentialProvider>();
         services.AddSingleton<SecretTypeRegistry>();
         services.AddSingleton<StorageLocationTypeRegistry>();
