@@ -2,9 +2,9 @@
     "instanceUrl": "https://devdiv.visualstudio.com/",
     "template": "TFSDEVDIV",
     "projectName": "DEVDIV",
-    "areaPath": "DevDiv\\NET Fundamentals\\Infrastructure\\Dnceng\\SDL",
+    "areaPath": "DevDiv\\NET Fundamentals\\Infrastructure\\Arcade\\SDL",
     "iterationPath": "DevDiv",
     "notificationAliases": [ "dnceng@microsoft.com" ],
-    "repositoryName":"Dnceng",
-    "codebaseName": "Dnceng"
+    "repositoryName":"dotnet-dnceng",
+    "codebaseName": "dotnet-dnceng"
 }
