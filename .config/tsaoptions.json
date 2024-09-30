@@ -1,10 +1,9 @@
 {  
-    "instanceUrl": "https://devdiv.visualstudio.com/",
-    "template": "TFSDEVDIV",
-    "projectName": "DEVDIV",
-    "areaPath": "DevDiv\\NET Fundamentals\\Infrastructure\\Dnceng\\SDL",
-    "iterationPath": "DevDiv",
+    "instanceUrl": "https://dnceng.visualstudio.com/",
+    "projectName": "INTERNAL",
+    "areaPath": "internal\\Dotnet-Core-Engineering\\Operations\\Service 360",
+    "iterationPath": "internal",
     "notificationAliases": [ "dnceng@microsoft.com" ],
-    "repositoryName":"Dnceng",
-    "codebaseName": "Dnceng"
+    "repositoryName":"dotnet-dnceng",
+    "codebaseName": "dotnet-dnceng"
 }
