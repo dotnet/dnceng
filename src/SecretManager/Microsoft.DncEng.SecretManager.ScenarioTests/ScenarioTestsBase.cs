@@ -44,6 +44,11 @@ namespace Microsoft.DncEng.SecretManager.Tests
         protected async Task ExecuteSynchronizeCommand(string manifest)
         {
             ServiceCollection services = new ServiceCollection();
+            // Dependency injection instruction needed to support properties used for Geneval Logging operations
+            services.AddSingleton(new GlobalCommand());
+            services.AddSingleton(new SecurityAuditLogger(Guid.Empty));
+
+            // Original dependency injection instructions
             services.AddSingleton<SynchronizeCommand>();
 
             Program program = new Program();

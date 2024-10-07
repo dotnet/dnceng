@@ -4,15 +4,15 @@ using System.Threading.Tasks;
 using Azure.Core;
 using Microsoft.DncEng.CommandLineLib;
 
-namespace Microsoft.DncEng.SecretManager;
+namespace Microsoft.DncEng.SecretManager.Commands;
 
 [Command("test")]
-class TestCommand : Command
+class TestCommand : ProjectBaseCommand
 {
     private readonly IConsole _console;
     private readonly ITokenCredentialProvider _tokenProvider;
 
-    public TestCommand(IConsole console, ITokenCredentialProvider tokenProvider)
+    public TestCommand(GlobalCommand globalCommand, IConsole console, ITokenCredentialProvider tokenProvider) : base(globalCommand)
     {
         _console = console;
         _tokenProvider = tokenProvider;
@@ -20,6 +20,9 @@ class TestCommand : Command
 
     public override async Task RunAsync(CancellationToken cancellationToken)
     {
+        // Provides a curtisy warning message if the ServiceTreeId option is set to a empty guid
+        ValidateServiceTreeIdOption();
+
         var creds = await _tokenProvider.GetCredentialAsync();
 
         var token = await creds.GetTokenAsync(new TokenRequestContext(new[]
