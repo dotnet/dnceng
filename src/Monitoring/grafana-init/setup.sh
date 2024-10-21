@@ -154,8 +154,6 @@ Environment=GF_SECURITY_ADMIN_PASSWORD=[vault(${VAULT_NAME}/grafana-admin-passwo
 Environment=GF_SECURITY_SECRET_KEY=[vault(${VAULT_NAME}/grafana-aes-256-secret-key)]
 Environment=GF_AUTH_GITHUB_CLIENT_ID=[vault(${VAULT_NAME}/dotnet-grafana-github-client-id)]
 Environment=GF_AUTH_GITHUB_CLIENT_SECRET=[vault(${VAULT_NAME}/dotnet-grafana-github-client-secret)]
-Environment=GF_EXTERNAL_IMAGE_STORAGE_AZURE_BLOB_ACCOUNT_NAME=${STORAGE_ACCOUNT_NAME}
-Environment=GF_EXTERNAL_IMAGE_STORAGE_AZURE_BLOB_ACCOUNT_KEY=[vault(${VAULT_NAME}/dotnetgrafana-storage-account-key)]
 EOT
 
 # Reset grafana-server and start it up again (or the first time)
