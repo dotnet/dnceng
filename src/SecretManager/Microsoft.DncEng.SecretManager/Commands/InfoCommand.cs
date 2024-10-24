@@ -19,7 +19,7 @@ class InfoCommand : ProjectBaseCommand
 
     public override Task RunAsync(CancellationToken cancellationToken)
     {
-        // Provides a curtisy warning message if the ServiceTreeId option is set to a empty guid
+        // Provides a courtesy warning message if the ServiceTreeId option is set to a empty guid
         ValidateServiceTreeIdOption();
 
         var exeName = Process.GetCurrentProcess().ProcessName;

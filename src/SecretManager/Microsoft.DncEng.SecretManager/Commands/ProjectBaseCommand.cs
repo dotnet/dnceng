@@ -12,7 +12,7 @@ namespace Microsoft.DncEng.SecretManager.Commands
     {
 
         /// <summary>
-        /// Indictes if the global option for 'quiet' is set
+        /// Indicates if the global option for 'quiet' is set
         /// </summary>
         public bool Quiet { get { return Verbosity == VerbosityLevel.Quiet; } }
 
@@ -24,7 +24,7 @@ namespace Microsoft.DncEng.SecretManager.Commands
 
         /// <summary>
         /// Provides the ServiceTreeId set with global options
-        /// The ID is a goid and is set to Guid.Empty if not set
+        /// The ID is a guid and is set to Guid.Empty if not set
         /// </summary>
         public Guid ServiceTreeId = Guid.Empty;
 
@@ -38,7 +38,7 @@ namespace Microsoft.DncEng.SecretManager.Commands
         }
 
         /// <summary>
-        /// Overides the GetOptions method from the base class to add a cusotm option for the ServiceTreeId
+        /// Overrides the GetOptions method from the base class to add a custom option for the ServiceTreeId
         /// </summary>
         public override OptionSet GetOptions()
         {
