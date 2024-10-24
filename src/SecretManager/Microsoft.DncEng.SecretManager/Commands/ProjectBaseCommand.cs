@@ -12,7 +12,7 @@ namespace Microsoft.DncEng.SecretManager.Commands
     {
 
         /// <summary>
-        /// Indictes if the global option for 'quiet' is set
+        /// Indicates if the global option for 'quiet' is set
         /// </summary>
         public bool Quiet { get { return Verbosity == VerbosityLevel.Quiet; } }
 
