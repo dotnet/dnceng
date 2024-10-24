@@ -37,7 +37,7 @@ public class Program : DependencyInjectedConsoleApp
         var projectBaseCommand = new ProjectBaseCommand(_globalCommand);
         options = projectBaselCommand.GetOptions();
         options.Parse(args);
-        ServiceTreeId = projectBaselCommand?.ServiceTreeId ?? Guid.Empty;
+        ServiceTreeId = projectBaselCommand.ServiceTreeId ?? Guid.Empty;
 
         return new Program().RunAsync(args);
     }
