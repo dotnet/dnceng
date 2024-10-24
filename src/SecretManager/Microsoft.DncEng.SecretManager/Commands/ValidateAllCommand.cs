@@ -47,7 +47,7 @@ public class ValidateAllCommand : ProjectBaseCommand
 
     public override async Task RunAsync(CancellationToken cancellationToken)
     {
-        // Provides a curtisy warning message if the ServiceTreeId option is set to a empty guid
+        // Provides a courtesy warning message if the ServiceTreeId option is set to an empty guid
         ValidateServiceTreeIdOption();
 
         bool haveErrors = false;
