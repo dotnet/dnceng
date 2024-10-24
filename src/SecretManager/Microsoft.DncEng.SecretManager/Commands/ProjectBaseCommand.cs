@@ -24,7 +24,7 @@ namespace Microsoft.DncEng.SecretManager.Commands
 
         /// <summary>
         /// Provides the ServiceTreeId set with global options
-        /// The ID is a goid and is set to Guid.Empty if not set
+        /// The ID is a guid and is set to Guid.Empty if not set
         /// </summary>
         public Guid ServiceTreeId = Guid.Empty;
 
