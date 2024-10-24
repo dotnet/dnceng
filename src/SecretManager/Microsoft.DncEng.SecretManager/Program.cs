@@ -35,9 +35,9 @@ public class Program : DependencyInjectedConsoleApp
         // so it can be used for dependency ingjection
         // The global option setings are passed to all other command objects that inhearit from the ProjectBaseCommand
         var projectBaseCommand = new ProjectBaseCommand(_globalCommand);
-        options = projectBaselCommand.GetOptions();
+        options = projectBaseCommand.GetOptions();
         options.Parse(args);
-        ServiceTreeId = projectBaselCommand.ServiceTreeId ?? Guid.Empty;
+        ServiceTreeId = projectBaseCommand.ServiceTreeId;
 
         return new Program().RunAsync(args);
     }
