@@ -19,7 +19,6 @@ public class Program : DependencyInjectedConsoleApp
     /// </summary>
     protected static GlobalCommand _globalCommand = new GlobalCommand();
 
-
     /// <summary>
     /// The service tree id of calling service parsed from the command line at the main method
     /// We mark this valeue as protected so it can be accessed by processes that invoke the assembly outside of the command line
