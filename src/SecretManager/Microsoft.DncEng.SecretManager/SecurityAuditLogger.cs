@@ -13,7 +13,7 @@ namespace Microsoft.DncEng.SecretManager
     /// </summary>
     public class SecurityAuditLogger
     {
-        private ILogger ControlPanelLogger;
+        private ILogger ControlPlaneLogger;
 
         private bool SuppressAuditLogging = false;
 
