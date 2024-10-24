@@ -53,7 +53,7 @@ public class SecretManifest
         public string importSecretsFrom { get; set; }
         public Dictionary<string, Storage> references { get; set; }
         public Dictionary<string, Key> keys { get; set; }
-        public Dictionary<string, Secret> secrets { get; set; }
+        public Dictionary<string, Secret> secrets { get; set; } = new();
 
         public class Storage
         {
