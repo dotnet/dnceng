@@ -110,7 +110,7 @@ public class AzureKeyVault : StorageLocationType<AzureKeyVaultParameters>
 
     public override async Task SetSecretValueAsync(AzureKeyVaultParameters parameters, string name, SecretValue value)
     {
-        // The default audit state should alwasy be failure and overwritten with success at the end of the operation.
+        // The default audit state should always be failure and overwritten with success at the end of the operation.
         var operationAuditResult = OperationResult.Failure;
         // Place holder for the operation result message which will cuase a default message to be logged on success.
         // Custom messages only need to be defined on failure
