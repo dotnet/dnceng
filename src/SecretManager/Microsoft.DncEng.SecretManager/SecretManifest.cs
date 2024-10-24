@@ -22,7 +22,7 @@ public class SecretManifest
                 importFile = Path.Join(Path.GetDirectoryName(filePath), importFile);
             }
             var importReader = new StreamReader(importFile, Encoding.UTF8);
-            var importedSecrets = Parse<Dictionary<string, Format.Secret>>(importReader);
+            var importedSecrets = Parse<Dictionary<string, Format.Secret>>(importReader) ?? new();
             foreach (var (name, secret) in importedSecrets)
             {
                 parsed.secrets.Add(name, secret);
