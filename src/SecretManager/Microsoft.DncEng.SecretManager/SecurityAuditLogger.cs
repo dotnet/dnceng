@@ -34,7 +34,7 @@ namespace Microsoft.DncEng.SecretManager
                 }
             });
 
-            ControlPanelLogger = auditFactory.CreateControlPlaneLogger();
+            ControlPlaneLogger = auditFactory.CreateControlPlaneLogger();
         }
 
         /// <summary>
@@ -94,15 +94,15 @@ namespace Microsoft.DncEng.SecretManager
             auditRecord.AddTargetResource(secretStoreType, secretLocation);
             auditRecord.OperationResultDescription = (!string.IsNullOrWhiteSpace(resultMessage)) ? $"{resultMessage}" : $"'{operationName}' : '{result}'";
 
-            ControlPanelLogger.LogAudit(auditRecord);
+            ControlPlaneLogger.LogAudit(auditRecord);
         }
         internal static string GetLocalIPAddress()
         {
             var host = Dns.GetHostEntry(Dns.GetHostName());
-            var ipAddress = host.AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork);
+            var ipAddress = host.AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork || ip.AddressFamily == AddressFamily.InterNetworkV6);
             if (ipAddress == null)
             {
-                throw new Exception("No network adapters with an IPv4 address in the system!");
+                throw new Exception("No network adapters with an IPv4 or IPv6 address in the system!");
             }
             return ipAddress.ToString();
         }
