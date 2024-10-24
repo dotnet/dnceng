@@ -38,7 +38,7 @@ namespace Microsoft.DncEng.SecretManager.Commands
         }
 
         /// <summary>
-        /// Overides the GetOptions method from the base class to add a cusotm option for the ServiceTreeId
+        /// Overrides the GetOptions method from the base class to add a custom option for the ServiceTreeId
         /// </summary>
         public override OptionSet GetOptions()
         {
