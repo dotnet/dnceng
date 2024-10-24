@@ -34,7 +34,7 @@ public class Program : DependencyInjectedConsoleApp
         // We then parse the ProjectBaseCommand to ensure we collect the service tree id at the start of the progress
         // so it can be used for dependency ingjection
         // The global option setings are passed to all other command objects that inhearit from the ProjectBaseCommand
-        var projectBaselCommand = new ProjectBaseCommand(_globalCommand);
+        var projectBaseCommand = new ProjectBaseCommand(_globalCommand);
         options = projectBaselCommand.GetOptions();
         options.Parse(args);
         ServiceTreeId = projectBaselCommand?.ServiceTreeId ?? Guid.Empty;
