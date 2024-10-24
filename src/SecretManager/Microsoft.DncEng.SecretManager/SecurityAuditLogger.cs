@@ -64,7 +64,7 @@ namespace Microsoft.DncEng.SecretManager
                 return;
             }
 
-            // The token applicatoin id of the client running the assembly.
+            // The token application id of the client running the assembly.
             // NOTE: The user identity here should be something 'dynamic'.
             // If you are hard coding this value you should question if this Audit Log is useful
             // as it is likly redundant to lower level permission change logging that is already occuring.
