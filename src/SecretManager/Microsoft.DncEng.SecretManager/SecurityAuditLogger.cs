@@ -46,7 +46,7 @@ namespace Microsoft.DncEng.SecretManager
             {
                 LogSecretAction(OperationType.Update, operationName, credentialProvider, secretName, secretStoreType, secretLocation, result, resultMessage);
             }
-            // Audit logging is a 'volitile' operation meaning it can throw exceptions if logging fails.
+            // Audit logging is a 'volatile' operation meaning it can throw exceptions if logging fails.
             // This could lead to service instability caused by simple logging issues which is not desirable.
             // So we catch all exceptions and write them to console as a last resort.
             // The hope is that app insights will also catch the base exception for debugging.
@@ -64,7 +64,7 @@ namespace Microsoft.DncEng.SecretManager
                 return;
             }
 
-            // The token applicatoin id of the client running the assembly.
+            // The token application id of the client running the assembly.
             // NOTE: The user identity here should be something 'dynamic'.
             // If you are hard coding this value you should question if this Audit Log is useful
             // as it is likly redundant to lower level permission change logging that is already occuring.
