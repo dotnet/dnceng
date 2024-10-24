@@ -145,7 +145,7 @@ public class AzureKeyVault : StorageLocationType<AzureKeyVaultParameters>
             _auditLogger.LogSecretUpdate(
                 credentialProvider: _tokenCredentialProvider,
                 secretName: name,
-                secretStoreType: "AzureKeyVault",
+                secretStoreType: nameof(AzureKeyVault),
                 secretLocation: GetAzureKeyVaultUri(parameters),
                 result: operationAuditResult,
                 resultMessage: operationResultMessage
