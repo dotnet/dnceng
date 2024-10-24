@@ -6,7 +6,7 @@ namespace Microsoft.DncEng.SecretManager;
 public interface ITokenCredentialProvider
 {
     /// <summary>
-    /// The applicatoin ID for the credential provider.
+    /// The application ID for the credential provider.
     /// </summary>
     public string ApplicationId { get; }
 
