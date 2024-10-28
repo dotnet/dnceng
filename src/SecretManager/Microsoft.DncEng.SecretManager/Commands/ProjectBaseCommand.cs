@@ -49,7 +49,6 @@ namespace Microsoft.DncEng.SecretManager.Commands
                         {
                             ServiceTreeId = guid;
                         }
-                        
                         else
                         {
                             throw new ArgumentException($"Failed to parse a valid Guid value from ServiceTreeId value '{id}'!");
