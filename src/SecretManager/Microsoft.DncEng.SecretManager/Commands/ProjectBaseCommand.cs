@@ -43,7 +43,7 @@ namespace Microsoft.DncEng.SecretManager.Commands
         {
             return new OptionSet()
             {
-                {"servicetreeid=", "The service tree ID (must be a valid GUID id from aka.ms/servicetree)", id =>
+                {"servicetreeid=", "Your service tree ID (Ids are defined at aka.ms/servicetree)", id =>
                     {
                         if (Guid.TryParse(id, out var guid))
                         {
