@@ -10,7 +10,6 @@ namespace Microsoft.DncEng.SecretManager.Commands
     /// </summary>
     public class ProjectBaseCommand : GlobalCommand
     {
-
         /// <summary>
         /// Indicates if the global option for 'quiet' is set
         /// </summary>
