@@ -46,6 +46,7 @@ public class Program : DependencyInjectedConsoleApp
     {
         // The injected service is needed to allow commands to consume global options set at the command line
         services.AddSingleton(_globalCommand);
+        // Dependency injection instruction needed to support properties used for Geneval Logging operations
         services.AddSingleton(new SecurityAuditLogger(ServiceTreeId));          
         services.AddSingleton<ITokenCredentialProvider, SecretManagerCredentialProvider>();
         services.AddSingleton<SecretTypeRegistry>();
