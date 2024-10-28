@@ -36,14 +36,22 @@ public sealed class SecretManagerCredentialProvider : ITokenCredentialProvider
     /// <inheritdoc/>
     internal void SetCredentialIdentityValues()
     {
-        // Get a token from the crendential provider
-        var tokenRequestContext = new TokenRequestContext(new[] { "https://management.azure.com/.default" });
-        var token = _credential.Value.GetToken(tokenRequestContext, CancellationToken.None);
+        try
+        {
+            // Get a token from the crendential provider
+            var tokenRequestContext = new TokenRequestContext(new[] { "https://management.azure.com/.default" });
+            var token = _credential.Value.GetToken(tokenRequestContext, CancellationToken.None);
 
-        // Decode the JWT to get user identity information
-        var handler = new JwtSecurityTokenHandler();
-        var jsonToken = handler.ReadToken(token.Token) as JwtSecurityToken;
-        ApplicationId = jsonToken?.Claims?.FirstOrDefault(claim => claim.Type == "appid")?.Value ?? "Claim appid (Application Id) Not Found"; 
-        TenantId = jsonToken?.Claims?.FirstOrDefault(claim => claim.Type == "tid")?.Value ?? "Claim tid (Tenant Id) Not Found";
+            // Decode the JWT to get user identity information
+            var handler = new JwtSecurityTokenHandler();
+            var jsonToken = handler.ReadToken(token.Token) as JwtSecurityToken;
+            ApplicationId = jsonToken?.Claims?.FirstOrDefault(claim => claim.Type == "tid")?.Value ?? "Claim appid (Application Id) Not Found";
+            TenantId = jsonToken?.Claims?.FirstOrDefault(claim => claim.Type == "tid")?.Value ?? "Claim tid (Tenant Id) Not Found";
+        }
+        catch
+        {
+            ApplicationId = "Failed To Read Claims Data: tid";
+            TenantId = "Failed To Read Claims Data: tid";
+        }
     }
 }
