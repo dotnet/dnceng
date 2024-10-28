@@ -59,8 +59,8 @@ namespace Microsoft.DncEng.SecretManager.Commands
         }
 
         /// <summary>
-        /// Provides a non-volitie warning message if the ServiceTreeId option is set to a empty guid value and argments have been parsed
-        internal void ValidateServiceTreeIdOption()
+        /// Provides a non-volitie warning message if the ServiceTreeId option is set to a empty guid value
+        internal void WarnIfServiceTreeIdIsSetToEmptyGuid()
         {
             if (!Quiet && ServiceTreeId == Guid.Empty)
             {
