@@ -24,15 +24,23 @@ namespace Microsoft.DncEng.SecretManager.Tests
         /// <inheritdoc/>
         internal void SetCredentialIdentityValues()
         {
-            // Get a token from the crendential provider
-            var tokenRequestContext = new TokenRequestContext(new[] { "https://management.azure.com/.default" });
-            var token = _tokenCredential.GetToken(tokenRequestContext, CancellationToken.None);
+            try
+            {
+                // Get a token from the crendential provider
+                var tokenRequestContext = new TokenRequestContext(new[] { "https://management.azure.com/.default" });
+                var token = _tokenCredential.GetToken(tokenRequestContext, CancellationToken.None);
 
-            // Decode the JWT to get user identity information
-            var handler = new JwtSecurityTokenHandler();
-            var jsonToken = handler.ReadToken(token.Token) as JwtSecurityToken;
-            ApplicationId = jsonToken?.Claims?.FirstOrDefault(claim => claim.Type == "oid")?.Value ?? "Claim Oid Not Found";
-            TenantId = jsonToken?.Claims?.FirstOrDefault(claim => claim.Type == "tenant_id")?.Value ?? "Claim tenant_id Not Found";
+                // Decode the JWT to get user identity information
+                var handler = new JwtSecurityTokenHandler();
+                var jsonToken = handler.ReadToken(token.Token) as JwtSecurityToken;
+                ApplicationId = jsonToken?.Claims?.FirstOrDefault(claim => claim.Type == "oid")?.Value ?? "Claim Oid Not Found";
+                TenantId = jsonToken?.Claims?.FirstOrDefault(claim => claim.Type == "tenant_id")?.Value ?? "Claim tenant_id Not Found";
+            }
+            catch
+            {
+                ApplicationId = "Failed To Read Claims Data: Oid";
+                TenantId = "Failed To Read Claims Data: tenant_id";
+            }
         }
 
         public Task<TokenCredential> GetCredentialAsync() => Task.FromResult(_tokenCredential);
