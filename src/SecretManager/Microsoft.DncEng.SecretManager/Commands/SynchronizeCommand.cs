@@ -58,7 +58,6 @@ public class SynchronizeCommand : ProjectBaseCommand
     {
         try
         {
-            // Provides a curtisy warning message if the ServiceTreeId option is set to a empty guid
             WarnIfServiceTreeIdIsSetToEmptyGuid();
 
             Console.OutputEncoding = System.Text.Encoding.UTF8;
