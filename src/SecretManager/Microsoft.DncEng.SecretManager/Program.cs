@@ -25,7 +25,7 @@ public class Program : DependencyInjectedConsoleApp
 
     public static Task<int> Main(string[] args)
     {
-        // The GlobalCommand must be pre-parsed before passing to the  ProjectBaseCommand object or the base global settings will be lost
+        // The GlobalCommand must be pre-parsed before passing to the ProjectBaseCommand object or the base global settings will be lost
         var options = _globalCommand.GetOptions();
         options.Parse(args);
 
