@@ -25,12 +25,7 @@ namespace Microsoft.DncEng.SecretManager.Commands
         /// Provides the ServiceTreeId set with global options
         /// The ID is a guid and is set to Guid.Empty if not set
         /// </summary>
-        private Guid _ServiceTreeId = Guid.Empty;
-
-        /// <summary>
-        /// Provides read only access to the _ServiceTreeId
-        /// </summary>
-        public Guid ServiceTreeId { get { return _ServiceTreeId; } }
+        public Guid ServiceTreeId { get; private set; } = Guid.Empty;
 
         /// <summary>
         /// Base constructor for the ProjectBaseCommand class
@@ -52,7 +47,7 @@ namespace Microsoft.DncEng.SecretManager.Commands
                     {
                         if (Guid.TryParse(id, out var guid))
                         {
-                            _ServiceTreeId = guid;
+                            ServiceTreeId = guid;
                         }
                         else
                         {
