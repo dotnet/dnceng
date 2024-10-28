@@ -28,7 +28,6 @@ public sealed class SecretManagerCredentialProvider : ITokenCredentialProvider
             new AzureCliCredential(new AzureCliCredentialOptions { TenantId = ConfigurationConstants.MsftAdTenantId }),
             new InteractiveBrowserCredential(new InteractiveBrowserCredentialOptions() { TenantId = ConfigurationConstants.MsftAdTenantId })
         ));
-        
     public Task<TokenCredential> GetCredentialAsync()
     {
         return Task.FromResult(_credential.Value);
