@@ -15,15 +15,13 @@ public class Program : DependencyInjectedConsoleApp
 {
     /// <summary>
     /// Object stores global command setting as parsed from the command line at the main method
-    /// We mark this valud as protected so it can be accessed by processes that invoke the assembly outside of the command line
     /// </summary>
-    protected static GlobalCommand _globalCommand = new GlobalCommand();
+    private static GlobalCommand _globalCommand = new GlobalCommand();
 
     /// <summary>
     /// The service tree id of calling service parsed from the command line at the main method
-    /// We mark this valeue as protected so it can be accessed by processes that invoke the assembly outside of the command line
     /// </summary>
-    protected static Guid ServiceTreeId = Guid.Empty;
+    private static Guid ServiceTreeId = Guid.Empty;
 
     public static Task<int> Main(string[] args)
     {
