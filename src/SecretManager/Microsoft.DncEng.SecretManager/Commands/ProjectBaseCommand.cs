@@ -10,7 +10,6 @@ namespace Microsoft.DncEng.SecretManager.Commands
     /// </summary>
     public class ProjectBaseCommand : GlobalCommand
     {
-
         /// <summary>
         /// Indicates if the global option for 'quiet' is set
         /// </summary>
@@ -55,7 +54,6 @@ namespace Microsoft.DncEng.SecretManager.Commands
                         {
                             _ServiceTreeId = guid;
                         }
-                        
                         else
                         {
                             throw new ArgumentException($"Failed to parse a valid Guid value from ServiceTreeId value '{id}'!");
