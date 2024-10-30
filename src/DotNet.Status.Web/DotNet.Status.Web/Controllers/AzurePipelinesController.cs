@@ -115,11 +115,11 @@ public class AzurePipelinesController : ControllerBase
         switch (build.Result)
         {
             case "failed":
-            case "partiallySucceeded":
                 _logger.LogInformation("Result '{result}' detected for build '{buildId}'", build.Result, build.Id);
                 return false;
             case "canceled":
             case "succeeded":
+            case "partiallySucceeded":
                 _logger.LogDebug("Ignored result code '{result}' found", build.Result);
                 return true;
             default:
