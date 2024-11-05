@@ -14,6 +14,7 @@ using Microsoft.DncEng.SecretManager.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
+using Moq;
 
 namespace Microsoft.DncEng.SecretManager.Tests
 {
@@ -45,8 +46,9 @@ namespace Microsoft.DncEng.SecretManager.Tests
         {
             ServiceCollection services = new ServiceCollection();
             // Dependency injection instruction needed to support properties used for Geneval Logging operations
-            services.AddSingleton(new GlobalCommand());
-            services.AddSingleton(new SecurityAuditLogger(Guid.Empty));
+            services.AddSingleton<CommonIdentityCommand>();
+            var mockSecurityAuditLogger = new Mock<SecurityAuditLogger>(MockBehavior.Strict);
+            services.AddSingleton(mockSecurityAuditLogger);
 
             // Original dependency injection instructions
             services.AddSingleton<SynchronizeCommand>();

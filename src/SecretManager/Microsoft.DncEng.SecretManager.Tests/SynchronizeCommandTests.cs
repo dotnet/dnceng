@@ -24,10 +24,10 @@ public class SynchronizeCommandTests
         var cancellationToken = cts.Token;
 
         var services = new ServiceCollection();
-        // The injected service is needed to allow commands to consume global options set at the command line
-        services.AddSingleton(new GlobalCommand());
         // Dependency injection instruction needed to support properties used for Geneval Logging operations
-        services.AddSingleton(new SecurityAuditLogger(Guid.Empty));
+        services.AddSingleton<CommonIdentityCommand>();
+        var mockSecurityAuditLogger = new Mock<SecurityAuditLogger>(MockBehavior.Strict);
+        services.AddSingleton(mockSecurityAuditLogger);
 
         services.AddSingleton(Mock.Of<IConsole>());
 
