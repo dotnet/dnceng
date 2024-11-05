@@ -10,12 +10,15 @@ using OpenTelemetry.Audit.Geneva;
 namespace Microsoft.DncEng.SecretManager
 {
     /// <summary>
-    /// SecurityAuditLogger is a class that is used to log security audit events to the security event log and Geneva
+    /// SecurityAuditLogger is a class that is used to log security audit events to the local event log and Geneva
     /// </summary>
     public class SecurityAuditLogger
     {
         private ILogger ControlPlaneLogger;
 
+        /// <summary>
+        /// Constructor for the SecurityAuditLogger that takes a CommonIdentityCommand to extract the service tree id value.
+        /// </summary>
         public SecurityAuditLogger(CommonIdentityCommand projectBaseCommand) : this(projectBaseCommand.ServiceTreeId)
         {
         }
@@ -46,15 +49,15 @@ namespace Microsoft.DncEng.SecretManager
             }
             // Audit logging is a 'volatile' operation meaning it can throw exceptions if logging fails.
             // This could lead to service instability caused by simple logging issues which is not desirable.
-            // So we catch all exceptions and write them to console as a last resort.
+            // So we catch all exceptions and write write a safe warding message to console 
             // The hope is that app insights will also catch the base exception for debugging.
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to add audit log for secret update!: <{ex.Message}>");
+                Console.WriteLine($"Failed to add audit log for secret update!");
             }            
         }
 
-        internal void LogSecretAction(OperationType operationType, string operationName, ITokenCredentialProvider credentialProvider, string secretName, string secretStoreType, string secretLocation, OperationResult result, string resultMessage)
+        private void LogSecretAction(OperationType operationType, string operationName, ITokenCredentialProvider credentialProvider, string secretName, string secretStoreType, string secretLocation, OperationResult result, string resultMessage)
         {
             // The token application id of the client running the assembly.
             // NOTE: The user identity here should be something 'dynamic'.
@@ -88,18 +91,23 @@ namespace Microsoft.DncEng.SecretManager
 
             ControlPlaneLogger.LogAudit(auditRecord);
         }
-        internal static string GetLocalIPAddress()
+        private static string GetLocalIPAddress()
         {
+            // Default to an empy IP address
+            var result = "0.0.0.0";
             var host = Dns.GetHostEntry(Dns.GetHostName());
             var ipAddress = host.AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork || ip.AddressFamily == AddressFamily.InterNetworkV6);
-            if (ipAddress == null)
+
+            // If we can't find a valid ipAddress we will return the default value
+            if (ipAddress != null)
             {
-                throw new Exception("No network adapters with an IPv4 or IPv6 address in the system!");
+                result = ipAddress.ToString();
             }
-            return ipAddress.ToString();
+
+            return result;
         }
 
-        internal string GetOperationAccessLevel(OperationType operation)
+        private string GetOperationAccessLevel(OperationType operation)
         {
             switch (operation)
             {
