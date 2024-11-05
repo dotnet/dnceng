@@ -68,7 +68,7 @@ namespace Microsoft.DncEng.SecretManager
             var tenantId = credentialProvider.TenantId;
             var auditRecord = new AuditRecord
             {
-                OperationResultDescription = $"Action '{operationType}' For Secret '{secretName}' With Opeation '{operationName}' By User '{user}' On Source '{secretLocation}' Resulted In '{result}'.",
+                OperationResultDescription = $"Action '{operationType}' For Secret '{secretName}' With Operation '{operationName}' By User '{user}' On Source '{secretLocation}' Resulted In '{result}'.",
                 CallerAgent = GetType().Namespace,
                 OperationName = operationName,
                 OperationType = operationType,
