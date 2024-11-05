@@ -19,12 +19,12 @@ namespace Microsoft.DncEng.SecretManager
         /// <summary>
         /// Constructor for the SecurityAuditLogger that takes a CommonIdentityCommand to extract the service tree id value.
         /// </summary>
-        public SecurityAuditLogger(CommonIdentityCommand projectBaseCommand) : this(projectBaseCommand.ServiceTreeId)
+        public SecurityAuditLogger(CommonIdentityCommand commonIdentityCommand) : this(commonIdentityCommand.ServiceTreeId)
         {
         }
 
         /// <summary>
-        /// Base constructor for the SecurityAuditLogger
+        /// Private constructor that configures the logger for the specified service tree id.
         /// </summary>
         private SecurityAuditLogger(Guid serviceTreeId)
         {
@@ -51,7 +51,7 @@ namespace Microsoft.DncEng.SecretManager
             // This could lead to service instability caused by simple logging issues which is not desirable.
             // So we catch all exceptions and write write a safe warding message to console 
             // The hope is that app insights will also catch the base exception for debugging.
-            catch (Exception ex)
+            catch 
             {
                 Console.WriteLine($"Failed to add audit log for secret update!");
             }            
@@ -91,15 +91,16 @@ namespace Microsoft.DncEng.SecretManager
 
             ControlPlaneLogger.LogAudit(auditRecord);
         }
+
         private static string GetLocalIPAddress()
         {
             // Default to an empy IP address
             var result = "0.0.0.0";
             var host = Dns.GetHostEntry(Dns.GetHostName());
-            var ipAddress = host.AddressList.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork || ip.AddressFamily == AddressFamily.InterNetworkV6);
+            var ipAddress = host?.AddressList?.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork || ip.AddressFamily == AddressFamily.InterNetworkV6);
 
             // If we can't find a valid ipAddress we will return the default value
-            if (ipAddress != null)
+            if (default(IPAddress) != ipAddress)
             {
                 result = ipAddress.ToString();
             }
