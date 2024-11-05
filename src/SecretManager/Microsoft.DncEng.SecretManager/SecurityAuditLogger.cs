@@ -81,7 +81,7 @@ namespace Microsoft.DncEng.SecretManager
             auditRecord.AddCallerIdentity(CallerIdentityType.ApplicationID, user);
             auditRecord.AddCallerIdentity(CallerIdentityType.TenantId, tenantId);
             // This value is basically a hard coded 'guess'
-            // The access level is defiend by permission setting of the 'user'
+            // The access level is defined by permission setting of the 'user'
             // which are not static and not defined by the service
             // So we are specifying what we belive the minmal acces level
             // would be requried for this operation to be successful
