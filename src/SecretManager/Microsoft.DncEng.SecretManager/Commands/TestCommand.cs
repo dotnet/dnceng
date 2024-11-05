@@ -7,12 +7,12 @@ using Microsoft.DncEng.CommandLineLib;
 namespace Microsoft.DncEng.SecretManager.Commands;
 
 [Command("test")]
-class TestCommand : ProjectBaseCommand
+class TestCommand : CommonIdentityCommand
 {
     private readonly IConsole _console;
     private readonly ITokenCredentialProvider _tokenProvider;
 
-    public TestCommand(GlobalCommand globalCommand, IConsole console, ITokenCredentialProvider tokenProvider) : base(globalCommand)
+    public TestCommand(IConsole console, ITokenCredentialProvider tokenProvider) : base(console)
     {
         _console = console;
         _tokenProvider = tokenProvider;

@@ -8,14 +8,14 @@ using Command = Microsoft.DncEng.CommandLineLib.Command;
 namespace Microsoft.DncEng.SecretManager.Commands;
 
 [Command("validate")]
-public class ValidateCommand : ProjectBaseCommand
+public class ValidateCommand : CommonIdentityCommand
 {
     private readonly SettingsFileValidator _settingsFileValidator;
     private string _manifestFile;
     private string _baseSettingsFile;
     private string _envSettingsFile;
 
-    public ValidateCommand(GlobalCommand globalCommand, SettingsFileValidator settingsFileValidator) : base(globalCommand)
+    public ValidateCommand(IConsole console, SettingsFileValidator settingsFileValidator) : base(console)
     {
         _settingsFileValidator = settingsFileValidator;
     }

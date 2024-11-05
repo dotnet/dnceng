@@ -1,3 +1,4 @@
+
 using System;
 using System.Net.Http;
 using System.Reflection;
@@ -13,39 +14,32 @@ namespace Microsoft.DncEng.SecretManager;
 
 public class Program : DependencyInjectedConsoleApp
 {
-    /// <summary>
-    /// Object stores global command setting as parsed from the command line at the main method
-    /// </summary>
-    private static GlobalCommand _globalCommand = new GlobalCommand();
-
-    /// <summary>
-    /// The service tree id of calling service parsed from the command line at the main method
-    /// </summary>
-    private static Guid ServiceTreeId = Guid.Empty;
+    /// Command args are stored for future use to parse options for the CommonIdentityCommand
+    private static string[] Args = new string[] { };
 
     public static Task<int> Main(string[] args)
     {
-        // The GlobalCommand must be pre-parsed before passing to the ProjectBaseCommand object or the base global settings will be lost
-        var options = _globalCommand.GetOptions();
-        options.Parse(args);
-
-        // We then parse the ProjectBaseCommand to ensure we collect the service tree id at the start of the progress
-        // so it can be used for dependency ingjection
-        // The global option setings are passed to all other command objects that inhearit from the ProjectBaseCommand
-        var projectBaseCommand = new ProjectBaseCommand(_globalCommand);
-        options = projectBaseCommand.GetOptions();
-        options.Parse(args);
-        ServiceTreeId = projectBaseCommand.ServiceTreeId;
-
+        Args = args;
         return new Program().RunAsync(args);
     }
 
     protected override void ConfigureServices(IServiceCollection services)
     {
-        // The injected service is needed to allow commands to consume global options set at the command line
-        services.AddSingleton(_globalCommand);
-        // Dependency injection instruction needed to support properties used for Geneval Logging operations
-        services.AddSingleton(new SecurityAuditLogger(ServiceTreeId));          
+        //// Dependency injection instruction needed to support properties used for Geneva Logging operations
+        services.AddSingleton<CommonIdentityCommand>();
+        services.AddSingleton(serviceProvider =>
+        {
+            var baseCommand = serviceProvider.GetRequiredService<CommonIdentityCommand>();
+            // We pre-pars command argument here to overcome a order of operatoins issue where 
+            // the SecurityAuditLogger object is instantiated before normal command options would be parsed
+            // by DependencyInjectedConsoleApp RunAsync processes employed by command objects
+            // In shoret we do this becasue we need the value for the IDs before they would be read in normal Command processing
+            var options = baseCommand.GetOptions();
+            options.Parse(Args);
+            return new SecurityAuditLogger(baseCommand);
+        });
+
+
         services.AddSingleton<ITokenCredentialProvider, SecretManagerCredentialProvider>();
         services.AddSingleton<SecretTypeRegistry>();
         services.AddSingleton<StorageLocationTypeRegistry>();
@@ -73,7 +67,7 @@ public class Program : DependencyInjectedConsoleApp
             });
         });
 
-        services.Configure<ServiceEndpointClient.Configuration>(config => {});
+        services.Configure<ServiceEndpointClient.Configuration>(config => { });
         services.AddSingleton<ServiceEndpointClient>();
     }
 }

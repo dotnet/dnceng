@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using Microsoft.DncEng.SecretManager.Commands;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry.Audit.Geneva;
 
@@ -15,23 +16,20 @@ namespace Microsoft.DncEng.SecretManager
     {
         private ILogger ControlPlaneLogger;
 
-        private bool SuppressAuditLogging = false;
+        public SecurityAuditLogger(CommonIdentityCommand projectBaseCommand) : this(projectBaseCommand.ServiceTreeId)
+        {
+        }
 
         /// <summary>
         /// Base constructor for the SecurityAuditLogger
         /// </summary>
-        public SecurityAuditLogger(Guid serviceTreeId)
+        private SecurityAuditLogger(Guid serviceTreeId)
         {
             var auditFactory = AuditLoggerFactory.Create(options =>
             {
                 // We use ETW as the destination for the audit logs becsue the application is not gurenteed to run on windows
                 options.Destination = AuditLogDestination.ETW;
                 options.ServiceId = serviceTreeId;
-                // If the service ID is a empty guid we should suppress audit logging
-                if (serviceTreeId == Guid.Empty)
-                {
-                    SuppressAuditLogging = true;
-                }
             });
 
             ControlPlaneLogger = auditFactory.CreateControlPlaneLogger();
@@ -58,12 +56,6 @@ namespace Microsoft.DncEng.SecretManager
 
         internal void LogSecretAction(OperationType operationType, string operationName, ITokenCredentialProvider credentialProvider, string secretName, string secretStoreType, string secretLocation, OperationResult result, string resultMessage)
         {
-            // Perform a no op if audit logging is suppressed
-            if (SuppressAuditLogging)
-            {
-                return;
-            }
-
             // The token application id of the client running the assembly.
             // NOTE: The user identity here should be something 'dynamic'.
             // If you are hard coding this value you should question if this Audit Log is useful

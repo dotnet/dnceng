@@ -1,20 +1,17 @@
 ﻿
 using System;
 using Microsoft.DncEng.CommandLineLib;
+using Microsoft.VisualStudio.Services.Common;
 using Mono.Options;
+
 
 namespace Microsoft.DncEng.SecretManager.Commands
 {
     /// <summary>
-    /// This class is used to extend the CommandLineLib.GlobalCommand class to add a global options spacific to this project
+    /// This class is used to extend the CommandLineLib.Command class to provide common identity value options which can be used by other commands via inheritance
     /// </summary>
-    public class ProjectBaseCommand : GlobalCommand
+    public class CommonIdentityCommand : CommandLineLib.Command
     {
-        /// <summary>
-        /// Indicates if the global option for 'quiet' is set
-        /// </summary>
-        public bool Quiet { get { return Verbosity == VerbosityLevel.Quiet; } }
-
         /// <summary>
         /// Check for local environment values to indicate you are running for Azure DevOps
         /// SYSTEM_COLLECTIONURI is a default environment variable in Azure DevOps
@@ -23,17 +20,19 @@ namespace Microsoft.DncEng.SecretManager.Commands
 
         /// <summary>
         /// Provides the ServiceTreeId set with global options
-        /// The ID is a guid and is set to Guid.Empty if not set
+        /// The ID is a guid and is set to the Helix service tree ID by default
         /// </summary>
-        public Guid ServiceTreeId { get; private set; } = Guid.Empty;
+        public Guid ServiceTreeId { get; private set; } = new Guid("8835b1f3-0d22-4e28-bae0-65da04655ed4");
+
+        // Local console object used to write messages to the console
+        private readonly IConsole _console;
 
         /// <summary>
-        /// Base constructor for the ProjectBaseCommand class
+        /// Base constructor for the CommonIdentityCommand class
         /// </summary>
-        public ProjectBaseCommand(GlobalCommand globalCommand)
+        public CommonIdentityCommand(IConsole console)
         {
-            Verbosity = globalCommand.Verbosity;
-            Help = globalCommand.Help;
+            _console = console;
         }
 
         /// <summary>
@@ -41,7 +40,7 @@ namespace Microsoft.DncEng.SecretManager.Commands
         /// </summary>
         public override OptionSet GetOptions()
         {
-            return new OptionSet()
+            var options = base.GetOptions().AddRange(new OptionSet()
             {
                 {"servicetreeid=", "Your service tree ID (Ids are defined at aka.ms/servicetree)", id =>
                     {
@@ -54,34 +53,28 @@ namespace Microsoft.DncEng.SecretManager.Commands
                             throw new ArgumentException($"Failed to parse a valid Guid value from ServiceTreeId value '{id}'!");
                         }
                     }
-                } 
-            };
+                }
+            });
+            return options;
         }
 
         /// <summary>
         /// Provides a non-volitie warning message if the ServiceTreeId option is set to a empty guid value
         internal void WarnIfServiceTreeIdIsSetToEmptyGuid()
         {
-            if (!Quiet && ServiceTreeId == Guid.Empty)
+            if (ServiceTreeId == Guid.Empty)
             {
                 // If running in Azure DevOps use VSO tagging in the console output to the warning message will be handled by the Azure DevOps build system
                 if (RunningInAzureDevOps)
                 {
-                    WriteWarningMessage("##vso[task.logissue type=warning]ServiceTreeId is set to an Empty Guid! Security Audit logging will be suppressed!");
+                    _console.WriteError("##vso[task.logissue type=warning]ServiceTreeId is set to an Empty Guid!\n");
                 }
                 // Else write a general warning messgae to console
                 else
                 {
-                    WriteWarningMessage("ServiceTreeId is set to an Empty Guid! Security Audit logging will be suppressed!");
+                    _console.WriteError("ServiceTreeId is set to an Empty Guid!\n");
                 }
             }
-        }
-
-        internal void WriteWarningMessage(string message)
-        {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine(message);
-            Console.ResetColor();
         }
     }
 }

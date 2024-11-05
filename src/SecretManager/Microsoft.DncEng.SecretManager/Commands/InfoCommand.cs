@@ -8,11 +8,11 @@ using Microsoft.DncEng.SecretManager.Commands;
 namespace Microsoft.DncEng.SecretManager;
 
 [Command("info")]
-class InfoCommand : ProjectBaseCommand
+class InfoCommand : CommonIdentityCommand
 {
     private readonly IConsole _console;
 
-    public InfoCommand(GlobalCommand globalCommand, IConsole console): base(globalCommand)
+    public InfoCommand(IConsole console): base(console)
     {
         _console = console;
     }

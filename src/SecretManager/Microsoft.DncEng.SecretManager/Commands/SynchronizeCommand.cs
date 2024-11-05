@@ -16,7 +16,7 @@ using Command = Microsoft.DncEng.CommandLineLib.Command;
 namespace Microsoft.DncEng.SecretManager.Commands;
 
 [Command("synchronize")]
-public class SynchronizeCommand : ProjectBaseCommand
+public class SynchronizeCommand : CommonIdentityCommand
 {
     private readonly StorageLocationTypeRegistry _storageLocationTypeRegistry;
     private readonly SecretTypeRegistry _secretTypeRegistry;
@@ -27,7 +27,7 @@ public class SynchronizeCommand : ProjectBaseCommand
     private bool _verifyOnly = false;
     private readonly List<string> _forcedSecrets = new();
 
-    public SynchronizeCommand(GlobalCommand globalCommand, StorageLocationTypeRegistry storageLocationTypeRegistry, SecretTypeRegistry secretTypeRegistry, ISystemClock clock, IConsole console) : base(globalCommand)
+    public SynchronizeCommand(StorageLocationTypeRegistry storageLocationTypeRegistry, SecretTypeRegistry secretTypeRegistry, ISystemClock clock, IConsole console) : base(console)
     {
         _storageLocationTypeRegistry = storageLocationTypeRegistry;
         _secretTypeRegistry = secretTypeRegistry;
