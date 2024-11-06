@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if INTERNAL
+using System;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -124,3 +125,51 @@ namespace Microsoft.DncEng.SecretManager
         }
     }
 }
+#else
+using System;
+using System.Runtime.CompilerServices;
+using Microsoft.DncEng.SecretManager.Commands;
+
+
+namespace Microsoft.DncEng.SecretManager
+{
+
+    /// <summary>
+    /// Enum to eliminat the OpenTelemetry.Audit.Genev using statment
+    /// </summary>
+    public enum OperationResult
+    {
+        Success = 1,
+        Failure
+    }
+
+    /// <summary>
+    /// SecurityAuditLogger No-Op implementation for non-internal builds
+    /// </summary>
+    public class SecurityAuditLogger
+    {
+
+        /// <summary>
+        /// Constructor for the SecurityAuditLogger that takes a CommonIdentityCommand to extract the service tree id value.
+        /// </summary>
+        public SecurityAuditLogger(CommonIdentityCommand commonIdentityCommand) : this(commonIdentityCommand.ServiceTreeId)
+        {
+        }
+
+        /// <summary>
+        /// Private constructor that configures the logger for the specified service tree id.
+        /// </summary>
+        private SecurityAuditLogger(Guid serviceTreeId)
+        {
+        }
+
+        /// <summary>
+        /// Add an audit log for secret update operations perfomred on behalf of a user.
+        /// </summary>
+        public void LogSecretUpdate(ITokenCredentialProvider credentialProvider, string secretName, string secretStoreType, string secretLocation, OperationResult result = OperationResult.Success, string resultMessage = "", [CallerMemberName] string operationName = "")
+        {
+            //No-op
+        }
+    }
+}
+#endif

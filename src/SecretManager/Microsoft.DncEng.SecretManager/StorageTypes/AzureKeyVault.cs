@@ -8,7 +8,9 @@ using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Secrets;
 using JetBrains.Annotations;
 using Microsoft.DncEng.CommandLineLib;
+#if INTERNAL
 using OpenTelemetry.Audit.Geneva;
+#endif
 
 namespace Microsoft.DncEng.SecretManager.StorageTypes;
 
