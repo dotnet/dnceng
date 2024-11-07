@@ -29,6 +29,11 @@ extends:
       name: NetCore1ESPool-Internal
       image: 1es-windows-2019
       os: windows
+    sdl:
+      policheck:
+        enabled: true
+      tsa:
+        enabled: true
    
     stages:
     - stage: GitHub_Issue_Verification
@@ -112,9 +117,9 @@ extends:
                 useGlobalJson: true
 
             - task: UseDotNet@2
-              displayName: Install .NET Version 3.1
+              displayName: Install .NET 6
               inputs:
-                version: 3.1.x
+                version: 6.x
 
             - task: NuGetToolInstaller@0
               inputs:
