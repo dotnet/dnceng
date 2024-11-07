@@ -67,6 +67,6 @@
     <ItemGroup>
       <NuGetConfigFiles Include="NuGet.config" />
     </ItemGroup>
-    <Exec Condition=" '$(DefineConstants)' == 'INTERNAL' " Command="dotnet nuget add source -n AzureGenevaMonitoring https://msblox.pkgs.visualstudio.com/_packaging/AzureGenevaMonitoring/nuget/v3/index.json --configfile %(NuGetConfigFiles.FullPath)" />
+    <Exec Condition=" '$(DefineConstants)' != '' AND '$(DefineConstants.Contains(INTERNAL))' " Command="dotnet nuget add source -n AzureGenevaMonitoring https://msblox.pkgs.visualstudio.com/_packaging/AzureGenevaMonitoring/nuget/v3/index.json --configfile %(NuGetConfigFiles.FullPath)" />
   </Target>
 </Project>
