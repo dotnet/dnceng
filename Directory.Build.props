@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project>
+<Project>  
   <PropertyGroup>
     <UsingToolXUnit>false</UsingToolXUnit>
   </PropertyGroup>
@@ -57,4 +57,16 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
+
+  <!--  
+  The following Target setting is used to conditionally add package source to the nuget.config for this solution.
+  We do this so we can add restricted access package sourcess to internal builds that cannot be access in public builds.
+  To set this build condtion add the following setting  <-p:DefineConstants="INTERNAL"> to a 'dotnet build' command.
+  -->
+  <Target Name="UpdateNuGetConfig" AfterTargets="BeforeBuild">
+    <ItemGroup>
+      <NuGetConfigFiles Include="NuGet.config" />
+    </ItemGroup>
+    <Exec Condition=" '$(DefineConstants)' == 'INTERNAL' " Command="dotnet nuget add source -n AzureGenevaMonitoring https://msblox.pkgs.visualstudio.com/_packaging/AzureGenevaMonitoring/nuget/v3/index.json --configfile %(NuGetConfigFiles.FullPath)" />
+  </Target>
 </Project>
