@@ -8,7 +8,7 @@
   "settings": {
     "autoResolve": true,
     "httpMethod": "POST",
-    "uploadImage": true,
+    "uploadImage": false,
     "url": "[vault(fr-bot-notifications-teams-notification-url)]"
   }
 }
