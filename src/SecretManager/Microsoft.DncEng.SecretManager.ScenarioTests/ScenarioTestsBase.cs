@@ -45,7 +45,7 @@ namespace Microsoft.DncEng.SecretManager.Tests
         protected async Task ExecuteSynchronizeCommand(string manifest)
         {
             ServiceCollection services = new ServiceCollection();
-            // Dependency injection instruction needed to support properties used for Geneval Logging operations
+            // Dependency injection instruction needed to support properties used for Geneva Logging operations
             services.AddSingleton<CommonIdentityCommand>();
             var mockSecurityAuditLogger = new Mock<SecurityAuditLogger>(MockBehavior.Strict);
             services.AddSingleton(mockSecurityAuditLogger);

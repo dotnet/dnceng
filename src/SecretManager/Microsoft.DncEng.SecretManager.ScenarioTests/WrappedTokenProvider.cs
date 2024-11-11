@@ -26,7 +26,7 @@ namespace Microsoft.DncEng.SecretManager.Tests
         {
             try
             {
-                // Get a token from the crendential provider
+                // Get a token from the credential provider
                 var tokenRequestContext = new TokenRequestContext(new[] { "https://management.azure.com/.default" });
                 var token = _tokenCredential.GetToken(tokenRequestContext, CancellationToken.None);
 

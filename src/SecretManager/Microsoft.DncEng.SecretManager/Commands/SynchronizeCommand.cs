@@ -182,8 +182,8 @@ public class SynchronizeCommand : CommonIdentityCommand
 
                         // since the rotation runs weekly, we need a 1 week grace period
                         // where verification runs will not fail, but rotation will happen.
-                        // otherwise a secret scheduled for rotation on tuesday, will cause
-                        // a build failure on wednesday, before it gets rotated normally on the following monday
+                        // otherwise a secret scheduled for rotation on Tuesday, will cause
+                        // a build failure on Wednesday, before it gets rotated normally on the following Monday
                         // the verification mode is to catch the "the rotation hasn't happened in months" case
                         if (_verifyOnly && nextRotation > now.AddDays(-7))
                         {

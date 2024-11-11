@@ -31,7 +31,7 @@ namespace Microsoft.DncEng.SecretManager
         {
             var auditFactory = AuditLoggerFactory.Create(options =>
             {
-                // We use ETW as the destination for the audit logs becsue the application is not gurenteed to run on windows
+                // We use ETW as the destination for the audit logs because the application is not guaranteed to run on windows
                 options.Destination = AuditLogDestination.ETW;
                 options.ServiceId = serviceTreeId;
             });
@@ -40,7 +40,7 @@ namespace Microsoft.DncEng.SecretManager
         }
 
         /// <summary>
-        /// Add an audit log for secret update operations perfomred on behalf of a user.
+        /// Add an audit log for secret update operations performed on behalf of a user.
         /// </summary>
         public void LogSecretUpdate(ITokenCredentialProvider credentialProvider, string secretName, string secretStoreType, string secretLocation, OperationResult result = OperationResult.Success, string resultMessage = "", [CallerMemberName] string operationName = "")
         {
@@ -50,7 +50,7 @@ namespace Microsoft.DncEng.SecretManager
             }
             // Audit logging is a 'volatile' operation meaning it can throw exceptions if logging fails.
             // This could lead to service instability caused by simple logging issues which is not desirable.
-            // So we catch all exceptions and write write a safe warding message to console 
+            // So we catch all exceptions and write a safe warding message to console 
             // The hope is that app insights will also catch the base exception for debugging.
             catch 
             {
@@ -63,7 +63,7 @@ namespace Microsoft.DncEng.SecretManager
             // The token application id of the client running the assembly.
             // NOTE: The user identity here should be something 'dynamic'.
             // If you are hard coding this value you should question if this Audit Log is useful
-            // as it is likly redundant to lower level permission change logging that is already occuring.
+            // as it is likely redundant to lower level permission change logging that is already occurring.
             var user = credentialProvider.ApplicationId;
             // Get the tenant ID that provided the token for the credential provider.
             var tenantId = credentialProvider.TenantId;
@@ -84,8 +84,8 @@ namespace Microsoft.DncEng.SecretManager
             // This value is basically a hard coded 'guess'
             // The access level is defined by permission setting of the 'user'
             // which are not static and not defined by the service
-            // So we are specifying what we belive the minmal acces level
-            // would be requried for this operation to be successful
+            // So we are specifying what we believe the minimal access level
+            // would be required for this operation to be successful
             auditRecord.AddCallerAccessLevel("Writer");
             auditRecord.AddTargetResource(secretStoreType, secretLocation);
             auditRecord.OperationResultDescription = (!string.IsNullOrWhiteSpace(resultMessage)) ? $"{resultMessage}" : $"'{operationName}' : '{result}'";
@@ -95,7 +95,7 @@ namespace Microsoft.DncEng.SecretManager
 
         private static string GetLocalIPAddress()
         {
-            // Default to an empy IP address
+            // Default to an empty IP address
             var result = "0.0.0.0";
             var host = Dns.GetHostEntry(Dns.GetHostName());
             var ipAddress = host?.AddressList?.FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork || ip.AddressFamily == AddressFamily.InterNetworkV6);
@@ -135,7 +135,7 @@ namespace Microsoft.DncEng.SecretManager
 {
 
     /// <summary>
-    /// Enum to eliminat the OpenTelemetry.Audit.Genev using statment
+    /// Enum to eliminate the OpenTelemetry.Audit.Genev using statement
     /// </summary>
     public enum OperationResult
     {
@@ -164,7 +164,7 @@ namespace Microsoft.DncEng.SecretManager
         }
 
         /// <summary>
-        /// Add an audit log for secret update operations perfomred on behalf of a user.
+        /// Add an audit log for secret update operations performed on behalf of a user.
         /// </summary>
         public void LogSecretUpdate(ITokenCredentialProvider credentialProvider, string secretName, string secretStoreType, string secretLocation, OperationResult result = OperationResult.Success, string resultMessage = "", [CallerMemberName] string operationName = "")
         {

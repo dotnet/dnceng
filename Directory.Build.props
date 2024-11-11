@@ -60,8 +60,8 @@
 
   <!--  
   The following Target setting is used to conditionally add package source to the nuget.config for this solution.
-  We do this so we can add restricted access package sourcess to internal builds that cannot be access in public builds.
-  To set this build condtion add the following setting  <-p:DefineConstants="INTERNAL"> to a 'dotnet build' command.
+  We do this so we can add restricted access package sources to internal builds that cannot be access in public builds.
+  To set this build condition add the following setting  <-p:DefineConstants="INTERNAL"> to a 'dotnet build' command.
   -->
   <Target Name="UpdateNuGetConfig" AfterTargets="BeforeBuild">
     <ItemGroup>

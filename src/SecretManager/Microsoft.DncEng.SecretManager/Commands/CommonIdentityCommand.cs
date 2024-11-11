@@ -59,7 +59,7 @@ namespace Microsoft.DncEng.SecretManager.Commands
         }
 
         /// <summary>
-        /// Provides a non-volitie warning message if the ServiceTreeId option is set to a empty guid value
+        /// Provides a non-volatile warning message if the ServiceTreeId option is set to a empty guid value
         internal void WarnIfServiceTreeIdIsSetToEmptyGuid()
         {
             if (ServiceTreeId == Guid.Empty)
@@ -69,7 +69,7 @@ namespace Microsoft.DncEng.SecretManager.Commands
                 {
                     _console.WriteError("##vso[task.logissue type=warning]ServiceTreeId is set to an Empty Guid!\n");
                 }
-                // Else write a general warning messgae to console
+                // Else write a general warning message to console
                 else
                 {
                     _console.WriteError("ServiceTreeId is set to an Empty Guid!\n");

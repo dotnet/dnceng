@@ -114,7 +114,7 @@ public class AzureKeyVault : StorageLocationType<AzureKeyVaultParameters>
     {
         // The default audit state should always be failure and overwritten with success at the end of the operation.
         var operationAuditResult = OperationResult.Failure;
-        // Place holder for the operation result message which will cuase a default message to be logged on success.
+        // Place holder for the operation result message which will cause a default message to be logged on success.
         // Custom messages only need to be defined on failure
         var operationResultMessage = "";
         try
@@ -157,12 +157,12 @@ public class AzureKeyVault : StorageLocationType<AzureKeyVaultParameters>
 
     public override async Task EnsureKeyAsync(AzureKeyVaultParameters parameters, string name, SecretManifest.Key config)
     {
-        // The default audit state should alwasy be failure and overwritten with success at the end of the operation.
+        // The default audit state should always be failure and overwritten with success at the end of the operation.
         var operationAuditResult = OperationResult.Failure;
-        // Place holder for the operation result message which will cuase a default message to be logged on success.
+        // Place holder for the operation result message which will cause a default message to be logged on success.
         // Custom messages only need to be defined on failure
         var operationResultMessage = "";
-        // Tracks when ceay creation is required since we only want to write audit logs when a new key is created
+        // Tracks when key creation is required since we only want to write audit logs when a new key is created
         var createKey = false;
         try
         {
