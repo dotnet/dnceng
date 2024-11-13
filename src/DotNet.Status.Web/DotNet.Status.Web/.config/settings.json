@@ -164,28 +164,28 @@
           "DefinitionPath": "\\dotnet\\installer\\installer-dotnet-dotnet-synchronization",
           "Branches": [ "main", "release/*" ],
           "IssuesId": "dotnet-dotnet-synchronization",
-          "Assignee": "premun"
+          "Assignee": "dotnet/prodconsvcs"
         },
         {
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\installer\\installer-dotnet-dotnet-synchronization-internal",
           "Branches": [ "main", "release/*", "internal/release/*" ],
           "IssuesId": "dotnet-dotnet-synchronization",
-          "Assignee": "premun"
+          "Assignee": "dotnet/prodconsvcs"
         },
         {
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\sdk\\sdk-dotnet-dotnet-synchronization",
           "Branches": [ "main", "release/*" ],
           "IssuesId": "dotnet-dotnet-synchronization",
-          "Assignee": "premun"
+          "Assignee": "dotnet/prodconsvcs"
         },
         {
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\sdk\\sdk-dotnet-dotnet-synchronization-internal",
           "Branches": [ "main", "release/*", "internal/release/*" ],
           "IssuesId": "dotnet-dotnet-synchronization",
-          "Assignee": "premun"
+          "Assignee": "dotnet/prodconsvcs"
         },
         {
           "Project": "internal",
