@@ -102,7 +102,7 @@ public class GitHubHookController : ControllerBase
         string uri = payload.Comment.HtmlUrl;
         string username = payload.Comment.User.Login;
         DateTimeOffset date = payload.Comment.UpdatedAt;
-        using IDisposable scope = _logger.BeginScope("Handling pull request {repo}#{prNumber}", repo, number);
+        using IDisposable? scope = _logger.BeginScope("Handling pull request {repo}#{prNumber}", repo, number);
         switch (payload.Action)
         {
             case "created":
