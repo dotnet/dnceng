@@ -11,6 +11,22 @@ using OpenTelemetry.Audit.Geneva;
 namespace Microsoft.DncEng.SecretManager
 {
     /// <summary>
+    /// Enum that mirrors values from the OperationResult type defined in OpenTelemetry.Audit.Geneva
+    /// </summary>
+    /// <remarks>
+    /// This enum is needed to ensure any external consumers of the SecurityAuditLogger class do not need to reference the OpenTelemetry.Audit.Geneva library.
+    /// </remarks>
+    public enum SecretManagerOperationResult
+    {
+        // All enum values should mirrors what is available in the OperationResult enum in OpenTelemetry.Audit.Geneva
+        // This ensure the code will adapted to value changes in the OpenTelemetry.Audit.Geneva library
+        // and it will ensure a compile time error is thrown here if a named enum type is changed or removed
+        // from the OpenTelemetry.Audit.Geneva library
+        Success = OperationResult.Success,
+        Failure = OperationResult.Failure
+    }
+
+    /// <summary>
     /// SecurityAuditLogger is a class that is used to log security audit events to the local event log and Geneva
     /// </summary>
     public class SecurityAuditLogger
@@ -42,7 +58,7 @@ namespace Microsoft.DncEng.SecretManager
         /// <summary>
         /// Add an audit log for secret update operations performed on behalf of a user.
         /// </summary>
-        public void LogSecretUpdate(ITokenCredentialProvider credentialProvider, string secretName, string secretStoreType, string secretLocation, OperationResult result = OperationResult.Success, string resultMessage = "", [CallerMemberName] string operationName = "")
+        public void LogSecretUpdate(ITokenCredentialProvider credentialProvider, string secretName, string secretStoreType, string secretLocation, SecretManagerOperationResult result = SecretManagerOperationResult.Success, string resultMessage = "", [CallerMemberName] string operationName = "")
         {
             try
             {
@@ -52,13 +68,13 @@ namespace Microsoft.DncEng.SecretManager
             // This could lead to service instability caused by simple logging issues which is not desirable.
             // So we catch all exceptions and write a safe warding message to console 
             // The hope is that app insights will also catch the base exception for debugging.
-            catch 
+            catch
             {
                 Console.WriteLine($"Failed to add audit log for secret update!");
-            }            
+            }
         }
 
-        private void LogSecretAction(OperationType operationType, string operationName, ITokenCredentialProvider credentialProvider, string secretName, string secretStoreType, string secretLocation, OperationResult result, string resultMessage)
+        private void LogSecretAction(OperationType operationType, string operationName, ITokenCredentialProvider credentialProvider, string secretName, string secretStoreType, string secretLocation, SecretManagerOperationResult result, string resultMessage)
         {
             // The token application id of the client running the assembly.
             // NOTE: The user identity here should be something 'dynamic'.
@@ -75,7 +91,7 @@ namespace Microsoft.DncEng.SecretManager
                 OperationType = operationType,
                 OperationAccessLevel = GetOperationAccessLevel(operationType),
                 CallerIpAddress = GetLocalIPAddress(),
-                OperationResult = result
+                OperationResult = (OperationResult)(result)
             };
 
             auditRecord.AddOperationCategory(OperationCategory.PasswordManagement);
@@ -133,14 +149,18 @@ using Microsoft.DncEng.SecretManager.Commands;
 
 namespace Microsoft.DncEng.SecretManager
 {
-
     /// <summary>
-    /// Enum to eliminate the OpenTelemetry.Audit.Genev using statement
+    /// Enum that mirrors values from the OperationResult type defined in OpenTelemetry.Audit.Geneva
     /// </summary>
-    public enum OperationResult
+    /// <remarks>
+    /// This enum is needed to ensure any external consumers of the SecurityAuditLogger class do not need to reference the OpenTelemetry.Audit.Geneva library.
+    /// </remarks>
+    public enum SecretManagerOperationResult
     {
+        // All enum values should mirrors what is available in the OperationResult enum in OpenTelemetry.Audit.Geneva
+        // The available named values here should be kept in sync with the values defined in the INTERNL IF block above.
         Success = 1,
-        Failure
+        Failure = 2
     }
 
     /// <summary>
@@ -166,7 +186,7 @@ namespace Microsoft.DncEng.SecretManager
         /// <summary>
         /// Add an audit log for secret update operations performed on behalf of a user.
         /// </summary>
-        public void LogSecretUpdate(ITokenCredentialProvider credentialProvider, string secretName, string secretStoreType, string secretLocation, OperationResult result = OperationResult.Success, string resultMessage = "", [CallerMemberName] string operationName = "")
+        public void LogSecretUpdate(ITokenCredentialProvider credentialProvider, string secretName, string secretStoreType, string secretLocation, SecretManagerOperationResult result = SecretManagerOperationResult.Success, string resultMessage = "", [CallerMemberName] string operationName = "")
         {
             //No-op
         }

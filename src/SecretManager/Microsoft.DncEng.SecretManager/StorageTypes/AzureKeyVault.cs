@@ -8,9 +8,6 @@ using Azure.Security.KeyVault.Keys;
 using Azure.Security.KeyVault.Secrets;
 using JetBrains.Annotations;
 using Microsoft.DncEng.CommandLineLib;
-#if INTERNAL
-using OpenTelemetry.Audit.Geneva;
-#endif
 
 namespace Microsoft.DncEng.SecretManager.StorageTypes;
 
@@ -113,7 +110,7 @@ public class AzureKeyVault : StorageLocationType<AzureKeyVaultParameters>
     public override async Task SetSecretValueAsync(AzureKeyVaultParameters parameters, string name, SecretValue value)
     {
         // The default audit state should always be failure and overwritten with success at the end of the operation.
-        var operationAuditResult = OperationResult.Failure;
+        var operationAuditResult = SecretManagerOperationResult.Failure;
         // Place holder for the operation result message which will cause a default message to be logged on success.
         // Custom messages only need to be defined on failure
         var operationResultMessage = "";
@@ -134,7 +131,7 @@ public class AzureKeyVault : StorageLocationType<AzureKeyVaultParameters>
             properties.ExpiresOn = value.ExpiresOn;
             await client.UpdateSecretPropertiesAsync(properties);
             operationResultMessage = $"Secret '{name}' Updated...";
-            operationAuditResult = OperationResult.Success;
+            operationAuditResult = SecretManagerOperationResult.Success;
         }
         catch(Exception e)
         {
@@ -158,7 +155,7 @@ public class AzureKeyVault : StorageLocationType<AzureKeyVaultParameters>
     public override async Task EnsureKeyAsync(AzureKeyVaultParameters parameters, string name, SecretManifest.Key config)
     {
         // The default audit state should always be failure and overwritten with success at the end of the operation.
-        var operationAuditResult = OperationResult.Failure;
+        var operationAuditResult = SecretManagerOperationResult.Failure;
         // Place holder for the operation result message which will cause a default message to be logged on success.
         // Custom messages only need to be defined on failure
         var operationResultMessage = "";
@@ -185,7 +182,7 @@ public class AzureKeyVault : StorageLocationType<AzureKeyVaultParameters>
                         KeySize = config.Size,
                     });
                     operationResultMessage = $"{config.Type} Key '{name}' Created...";
-                    operationAuditResult = OperationResult.Success;
+                    operationAuditResult = SecretManagerOperationResult.Success;
                     break;
                 default:
                     createKey = false;
