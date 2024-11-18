@@ -81,7 +81,7 @@
     <PackageVersion Include="NUnit" Version="4.2.2" />
     <PackageVersion Include="NUnit3TestAdapter" Version="4.6.0" />
     <PackageVersion Include="Octokit" Version="13.0.1" />
-    <PackageVersion Include="OpenTelemetry.Audit.Geneva" Version="2.2.3" />
+    <PackageVersion Include="OpenTelemetry.Audit.Geneva" Version="2.2.3" Condition=" '$(DefineConstants)' != '' AND '$(DefineConstants.Contains(INTERNAL))' " />
     <PackageVersion Include="ServiceFabricMocks" Version="$(ServiceFabricMocksVersion)" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta1.21308.1" />
     <PackageVersion Include="System.Data.SqlClient" Version="4.8.6" />
