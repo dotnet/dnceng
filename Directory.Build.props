@@ -57,7 +57,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-  <Target Name="RestorePackages" BeforeTargets="BeforeBuild">
+  <Target Name="RestorePackages" BeforeTargets="BeforeBuild" Condition=" '$(DefineConstants)' != '' AND '$(DefineConstants.Contains(INTERNAL))' ">
     <Exec Command="dotnet restore --configfile $(SolutionDir)NuGet.Solution.config" />
   </Target>
 </Project>
