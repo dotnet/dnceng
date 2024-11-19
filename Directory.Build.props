@@ -57,4 +57,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
+  <Target Name="RestorePackages" BeforeTargets="BeforeBuild">
+    <Exec Command="dotnet restore --configfile $(SolutionDir)NuGet.Solution.config" />
+  </Target>
 </Project>
