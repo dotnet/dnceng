@@ -58,8 +58,4 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-
-  <PropertyGroup>
-    <RestoreAdditionalProjectSources>https://msblox.pkgs.visualstudio.com/_packaging/AzureGenevaMonitoring/nuget/v3/index.json</RestoreAdditionalProjectSources>
-  </PropertyGroup>
 </Project>
