@@ -1,4 +1,7 @@
-﻿#if INTERNAL
+﻿#if INTERNAL 
+// NOTE: 
+// We conditional compile this code because it depends on 
+// references that are only available in the internal build
 using System;
 using System.Linq;
 using System.Net;
@@ -14,7 +17,8 @@ namespace Microsoft.DncEng.SecretManager
     /// Enum that mirrors values from the OperationResult type defined in OpenTelemetry.Audit.Geneva
     /// </summary>
     /// <remarks>
-    /// This enum is needed to ensure any external consumers of the SecurityAuditLogger class do not need to reference the OpenTelemetry.Audit.Geneva library.
+    /// This enum is needed to ensure any external consumers of the SecurityAuditLogger class do not need to 
+    /// reference the OpenTelemetry.Audit.Geneva library directly.
     /// </remarks>
     public enum SecretManagerOperationResult
     {
@@ -22,12 +26,14 @@ namespace Microsoft.DncEng.SecretManager
         // This ensure the code will adapted to value changes in the OpenTelemetry.Audit.Geneva library
         // and it will ensure a compile time error is thrown here if a named enum type is changed or removed
         // from the OpenTelemetry.Audit.Geneva library
+        // NOTE: It will not handle named enum additions to the OpenTelemetry.Audit.Geneva library
         Success = OperationResult.Success,
         Failure = OperationResult.Failure
     }
 
     /// <summary>
-    /// SecurityAuditLogger is a class that is used to log security audit events to the local event log and Geneva
+    /// SecurityAuditLogger is a class that is used to log security audit events to the local event log 
+    /// in a formate that is comparable with Geneva audit logging
     /// </summary>
     public class SecurityAuditLogger
     {
@@ -66,7 +72,7 @@ namespace Microsoft.DncEng.SecretManager
             }
             // Audit logging is a 'volatile' operation meaning it can throw exceptions if logging fails.
             // This could lead to service instability caused by simple logging issues which is not desirable.
-            // So we catch all exceptions and write a safe warding message to console 
+            // So we catch all exceptions and write a safe warning message to console 
             // The hope is that app insights will also catch the base exception for debugging.
             catch
             {
@@ -83,6 +89,8 @@ namespace Microsoft.DncEng.SecretManager
             var user = credentialProvider.ApplicationId;
             // Get the tenant ID that provided the token for the credential provider.
             var tenantId = credentialProvider.TenantId;
+
+            // Create a logging record that is compatible with Geneva audit logging
             var auditRecord = new AuditRecord
             {
                 OperationResultDescription = $"Action '{operationType}' For Secret '{secretName}' With Operation '{operationName}' By User '{user}' On Source '{secretLocation}' Resulted In '{result}'.",
@@ -94,6 +102,7 @@ namespace Microsoft.DncEng.SecretManager
                 OperationResult = (OperationResult)(result)
             };
 
+            // Add additional context to the audit record as required by Geneva audit logging
             auditRecord.AddOperationCategory(OperationCategory.PasswordManagement);
             auditRecord.AddCallerIdentity(CallerIdentityType.ApplicationID, user);
             auditRecord.AddCallerIdentity(CallerIdentityType.TenantId, tenantId);
@@ -142,6 +151,10 @@ namespace Microsoft.DncEng.SecretManager
     }
 }
 #else
+// NOTE: 
+// We conditional compile this code because it depends on 
+// references that are only available in the internal build
+// Public build implementations will perform no-op logging processes
 using System;
 using System.Runtime.CompilerServices;
 using Microsoft.DncEng.SecretManager.Commands;
@@ -158,7 +171,7 @@ namespace Microsoft.DncEng.SecretManager
     public enum SecretManagerOperationResult
     {
         // All enum values should mirrors what is available in the OperationResult enum in OpenTelemetry.Audit.Geneva
-        // The available named values here should be kept in sync with the values defined in the INTERNL IF block above.
+        // NOTE: The named values here should be kept in sync with the values defined in the INTERNL IF block above.
         Success = 1,
         Failure = 2
     }
