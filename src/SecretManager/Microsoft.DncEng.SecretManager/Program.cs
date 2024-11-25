@@ -30,7 +30,7 @@ public class Program : DependencyInjectedConsoleApp
         services.AddSingleton(serviceProvider =>
         {
             var baseCommand = serviceProvider.GetRequiredService<CommonIdentityCommand>();
-            // We pre-pars command argument here to overcome a order of operations issue where 
+            // We pre-parse command argument here to overcome a order of operations issue where 
             // the SecurityAuditLogger object is instantiated before normal command options would be parsed
             // by DependencyInjectedConsoleApp RunAsync processes employed by command objects
             // In short, we do this because we need the value for the IDs before they would be read in normal Command processing
