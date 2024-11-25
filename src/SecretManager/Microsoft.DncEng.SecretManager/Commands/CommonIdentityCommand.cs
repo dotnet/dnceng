@@ -12,11 +12,6 @@ namespace Microsoft.DncEng.SecretManager.Commands
     /// </summary>
     public class CommonIdentityCommand : CommandLineLib.Command
     {
-        /// <summary>
-        /// Check for local environment values to indicate you are running for Azure DevOps
-        /// SYSTEM_COLLECTIONURI is a default environment variable in Azure DevOps
-        /// </summary>
-        private bool RunningInAzureDevOps = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SYSTEM_COLLECTIONURI"));
 
         /// <summary>
         /// Provides the ServiceTreeId set with global options
@@ -64,16 +59,7 @@ namespace Microsoft.DncEng.SecretManager.Commands
         {
             if (ServiceTreeId == Guid.Empty)
             {
-                // If running in Azure DevOps use VSO tagging in the console output to the warning message will be handled by the Azure DevOps build system
-                if (RunningInAzureDevOps)
-                {
-                    _console.WriteError("##vso[task.logissue type=warning]ServiceTreeId is set to an Empty Guid!\n");
-                }
-                // Else write a general warning message to console
-                else
-                {
-                    _console.WriteError("ServiceTreeId is set to an Empty Guid!\n");
-                }
+                _console.WriteError("ServiceTreeId is set to an Empty Guid!\n");
             }
         }
     }

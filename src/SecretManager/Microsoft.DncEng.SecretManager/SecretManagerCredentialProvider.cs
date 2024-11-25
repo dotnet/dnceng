@@ -50,8 +50,8 @@ public sealed class SecretManagerCredentialProvider : ITokenCredentialProvider
         }
         catch
         {
-            ApplicationId = "Failed To Read Claims Data: appid";
-            TenantId = "Failed To Read Claims Data: tid";
+            // We swallow all errors here to ensure that no part of the audit logging process can cause the application to fail.
+            // These values are not critical to the operation of the application and are only used for audit logging purposes.
         }
     }
 }

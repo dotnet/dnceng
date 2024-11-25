@@ -38,8 +38,8 @@ namespace Microsoft.DncEng.SecretManager.Tests
             }
             catch
             {
-                ApplicationId = "Failed To Read Claims Data: Oid";
-                TenantId = "Failed To Read Claims Data: tenant_id";
+                // We swallow all errors here to ensure that no part of the audit logging process can cause the application to fail.
+                // These values are not critical to the operation of the application and are only used for audit logging purposes.
             }
         }
 
