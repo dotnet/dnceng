@@ -12,7 +12,7 @@ class TestCommand : CommonIdentityCommand
     private readonly IConsole _console;
     private readonly ITokenCredentialProvider _tokenProvider;
 
-    public TestCommand(IConsole console, ITokenCredentialProvider tokenProvider) : base(console)
+    public TestCommand(IConsole console, ITokenCredentialProvider tokenProvider) : base()
     {
         _console = console;
         _tokenProvider = tokenProvider;
@@ -20,8 +20,6 @@ class TestCommand : CommonIdentityCommand
 
     public override async Task RunAsync(CancellationToken cancellationToken)
     {
-        WarnIfServiceTreeIdIsSetToEmptyGuid();
-
         var creds = await _tokenProvider.GetCredentialAsync();
 
         var token = await creds.GetTokenAsync(new TokenRequestContext(new[]

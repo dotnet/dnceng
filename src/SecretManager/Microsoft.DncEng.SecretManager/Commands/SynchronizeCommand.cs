@@ -27,7 +27,7 @@ public class SynchronizeCommand : CommonIdentityCommand
     private bool _verifyOnly = false;
     private readonly List<string> _forcedSecrets = new();
 
-    public SynchronizeCommand(StorageLocationTypeRegistry storageLocationTypeRegistry, SecretTypeRegistry secretTypeRegistry, ISystemClock clock, IConsole console) : base(console)
+    public SynchronizeCommand(StorageLocationTypeRegistry storageLocationTypeRegistry, SecretTypeRegistry secretTypeRegistry, ISystemClock clock, IConsole console) : base()
     {
         _storageLocationTypeRegistry = storageLocationTypeRegistry;
         _secretTypeRegistry = secretTypeRegistry;
@@ -58,8 +58,6 @@ public class SynchronizeCommand : CommonIdentityCommand
     {
         try
         {
-            WarnIfServiceTreeIdIsSetToEmptyGuid();
-
             Console.OutputEncoding = System.Text.Encoding.UTF8;
             _console.WriteLine($"🔁 Synchronizing secrets contained in {_manifestFile}");
             if (_force || _forcedSecrets.Any())

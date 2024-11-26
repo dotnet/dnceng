@@ -15,7 +15,7 @@ public class ValidateCommand : CommonIdentityCommand
     private string _baseSettingsFile;
     private string _envSettingsFile;
 
-    public ValidateCommand(IConsole console, SettingsFileValidator settingsFileValidator) : base(console)
+    public ValidateCommand(IConsole console, SettingsFileValidator settingsFileValidator) : base()
     {
         _settingsFileValidator = settingsFileValidator;
     }
@@ -39,7 +39,6 @@ public class ValidateCommand : CommonIdentityCommand
 
     public override async Task RunAsync(CancellationToken cancellationToken)
     {
-        WarnIfServiceTreeIdIsSetToEmptyGuid();
         bool foundError = !await _settingsFileValidator.ValidateFileAsync(_envSettingsFile, _baseSettingsFile, _manifestFile, cancellationToken);
 
         if (foundError)

@@ -24,7 +24,7 @@ public class ValidateAllCommand : CommonIdentityCommand
     private readonly List<string> _manifestFiles = new List<string>();
     private string _basePath;
 
-    public ValidateAllCommand(IConsole console, SettingsFileValidator settingsFileValidator, StorageLocationTypeRegistry storageLocationTypeRegistry) : base(console)
+    public ValidateAllCommand(IConsole console, SettingsFileValidator settingsFileValidator, StorageLocationTypeRegistry storageLocationTypeRegistry) : base()
     {
         _console = console;
         _settingsFileValidator = settingsFileValidator;
@@ -47,8 +47,6 @@ public class ValidateAllCommand : CommonIdentityCommand
 
     public override async Task RunAsync(CancellationToken cancellationToken)
     {
-        WarnIfServiceTreeIdIsSetToEmptyGuid();
-
         bool haveErrors = false;
         var manifestFiles = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (string manifestFile in _manifestFiles)

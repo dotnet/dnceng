@@ -33,8 +33,8 @@ namespace Microsoft.DncEng.SecretManager.Tests
                 // Decode the JWT to get user identity information
                 var handler = new JwtSecurityTokenHandler();
                 var jsonToken = handler.ReadToken(token.Token) as JwtSecurityToken;
-                ApplicationId = jsonToken?.Claims?.FirstOrDefault(claim => claim.Type == "oid")?.Value ?? "Claim Oid Not Found";
-                TenantId = jsonToken?.Claims?.FirstOrDefault(claim => claim.Type == "tenant_id")?.Value ?? "Claim tenant_id Not Found";
+                ApplicationId = jsonToken?.Claims?.FirstOrDefault(claim => claim.Type == "oid")?.Value ?? "";
+                TenantId = jsonToken?.Claims?.FirstOrDefault(claim => claim.Type == "tenant_id")?.Value ?? "";
             }
             catch
             {

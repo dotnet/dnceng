@@ -1,6 +1,5 @@
 ﻿
 using System;
-using Microsoft.DncEng.CommandLineLib;
 using Microsoft.VisualStudio.Services.Common;
 using Mono.Options;
 
@@ -12,22 +11,17 @@ namespace Microsoft.DncEng.SecretManager.Commands
     /// </summary>
     public class CommonIdentityCommand : CommandLineLib.Command
     {
-
         /// <summary>
         /// Provides the ServiceTreeId set with global options
         /// The ID is a guid and is set to the Helix service tree ID by default
         /// </summary>
         public Guid ServiceTreeId { get; private set; } = new Guid("8835b1f3-0d22-4e28-bae0-65da04655ed4");
 
-        // Local console object used to write messages to the console
-        private readonly IConsole _console;
-
         /// <summary>
         /// Base constructor for the CommonIdentityCommand class
         /// </summary>
-        public CommonIdentityCommand(IConsole console)
+        public CommonIdentityCommand()
         {
-            _console = console;
         }
 
         /// <summary>
@@ -51,16 +45,6 @@ namespace Microsoft.DncEng.SecretManager.Commands
                 }
             });
             return options;
-        }
-
-        /// <summary>
-        /// Provides a non-volatile warning message if the ServiceTreeId option is set to a empty guid value
-        internal void WarnIfServiceTreeIdIsSetToEmptyGuid()
-        {
-            if (ServiceTreeId == Guid.Empty)
-            {
-                _console.WriteError("ServiceTreeId is set to an Empty Guid!\n");
-            }
         }
     }
 }

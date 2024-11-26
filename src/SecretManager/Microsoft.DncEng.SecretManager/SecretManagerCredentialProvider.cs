@@ -45,8 +45,8 @@ public sealed class SecretManagerCredentialProvider : ITokenCredentialProvider
             // Decode the JWT to get user identity information
             var handler = new JwtSecurityTokenHandler();
             var jsonToken = handler.ReadToken(token.Token) as JwtSecurityToken;
-            ApplicationId = jsonToken?.Claims?.FirstOrDefault(claim => claim.Type == "appid")?.Value ?? "Claim appid (Application Id) Not Found";
-            TenantId = jsonToken?.Claims?.FirstOrDefault(claim => claim.Type == "tid")?.Value ?? "Claim tid (Tenant Id) Not Found";
+            ApplicationId = jsonToken?.Claims?.FirstOrDefault(claim => claim.Type == "appid")?.Value ?? "";
+            TenantId = jsonToken?.Claims?.FirstOrDefault(claim => claim.Type == "tid")?.Value ?? "";
         }
         catch
         {

@@ -12,15 +12,13 @@ class InfoCommand : CommonIdentityCommand
 {
     private readonly IConsole _console;
 
-    public InfoCommand(IConsole console): base(console)
+    public InfoCommand(IConsole console): base()
     {
         _console = console;
     }
 
     public override Task RunAsync(CancellationToken cancellationToken)
     {
-        WarnIfServiceTreeIdIsSetToEmptyGuid();
-
         var exeName = Process.GetCurrentProcess().ProcessName;
         var version = Assembly.GetEntryAssembly()
             ?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
