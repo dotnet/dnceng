@@ -1,13 +1,13 @@
-using Azure;
-using Azure.Security.KeyVault.Keys;
-using Azure.Security.KeyVault.Secrets;
-using JetBrains.Annotations;
-using Microsoft.DncEng.CommandLineLib;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using Azure;
+using Azure.Security.KeyVault.Keys;
+using Azure.Security.KeyVault.Secrets;
+using JetBrains.Annotations;
+using Microsoft.DncEng.CommandLineLib;
 
 namespace Microsoft.DncEng.SecretManager.StorageTypes;
 
@@ -23,11 +23,13 @@ public class AzureKeyVault : StorageLocationType<AzureKeyVaultParameters>
     public const string NextRotationOnTag = "next-rotation-on";
     private readonly ITokenCredentialProvider _tokenCredentialProvider;
     private readonly IConsole _console;
+    private readonly SecurityAuditLogger _auditLogger;
 
-    public AzureKeyVault(ITokenCredentialProvider tokenCredentialProvider, IConsole console)
+    public AzureKeyVault(ITokenCredentialProvider tokenCredentialProvider, IConsole console, SecurityAuditLogger auditLogger)
     {
         _tokenCredentialProvider = tokenCredentialProvider;
         _console = console;
+        _auditLogger = auditLogger;
     }
 
     private async Task<SecretClient> CreateSecretClient(AzureKeyVaultParameters parameters)
@@ -107,44 +109,106 @@ public class AzureKeyVault : StorageLocationType<AzureKeyVaultParameters>
 
     public override async Task SetSecretValueAsync(AzureKeyVaultParameters parameters, string name, SecretValue value)
     {
-        SecretClient client = await CreateSecretClient(parameters);
-        var createdSecret = await client.SetSecretAsync(name, value.Value ?? "");
-        var properties = createdSecret.Value.Properties;
-        foreach (var (k, v) in value.Tags)
+        // The default audit state should always be failure and overwritten with success at the end of the operation.
+        var operationAuditResult = SecretManagerOperationResult.Failure;
+        // Place holder for the operation result message which will cause a default message to be logged on success.
+        // Custom messages only need to be defined on failure
+        var operationResultMessage = "";
+        try
         {
-            properties.Tags[k] = v;
+            SecretClient client = await CreateSecretClient(parameters);
+            var createdSecret = await client.SetSecretAsync(name, value.Value ?? "");
+            var properties = createdSecret.Value.Properties;
+            foreach (var (k, v) in value.Tags)
+            {
+                properties.Tags[k] = v;
+            }
+            properties.Tags[NextRotationOnTag] = value.NextRotationOn.ToString("O");
+            properties.Tags["ChangedBy"] = "secret-manager.exe";
+            // Tags to appease the old secret management system
+            properties.Tags["Owner"] = "secret-manager.exe";
+            properties.Tags["SecretType"] = "MANAGED";
+            properties.ExpiresOn = value.ExpiresOn;
+            await client.UpdateSecretPropertiesAsync(properties);
+            operationResultMessage = $"Secret '{name}' Updated...";
+            operationAuditResult = SecretManagerOperationResult.Success;
         }
-        properties.Tags[NextRotationOnTag] = value.NextRotationOn.ToString("O");
-        properties.Tags["ChangedBy"] = "secret-manager.exe";
-        // Tags to appease the old secret management system
-        properties.Tags["Owner"] = "secret-manager.exe";
-        properties.Tags["SecretType"] = "MANAGED";
-        properties.ExpiresOn = value.ExpiresOn;
-        await client.UpdateSecretPropertiesAsync(properties);
+        catch(Exception e)
+        {
+           operationResultMessage = e.Message;
+           throw;
+        }
+        finally
+        {
+            // Record an audit log for the secret update operation
+            _auditLogger.LogSecretUpdate(
+                credentialProvider: _tokenCredentialProvider,
+                secretName: name,
+                secretStoreType: nameof(AzureKeyVault),
+                secretLocation: GetAzureKeyVaultUri(parameters),
+                result: operationAuditResult,
+                resultMessage: operationResultMessage
+                );
+        }
     }
 
     public override async Task EnsureKeyAsync(AzureKeyVaultParameters parameters, string name, SecretManifest.Key config)
     {
-        var client = await CreateKeyClient(parameters);
+        // The default audit state should always be failure and overwritten with success at the end of the operation.
+        var operationAuditResult = SecretManagerOperationResult.Failure;
+        // Place holder for the operation result message which will cause a default message to be logged on success.
+        // Custom messages only need to be defined on failure
+        var operationResultMessage = "";
+        // Tracks when key creation is required since we only want to write audit logs when a new key is created
+        var createKey = false;
         try
         {
-            await client.GetKeyAsync(name);
-            return; // key exists, so we are done.
-        }
-        catch (RequestFailedException ex) when (ex.Status == 404)
-        {
-        }
+            var client = await CreateKeyClient(parameters);
+            try
+            {
+                await client.GetKeyAsync(name);
+                return; // key exists, so we are done.
+            }
+            catch (RequestFailedException ex) when (ex.Status == 404)
+            {
+            }
 
-        switch (config.Type.ToLowerInvariant())
+            createKey = true;
+            switch (config.Type.ToLowerInvariant())
+            {
+                case "rsa":
+                    await client.CreateKeyAsync(name, KeyType.Rsa, new CreateRsaKeyOptions(name)
+                    {
+                        KeySize = config.Size,
+                    });
+                    operationResultMessage = $"{config.Type} Key '{name}' Created...";
+                    operationAuditResult = SecretManagerOperationResult.Success;
+                    break;
+                default:
+                    createKey = false;
+                    throw new NotImplementedException(config.Type);
+            }
+        }
+        catch (Exception e)
         {
-            case "rsa":
-                await client.CreateKeyAsync(name, KeyType.Rsa, new CreateRsaKeyOptions(name)
-                {
-                    KeySize = config.Size,
-                });
-                break;
-            default:
-                throw new NotImplementedException(config.Type);
+            operationResultMessage = e.Message;
+            throw;
+        }
+        finally
+        {
+            // Only write an audit log if a new key is created
+            if (createKey)
+            {
+                // Record an audit log for the key creation operation
+                _auditLogger.LogSecretUpdate(
+                    credentialProvider: _tokenCredentialProvider,
+                    secretName: name,
+                    secretStoreType: "AzureKeyVault",
+                    secretLocation: GetAzureKeyVaultUri(parameters),
+                    result: operationAuditResult,
+                    resultMessage: operationResultMessage
+                    );
+            }
         }
     }
 }
