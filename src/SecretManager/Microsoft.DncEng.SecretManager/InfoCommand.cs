@@ -3,16 +3,15 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DncEng.CommandLineLib;
-using Microsoft.DncEng.SecretManager.Commands;
 
 namespace Microsoft.DncEng.SecretManager;
 
 [Command("info")]
-class InfoCommand : CommonIdentityCommand
+class InfoCommand : Command
 {
     private readonly IConsole _console;
 
-    public InfoCommand(IConsole console): base()
+    public InfoCommand(IConsole console)
     {
         _console = console;
     }
