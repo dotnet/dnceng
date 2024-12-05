@@ -7,13 +7,16 @@ using System.Threading.Tasks;
 using ConsoleTables;
 using Microsoft.DncEng.CommandLineLib;
 using Microsoft.DncEng.SecretManager.StorageTypes;
+using Microsoft.VisualStudio.Services.Common;
+
 using Mono.Options;
+
 using Command = Microsoft.DncEng.CommandLineLib.Command;
 
 namespace Microsoft.DncEng.SecretManager.Commands;
 
 [Command("synchronize")]
-public class SynchronizeCommand : Command
+public class SynchronizeCommand : CommonIdentityCommand
 {
     private readonly StorageLocationTypeRegistry _storageLocationTypeRegistry;
     private readonly SecretTypeRegistry _secretTypeRegistry;
@@ -24,7 +27,7 @@ public class SynchronizeCommand : Command
     private bool _verifyOnly = false;
     private readonly List<string> _forcedSecrets = new();
 
-    public SynchronizeCommand(StorageLocationTypeRegistry storageLocationTypeRegistry, SecretTypeRegistry secretTypeRegistry, ISystemClock clock, IConsole console)
+    public SynchronizeCommand(StorageLocationTypeRegistry storageLocationTypeRegistry, SecretTypeRegistry secretTypeRegistry, ISystemClock clock, IConsole console) : base()
     {
         _storageLocationTypeRegistry = storageLocationTypeRegistry;
         _secretTypeRegistry = secretTypeRegistry;
@@ -42,13 +45,13 @@ public class SynchronizeCommand : Command
 
     public override OptionSet GetOptions()
     {
-        return new OptionSet
+        return base.GetOptions().AddRange(new OptionSet()
         {
             {"f|force", "Force rotate all secrets", f => _force = !string.IsNullOrEmpty(f)},
             {"force-secret=", "Force rotate the specified secret", _forcedSecrets.Add},
             {"skip-untracked", "Skip untracked secrets", f => _skipUntracked = !string.IsNullOrEmpty(f)},
             {"verify-only", "Does not rotate any secrets, instead, produces an error for every secret that needs to be rotated.", v => _verifyOnly = !string.IsNullOrEmpty(v)},
-        };
+        });
     }
 
     public override async Task RunAsync(CancellationToken cancellationToken)
@@ -177,8 +180,8 @@ public class SynchronizeCommand : Command
 
                         // since the rotation runs weekly, we need a 1 week grace period
                         // where verification runs will not fail, but rotation will happen.
-                        // otherwise a secret scheduled for rotation on tuesday, will cause
-                        // a build failure on wednesday, before it gets rotated normally on the following monday
+                        // otherwise a secret scheduled for rotation on Tuesday, will cause
+                        // a build failure on Wednesday, before it gets rotated normally on the following Monday
                         // the verification mode is to catch the "the rotation hasn't happened in months" case
                         if (_verifyOnly && nextRotation > now.AddDays(-7))
                         {

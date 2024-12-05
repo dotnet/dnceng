@@ -126,6 +126,12 @@
         },
         {
           "Project": "internal",
+          "DefinitionPath": "\\dotnet\\helix-machines\\dotnet-helix-machines-cleaning",
+          "Branches": [ "main" ],
+          "IssuesId": "dotnet-dnceng-first-responder"
+        },
+        {
+          "Project": "internal",
           "DefinitionPath": "\\dotnet-release\\Validate-DotNet",
           "Branches": [ "main" ],
           "IssuesId": "dotnet-aspnetcore-infra",
