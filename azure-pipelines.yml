@@ -158,6 +158,7 @@ extends:
               condition: succeeded()
               
             - powershell: |
+                az account show
                 $manifestArgs = @()
                 Get-ChildItem .vault-config/*.yaml |% {
                   $manifestArgs += @("-m", $_.FullName)
