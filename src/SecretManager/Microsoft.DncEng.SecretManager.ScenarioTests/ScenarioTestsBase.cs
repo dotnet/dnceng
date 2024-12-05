@@ -14,7 +14,6 @@ using Microsoft.DncEng.SecretManager.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
-using Moq;
 
 namespace Microsoft.DncEng.SecretManager.Tests
 {
@@ -45,12 +44,6 @@ namespace Microsoft.DncEng.SecretManager.Tests
         protected async Task ExecuteSynchronizeCommand(string manifest)
         {
             ServiceCollection services = new ServiceCollection();
-            // Dependency injection instruction needed to support properties used for Geneva Logging operations
-            services.AddSingleton<CommonIdentityCommand>();
-            var mockSecurityAuditLogger = new Mock<SecurityAuditLogger>(MockBehavior.Strict);
-            services.AddSingleton(mockSecurityAuditLogger);
-
-            // Original dependency injection instructions
             services.AddSingleton<SynchronizeCommand>();
 
             Program program = new Program();
