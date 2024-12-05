@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,11 +26,6 @@ public class SynchronizeCommandTests
         var cancellationToken = cts.Token;
 
         var services = new ServiceCollection();
-        // Dependency injection instruction needed to support properties used for Geneva Logging operations
-        services.AddSingleton<CommonIdentityCommand>();
-        var mockSecurityAuditLogger = new Mock<SecurityAuditLogger>(MockBehavior.Strict);
-        services.AddSingleton(mockSecurityAuditLogger);
-
         services.AddSingleton(Mock.Of<IConsole>());
 
         var storageLocationTypeRegistry = new Mock<StorageLocationTypeRegistry>(MockBehavior.Strict);

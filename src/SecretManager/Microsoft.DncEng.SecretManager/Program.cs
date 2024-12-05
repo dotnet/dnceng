@@ -1,12 +1,11 @@
-
 using System;
 using System.Net.Http;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Microsoft.DncEng.CommandLineLib;
-using Microsoft.DncEng.SecretManager.Commands;
 using Microsoft.DncEng.SecretManager.ServiceConnections;
+using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http;
 
@@ -14,32 +13,13 @@ namespace Microsoft.DncEng.SecretManager;
 
 public class Program : DependencyInjectedConsoleApp
 {
-    /// Command args are stored for future use to parse options for the CommonIdentityCommand
-    private static string[] Args = new string[] { };
-
     public static Task<int> Main(string[] args)
     {
-        Args = args;
         return new Program().RunAsync(args);
     }
 
     protected override void ConfigureServices(IServiceCollection services)
     {
-        //// Dependency injection instruction needed to support properties used for Geneva Logging operations
-        services.AddSingleton<CommonIdentityCommand>();
-        services.AddSingleton(serviceProvider =>
-        {
-            var baseCommand = serviceProvider.GetRequiredService<CommonIdentityCommand>();
-            // We pre-parse command argument here to overcome a order of operations issue where 
-            // the SecurityAuditLogger object is instantiated before normal command options would be parsed
-            // by DependencyInjectedConsoleApp RunAsync processes employed by command objects
-            // In short, we do this because we need the value for the IDs before they would be read in normal Command processing
-            var options = baseCommand.GetOptions();
-            options.Parse(Args);
-            return new SecurityAuditLogger(baseCommand);
-        });
-
-
         services.AddSingleton<ITokenCredentialProvider, SecretManagerCredentialProvider>();
         services.AddSingleton<SecretTypeRegistry>();
         services.AddSingleton<StorageLocationTypeRegistry>();
@@ -67,7 +47,7 @@ public class Program : DependencyInjectedConsoleApp
             });
         });
 
-        services.Configure<ServiceEndpointClient.Configuration>(config => { });
+        services.Configure<ServiceEndpointClient.Configuration>(config => {});
         services.AddSingleton<ServiceEndpointClient>();
     }
 }
