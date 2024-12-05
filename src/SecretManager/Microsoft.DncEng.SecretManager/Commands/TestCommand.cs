@@ -4,15 +4,15 @@ using System.Threading.Tasks;
 using Azure.Core;
 using Microsoft.DncEng.CommandLineLib;
 
-namespace Microsoft.DncEng.SecretManager;
+namespace Microsoft.DncEng.SecretManager.Commands;
 
 [Command("test")]
-class TestCommand : Command
+class TestCommand : CommonIdentityCommand
 {
     private readonly IConsole _console;
     private readonly ITokenCredentialProvider _tokenProvider;
 
-    public TestCommand(IConsole console, ITokenCredentialProvider tokenProvider)
+    public TestCommand(IConsole console, ITokenCredentialProvider tokenProvider) : base()
     {
         _console = console;
         _tokenProvider = tokenProvider;
