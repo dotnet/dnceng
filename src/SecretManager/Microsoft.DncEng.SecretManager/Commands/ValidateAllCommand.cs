@@ -4,8 +4,10 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.DncEng.CommandLineLib;
 using Microsoft.DncEng.SecretManager.StorageTypes;
+using Microsoft.VisualStudio.Services.Common;
 using Mono.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -14,7 +16,7 @@ using Command = Microsoft.DncEng.CommandLineLib.Command;
 namespace Microsoft.DncEng.SecretManager.Commands;
 
 [Command("validate-all")]
-public class ValidateAllCommand : Command
+public class ValidateAllCommand : CommonIdentityCommand
 {
     private readonly IConsole _console;
     private readonly SettingsFileValidator _settingsFileValidator;
@@ -22,7 +24,7 @@ public class ValidateAllCommand : Command
     private readonly List<string> _manifestFiles = new List<string>();
     private string _basePath;
 
-    public ValidateAllCommand(IConsole console, SettingsFileValidator settingsFileValidator, StorageLocationTypeRegistry storageLocationTypeRegistry)
+    public ValidateAllCommand(IConsole console, SettingsFileValidator settingsFileValidator, StorageLocationTypeRegistry storageLocationTypeRegistry) : base()
     {
         _console = console;
         _settingsFileValidator = settingsFileValidator;
@@ -31,11 +33,11 @@ public class ValidateAllCommand : Command
 
     public override OptionSet GetOptions()
     {
-        return new OptionSet
+        return base.GetOptions().AddRange(new OptionSet()
         {
             {"m|manifest-file=", "A secret manifest file. Can be specified more than once.", m => _manifestFiles.Add(m)},
             {"b|base-path=", "The base path to search for settings files.", b => _basePath = b},
-        };
+        });
     }
 
     public override bool AreRequiredOptionsSet()
