@@ -15,8 +15,6 @@ parameters:
   type: string
 - name: StatusVariableGroup
   type: string
-- name: RolloutScorerAppName
-  type: string
 - name: GrafanaHost
   type: string
 - name: GrafanaKeyVault
