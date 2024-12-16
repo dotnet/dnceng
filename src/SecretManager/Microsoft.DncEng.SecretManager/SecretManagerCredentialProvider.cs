@@ -18,7 +18,6 @@ public sealed class SecretManagerCredentialProvider : ITokenCredentialProvider
 
     public SecretManagerCredentialProvider()
     {
-        SetCredentialIdentityValues();
     }
 
     // Expect AzureCliCredential for CI and local dev environments. 
@@ -30,7 +29,14 @@ public sealed class SecretManagerCredentialProvider : ITokenCredentialProvider
         ));
     public Task<TokenCredential> GetCredentialAsync()
     {
-        return Task.FromResult(_credential.Value);
+        var result = Task.FromResult(_credential.Value);
+        // We call SetCredentialIdentityValues here because _credential is set
+        // by a lazy action that does not run until it is first needed
+        // If this were called in the constructor it would force _credential to
+        // populate as soon as the object was instantiated which would change
+        // the current process behavior
+        SetCredentialIdentityValues();
+        return result;
     }
 
     /// <inheritdoc/>
