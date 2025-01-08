@@ -15,8 +15,6 @@ parameters:
   type: string
 - name: StatusVariableGroup
   type: string
-- name: RolloutScorerAppName
-  type: string
 - name: GrafanaHost
   type: string
 - name: GrafanaKeyVault
@@ -150,33 +148,6 @@ stages:
         enableCustomDeployment: true
         DeploymentType: zipDeploy
         RemoveAdditionalFilesFlag: true
-
-  - job: deployRolloutScorer
-    displayName: Deploy rollout scorer azure function
-    pool:
-      name: NetCore1ESPool-Internal-NoMSI
-      demands: ImageOverride -equals 1es-windows-2019
-    steps:
-    - download: current
-      artifact: RolloutScorer
-    - task: AzureFunctionApp@1
-      displayName: Deploy RolloutScorer
-      inputs:
-        azureSubscription: ${{ parameters.ServiceConnectionName }}
-        ${{ if ne(parameters.DeploymentEnvironment, 'Production') }}:
-          appSettings: >
-            -DeploymentEnvironment Staging
-            -ScorecardsStorageAccountKeySecretName "rolloutscorecardsstaging-storage-key"
-            -ScorecardsStorageAccountName "rolloutscorecardsstaging"
-            -ScorecardsStorageAccountTableName "scorecardsstaging"
-        ${{ if eq(parameters.DeploymentEnvironment, 'Production') }}:
-          appSettings: >
-            -DeploymentEnvironment Production
-            -ScorecardsStorageAccountKeySecretName "rolloutscorecards-storage-key"
-            -ScorecardsStorageAccountName "rolloutscorecards"
-            -ScorecardsStorageAccountTableName "scorecards"
-        package: $(Pipeline.Workspace)/RolloutScorer/RolloutScorer.zip
-        appName: ${{ parameters.RolloutScorerAppName }}
 
 - stage: postdeploy
   displayName: Post-Deployment
