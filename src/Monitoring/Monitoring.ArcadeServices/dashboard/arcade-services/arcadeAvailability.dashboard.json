@@ -1255,6 +1255,48 @@
           "type": "alertlist"
         },
         {
+          "alert": {
+            "alertRuleTags": {
+              "NotificationId": "6179576701874a7abc440a574cf636d0"
+            },
+            "conditions": [
+              {
+                "evaluator": {
+                  "params": [
+                    99
+                  ],
+                  "type": "lt"
+                },
+                "operator": {
+                  "type": "and"
+                },
+                "query": {
+                  "params": [
+                    "A",
+                    "30m",
+                    "now"
+                  ]
+                },
+                "reducer": {
+                  "params": [],
+                  "type": "max"
+                },
+                "type": "query"
+              }
+            ],
+            "executionErrorState": "keep_state",
+            "for": "5m",
+            "frequency": "1m",
+            "handler": 1,
+            "message": "Helix API availability alert!",
+            "name": "Helix API availability",
+            "noDataState": "keep_state",
+            "notifications": [
+              {
+                "uid": "statusHook"
+              }
+            ]
+          },
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
             "uid": "F2XodEi7z"
@@ -1427,6 +1469,48 @@
           "type": "timeseries"
         },
         {
+          "alert": {
+            "alertRuleTags": {
+              "NotificationId": "24cae10d9eca44079e7cf3d47f148497"
+            },
+            "conditions": [
+              {
+                "evaluator": {
+                  "params": [
+                    5000
+                  ],
+                  "type": "gt"
+                },
+                "operator": {
+                  "type": "and"
+                },
+                "query": {
+                  "params": [
+                    "A",
+                    "5m",
+                    "now"
+                  ]
+                },
+                "reducer": {
+                  "params": [],
+                  "type": "avg"
+                },
+                "type": "query"
+              }
+            ],
+            "executionErrorState": "keep_state",
+            "for": "5m",
+            "frequency": "1m",
+            "handler": 1,
+            "message": "Helix API Average Response Time is high!",
+            "name": "Helix API Average Response Time",
+            "noDataState": "keep_state",
+            "notifications": [
+              {
+                "uid": "statusHook"
+              }
+            ]
+          },
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
             "uid": "F2XodEi7z"
@@ -1574,6 +1658,47 @@
           "type": "timeseries"
         },
         {
+          "alert": {
+            "alertRuleTags": {
+              "NotificationId": "6213d3c5ce9a46278343bf075798e46f"
+            },
+            "conditions": [
+              {
+                "evaluator": {
+                  "params": [
+                    1
+                  ],
+                  "type": "lt"
+                },
+                "operator": {
+                  "type": "and"
+                },
+                "query": {
+                  "params": [
+                    "A",
+                    "30m",
+                    "now"
+                  ]
+                },
+                "reducer": {
+                  "params": [],
+                  "type": "avg"
+                },
+                "type": "query"
+              }
+            ],
+            "executionErrorState": "keep_state",
+            "for": "5m",
+            "frequency": "1m",
+            "handler": 1,
+            "name": "Helix AutoScaler Service Stopped Running",
+            "noDataState": "alerting",
+            "notifications": [
+              {
+                "uid": "statusHook"
+              }
+            ]
+          },
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
             "uid": "F2XodEi7z"
@@ -1859,6 +1984,48 @@
       "id": 52,
       "panels": [
         {
+          "alert": {
+            "alertRuleTags": {
+              "NotificationId": "d2dd705a6c724ed68fcf6955561c06dd"
+            },
+            "conditions": [
+              {
+                "evaluator": {
+                  "params": [
+                    20
+                  ],
+                  "type": "gt"
+                },
+                "operator": {
+                  "type": "and"
+                },
+                "query": {
+                  "params": [
+                    "A",
+                    "1h",
+                    "now-10m"
+                  ]
+                },
+                "reducer": {
+                  "params": [],
+                  "type": "avg"
+                },
+                "type": "query"
+              }
+            ],
+            "executionErrorState": "keep_state",
+            "for": "5m",
+            "frequency": "1m",
+            "handler": 1,
+            "message": "The number of failed DotNetEng Status requests per hour is above 20. This may indicate a systemic problem that needs to be investigated.\nTo intially investigate prod, run the following query in DotNetEng-Status-Prod, and to investigate staging, run the query in DotNetEng-Status-Staging:\n\n```\nunion exceptions, traces\n| project timestamp, operation_Name, customDimensions, message, problemId, details\n| order by timestamp asc\n```",
+            "name": "DotNetEng Status Failed Requests/Hour alert",
+            "noDataState": "ok",
+            "notifications": [
+              {
+                "uid": "statusHook"
+              }
+            ]
+          },
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
             "uid": "F2XodEi7z"
@@ -1979,6 +2146,48 @@
           "type": "timeseries"
         },
         {
+          "alert": {
+            "alertRuleTags": {
+              "NotificationId": "fb8faaf7600740f98a1c2db076cd1712"
+            },
+            "conditions": [
+              {
+                "evaluator": {
+                  "params": [
+                    60
+                  ],
+                  "type": "lt"
+                },
+                "operator": {
+                  "type": "and"
+                },
+                "query": {
+                  "params": [
+                    "A",
+                    "5m",
+                    "now"
+                  ]
+                },
+                "reducer": {
+                  "params": [],
+                  "type": "avg"
+                },
+                "type": "query"
+              }
+            ],
+            "executionErrorState": "keep_state",
+            "for": "15m",
+            "frequency": "1m",
+            "handler": 1,
+            "message": "source.dot.net availability is low!",
+            "name": "source.dot.net Availability",
+            "noDataState": "keep_state",
+            "notifications": [
+              {
+                "uid": "statusHook"
+              }
+            ]
+          },
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
             "uid": "F2XodEi7z"
