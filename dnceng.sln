@@ -49,8 +49,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DncEng.Configurat
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Internal.Tools.SynchronizePackageProps", "src\Microsoft.DotNet.Internal.Tools.SynchronizePackageProps\Microsoft.DotNet.Internal.Tools.SynchronizePackageProps.csproj", "{5B72F5E3-FB1C-4D36-8D32-51BBCA118E26}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RolloutScorer", "RolloutScorer", "{C77B1797-82F6-4AA9-A5EA-F466C4032067}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Monitoring", "Monitoring", "{4614FF66-8594-4D7E-BEF8-31611B6087C5}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Monitoring.Sdk", "src\Monitoring\Sdk\Microsoft.DotNet.Monitoring.Sdk.csproj", "{BC62FD8B-FC12-434F-9958-4EA0A52D60B2}"
