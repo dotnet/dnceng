@@ -131,5 +131,33 @@
       "Staging": "a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1",
       "Production": "a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1"
     }
+  },
+  {
+    "Name": "product-construction-service-resourcegroup",
+    "Values": {
+      "Staging": "product-construction-service",
+      "Production": "product-construction-service"
+    }
+  },
+  {
+    "Name": "product-construction-service-appinsights-resourcename",
+    "Values": {
+      "Staging": "product-construction-service-ai-int",
+      "Production": "product-construction-service-ai-prod"
+    }
+  },
+  {
+    "Name": "product-construction-service-appinsights-resourcepath",
+    "Values": {
+      "Staging": "/subscriptions/e6b5f9f5-0ca4-4351-879b-014d78400ec2/resourceGroups/product-construction-service/providers/Microsoft.Insights/components/product-construction-service-ai-int",
+      "Production": "/subscriptions/fbd6122a-9ad3-42e4-976e-bccb82486856/resourceGroups/product-construction-service/providers/Microsoft.Insights/components/product-construction-service-ai-prod"
+    }
+  },
+  {
+    "Name": "dotnet-product-construction-services-subscriptionid",
+    "Values": {
+      "Staging": "e6b5f9f5-0ca4-4351-879b-014d78400ec2",
+      "Production": "fbd6122a-9ad3-42e4-976e-bccb82486856"
+    }
   }
 ]
