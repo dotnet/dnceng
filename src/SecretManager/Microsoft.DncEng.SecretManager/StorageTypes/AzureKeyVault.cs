@@ -23,13 +23,13 @@ public class AzureKeyVault : StorageLocationType<AzureKeyVaultParameters>
     public const string NextRotationOnTag = "next-rotation-on";
     private readonly ITokenCredentialProvider _tokenCredentialProvider;
     private readonly IConsole _console;
-    private readonly SecurityAuditLogger _auditLogger;
+    private SecurityAuditLogger _auditLogger;
 
-    public AzureKeyVault(ITokenCredentialProvider tokenCredentialProvider, IConsole console, SecurityAuditLogger auditLogger)
+    public AzureKeyVault(ITokenCredentialProvider tokenCredentialProvider, IConsole console)
     {
         _tokenCredentialProvider = tokenCredentialProvider;
         _console = console;
-        _auditLogger = auditLogger;
+        SetSecurityAuditLogger(new SecurityAuditLogger(Guid.Empty));
     }
 
     private async Task<SecretClient> CreateSecretClient(AzureKeyVaultParameters parameters)
@@ -48,6 +48,12 @@ public class AzureKeyVault : StorageLocationType<AzureKeyVaultParameters>
         return new KeyClient(
             new Uri($"https://{parameters.Name}.vault.azure.net/"),
             creds);
+    }
+
+    /// <inheritdoc/>
+    public override void SetSecurityAuditLogger(SecurityAuditLogger auditLogger)
+    {
+        _auditLogger = auditLogger;
     }
 
     public string GetAzureKeyVaultUri(AzureKeyVaultParameters parameters)

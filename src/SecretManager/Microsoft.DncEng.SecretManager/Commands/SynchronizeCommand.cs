@@ -16,8 +16,14 @@ using Command = Microsoft.DncEng.CommandLineLib.Command;
 namespace Microsoft.DncEng.SecretManager.Commands;
 
 [Command("synchronize")]
-public class SynchronizeCommand : CommonIdentityCommand
+public class SynchronizeCommand : Command
 {
+    /// <summary>
+    /// Provides the ServiceTreeId set with global options
+    /// The ID is a guid and is set to the Helix service tree ID by default
+    /// </summary>
+    private Guid ServiceTreeId { get; set; } = new Guid("8835b1f3-0d22-4e28-bae0-65da04655ed4");
+
     private readonly StorageLocationTypeRegistry _storageLocationTypeRegistry;
     private readonly SecretTypeRegistry _secretTypeRegistry;
     private readonly ISystemClock _clock;
@@ -27,7 +33,7 @@ public class SynchronizeCommand : CommonIdentityCommand
     private bool _verifyOnly = false;
     private readonly List<string> _forcedSecrets = new();
 
-    public SynchronizeCommand(StorageLocationTypeRegistry storageLocationTypeRegistry, SecretTypeRegistry secretTypeRegistry, ISystemClock clock, IConsole console) : base()
+    public SynchronizeCommand(StorageLocationTypeRegistry storageLocationTypeRegistry, SecretTypeRegistry secretTypeRegistry, ISystemClock clock, IConsole console)
     {
         _storageLocationTypeRegistry = storageLocationTypeRegistry;
         _secretTypeRegistry = secretTypeRegistry;
@@ -47,6 +53,18 @@ public class SynchronizeCommand : CommonIdentityCommand
     {
         return base.GetOptions().AddRange(new OptionSet()
         {
+            {"servicetreeid=", "Your service tree ID (Ids are defined at aka.ms/servicetree)", id =>
+                {
+                    if (Guid.TryParse(id, out var guid))
+                    {
+                        ServiceTreeId = guid;
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"Failed to parse a valid Guid value from ServiceTreeId value '{id}'!");
+                    }
+                }
+            },
             {"f|force", "Force rotate all secrets", f => _force = !string.IsNullOrEmpty(f)},
             {"force-secret=", "Force rotate the specified secret", _forcedSecrets.Add},
             {"skip-untracked", "Skip untracked secrets", f => _skipUntracked = !string.IsNullOrEmpty(f)},
@@ -80,6 +98,8 @@ public class SynchronizeCommand : CommonIdentityCommand
             SecretManifest manifest = SecretManifest.Read(_manifestFile);
             using StorageLocationType.Bound storage = _storageLocationTypeRegistry
                 .Get(manifest.StorageLocation.Type).BindParameters(manifest.StorageLocation.Parameters);
+            // Set the audit logging service tree id specified for this command
+            storage.SetSecurityAuditLogger(new SecurityAuditLogger(ServiceTreeId));
             using var disposables = new DisposableList();
             var references = new Dictionary<string, StorageLocationType.Bound>();
             foreach (var (name, storageReference) in manifest.References)

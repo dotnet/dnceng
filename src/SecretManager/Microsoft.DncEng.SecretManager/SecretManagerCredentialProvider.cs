@@ -23,10 +23,12 @@ public sealed class SecretManagerCredentialProvider : ITokenCredentialProvider
     // Expect AzureCliCredential for CI and local dev environments. 
     // Use InteractiveBrowserCredential as a fall back for local dev environments.
     private readonly Lazy<TokenCredential> _credential = new(() =>
-        new ChainedTokenCredential(
+    {
+        return new ChainedTokenCredential(
             new AzureCliCredential(new AzureCliCredentialOptions { TenantId = ConfigurationConstants.MsftAdTenantId }),
             new InteractiveBrowserCredential(new InteractiveBrowserCredentialOptions() { TenantId = ConfigurationConstants.MsftAdTenantId })
-        ));
+        );
+        });
     public Task<TokenCredential> GetCredentialAsync()
     {
         var result = Task.FromResult(_credential.Value);

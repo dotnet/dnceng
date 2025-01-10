@@ -24,10 +24,6 @@ public class SynchronizeCommandTests
         var cancellationToken = cts.Token;
 
         var services = new ServiceCollection();
-        // Dependency injection instruction needed to support properties used for Geneva Logging operations
-        services.AddSingleton<CommonIdentityCommand>();
-        var mockSecurityAuditLogger = new Mock<SecurityAuditLogger>(MockBehavior.Strict);
-        services.AddSingleton(mockSecurityAuditLogger);
 
         services.AddSingleton(Mock.Of<IConsole>());
 
@@ -50,6 +46,8 @@ public class SynchronizeCommandTests
 
             var storageLocationType = new Mock<StorageLocationType>(MockBehavior.Strict);
             storageLocationType.Protected().Setup("Dispose", true);
+            storageLocationType
+                .Setup(x => x.SetSecurityAuditLogger(It.IsAny<SecurityAuditLogger>()));
             storageLocationType
                 .Setup(storage => storage.ListSecretsAsync(It.IsAny<IDictionary<string, object>>()))
                 .ReturnsAsync(existingSecrets);

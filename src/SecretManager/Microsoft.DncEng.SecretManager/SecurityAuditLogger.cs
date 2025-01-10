@@ -7,7 +7,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
-using Microsoft.DncEng.SecretManager.Commands;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry.Audit.Geneva;
 
@@ -40,16 +39,9 @@ namespace Microsoft.DncEng.SecretManager
         private ILogger ControlPlaneLogger;
 
         /// <summary>
-        /// Constructor for the SecurityAuditLogger that takes a CommonIdentityCommand to extract the service tree id value.
+        /// Main constructor that configures the logger for the specified service tree id.
         /// </summary>
-        public SecurityAuditLogger(CommonIdentityCommand commonIdentityCommand) : this(commonIdentityCommand.ServiceTreeId)
-        {
-        }
-
-        /// <summary>
-        /// Private constructor that configures the logger for the specified service tree id.
-        /// </summary>
-        private SecurityAuditLogger(Guid serviceTreeId)
+        public SecurityAuditLogger(Guid serviceTreeId)
         {
             var auditFactory = AuditLoggerFactory.Create(options =>
             {
@@ -157,7 +149,6 @@ namespace Microsoft.DncEng.SecretManager
 // Public build implementations will perform no-op logging processes
 using System;
 using System.Runtime.CompilerServices;
-using Microsoft.DncEng.SecretManager.Commands;
 
 
 namespace Microsoft.DncEng.SecretManager
@@ -181,18 +172,10 @@ namespace Microsoft.DncEng.SecretManager
     /// </summary>
     public class SecurityAuditLogger
     {
-
         /// <summary>
-        /// Constructor for the SecurityAuditLogger that takes a CommonIdentityCommand to extract the service tree id value.
+        /// Main constructor that configures the logger for the specified service tree id.
         /// </summary>
-        public SecurityAuditLogger(CommonIdentityCommand commonIdentityCommand) : this(commonIdentityCommand.ServiceTreeId)
-        {
-        }
-
-        /// <summary>
-        /// Private constructor that configures the logger for the specified service tree id.
-        /// </summary>
-        private SecurityAuditLogger(Guid serviceTreeId)
+        public SecurityAuditLogger(Guid serviceTreeId)
         {
         }
 

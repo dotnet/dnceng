@@ -16,7 +16,7 @@ using Command = Microsoft.DncEng.CommandLineLib.Command;
 namespace Microsoft.DncEng.SecretManager.Commands;
 
 [Command("validate-all")]
-public class ValidateAllCommand : CommonIdentityCommand
+public class ValidateAllCommand : Command
 {
     private readonly IConsole _console;
     private readonly SettingsFileValidator _settingsFileValidator;
@@ -24,7 +24,7 @@ public class ValidateAllCommand : CommonIdentityCommand
     private readonly List<string> _manifestFiles = new List<string>();
     private string _basePath;
 
-    public ValidateAllCommand(IConsole console, SettingsFileValidator settingsFileValidator, StorageLocationTypeRegistry storageLocationTypeRegistry) : base()
+    public ValidateAllCommand(IConsole console, SettingsFileValidator settingsFileValidator, StorageLocationTypeRegistry storageLocationTypeRegistry)
     {
         _console = console;
         _settingsFileValidator = settingsFileValidator;
