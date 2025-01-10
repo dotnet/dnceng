@@ -1,0 +1,117 @@
+storageLocation:
+  type: azure-devops-project
+  parameters:
+    organization: devdiv
+    project: DevDiv
+
+references:
+  helixkv:
+    type: azure-key-vault
+    parameters:
+      subscription: a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1
+      name: helixkv
+
+secrets:
+  dotnet-eng:
+    type: azure-devops-service-endpoint
+    parameters:
+      authorization:
+        type: azure-devops-access-token
+        parameters:
+          domainAccountName: dn-bot
+          domainAccountSecret:
+            location: helixkv
+            name: dn-bot-account-redmond
+          organizations: dnceng
+          scopes: packaging_write
+          
+  dnceng-test-tools-feed:
+    type: azure-devops-service-endpoint
+    parameters:
+      authorization:
+        type: azure-devops-access-token
+        parameters:
+          domainAccountName: dn-bot
+          domainAccountSecret:
+            location: helixkv
+            name: dn-bot-account-redmond
+          organizations: dnceng
+          scopes: packaging_write
+
+  dnceng-dotnet9:
+    type: azure-devops-service-endpoint
+    parameters:
+      authorization:
+        type: azure-devops-access-token
+        parameters:
+          domainAccountName: dn-bot
+          domainAccountSecret:
+            location: helixkv
+            name: dn-bot-account-redmond
+          organizations: dnceng
+          scopes: packaging_write
+
+  dnceng-dotnet8:
+    type: azure-devops-service-endpoint
+    parameters:
+      authorization:
+        type: azure-devops-access-token
+        parameters:
+          domainAccountName: dn-bot
+          domainAccountSecret:
+            location: helixkv
+            name: dn-bot-account-redmond
+          organizations: dnceng
+          scopes: packaging_write
+
+  dnceng-dotnet8-workloads:
+    type: azure-devops-service-endpoint
+    parameters:
+      authorization:
+        type: azure-devops-access-token
+        parameters:
+          domainAccountName: dn-bot
+          domainAccountSecret:
+            location: helixkv
+            name: dn-bot-account-redmond
+          organizations: dnceng
+          scopes: packaging_write
+
+  dnceng-dotnet9-workloads:
+    type: azure-devops-service-endpoint
+    parameters:
+      authorization:
+        type: azure-devops-access-token
+        parameters:
+          domainAccountName: dn-bot
+          domainAccountSecret:
+            location: helixkv
+            name: dn-bot-account-redmond
+          organizations: dnceng
+          scopes: packaging_write
+
+  dotnet-tools-dnceng-public-feed:
+    type: azure-devops-service-endpoint
+    parameters:
+      authorization:
+        type: azure-devops-access-token
+        parameters:
+          domainAccountName: dn-bot
+          domainAccountSecret:
+            location: helixkv
+            name: dn-bot-account-redmond
+          organizations: dnceng
+          scopes: packaging_write
+
+  dnceng/internal:
+    type: azure-devops-service-endpoint
+    parameters:
+      authorization:
+        type: azure-devops-access-token
+        parameters:
+          domainAccountName: dn-bot
+          domainAccountSecret:
+            location: helixkv
+            name: dn-bot-account-redmond
+          organizations: dnceng
+          scopes: code

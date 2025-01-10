@@ -7,11 +7,13 @@ using Azure.Core;
 using Azure.Identity;
 using Azure.ResourceManager;
 using Azure.Security.KeyVault.Secrets;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.DncEng.CommandLineLib;
 using Microsoft.DncEng.Configuration.Extensions;
 using Microsoft.DncEng.SecretManager.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 
 namespace Microsoft.DncEng.SecretManager.Tests
 {
@@ -56,6 +58,9 @@ namespace Microsoft.DncEng.SecretManager.Tests
             services.RemoveAll<IConsole>();
             services.RemoveAll<IConsoleBackend>();
             services.AddSingleton<IConsole, TestConsole>();
+
+            services.RemoveAll<IConfigureOptions<TelemetryConfiguration>>();
+            services.Configure<TelemetryConfiguration>(_ => { });
 
             ServiceProvider provider = services.BuildServiceProvider();
             GlobalCommand globalCommand = ActivatorUtilities.CreateInstance<GlobalCommand>(provider);

@@ -29,6 +29,11 @@ extends:
       name: NetCore1ESPool-Internal
       image: 1es-windows-2019
       os: windows
+    sdl:
+      policheck:
+        enabled: true
+      tsa:
+        enabled: true
    
     stages:
     - stage: GitHub_Issue_Verification
@@ -112,9 +117,9 @@ extends:
                 useGlobalJson: true
 
             - task: UseDotNet@2
-              displayName: Install .NET Version 3.1
+              displayName: Install .NET 6
               inputs:
-                version: 3.1.x
+                version: 6.x
 
             - task: NuGetToolInstaller@0
               inputs:
@@ -245,7 +250,6 @@ extends:
             DotNetStatusAppName: dotneteng-status-staging
             DotNetStatusEndpoint: .NET Engineering Deployment Notification - Staging
             PublishProfile: Int
-            RolloutScorerAppName: rollout-scorer-int
             ServiceConnectionName: NetHelixStaging
             StatusVariableGroup: DotNetStatus Staging
             GrafanaHost: https://dotnet-eng-grafana-staging.westus2.cloudapp.azure.com
@@ -258,7 +262,6 @@ extends:
             DotNetStatusAppName: dotneteng-status
             DotNetStatusEndpoint: .NET Engineering Deployment Notification - Production
             PublishProfile: Prod
-            RolloutScorerAppName: rollout-scorer-prod
             ServiceConnectionName: NetHelix
             StatusVariableGroup: DotNetStatus Production
             GrafanaHost: https://dotnet-eng-grafana.westus2.cloudapp.azure.com

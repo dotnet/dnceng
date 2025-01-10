@@ -22,6 +22,13 @@
       "Name": "status-test"
     }
   },
+  "Kestrel": {
+    "Endpoints": {
+      "MyHttpEndpoint": {
+        "Url": "https://localhost:5001"
+      }
+    }
+  },
   "WebHooks": {
     "github": {
       "SecretKey": {
