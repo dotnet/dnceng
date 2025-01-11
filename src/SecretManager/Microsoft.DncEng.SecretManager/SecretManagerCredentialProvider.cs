@@ -21,7 +21,7 @@ public sealed class SecretManagerCredentialProvider : ITokenCredentialProvider
     }
 
     // Expect AzureCliCredential for CI and local dev environments. 
-    // Use InteractiveBrowserCredential as a fall back for local dev environments.
+    // Enable InteractiveBrowserCredential for use in local dev environments.
     private readonly Lazy<TokenCredential> _credential = new(() =>
     {
         return new ChainedTokenCredential(
