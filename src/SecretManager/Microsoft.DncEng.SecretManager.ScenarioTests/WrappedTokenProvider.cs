@@ -22,7 +22,7 @@ namespace Microsoft.DncEng.SecretManager.Tests
         }
 
         /// <inheritdoc/>
-        internal void SetCredentialIdentityValues()
+        public void SetCredentialIdentityValues()
         {
             try
             {

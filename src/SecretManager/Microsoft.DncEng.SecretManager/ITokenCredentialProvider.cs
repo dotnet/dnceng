@@ -16,4 +16,9 @@ public interface ITokenCredentialProvider
     public string TenantId { get; }
 
     public Task<TokenCredential> GetCredentialAsync();
+
+    /// <summary>
+    /// Sets the Application Id and TenantId properties based on the current credential.
+    /// </summary>
+    public void SetCredentialIdentityValues();
 }

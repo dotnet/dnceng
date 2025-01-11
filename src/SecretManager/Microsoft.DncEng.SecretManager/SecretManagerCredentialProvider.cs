@@ -42,7 +42,7 @@ public sealed class SecretManagerCredentialProvider : ITokenCredentialProvider
     }
 
     /// <inheritdoc/>
-    internal void SetCredentialIdentityValues()
+    public void SetCredentialIdentityValues()
     {
         try
         {
