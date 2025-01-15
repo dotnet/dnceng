@@ -1,3 +1,6 @@
+[!CAUTION]
+Rollout Scorer has been deprecated. This doc is being retained for informational purposes only. 
+
 # Rollout Scorer Proposal
 
 This is a proposal for the Rollout Scorer which will assist in generating rollout scorecards. Given a few inputs, it will scrape AzDO (and later, telemetry sources) to calculate a score and then generate a markdown file in a PR to core-eng and upload the data to Kusto.

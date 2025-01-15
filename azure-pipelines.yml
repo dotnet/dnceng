@@ -73,10 +73,6 @@ extends:
                   targetPath: $(Build.ArtifactStagingDirectory)/DotNet.Status.Web/package
                   artifactName: DotNetStatus
                 - output: pipelineArtifact
-                  displayName: 'Publish RolloutScorerAzureFunction'
-                  targetPath: $(Build.ArtifactStagingDirectory)/RolloutScorerAzureFunction/package
-                  artifactName: RolloutScorer
-                - output: pipelineArtifact
                   displayName: 'Publish Release Utilities Artifact'
                   targetPath: $(Build.ArtifactStagingDirectory)\eng
                   artifactName: ReleaseUtilities
@@ -200,18 +196,6 @@ extends:
                 includeRootFolder: false
                 archiveType: zip
                 archiveFile: $(Build.ArtifactStagingDirectory)/DotNet.Status.Web/package/DotNetStatus.zip
-                replaceExistingArchive: true
-
-            - script: $(Build.SourcesDirectory)\.dotnet\dotnet publish -o $(Build.ArtifactStagingDirectory)\RolloutScorerAzureFunction\publish -f net6.0
-              workingDirectory: src/RolloutScorer/RolloutScorerAzureFunction
-              displayName: dotnet publish RolloutScorerAzureFunction
-
-            - task: ArchiveFiles@2
-              inputs:
-                rootFolderOrFile: $(Build.ArtifactStagingDirectory)/RolloutScorerAzureFunction/publish
-                includeRootFolder: false
-                archiveType: zip
-                archiveFile: $(Build.ArtifactStagingDirectory)/RolloutScorerAzureFunction/package/RolloutScorer.zip
                 replaceExistingArchive: true
 
             ## Prepare release utilities artifact

@@ -1,3 +1,6 @@
+[!CAUTION]
+Rollout Scorer has been deprecated. This doc is being retained for informational purposes only. 
+
 # Rollout Scorer Automation Proposal
 
 The [Rollout Scorer](/MiscTools/RolloutScorer/Readme.md) as it exists now is very useful for speeding up the process
