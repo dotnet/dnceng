@@ -18,32 +18,6 @@ using Moq;
 
 namespace Microsoft.DncEng.SecretManager.Tests
 {
-
-    // Derived class to override SetCredentialIdentityValues method
-    public class TestWrappedTokenProvider : ITokenCredentialProvider
-    {
-        private WrappedTokenProvider wrappedTokenProvider;
-
-        public TestWrappedTokenProvider(TokenCredential tokenCredential)
-        {
-            wrappedTokenProvider = new WrappedTokenProvider(tokenCredential);
-        }
-
-        public string ApplicationId => wrappedTokenProvider.ApplicationId;
-
-        public string TenantId => wrappedTokenProvider.TenantId;
-
-        public Task<TokenCredential> GetCredentialAsync()
-        {
-            return wrappedTokenProvider.GetCredentialAsync();
-        }
-
-        public void SetCredentialIdentityValues()
-        {
-            // Mocked implementation
-        }
-    }
-
     public class ScenarioTestsBase
     {
         protected const string ResourceGroup = "secret-manager-scenario-tests";
@@ -78,11 +52,7 @@ namespace Microsoft.DncEng.SecretManager.Tests
 
             // Use environment credentials
             services.RemoveAll<ITokenCredentialProvider>();
-
-            // Using custom test class TestWrappedTokenProvider to Mock just the SetCredentialIdentityValues method
-            // for WrappedTokenProvider class because if the real method is call it would perform real token generation
-            // which is not needed for unit testing.
-            services.AddSingleton<ITokenCredentialProvider, TestWrappedTokenProvider>(_ => new TestWrappedTokenProvider(_tokenCredential));
+            services.AddSingleton<ITokenCredentialProvider, WrappedTokenProvider>(_ => new WrappedTokenProvider(_tokenCredential));
 
             // Replace the console with a test console so that we don't get a bunch of errors/warnings
             // the command line when running these tests

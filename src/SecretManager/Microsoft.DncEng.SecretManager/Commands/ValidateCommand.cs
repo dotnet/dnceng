@@ -15,7 +15,7 @@ public class ValidateCommand : Command
     private string _baseSettingsFile;
     private string _envSettingsFile;
 
-    public ValidateCommand(IConsole console, SettingsFileValidator settingsFileValidator)
+    public ValidateCommand(SettingsFileValidator settingsFileValidator)
     {
         _settingsFileValidator = settingsFileValidator;
     }
