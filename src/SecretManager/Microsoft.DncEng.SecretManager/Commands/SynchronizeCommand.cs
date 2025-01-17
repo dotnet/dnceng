@@ -7,7 +7,10 @@ using System.Threading.Tasks;
 using ConsoleTables;
 using Microsoft.DncEng.CommandLineLib;
 using Microsoft.DncEng.SecretManager.StorageTypes;
+using Microsoft.VisualStudio.Services.Common;
+
 using Mono.Options;
+
 using Command = Microsoft.DncEng.CommandLineLib.Command;
 
 namespace Microsoft.DncEng.SecretManager.Commands;
@@ -15,6 +18,12 @@ namespace Microsoft.DncEng.SecretManager.Commands;
 [Command("synchronize")]
 public class SynchronizeCommand : Command
 {
+    /// <summary>
+    /// Provides the ServiceTreeId set with global options
+    /// The ID is a guid and is set to the Helix service tree ID by default
+    /// </summary>
+    private Guid ServiceTreeId { get; set; } = new Guid("8835b1f3-0d22-4e28-bae0-65da04655ed4");
+
     private readonly StorageLocationTypeRegistry _storageLocationTypeRegistry;
     private readonly SecretTypeRegistry _secretTypeRegistry;
     private readonly ISystemClock _clock;
@@ -42,13 +51,25 @@ public class SynchronizeCommand : Command
 
     public override OptionSet GetOptions()
     {
-        return new OptionSet
+        return base.GetOptions().AddRange(new OptionSet()
         {
+            {"servicetreeid=", "Your service tree ID (Ids are defined at aka.ms/servicetree)", id =>
+                {
+                    if (Guid.TryParse(id, out var guid))
+                    {
+                        ServiceTreeId = guid;
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"Failed to parse a valid Guid value from ServiceTreeId value '{id}'!");
+                    }
+                }
+            },
             {"f|force", "Force rotate all secrets", f => _force = !string.IsNullOrEmpty(f)},
             {"force-secret=", "Force rotate the specified secret", _forcedSecrets.Add},
             {"skip-untracked", "Skip untracked secrets", f => _skipUntracked = !string.IsNullOrEmpty(f)},
             {"verify-only", "Does not rotate any secrets, instead, produces an error for every secret that needs to be rotated.", v => _verifyOnly = !string.IsNullOrEmpty(v)},
-        };
+        });
     }
 
     public override async Task RunAsync(CancellationToken cancellationToken)
@@ -77,6 +98,8 @@ public class SynchronizeCommand : Command
             SecretManifest manifest = SecretManifest.Read(_manifestFile);
             using StorageLocationType.Bound storage = _storageLocationTypeRegistry
                 .Get(manifest.StorageLocation.Type).BindParameters(manifest.StorageLocation.Parameters);
+            // Set the audit logging service tree id specified for this command
+            storage.SetSecurityAuditLogger(new SecurityAuditLogger(ServiceTreeId));
             using var disposables = new DisposableList();
             var references = new Dictionary<string, StorageLocationType.Bound>();
             foreach (var (name, storageReference) in manifest.References)
@@ -177,8 +200,8 @@ public class SynchronizeCommand : Command
 
                         // since the rotation runs weekly, we need a 1 week grace period
                         // where verification runs will not fail, but rotation will happen.
-                        // otherwise a secret scheduled for rotation on tuesday, will cause
-                        // a build failure on wednesday, before it gets rotated normally on the following monday
+                        // otherwise a secret scheduled for rotation on Tuesday, will cause
+                        // a build failure on Wednesday, before it gets rotated normally on the following Monday
                         // the verification mode is to catch the "the rotation hasn't happened in months" case
                         if (_verifyOnly && nextRotation > now.AddDays(-7))
                         {

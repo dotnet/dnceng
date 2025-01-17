@@ -1,3 +1,4 @@
+
 using System;
 using System.Net.Http;
 using System.Reflection;
@@ -5,7 +6,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Microsoft.DncEng.CommandLineLib;
 using Microsoft.DncEng.SecretManager.ServiceConnections;
-using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http;
 

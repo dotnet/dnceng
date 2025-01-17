@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Azure.Core;
 using Microsoft.DncEng.CommandLineLib;
 
-namespace Microsoft.DncEng.SecretManager;
+namespace Microsoft.DncEng.SecretManager.Commands;
 
 [Command("test")]
 class TestCommand : Command

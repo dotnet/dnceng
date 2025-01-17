@@ -102,7 +102,7 @@ public class GitHubHookController : ControllerBase
         string uri = payload.Comment.HtmlUrl;
         string username = payload.Comment.User.Login;
         DateTimeOffset date = payload.Comment.UpdatedAt;
-        using IDisposable scope = _logger.BeginScope("Handling pull request {repo}#{prNumber}", repo, number);
+        using IDisposable? scope = _logger.BeginScope("Handling pull request {repo}#{prNumber}", repo, number);
         switch (payload.Action)
         {
             case "created":
@@ -129,7 +129,7 @@ public class GitHubHookController : ControllerBase
         string uri = payload.Comment.HtmlUrl;
         string username = payload.Comment.User.Login;
         DateTimeOffset date = payload.Comment.UpdatedAt ?? _systemClock.UtcNow;
-        using IDisposable scope = _logger.BeginScope("Handling issue {repo}#{issueNumber}", repo, number);
+        using IDisposable? scope = _logger.BeginScope("Handling issue {repo}#{issueNumber}", repo, number); 
         switch (payload.Action)
         {
             case "created":
@@ -155,7 +155,7 @@ public class GitHubHookController : ControllerBase
         string uri = payload.PullRequest.HtmlUrl;
         string username = payload.PullRequest.User.Login;
         DateTimeOffset date = payload.PullRequest.UpdatedAt;
-        using IDisposable scope = _logger.BeginScope("Handling pull request {repo}#{prNumber}", repo, number);
+        using IDisposable? scope = _logger.BeginScope("Handling pull request {repo}#{prNumber}", repo, number);
 
         switch (payload.Action)
         {
@@ -376,7 +376,7 @@ public class GitHubHookController : ControllerBase
         string uri = issueEvent.Issue.HtmlUrl;
         string username = issueEvent.Issue.User.Login;
         DateTimeOffset date = issueEvent.Issue.UpdatedAt ?? _systemClock.UtcNow;
-        using IDisposable scope = _logger.BeginScope("Handling issue {repo}#{issueNumber}", repo, number);
+        using IDisposable? scope = _logger.BeginScope("Handling issue {repo}#{issueNumber}", repo, number);
         switch (issueEvent.Action)
         {
             case "opened":

@@ -14,6 +14,7 @@ using Microsoft.DncEng.SecretManager.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
+using Moq;
 
 namespace Microsoft.DncEng.SecretManager.Tests
 {
