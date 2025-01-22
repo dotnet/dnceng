@@ -7,6 +7,11 @@ namespace Microsoft.DncEng.SecretManager;
 
 public abstract class StorageLocationType : IDisposable
 {
+
+    /// <summary>
+    /// Assigns the security audit logger object to be used by the StorageLocationType
+    /// </summary>
+    public abstract void SetSecurityAuditLogger(SecurityAuditLogger auditLogger);
     public abstract Task<List<SecretProperties>> ListSecretsAsync(IDictionary<string, object> parameters);
     [ItemCanBeNull]
     public abstract Task<SecretValue> GetSecretValueAsync(IDictionary<string, object> parameters, string name);
@@ -37,6 +42,14 @@ public abstract class StorageLocationType : IDisposable
         {
             _that = that;
             _parameters = parameters;
+        }
+
+        /// <summary>
+        /// Assigns the security audit logger object to be used by the StorageLocationType.Bound object
+        /// </summary>
+        public void SetSecurityAuditLogger(SecurityAuditLogger auditLogger)
+        {
+            _that.SetSecurityAuditLogger(auditLogger);
         }
 
         public Task<List<SecretProperties>> ListSecretsAsync()

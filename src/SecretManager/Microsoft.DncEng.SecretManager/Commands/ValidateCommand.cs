@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DncEng.CommandLineLib;
+using Microsoft.VisualStudio.Services.Common;
 using Mono.Options;
 using Command = Microsoft.DncEng.CommandLineLib.Command;
 
@@ -21,12 +22,12 @@ public class ValidateCommand : Command
 
     public override OptionSet GetOptions()
     {
-        return new OptionSet
+        return base.GetOptions().AddRange(new OptionSet()
         {
             {"m|manifest-file=", "The secret manifest file", f => _manifestFile = f},
             {"e|env-settings-file=", "The environment settings file to validate", f => _envSettingsFile = f},
             {"b|base-settings-file=", "The base settings file to validate", f => _baseSettingsFile = f},
-        };
+        });
     }
 
     public override bool AreRequiredOptionsSet()
