@@ -684,7 +684,7 @@
             },
             "reducer": {
               "params": [],
-              "type": "avg"
+              "type": "min"
             },
             "type": "query"
           }
@@ -787,6 +787,10 @@
                   "fixedColor": "super-light-blue",
                   "mode": "fixed"
                 }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
               }
             ]
           },
