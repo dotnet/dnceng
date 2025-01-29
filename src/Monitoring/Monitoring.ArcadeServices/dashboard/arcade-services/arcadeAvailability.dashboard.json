@@ -784,7 +784,7 @@
               {
                 "id": "color",
                 "value": {
-                  "fixedColor": "blue",
+                  "fixedColor": "super-light-blue",
                   "mode": "fixed"
                 }
               }
