@@ -205,39 +205,14 @@
         "type": "grafana-azure-monitor-datasource",
         "uid": "F2XodEi7z"
       },
-      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           },
           "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
+            "align": "auto",
+            "displayMode": "auto"
           },
           "mappings": [],
           "thresholds": {
@@ -252,19 +227,30 @@
                 "value": 80
               }
             ]
-          },
-          "unit": "none"
+          }
         },
         "overrides": [
           {
             "matcher": {
               "id": "byName",
-              "options": "Wait time (max)"
+              "options": "Problem"
             },
             "properties": [
               {
-                "id": "unit",
-                "value": "ms"
+                "id": "custom.width",
+                "value": 1164
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Count"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 64
               }
             ]
           }
@@ -276,44 +262,49 @@
         "x": 12,
         "y": 1
       },
-      "id": 55,
-      "options": {
-        "legend": {
-          "calcs": [
-            "mean",
-            "max"
-          ],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single"
+      "id": 62,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Application Insights",
+          "url": "https://ms.portal.azure.com#@72f988bf-86f1-41af-91ab-2d7cd011db47/blade/Microsoft_OperationsManagementSuite_Workspace/Logs.ReactView/resourceId/%2Fsubscriptions%2Ffbd6122a-9ad3-42e4-976e-bccb82486856%2FresourceGroups%2Fproduct-construction-service%2Fproviders%2Fmicrosoft.insights%2Fcomponents%2Fproduct-construction-service-ai-prod/source/LogsBlade.AnalyticsShareLinkToQuery/q/H4sIAAAAAAAAA0utSE4tKMnMzysGAGAbcigKAAAA/timespan/P1D/limit/5000"
         }
+      ],
+      "options": {
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
       },
+      "pluginVersion": "8.3.6",
       "targets": [
         {
+          "azureLogAnalytics": {
+            "query": "exceptions\r\n| where $__timeFilter(timestamp) and problemId !contains \"SpaDefaultPageMiddleware\"\r\n| project Exception=problemId, Method=method\r\n| summarize Count=count() by Exception, Method\r\n| order by Count desc",
+            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]"
+          },
           "azureMonitor": {
-            "aggregation": "Average",
-            "alias": "Wait time (max)",
             "dimensionFilters": [],
-            "metricDefinition": "Microsoft.Insights/components",
-            "metricName": "pcs.queue.wait_time",
-            "metricNamespace": "Azure.ApplicationInsights",
-            "resourceGroup": "[parameter(product-construction-service-resourcegroup)]",
-            "resourceName": "[parameter(product-construction-service-appinsights-resourcename)]",
             "timeGrain": "auto"
           },
+          "database": "engineeringdata",
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
             "uid": "F2XodEi7z"
           },
-          "queryType": "Azure Monitor",
+          "queryType": "Azure Log Analytics",
           "refId": "A",
-          "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
+          "resultFormat": "table",
+          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
         }
       ],
-      "title": "PCS Background Queue Wait Time",
-      "type": "timeseries"
+      "title": "PCS Most Frequent Exceptions",
+      "type": "table"
     },
     {
       "datasource": {
@@ -447,6 +438,121 @@
       "fieldConfig": {
         "defaults": {
           "color": {
+            "fixedColor": "red",
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 7,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "stepBefore",
+            "lineWidth": 3,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "id": 46,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Application Insights",
+          "url": "https://ms.portal.azure.com#@72f988bf-86f1-41af-91ab-2d7cd011db47/blade/Microsoft_OperationsManagementSuite_Workspace/Logs.ReactView/resourceId/%2Fsubscriptions%2Ffbd6122a-9ad3-42e4-976e-bccb82486856%2FresourceGroups%2Fproduct-construction-service%2Fproviders%2Fmicrosoft.insights%2Fcomponents%2Fproduct-construction-service-ai-prod/source/LogsBlade.AnalyticsShareLinkToQuery/q/H4sIAAAAAAAAA0utSE4tKMnMzysGAGAbcigKAAAA/timespan/P1D/limit/5000"
+        }
+      ],
+      "options": {
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "query": "exceptions\r\n| where $__timeFilter(timestamp) and problemId !contains \"SpaDefaultPageMiddleware\"\r\n| summarize Exceptions=count() by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
+            "resultFormat": "time_series",
+            "workspace": "[parameter(default-workspace-resourcepath)]"
+          },
+          "azureMonitor": {
+            "dimensionFilters": [],
+            "timeGrain": "auto"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A",
+          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]",
+          "subscriptions": [
+            "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+            "cab65fc3-d077-467d-931f-3932eabf36d3"
+          ]
+        }
+      ],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "op": "gt",
+          "value": 100,
+          "visible": true
+        }
+      ],
+      "title": "PCS Exceptions",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "F2XodEi7z"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
             "mode": "palette-classic"
           },
           "custom": {
@@ -497,12 +603,12 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Virtual CPUs"
+              "options": "Wait time (max)"
             },
             "properties": [
               {
                 "id": "unit",
-                "value": "none"
+                "value": "ms"
               }
             ]
           }
@@ -511,13 +617,16 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 12,
-        "y": 9
+        "x": 0,
+        "y": 17
       },
-      "id": 54,
+      "id": 55,
       "options": {
         "legend": {
-          "calcs": [],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "list",
           "placement": "bottom"
         },
@@ -529,11 +638,11 @@
         {
           "azureMonitor": {
             "aggregation": "Average",
-            "alias": "Virtual CPUs",
+            "alias": "Wait time (max)",
             "dimensionFilters": [],
             "metricDefinition": "Microsoft.Insights/components",
-            "metricName": "performanceCounters/processCpuPercentage",
-            "metricNamespace": "Microsoft.Insights/components",
+            "metricName": "pcs.queue.wait_time",
+            "metricNamespace": "Azure.ApplicationInsights",
             "resourceGroup": "[parameter(product-construction-service-resourcegroup)]",
             "resourceName": "[parameter(product-construction-service-appinsights-resourcename)]",
             "timeGrain": "auto"
@@ -547,10 +656,52 @@
           "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
         }
       ],
-      "title": "PCS CPU Usage",
+      "title": "PCS Background Queue Wait Time",
       "type": "timeseries"
     },
     {
+      "alert": {
+        "alertRuleTags": {
+          "NotificationId": "d71fe025a8954b6cad9866354ca041cf"
+        },
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                80
+              ],
+              "type": "lt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "B",
+                "5m",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "min"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "keep_state",
+        "for": "5m",
+        "frequency": "1m",
+        "handler": 1,
+        "message": "The PCS background work items started to fail frequently.\n\n@dotnet/prodconsvcs to deal with this",
+        "name": "PCS Work Item Success Rate alert",
+        "noDataState": "keep_state",
+        "notifications": [
+          {
+            "uid": "statusHook"
+          }
+        ]
+      },
       "datasource": {
         "type": "grafana-azure-monitor-datasource",
         "uid": "F2XodEi7z"
@@ -585,101 +736,8 @@
               "mode": "none"
             },
             "thresholdsStyle": {
-              "mode": "line"
+              "mode": "off"
             }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 100
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 17
-      },
-      "id": 46,
-      "links": [
-        {
-          "targetBlank": true,
-          "title": "Application Insights",
-          "url": "https://ms.portal.azure.com#@72f988bf-86f1-41af-91ab-2d7cd011db47/blade/Microsoft_OperationsManagementSuite_Workspace/Logs.ReactView/resourceId/%2Fsubscriptions%2Ffbd6122a-9ad3-42e4-976e-bccb82486856%2FresourceGroups%2Fproduct-construction-service%2Fproviders%2Fmicrosoft.insights%2Fcomponents%2Fproduct-construction-service-ai-prod/source/LogsBlade.AnalyticsShareLinkToQuery/q/H4sIAAAAAAAAA0utSE4tKMnMzysGAGAbcigKAAAA/timespan/P1D/limit/5000"
-        }
-      ],
-      "options": {
-        "legend": {
-          "calcs": [
-            "sum"
-          ],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "targets": [
-        {
-          "azureLogAnalytics": {
-            "query": "exceptions\r\n| where $__timeFilter(timestamp)\r\n| summarize Exceptions=count() by bin(timestamp, $__interval)\r\n| order by timestamp asc",
-            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
-            "resultFormat": "time_series",
-            "workspace": "[parameter(default-workspace-resourcepath)]"
-          },
-          "azureMonitor": {
-            "dimensionFilters": [],
-            "timeGrain": "auto"
-          },
-          "datasource": {
-            "type": "grafana-azure-monitor-datasource",
-            "uid": "F2XodEi7z"
-          },
-          "queryType": "Azure Log Analytics",
-          "refId": "A",
-          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]",
-          "subscriptions": [
-            "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
-            "cab65fc3-d077-467d-931f-3932eabf36d3"
-          ]
-        }
-      ],
-      "thresholds": [
-        {
-          "colorMode": "critical",
-          "op": "gt",
-          "value": 100,
-          "visible": true
-        }
-      ],
-      "title": "PCS Exceptions",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "grafana-azure-monitor-datasource",
-        "uid": "F2XodEi7z"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "displayMode": "auto"
           },
           "mappings": [],
           "thresholds": {
@@ -694,30 +752,102 @@
                 "value": 80
               }
             ]
-          }
+          },
+          "unit": "none"
         },
         "overrides": [
           {
             "matcher": {
               "id": "byName",
-              "options": "Problem"
+              "options": "Failed"
             },
             "properties": [
               {
-                "id": "custom.width",
-                "value": 1164
+                "id": "custom.fillOpacity",
+                "value": 12
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
               }
             ]
           },
           {
             "matcher": {
               "id": "byName",
-              "options": "Count"
+              "options": "Successful"
             },
             "properties": [
               {
-                "id": "custom.width",
-                "value": 64
+                "id": "color",
+                "value": {
+                  "fixedColor": "super-light-blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SuccessRate"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisSoftMax",
+                "value": 100
+              },
+              {
+                "id": "custom.axisSoftMin",
+                "value": 0
+              },
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-green",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 3
+              },
+              {
+                "id": "custom.thresholdsStyle",
+                "value": {
+                  "mode": "line"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
               }
             ]
           }
@@ -729,31 +859,24 @@
         "x": 12,
         "y": 17
       },
-      "id": 62,
-      "links": [
-        {
-          "targetBlank": true,
-          "title": "Application Insights",
-          "url": "https://ms.portal.azure.com#@72f988bf-86f1-41af-91ab-2d7cd011db47/blade/Microsoft_OperationsManagementSuite_Workspace/Logs.ReactView/resourceId/%2Fsubscriptions%2Ffbd6122a-9ad3-42e4-976e-bccb82486856%2FresourceGroups%2Fproduct-construction-service%2Fproviders%2Fmicrosoft.insights%2Fcomponents%2Fproduct-construction-service-ai-prod/source/LogsBlade.AnalyticsShareLinkToQuery/q/H4sIAAAAAAAAA0utSE4tKMnMzysGAGAbcigKAAAA/timespan/P1D/limit/5000"
-        }
-      ],
+      "id": 64,
+      "interval": "5m",
       "options": {
-        "footer": {
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
         },
-        "showHeader": true,
-        "sortBy": []
+        "tooltip": {
+          "mode": "multi"
+        }
       },
-      "pluginVersion": "8.3.6",
       "targets": [
         {
           "azureLogAnalytics": {
-            "query": "exceptions\r\n| where $__timeFilter(timestamp)\r\n| project Exception=problemId, Method=method\r\n| summarize Count=count() by Exception, Method\r\n| order by Count desc",
-            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]"
+            "query": "customEvents\r\n| where name == \"WorkItemExecuted\" and $__timeFilter(timestamp)\r\n| extend Success = tobool(customDimensions[\"Success\"])\r\n| summarize Successful = countif(Success == true), Failed = countif(Success == false) by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
+            "resultFormat": "time_series"
           },
           "azureMonitor": {
             "dimensionFilters": [],
@@ -768,10 +891,39 @@
           "refId": "A",
           "resultFormat": "table",
           "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
+        },
+        {
+          "azureLogAnalytics": {
+            "query": "customEvents\r\n| where name == \"WorkItemExecuted\" and $__timeFilter(timestamp)\r\n| extend Success = tobool(customDimensions[\"Success\"])\r\n| summarize SuccessRate=100*countif(Success == true)/count() by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
+            "resultFormat": "time_series"
+          },
+          "azureMonitor": {
+            "dimensionFilters": [],
+            "timeGrain": "auto"
+          },
+          "database": "engineeringdata",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "hide": false,
+          "queryType": "Azure Log Analytics",
+          "refId": "B",
+          "resultFormat": "table",
+          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
         }
       ],
-      "title": "PCS Most Frequent Exceptions",
-      "type": "table"
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "op": "lt",
+          "value": 80,
+          "visible": true
+        }
+      ],
+      "title": "PCS Work Item Success Rate",
+      "type": "timeseries"
     },
     {
       "datasource": {
@@ -835,11 +987,13 @@
         "x": 0,
         "y": 25
       },
-      "id": 58,
+      "id": 59,
+      "interval": "5m",
       "options": {
         "legend": {
           "calcs": [
-            "sum"
+            "max",
+            "mean"
           ],
           "displayMode": "list",
           "placement": "bottom"
@@ -851,7 +1005,7 @@
       "targets": [
         {
           "azureLogAnalytics": {
-            "query": "customEvents\r\n| where name == \"GitClone\" and $__timeFilter(timestamp)\r\n| extend Duration = toint(customMeasurements[\"Duration\"])\r\n| summarize Duration=avg(Duration) by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "query": "customEvents\r\n| where name == \"WorkItemExecuted\" and $__timeFilter(timestamp)\r\n| extend Duration = toint(customMeasurements[\"Duration\"])\r\n| summarize avg(Duration) by bin(timestamp, $__interval)\r\n| order by timestamp asc",
             "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
             "resultFormat": "time_series"
           },
@@ -870,7 +1024,7 @@
           "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
         }
       ],
-      "title": "PCS Git Clones",
+      "title": "PCS Work Item Duration",
       "type": "timeseries"
     },
     {
@@ -1026,7 +1180,7 @@
               }
             ]
           },
-          "unit": "none"
+          "unit": "ms"
         },
         "overrides": []
       },
@@ -1036,7 +1190,7 @@
         "x": 0,
         "y": 33
       },
-      "id": 60,
+      "id": 58,
       "options": {
         "legend": {
           "calcs": [
@@ -1052,7 +1206,7 @@
       "targets": [
         {
           "azureLogAnalytics": {
-            "query": "traces\r\n| where $__timeFilter(timestamp) and cloud_RoleInstance startswith \"feed-cleaner-prod\" and message has \"cleaning finished\"\r\n| project\r\n    timestamp,\r\n    packagesCleaned = toint(customDimensions[\"count\"]),\r\n    packagesTotal = toint(customDimensions[\"totalCount\"])\r\n| summarize PackagesCleaned=sum(packagesCleaned), PackagesTotal=sum(packagesTotal) by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "query": "customEvents\r\n| where name == \"GitClone\" and $__timeFilter(timestamp)\r\n| extend Duration = toint(customMeasurements[\"Duration\"])\r\n| summarize Duration=avg(Duration) by bin(timestamp, $__interval)\r\n| order by timestamp asc",
             "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
             "resultFormat": "time_series"
           },
@@ -1071,7 +1225,118 @@
           "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
         }
       ],
-      "title": "PCS Feed Cleaner",
+      "title": "PCS Git Clones",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "F2XodEi7z"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Virtual CPUs"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 33
+      },
+      "id": 54,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "azureMonitor": {
+            "aggregation": "Average",
+            "alias": "Virtual CPUs",
+            "dimensionFilters": [],
+            "metricDefinition": "Microsoft.Insights/components",
+            "metricName": "performanceCounters/processCpuPercentage",
+            "metricNamespace": "Microsoft.Insights/components",
+            "resourceGroup": "[parameter(product-construction-service-resourcegroup)]",
+            "resourceName": "[parameter(product-construction-service-appinsights-resourcename)]",
+            "timeGrain": "auto"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "queryType": "Azure Monitor",
+          "refId": "A",
+          "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
+        }
+      ],
+      "title": "PCS CPU Usage",
       "type": "timeseries"
     },
     {
@@ -1126,23 +1391,21 @@
               }
             ]
           },
-          "unit": "ms"
+          "unit": "none"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 12,
-        "y": 33
+        "x": 0,
+        "y": 41
       },
-      "id": 59,
-      "interval": "5m",
+      "id": 60,
       "options": {
         "legend": {
           "calcs": [
-            "max",
-            "mean"
+            "sum"
           ],
           "displayMode": "list",
           "placement": "bottom"
@@ -1154,7 +1417,7 @@
       "targets": [
         {
           "azureLogAnalytics": {
-            "query": "customEvents\r\n| where name == \"WorkItemExecuted\" and $__timeFilter(timestamp)\r\n| extend Duration = toint(customMeasurements[\"Duration\"])\r\n| summarize avg(Duration) by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "query": "traces\r\n| where $__timeFilter(timestamp) and cloud_RoleInstance startswith \"feed-cleaner-prod\" and message has \"cleaning finished\"\r\n| project\r\n    timestamp,\r\n    packagesCleaned = toint(customDimensions[\"count\"]),\r\n    packagesTotal = toint(customDimensions[\"totalCount\"])\r\n| summarize PackagesCleaned=sum(packagesCleaned), PackagesTotal=sum(packagesTotal) by bin(timestamp, $__interval)\r\n| order by timestamp asc",
             "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
             "resultFormat": "time_series"
           },
@@ -1173,7 +1436,7 @@
           "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
         }
       ],
-      "title": "PCS Work Item Duration",
+      "title": "PCS Feed Cleaner",
       "type": "timeseries"
     },
     {
@@ -1182,162 +1445,194 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 41
+        "y": 49
       },
       "id": 48,
-      "panels": [],
-      "title": "Helix",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "grafana-azure-monitor-datasource",
-        "uid": "F2XodEi7z"
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 8,
-        "x": 0,
-        "y": 42
-      },
-      "id": 2,
-      "options": {
-        "alertName": "",
-        "dashboardAlerts": true,
-        "dashboardTitle": "",
-        "maxItems": 10,
-        "showOptions": "current",
-        "sortOrder": 1,
-        "stateFilter": {
-          "alerting": false,
-          "execution_error": false,
-          "no_data": false,
-          "ok": false,
-          "paused": false,
-          "pending": false
-        },
-        "tags": []
-      },
-      "pluginVersion": "8.3.6",
-      "targets": [
+      "panels": [
         {
-          "appInsights": {
-            "dimension": [],
-            "metricName": "select",
-            "timeGrain": "auto"
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
           },
-          "azureLogAnalytics": {
-            "query": "//change this example to create your own time series query\n<table name>                                                              //the table to query (e.g. Usage, Heartbeat, Perf)\n| where $__timeFilter(TimeGenerated)                                      //this is a macro used to show the full chart’s time range, choose the datetime column here\n| summarize count() by <group by column>, bin(TimeGenerated, $__interval) //change “group by column” to a column in your table, such as “Computer”. The $__interval macro is used to auto-select the time grain. Can also use 1h, 5m etc.\n| order by TimeGenerated asc",
-            "resultFormat": "time_series",
-            "workspace": "[parameter(emptystring)]"
+          "gridPos": {
+            "h": 9,
+            "w": 8,
+            "x": 0,
+            "y": 20
           },
-          "azureMonitor": {
-            "aggOptions": [],
-            "dimensionFilter": "*",
-            "dimensionFilters": [],
-            "timeGrain": "auto",
-            "timeGrains": [],
-            "top": "10"
-          },
-          "azureResourceGraph": {
-            "resultFormat": "table"
-          },
-          "insightsAnalytics": {
-            "query": "",
-            "resultFormat": "time_series"
-          },
-          "queryType": "Azure Monitor",
-          "refId": "A",
-          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]",
-          "subscriptions": [
-            "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
-            "cab65fc3-d077-467d-931f-3932eabf36d3"
-          ]
-        }
-      ],
-      "type": "alertlist"
-    },
-    {
-      "alert": {
-        "alertRuleTags": {
-          "NotificationId": "6179576701874a7abc440a574cf636d0"
-        },
-        "conditions": [
-          {
-            "evaluator": {
-              "params": [
-                99
-              ],
-              "type": "lt"
+          "id": 2,
+          "options": {
+            "alertName": "",
+            "dashboardAlerts": true,
+            "dashboardTitle": "",
+            "maxItems": 10,
+            "showOptions": "current",
+            "sortOrder": 1,
+            "stateFilter": {
+              "alerting": false,
+              "execution_error": false,
+              "no_data": false,
+              "ok": false,
+              "paused": false,
+              "pending": false
             },
-            "operator": {
-              "type": "and"
-            },
-            "query": {
-              "params": [
-                "A",
-                "30m",
-                "now"
+            "tags": []
+          },
+          "pluginVersion": "8.3.6",
+          "targets": [
+            {
+              "appInsights": {
+                "dimension": [],
+                "metricName": "select",
+                "timeGrain": "auto"
+              },
+              "azureLogAnalytics": {
+                "query": "//change this example to create your own time series query\n<table name>                                                              //the table to query (e.g. Usage, Heartbeat, Perf)\n| where $__timeFilter(TimeGenerated)                                      //this is a macro used to show the full chart’s time range, choose the datetime column here\n| summarize count() by <group by column>, bin(TimeGenerated, $__interval) //change “group by column” to a column in your table, such as “Computer”. The $__interval macro is used to auto-select the time grain. Can also use 1h, 5m etc.\n| order by TimeGenerated asc",
+                "resultFormat": "time_series",
+                "workspace": ""
+              },
+              "azureMonitor": {
+                "aggOptions": [],
+                "dimensionFilter": "*",
+                "dimensionFilters": [],
+                "timeGrain": "auto",
+                "timeGrains": [],
+                "top": "10"
+              },
+              "azureResourceGraph": {
+                "resultFormat": "table"
+              },
+              "insightsAnalytics": {
+                "query": "",
+                "resultFormat": "time_series"
+              },
+              "queryType": "Azure Monitor",
+              "refId": "A",
+              "subscription": "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+              "subscriptions": [
+                "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+                "cab65fc3-d077-467d-931f-3932eabf36d3"
               ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "avg"
-            },
-            "type": "query"
-          }
-        ],
-        "executionErrorState": "keep_state",
-        "for": "5m",
-        "frequency": "1m",
-        "handler": 1,
-        "message": "Helix API availability alert!",
-        "name": "Helix API availability",
-        "noDataState": "keep_state",
-        "notifications": [
-          {
-            "uid": "statusHook"
-          }
-        ]
-      },
-      "datasource": {
-        "type": "grafana-azure-monitor-datasource",
-        "uid": "F2XodEi7z"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "axisSoftMax": 100,
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "area"
             }
+          ],
+          "type": "alertlist"
+        },
+        {
+          "alert": {
+            "alertRuleTags": {
+              "NotificationId": "6179576701874a7abc440a574cf636d0"
+            },
+            "conditions": [
+              {
+                "evaluator": {
+                  "params": [
+                    99
+                  ],
+                  "type": "lt"
+                },
+                "operator": {
+                  "type": "and"
+                },
+                "query": {
+                  "params": [
+                    "A",
+                    "30m",
+                    "now"
+                  ]
+                },
+                "reducer": {
+                  "params": [],
+                  "type": "max"
+                },
+                "type": "query"
+              }
+            ],
+            "executionErrorState": "keep_state",
+            "for": "5m",
+            "frequency": "1m",
+            "handler": 1,
+            "message": "Helix API availability alert!",
+            "name": "Helix API availability",
+            "noDataState": "keep_state",
+            "notifications": [
+              {
+                "uid": "statusHook"
+              }
+            ]
           },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "axisSoftMax": 100,
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "area"
+                }
+              },
+              "links": [
+                {
+                  "targetBlank": true,
+                  "title": "Azure Portal: Availability",
+                  "url": "https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/68672ab8-de0c-40f1-8d1b-ffb20bd62c0f/resourceGroups/helixinfrarg/providers/microsoft.insights/components/helix-prod/availability"
+                },
+                {
+                  "targetBlank": true,
+                  "title": "Helix",
+                  "url": "https://helix.dot.net/"
+                }
+              ],
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red"
+                  },
+                  {
+                    "color": "green",
+                    "value": 99
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 8,
+            "x": 8,
+            "y": 20
+          },
+          "id": 18,
           "links": [
             {
               "targetBlank": true,
@@ -1350,639 +1645,596 @@
               "url": "https://helix.dot.net/"
             }
           ],
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "green",
-                "value": 99
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 8,
-        "x": 8,
-        "y": 42
-      },
-      "id": 18,
-      "links": [
-        {
-          "targetBlank": true,
-          "title": "Azure Portal: Availability",
-          "url": "https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/68672ab8-de0c-40f1-8d1b-ffb20bd62c0f/resourceGroups/helixinfrarg/providers/microsoft.insights/components/helix-prod/availability"
-        },
-        {
-          "targetBlank": true,
-          "title": "Helix",
-          "url": "https://helix.dot.net/"
-        }
-      ],
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "targets": [
-        {
-          "appInsights": {
-            "dimension": [],
-            "metricName": "select",
-            "timeGrain": "auto"
-          },
-          "azureLogAnalytics": {
-            "query": "//change this example to create your own time series query\n<table name>                                                              //the table to query (e.g. Usage, Heartbeat, Perf)\n| where $__timeFilter(TimeGenerated)                                      //this is a macro used to show the full chart’s time range, choose the datetime column here\n| summarize count() by <group by column>, bin(TimeGenerated, $__interval) //change “group by column” to a column in your table, such as “Computer”. The $__interval macro is used to auto-select the time grain. Can also use 1h, 5m etc.\n| order by TimeGenerated asc",
-            "resultFormat": "time_series",
-            "workspace": "[parameter(emptystring)]"
-          },
-          "azureMonitor": {
-            "aggOptions": [],
-            "aggregation": "Average",
-            "alias": "{{ availabilityresult/location }}",
-            "allowedTimeGrainsMs": [
-              60000,
-              300000,
-              900000,
-              1800000,
-              3600000,
-              21600000,
-              43200000,
-              86400000
-            ],
-            "dimensionFilter": "*",
-            "dimensionFilters": [
-              {
-                "dimension": "availabilityResult/name",
-                "filter": "Helix API",
-                "operator": "eq"
-              },
-              {
-                "dimension": "availabilityResult/location",
-                "filter": "",
-                "operator": "eq"
-              }
-            ],
-            "metricDefinition": "microsoft.insights/components",
-            "metricName": "availabilityResults/availabilityPercentage",
-            "metricNamespace": "microsoft.insights/components",
-            "resourceGroup": "[parameter(helix-client-appinsights-resourcegroup)]",
-            "resourceName": "[parameter(helix-appinsights-resourcename)]",
-            "timeGrain": "auto",
-            "timeGrains": [],
-            "top": "10"
-          },
-          "azureResourceGraph": {
-            "resultFormat": "table"
-          },
-          "datasource": {
-            "type": "grafana-azure-monitor-datasource",
-            "uid": "F2XodEi7z"
-          },
-          "insightsAnalytics": {
-            "query": "",
-            "resultFormat": "time_series"
-          },
-          "queryType": "Azure Monitor",
-          "refId": "A",
-          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]",
-          "subscriptions": [
-            "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
-            "cab65fc3-d077-467d-931f-3932eabf36d3"
-          ]
-        }
-      ],
-      "thresholds": [
-        {
-          "colorMode": "critical",
-          "op": "lt",
-          "value": 99,
-          "visible": true
-        }
-      ],
-      "title": "Helix API",
-      "transformations": [],
-      "type": "timeseries"
-    },
-    {
-      "alert": {
-        "alertRuleTags": {
-          "NotificationId": "24cae10d9eca44079e7cf3d47f148497"
-        },
-        "conditions": [
-          {
-            "evaluator": {
-              "params": [
-                5000
-              ],
-              "type": "gt"
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
             },
-            "operator": {
-              "type": "and"
-            },
-            "query": {
-              "params": [
-                "A",
-                "5m",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "avg"
-            },
-            "type": "query"
-          }
-        ],
-        "executionErrorState": "keep_state",
-        "for": "5m",
-        "frequency": "1m",
-        "handler": 1,
-        "message": "Helix API Average Response Time is high!",
-        "name": "Helix API Average Response Time",
-        "noDataState": "keep_state",
-        "notifications": [
-          {
-            "uid": "statusHook"
-          }
-        ]
-      },
-      "datasource": {
-        "type": "grafana-azure-monitor-datasource",
-        "uid": "F2XodEi7z"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "axisSoftMax": 100,
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
+            "tooltip": {
+              "mode": "single"
             }
           },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
+          "targets": [
+            {
+              "appInsights": {
+                "dimension": [],
+                "metricName": "select",
+                "timeGrain": "auto"
               },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 8,
-        "x": 16,
-        "y": 42
-      },
-      "id": 19,
-      "links": [
-        {
-          "targetBlank": true,
-          "title": "Azure Portal: Average Response Time",
-          "url": "https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/blade/Microsoft_Azure_MonitoringAz/MetricsV4/Referer/MetricsExplorer/ResourceId/%2Fsubscriptions%2F68672ab8-de0c-40f1-8d1b-ffb20bd62c0f%2FresourceGroups%2Fhelixinfrarg%2Fproviders%2FMicrosoft.Web%2Fsites%2Fhelixview-prod/TimeContext/%7B%22relative%22%3A%7B%22duration%22%3A2592000000%7D%2C%22showUTCTime%22%3Afalse%2C%22grain%22%3A1%7D/ChartDefinition/%7B%22v2charts%22%3A%5B%7B%22metrics%22%3A%5B%7B%22resourceMetadata%22%3A%7B%22id%22%3A%22%2Fsubscriptions%2F68672ab8-de0c-40f1-8d1b-ffb20bd62c0f%2FresourceGroups%2Fhelixinfrarg%2Fproviders%2FMicrosoft.Web%2Fsites%2Fhelixview-prod%22%7D%2C%22name%22%3A%22AverageResponseTime%22%2C%22aggregationType%22%3A4%2C%22namespace%22%3A%22microsoft.web%2Fsites%22%2C%22metricVisualization%22%3A%7B%22displayName%22%3A%22Average%20Response%20Time%22%2C%22resourceDisplayName%22%3A%22helixview-prod%22%7D%7D%5D%2C%22title%22%3A%22Average%20Response%20Time%22%2C%22titleKind%22%3A2%2C%22visualization%22%3A%7B%22chartType%22%3A2%2C%22legendVisualization%22%3A%7B%22isVisible%22%3Atrue%2C%22position%22%3A2%2C%22hideSubtitle%22%3Afalse%7D%2C%22axisVisualization%22%3A%7B%22x%22%3A%7B%22isVisible%22%3Atrue%2C%22axisType%22%3A2%7D%2C%22y%22%3A%7B%22isVisible%22%3Atrue%2C%22axisType%22%3A1%7D%7D%7D%7D%5D%7D"
-        }
-      ],
-      "options": {
-        "legend": {
-          "calcs": [
-            "max",
-            "mean"
+              "azureLogAnalytics": {
+                "query": "//change this example to create your own time series query\n<table name>                                                              //the table to query (e.g. Usage, Heartbeat, Perf)\n| where $__timeFilter(TimeGenerated)                                      //this is a macro used to show the full chart’s time range, choose the datetime column here\n| summarize count() by <group by column>, bin(TimeGenerated, $__interval) //change “group by column” to a column in your table, such as “Computer”. The $__interval macro is used to auto-select the time grain. Can also use 1h, 5m etc.\n| order by TimeGenerated asc",
+                "resultFormat": "time_series",
+                "workspace": ""
+              },
+              "azureMonitor": {
+                "aggOptions": [],
+                "aggregation": "Average",
+                "alias": "{{ availabilityresult/location }}",
+                "allowedTimeGrainsMs": [
+                  60000,
+                  300000,
+                  900000,
+                  1800000,
+                  3600000,
+                  21600000,
+                  43200000,
+                  86400000
+                ],
+                "dimensionFilter": "*",
+                "dimensionFilters": [
+                  {
+                    "dimension": "availabilityResult/name",
+                    "filter": "Helix API",
+                    "operator": "eq"
+                  },
+                  {
+                    "dimension": "availabilityResult/location",
+                    "filter": "",
+                    "operator": "eq"
+                  }
+                ],
+                "metricDefinition": "microsoft.insights/components",
+                "metricName": "availabilityResults/availabilityPercentage",
+                "metricNamespace": "microsoft.insights/components",
+                "resourceGroup": "helixinfrarg",
+                "resourceName": "helix-prod",
+                "timeGrain": "auto",
+                "timeGrains": [],
+                "top": "10"
+              },
+              "azureResourceGraph": {
+                "resultFormat": "table"
+              },
+              "insightsAnalytics": {
+                "query": "",
+                "resultFormat": "time_series"
+              },
+              "queryType": "Azure Monitor",
+              "refId": "A",
+              "subscription": "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+              "subscriptions": [
+                "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+                "cab65fc3-d077-467d-931f-3932eabf36d3"
+              ]
+            }
           ],
-          "displayMode": "list",
-          "placement": "bottom"
+          "thresholds": [
+            {
+              "colorMode": "critical",
+              "op": "lt",
+              "value": 99,
+              "visible": true
+            }
+          ],
+          "title": "Helix API",
+          "transformations": [],
+          "type": "timeseries"
         },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "targets": [
         {
-          "appInsights": {
-            "dimension": [],
-            "metricName": "select",
-            "timeGrain": "auto"
-          },
-          "azureLogAnalytics": {
-            "query": "//change this example to create your own time series query\n<table name>                                                              //the table to query (e.g. Usage, Heartbeat, Perf)\n| where $__timeFilter(TimeGenerated)                                      //this is a macro used to show the full chart’s time range, choose the datetime column here\n| summarize count() by <group by column>, bin(TimeGenerated, $__interval) //change “group by column” to a column in your table, such as “Computer”. The $__interval macro is used to auto-select the time grain. Can also use 1h, 5m etc.\n| order by TimeGenerated asc",
-            "resultFormat": "time_series",
-            "workspace": "[parameter(emptystring)]"
-          },
-          "azureMonitor": {
-            "aggOptions": [],
-            "aggregation": "Average",
-            "alias": "",
-            "allowedTimeGrainsMs": [
-              60000,
-              300000,
-              900000,
-              1800000,
-              3600000,
-              21600000,
-              43200000,
-              86400000
+          "alert": {
+            "alertRuleTags": {
+              "NotificationId": "24cae10d9eca44079e7cf3d47f148497"
+            },
+            "conditions": [
+              {
+                "evaluator": {
+                  "params": [
+                    5000
+                  ],
+                  "type": "gt"
+                },
+                "operator": {
+                  "type": "and"
+                },
+                "query": {
+                  "params": [
+                    "A",
+                    "5m",
+                    "now"
+                  ]
+                },
+                "reducer": {
+                  "params": [],
+                  "type": "avg"
+                },
+                "type": "query"
+              }
             ],
-            "dimensionFilter": "*",
-            "dimensionFilters": [],
-            "metricDefinition": "Microsoft.Insights/components",
-            "metricName": "requests/duration",
-            "metricNamespace": "microsoft.insights/components",
-            "resourceGroup": "[parameter(dotnet-eng-appinsights-resourcegroup)]",
-            "resourceName": "[parameter(dotnet-eng-appinsights-resourcename)]",
-            "timeGrain": "auto",
-            "timeGrains": [],
-            "top": "10"
-          },
-          "azureResourceGraph": {
-            "resultFormat": "table"
+            "executionErrorState": "keep_state",
+            "for": "5m",
+            "frequency": "1m",
+            "handler": 1,
+            "message": "Helix API Average Response Time is high!",
+            "name": "Helix API Average Response Time",
+            "noDataState": "keep_state",
+            "notifications": [
+              {
+                "uid": "statusHook"
+              }
+            ]
           },
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
             "uid": "F2XodEi7z"
           },
-          "insightsAnalytics": {
-            "query": "",
-            "resultFormat": "time_series"
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "axisSoftMax": 100,
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
           },
-          "queryType": "Azure Monitor",
-          "refId": "A",
-          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]",
-          "subscriptions": [
-            "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
-            "cab65fc3-d077-467d-931f-3932eabf36d3"
-          ]
-        }
-      ],
-      "thresholds": [
-        {
-          "colorMode": "critical",
-          "op": "gt",
-          "value": 5000,
-          "visible": true
-        }
-      ],
-      "title": "Helix Average Response Time",
-      "transformations": [],
-      "type": "timeseries"
-    },
-    {
-      "alert": {
-        "alertRuleTags": {
-          "NotificationId": "6213d3c5ce9a46278343bf075798e46f"
-        },
-        "conditions": [
-          {
-            "evaluator": {
-              "params": [
-                1
+          "gridPos": {
+            "h": 9,
+            "w": 8,
+            "x": 16,
+            "y": 20
+          },
+          "id": 19,
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "Azure Portal: Average Response Time",
+              "url": "https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/blade/Microsoft_Azure_MonitoringAz/MetricsV4/Referer/MetricsExplorer/ResourceId/%2Fsubscriptions%2F68672ab8-de0c-40f1-8d1b-ffb20bd62c0f%2FresourceGroups%2Fhelixinfrarg%2Fproviders%2FMicrosoft.Web%2Fsites%2Fhelixview-prod/TimeContext/%7B%22relative%22%3A%7B%22duration%22%3A2592000000%7D%2C%22showUTCTime%22%3Afalse%2C%22grain%22%3A1%7D/ChartDefinition/%7B%22v2charts%22%3A%5B%7B%22metrics%22%3A%5B%7B%22resourceMetadata%22%3A%7B%22id%22%3A%22%2Fsubscriptions%2F68672ab8-de0c-40f1-8d1b-ffb20bd62c0f%2FresourceGroups%2Fhelixinfrarg%2Fproviders%2FMicrosoft.Web%2Fsites%2Fhelixview-prod%22%7D%2C%22name%22%3A%22AverageResponseTime%22%2C%22aggregationType%22%3A4%2C%22namespace%22%3A%22microsoft.web%2Fsites%22%2C%22metricVisualization%22%3A%7B%22displayName%22%3A%22Average%20Response%20Time%22%2C%22resourceDisplayName%22%3A%22helixview-prod%22%7D%7D%5D%2C%22title%22%3A%22Average%20Response%20Time%22%2C%22titleKind%22%3A2%2C%22visualization%22%3A%7B%22chartType%22%3A2%2C%22legendVisualization%22%3A%7B%22isVisible%22%3Atrue%2C%22position%22%3A2%2C%22hideSubtitle%22%3Afalse%7D%2C%22axisVisualization%22%3A%7B%22x%22%3A%7B%22isVisible%22%3Atrue%2C%22axisType%22%3A2%7D%2C%22y%22%3A%7B%22isVisible%22%3Atrue%2C%22axisType%22%3A1%7D%7D%7D%7D%5D%7D"
+            }
+          ],
+          "options": {
+            "legend": {
+              "calcs": [
+                "max",
+                "mean"
               ],
-              "type": "lt"
+              "displayMode": "list",
+              "placement": "bottom"
             },
-            "operator": {
-              "type": "and"
-            },
-            "query": {
-              "params": [
-                "A",
-                "30m",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "avg"
-            },
-            "type": "query"
-          }
-        ],
-        "executionErrorState": "keep_state",
-        "for": "5m",
-        "frequency": "1m",
-        "handler": 1,
-        "name": "Helix AutoScaler Service Stopped Running",
-        "noDataState": "alerting",
-        "notifications": [
-          {
-            "uid": "statusHook"
-          }
-        ]
-      },
-      "datasource": {
-        "type": "grafana-azure-monitor-datasource",
-        "uid": "F2XodEi7z"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
+            "tooltip": {
+              "mode": "single"
             }
           },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
+          "targets": [
+            {
+              "appInsights": {
+                "dimension": [],
+                "metricName": "select",
+                "timeGrain": "auto"
               },
+              "azureLogAnalytics": {
+                "query": "//change this example to create your own time series query\n<table name>                                                              //the table to query (e.g. Usage, Heartbeat, Perf)\n| where $__timeFilter(TimeGenerated)                                      //this is a macro used to show the full chart’s time range, choose the datetime column here\n| summarize count() by <group by column>, bin(TimeGenerated, $__interval) //change “group by column” to a column in your table, such as “Computer”. The $__interval macro is used to auto-select the time grain. Can also use 1h, 5m etc.\n| order by TimeGenerated asc",
+                "resultFormat": "time_series",
+                "workspace": ""
+              },
+              "azureMonitor": {
+                "aggOptions": [],
+                "aggregation": "Average",
+                "alias": "",
+                "allowedTimeGrainsMs": [
+                  60000,
+                  300000,
+                  900000,
+                  1800000,
+                  3600000,
+                  21600000,
+                  43200000,
+                  86400000
+                ],
+                "dimensionFilter": "*",
+                "dimensionFilters": [],
+                "metricDefinition": "Microsoft.Insights/components",
+                "metricName": "requests/duration",
+                "metricNamespace": "microsoft.insights/components",
+                "resourceGroup": "dotnet-eng-cluster",
+                "resourceName": "dotnet-eng",
+                "timeGrain": "auto",
+                "timeGrains": [],
+                "top": "10"
+              },
+              "azureResourceGraph": {
+                "resultFormat": "table"
+              },
+              "insightsAnalytics": {
+                "query": "",
+                "resultFormat": "time_series"
+              },
+              "queryType": "Azure Monitor",
+              "refId": "A",
+              "subscription": "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+              "subscriptions": [
+                "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+                "cab65fc3-d077-467d-931f-3932eabf36d3"
+              ]
+            }
+          ],
+          "thresholds": [
+            {
+              "colorMode": "critical",
+              "op": "gt",
+              "value": 5000,
+              "visible": true
+            }
+          ],
+          "title": "Helix Average Response Time",
+          "transformations": [],
+          "type": "timeseries"
+        },
+        {
+          "alert": {
+            "alertRuleTags": {
+              "NotificationId": "6213d3c5ce9a46278343bf075798e46f"
+            },
+            "conditions": [
               {
-                "color": "red",
-                "value": 80
+                "evaluator": {
+                  "params": [
+                    1
+                  ],
+                  "type": "lt"
+                },
+                "operator": {
+                  "type": "and"
+                },
+                "query": {
+                  "params": [
+                    "A",
+                    "30m",
+                    "now"
+                  ]
+                },
+                "reducer": {
+                  "params": [],
+                  "type": "avg"
+                },
+                "type": "query"
+              }
+            ],
+            "executionErrorState": "keep_state",
+            "for": "5m",
+            "frequency": "1m",
+            "handler": 1,
+            "name": "Helix AutoScaler Service Stopped Running",
+            "noDataState": "alerting",
+            "notifications": [
+              {
+                "uid": "statusHook"
               }
             ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 16,
-        "x": 0,
-        "y": 51
-      },
-      "id": 29,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "targets": [
-        {
-          "appInsights": {
-            "dimension": [],
-            "metricName": "select",
-            "timeGrain": "auto"
-          },
-          "azureLogAnalytics": {
-            "query": "//change this example to create your own time series query\n<table name>                                                              //the table to query (e.g. Usage, Heartbeat, Perf)\n| where $__timeFilter(TimeGenerated)                                      //this is a macro used to show the full chart’s time range, choose the datetime column here\n| summarize count() by <group by column>, bin(TimeGenerated, $__interval) //change “group by column” to a column in your table, such as “Computer”. The $__interval macro is used to auto-select the time grain. Can also use 1h, 5m etc.\n| order by TimeGenerated asc",
-            "resultFormat": "time_series",
-            "workspace": "[parameter(emptystring)]"
-          },
-          "azureMonitor": {
-            "aggOptions": [],
-            "aggregation": "Count",
-            "alias": "{{cloud/RoleName}}",
-            "allowedTimeGrainsMs": [
-              60000,
-              300000,
-              900000,
-              1800000,
-              3600000,
-              21600000,
-              43200000,
-              86400000
-            ],
-            "dimensionFilter": "*",
-            "dimensionFilters": [
-              {
-                "dimension": "cloud/roleName",
-                "filter": "fabric:/Helix/AutoScaleActorService",
-                "operator": "eq"
-              }
-            ],
-            "metricDefinition": "Microsoft.Insights/components",
-            "metricName": "traces/count",
-            "metricNamespace": "microsoft.insights/components",
-            "resourceGroup": "[parameter(dotnet-eng-appinsights-resourcegroup)]",
-            "resourceName": "[parameter(dotnet-eng-appinsights-resourcename)]",
-            "timeGrain": "auto",
-            "timeGrains": [],
-            "top": "100"
-          },
-          "azureResourceGraph": {
-            "resultFormat": "table"
           },
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
             "uid": "F2XodEi7z"
           },
-          "insightsAnalytics": {
-            "query": "",
-            "resultFormat": "time_series"
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
           },
-          "queryType": "Azure Monitor",
-          "refId": "A",
-          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]",
-          "subscriptions": [
-            "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
-            "cab65fc3-d077-467d-931f-3932eabf36d3"
-          ]
-        }
-      ],
-      "thresholds": [
-        {
-          "colorMode": "critical",
-          "op": "lt",
-          "value": 1,
-          "visible": true
-        }
-      ],
-      "title": "Helix AutoScaler Service Traces",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "grafana-azure-monitor-datasource",
-        "uid": "F2XodEi7z"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
+          "gridPos": {
+            "h": 9,
+            "w": 16,
+            "x": 0,
+            "y": 29
           },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
+          "id": 29,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
             },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
+            "tooltip": {
+              "mode": "single"
             }
           },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
+          "targets": [
+            {
+              "appInsights": {
+                "dimension": [],
+                "metricName": "select",
+                "timeGrain": "auto"
               },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
+              "azureLogAnalytics": {
+                "query": "//change this example to create your own time series query\n<table name>                                                              //the table to query (e.g. Usage, Heartbeat, Perf)\n| where $__timeFilter(TimeGenerated)                                      //this is a macro used to show the full chart’s time range, choose the datetime column here\n| summarize count() by <group by column>, bin(TimeGenerated, $__interval) //change “group by column” to a column in your table, such as “Computer”. The $__interval macro is used to auto-select the time grain. Can also use 1h, 5m etc.\n| order by TimeGenerated asc",
+                "resultFormat": "time_series",
+                "workspace": ""
+              },
+              "azureMonitor": {
+                "aggOptions": [],
+                "aggregation": "Count",
+                "alias": "{{cloud/RoleName}}",
+                "allowedTimeGrainsMs": [
+                  60000,
+                  300000,
+                  900000,
+                  1800000,
+                  3600000,
+                  21600000,
+                  43200000,
+                  86400000
+                ],
+                "dimensionFilter": "*",
+                "dimensionFilters": [
+                  {
+                    "dimension": "cloud/roleName",
+                    "filter": "fabric:/Helix/AutoScaleActorService",
+                    "operator": "eq"
+                  }
+                ],
+                "metricDefinition": "Microsoft.Insights/components",
+                "metricName": "traces/count",
+                "metricNamespace": "microsoft.insights/components",
+                "resourceGroup": "dotnet-eng-cluster",
+                "resourceName": "dotnet-eng",
+                "timeGrain": "auto",
+                "timeGrains": [],
+                "top": "100"
+              },
+              "azureResourceGraph": {
+                "resultFormat": "table"
+              },
+              "datasource": {
+                "type": "grafana-azure-monitor-datasource",
+                "uid": "F2XodEi7z"
+              },
+              "insightsAnalytics": {
+                "query": "",
+                "resultFormat": "time_series"
+              },
+              "queryType": "Azure Monitor",
+              "refId": "A",
+              "subscription": "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+              "subscriptions": [
+                "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+                "cab65fc3-d077-467d-931f-3932eabf36d3"
+              ]
+            }
+          ],
+          "thresholds": [
+            {
+              "colorMode": "critical",
+              "op": "lt",
+              "value": 20,
+              "visible": true
+            }
+          ],
+          "title": "Helix AutoScaler Service Traces",
+          "type": "timeseries"
         },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 8,
-        "x": 16,
-        "y": 51
-      },
-      "id": 30,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "targets": [
         {
-          "appInsights": {
-            "dimension": [],
-            "metricName": "select",
-            "timeGrain": "auto"
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
           },
-          "azureLogAnalytics": {
-            "query": "//change this example to create your own time series query\n<table name>                                                              //the table to query (e.g. Usage, Heartbeat, Perf)\n| where $__timeFilter(TimeGenerated)                                      //this is a macro used to show the full chart’s time range, choose the datetime column here\n| summarize count() by <group by column>, bin(TimeGenerated, $__interval) //change “group by column” to a column in your table, such as “Computer”. The $__interval macro is used to auto-select the time grain. Can also use 1h, 5m etc.\n| order by TimeGenerated asc",
-            "resultFormat": "time_series",
-            "workspace": "[parameter(emptystring)]"
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
           },
-          "azureMonitor": {
-            "aggOptions": [],
-            "aggregation": "Count",
-            "allowedTimeGrainsMs": [
-              60000,
-              300000,
-              900000,
-              1800000,
-              3600000,
-              21600000,
-              43200000,
-              86400000
-            ],
-            "dimensionFilter": "*",
-            "dimensionFilters": [],
-            "metricDefinition": "microsoft.insights/components",
-            "metricName": "exceptions/server",
-            "metricNamespace": "microsoft.insights/components",
-            "resourceGroup": "[parameter(helix-client-appinsights-resourcegroup)]",
-            "resourceName": "[parameter(helix-appinsights-resourcename)]",
-            "timeGrain": "auto",
-            "timeGrains": [],
-            "top": "10"
+          "gridPos": {
+            "h": 9,
+            "w": 8,
+            "x": 16,
+            "y": 29
           },
-          "azureResourceGraph": {
-            "resultFormat": "table"
+          "id": 30,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single"
+            }
           },
-          "insightsAnalytics": {
-            "query": "",
-            "resultFormat": "time_series"
-          },
-          "queryType": "Azure Monitor",
-          "refId": "A",
-          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]",
-          "subscriptions": [
-            "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
-            "cab65fc3-d077-467d-931f-3932eabf36d3"
-          ]
+          "targets": [
+            {
+              "appInsights": {
+                "dimension": [],
+                "metricName": "select",
+                "timeGrain": "auto"
+              },
+              "azureLogAnalytics": {
+                "query": "//change this example to create your own time series query\n<table name>                                                              //the table to query (e.g. Usage, Heartbeat, Perf)\n| where $__timeFilter(TimeGenerated)                                      //this is a macro used to show the full chart’s time range, choose the datetime column here\n| summarize count() by <group by column>, bin(TimeGenerated, $__interval) //change “group by column” to a column in your table, such as “Computer”. The $__interval macro is used to auto-select the time grain. Can also use 1h, 5m etc.\n| order by TimeGenerated asc",
+                "resultFormat": "time_series",
+                "workspace": ""
+              },
+              "azureMonitor": {
+                "aggOptions": [],
+                "aggregation": "Count",
+                "allowedTimeGrainsMs": [
+                  60000,
+                  300000,
+                  900000,
+                  1800000,
+                  3600000,
+                  21600000,
+                  43200000,
+                  86400000
+                ],
+                "dimensionFilter": "*",
+                "dimensionFilters": [],
+                "metricDefinition": "microsoft.insights/components",
+                "metricName": "exceptions/server",
+                "metricNamespace": "microsoft.insights/components",
+                "resourceGroup": "helixinfrarg",
+                "resourceName": "helix-prod",
+                "timeGrain": "auto",
+                "timeGrains": [],
+                "top": "10"
+              },
+              "azureResourceGraph": {
+                "resultFormat": "table"
+              },
+              "insightsAnalytics": {
+                "query": "",
+                "resultFormat": "time_series"
+              },
+              "queryType": "Azure Monitor",
+              "refId": "A",
+              "subscription": "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+              "subscriptions": [
+                "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+                "cab65fc3-d077-467d-931f-3932eabf36d3"
+              ]
+            }
+          ],
+          "title": "Helix Failed Requests",
+          "type": "timeseries"
         }
       ],
-      "title": "Helix Failed Requests",
-      "type": "timeseries"
+      "title": "Helix",
+      "type": "row"
     },
     {
       "collapsed": false,
@@ -1990,380 +2242,379 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 60
+        "y": 50
       },
       "id": 52,
-      "panels": [],
-      "title": "Other",
-      "type": "row"
-    },
-    {
-      "alert": {
-        "alertRuleTags": {
-          "NotificationId": "d2dd705a6c724ed68fcf6955561c06dd"
-        },
-        "conditions": [
-          {
-            "evaluator": {
-              "params": [
-                20
-              ],
-              "type": "gt"
-            },
-            "operator": {
-              "type": "and"
-            },
-            "query": {
-              "params": [
-                "A",
-                "1h",
-                "now-10m"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "avg"
-            },
-            "type": "query"
-          }
-        ],
-        "executionErrorState": "keep_state",
-        "for": "5m",
-        "frequency": "1m",
-        "handler": 1,
-        "message": "The number of failed DotNetEng Status requests per hour is above 20. This may indicate a systemic problem that needs to be investigated.\nTo intially investigate prod, run the following query in DotNetEng-Status-Prod, and to investigate staging, run the query in DotNetEng-Status-Staging:\n\n```\nunion exceptions, traces\n| project timestamp, operation_Name, customDimensions, message, problemId, details\n| order by timestamp asc\n```",
-        "name": "DotNetEng Status Failed Requests/Hour alert",
-        "noDataState": "ok",
-        "notifications": [
-          {
-            "uid": "statusHook"
-          }
-        ]
-      },
-      "datasource": {
-        "type": "grafana-azure-monitor-datasource",
-        "uid": "F2XodEi7z"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 6,
-        "x": 0,
-        "y": 61
-      },
-      "id": 44,
-      "interval": "15m",
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "hidden",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "targets": [
+      "panels": [
         {
-          "appInsights": {
-            "dimension": [],
-            "metricName": "select",
-            "timeGrain": "auto"
-          },
-          "azureLogAnalytics": {
-            "query": "let r = requests | where $__timeFilter(timestamp);\nlet f = coalesce(toscalar(r | summarize min(timestamp)), ago(1d));\nlet t = coalesce(toscalar(r | summarize max(timestamp)), now());\nlet span=(t - f)/60;\nlet interval=case(span >= 1d, bin(span, 1d), span >= 1h, bin(span, 1h), 15m);\nlet intervalHours = interval / 1h;\nr\n| where success == false\n| make-series kind=nonempty valueCount=count() default=0 on timestamp in range(f, t, interval)\n| mv-expand timestamp to typeof(datetime), valueCount to typeof(double)\n| project timestamp, failuresCount=valueCount/intervalHours",
-            "resource": "[parameter(dotneteng-status-appinsights-resourcepath)]",
-            "resultFormat": "time_series",
-            "workspace": "[parameter(default-workspace-resourcepath)]"
-          },
-          "azureMonitor": {
-            "aggOptions": [],
-            "dimensionFilter": "*",
-            "dimensionFilters": [],
-            "timeGrain": "auto",
-            "timeGrains": [],
-            "top": "10"
-          },
-          "azureResourceGraph": {
-            "resultFormat": "table"
-          },
-          "insightsAnalytics": {
-            "query": "",
-            "resultFormat": "time_series"
-          },
-          "queryType": "Azure Log Analytics",
-          "refId": "A",
-          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]",
-          "subscriptions": [
-            "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
-            "cab65fc3-d077-467d-931f-3932eabf36d3"
-          ]
-        }
-      ],
-      "thresholds": [
-        {
-          "colorMode": "critical",
-          "op": "gt",
-          "value": 20,
-          "visible": true
-        }
-      ],
-      "title": "DotNetEng Status Failed Requests/Hour",
-      "type": "timeseries"
-    },
-    {
-      "alert": {
-        "alertRuleTags": {
-          "NotificationId": "fb8faaf7600740f98a1c2db076cd1712"
-        },
-        "conditions": [
-          {
-            "evaluator": {
-              "params": [
-                60
-              ],
-              "type": "lt"
+          "alert": {
+            "alertRuleTags": {
+              "NotificationId": "d2dd705a6c724ed68fcf6955561c06dd"
             },
-            "operator": {
-              "type": "and"
-            },
-            "query": {
-              "params": [
-                "A",
-                "5m",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "avg"
-            },
-            "type": "query"
-          }
-        ],
-        "executionErrorState": "keep_state",
-        "for": "15m",
-        "frequency": "1m",
-        "handler": 1,
-        "message": "source.dot.net availability is low!",
-        "name": "source.dot.net Availability",
-        "noDataState": "keep_state",
-        "notifications": [
-          {
-            "uid": "statusHook"
-          }
-        ]
-      },
-      "datasource": {
-        "type": "grafana-azure-monitor-datasource",
-        "uid": "F2XodEi7z"
-      },
-      "description": "Availability tests for the site source.dot.net.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "axisSoftMax": 100,
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
+            "conditions": [
               {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 6,
-        "x": 6,
-        "y": 61
-      },
-      "id": 16,
-      "links": [
-        {
-          "targetBlank": true,
-          "title": "Azure Portal: Availability",
-          "url": "https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/68672ab8-de0c-40f1-8d1b-ffb20bd62c0f/resourceGroups/dotnet-eng-cluster/providers/microsoft.insights/components/dotnet-eng/availability"
-        },
-        {
-          "targetBlank": true,
-          "title": "Source Browser",
-          "url": "https://source.dot.net/"
-        }
-      ],
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "hidden",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "targets": [
-        {
-          "appInsights": {
-            "dimension": [],
-            "metricName": "select",
-            "timeGrain": "auto"
-          },
-          "azureLogAnalytics": {
-            "query": "//change this example to create your own time series query\n<table name>                                                              //the table to query (e.g. Usage, Heartbeat, Perf)\n| where $__timeFilter(TimeGenerated)                                      //this is a macro used to show the full chart’s time range, choose the datetime column here\n| summarize count() by <group by column>, bin(TimeGenerated, $__interval) //change “group by column” to a column in your table, such as “Computer”. The $__interval macro is used to auto-select the time grain. Can also use 1h, 5m etc.\n| order by TimeGenerated asc",
-            "resultFormat": "time_series",
-            "workspace": "[parameter(emptystring)]"
-          },
-          "azureMonitor": {
-            "aggOptions": [],
-            "aggregation": "Average",
-            "alias": "",
-            "allowedTimeGrainsMs": [
-              60000,
-              300000,
-              900000,
-              1800000,
-              3600000,
-              21600000,
-              43200000,
-              86400000
-            ],
-            "dimensionFilter": "*",
-            "dimensionFilters": [
-              {
-                "dimension": "availabilityResult/name",
-                "filter": "source-dot-net",
-                "operator": "eq"
+                "evaluator": {
+                  "params": [
+                    20
+                  ],
+                  "type": "gt"
+                },
+                "operator": {
+                  "type": "and"
+                },
+                "query": {
+                  "params": [
+                    "A",
+                    "1h",
+                    "now-10m"
+                  ]
+                },
+                "reducer": {
+                  "params": [],
+                  "type": "avg"
+                },
+                "type": "query"
               }
             ],
-            "metricDefinition": "Microsoft.Insights/components",
-            "metricName": "availabilityResults/availabilityPercentage",
-            "metricNamespace": "microsoft.insights/components",
-            "resourceGroup": "[parameter(dotnet-eng-appinsights-resourcegroup)]",
-            "resourceName": "[parameter(dotnet-eng-appinsights-resourcename)]",
-            "timeGrain": "auto",
-            "timeGrains": [],
-            "top": "10"
-          },
-          "azureResourceGraph": {
-            "resultFormat": "table"
+            "executionErrorState": "keep_state",
+            "for": "5m",
+            "frequency": "1m",
+            "handler": 1,
+            "message": "The number of failed DotNetEng Status requests per hour is above 20. This may indicate a systemic problem that needs to be investigated.\nTo intially investigate prod, run the following query in DotNetEng-Status-Prod, and to investigate staging, run the query in DotNetEng-Status-Staging:\n\n```\nunion exceptions, traces\n| project timestamp, operation_Name, customDimensions, message, problemId, details\n| order by timestamp asc\n```",
+            "name": "DotNetEng Status Failed Requests/Hour alert",
+            "noDataState": "ok",
+            "notifications": [
+              {
+                "uid": "statusHook"
+              }
+            ]
           },
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
             "uid": "F2XodEi7z"
           },
-          "insightsAnalytics": {
-            "query": "",
-            "resultFormat": "time_series"
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
           },
-          "queryType": "Azure Monitor",
-          "refId": "A",
-          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]",
-          "subscriptions": [
-            "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
-            "cab65fc3-d077-467d-931f-3932eabf36d3"
-          ]
-        }
-      ],
-      "thresholds": [
+          "gridPos": {
+            "h": 9,
+            "w": 6,
+            "x": 0,
+            "y": 21
+          },
+          "id": 44,
+          "interval": "15m",
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "hidden",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "appInsights": {
+                "dimension": [],
+                "metricName": "select",
+                "timeGrain": "auto"
+              },
+              "azureLogAnalytics": {
+                "query": "let r = requests | where $__timeFilter(timestamp);\nlet f = coalesce(toscalar(r | summarize min(timestamp)), ago(1d));\nlet t = coalesce(toscalar(r | summarize max(timestamp)), now());\nlet span=(t - f)/60;\nlet interval=case(span >= 1d, bin(span, 1d), span >= 1h, bin(span, 1h), 15m);\nlet intervalHours = interval / 1h;\nr\n| where success == false\n| make-series kind=nonempty valueCount=count() default=0 on timestamp in range(f, t, interval)\n| mv-expand timestamp to typeof(datetime), valueCount to typeof(double)\n| project timestamp, failuresCount=valueCount/intervalHours",
+                "resource": "/subscriptions/68672ab8-de0c-40f1-8d1b-ffb20bd62c0f/resourceGroups/monitoring/providers/microsoft.insights/components/DotNetEng-Status-Prod",
+                "resultFormat": "time_series",
+                "workspace": "/subscriptions/68672ab8-de0c-40f1-8d1b-ffb20bd62c0f/resourcegroups/defaultresourcegroup-eus/providers/microsoft.operationalinsights/workspaces/defaultworkspace-68672ab8-de0c-40f1-8d1b-ffb20bd62c0f-eus"
+              },
+              "azureMonitor": {
+                "aggOptions": [],
+                "dimensionFilter": "*",
+                "dimensionFilters": [],
+                "timeGrain": "auto",
+                "timeGrains": [],
+                "top": "10"
+              },
+              "azureResourceGraph": {
+                "resultFormat": "table"
+              },
+              "insightsAnalytics": {
+                "query": "",
+                "resultFormat": "time_series"
+              },
+              "queryType": "Azure Log Analytics",
+              "refId": "A",
+              "subscription": "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+              "subscriptions": [
+                "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+                "cab65fc3-d077-467d-931f-3932eabf36d3"
+              ]
+            }
+          ],
+          "thresholds": [
+            {
+              "colorMode": "critical",
+              "op": "gt",
+              "value": 20,
+              "visible": true
+            }
+          ],
+          "title": "DotNetEng Status Failed Requests/Hour",
+          "type": "timeseries"
+        },
         {
-          "colorMode": "critical",
-          "op": "lt",
-          "value": 60,
-          "visible": true
+          "alert": {
+            "alertRuleTags": {
+              "NotificationId": "fb8faaf7600740f98a1c2db076cd1712"
+            },
+            "conditions": [
+              {
+                "evaluator": {
+                  "params": [
+                    60
+                  ],
+                  "type": "lt"
+                },
+                "operator": {
+                  "type": "and"
+                },
+                "query": {
+                  "params": [
+                    "A",
+                    "5m",
+                    "now"
+                  ]
+                },
+                "reducer": {
+                  "params": [],
+                  "type": "avg"
+                },
+                "type": "query"
+              }
+            ],
+            "executionErrorState": "keep_state",
+            "for": "15m",
+            "frequency": "1m",
+            "handler": 1,
+            "message": "source.dot.net availability is low!",
+            "name": "source.dot.net Availability",
+            "noDataState": "keep_state",
+            "notifications": [
+              {
+                "uid": "statusHook"
+              }
+            ]
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "description": "Availability tests for the site source.dot.net.",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "axisSoftMax": 100,
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green"
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 9,
+            "w": 6,
+            "x": 6,
+            "y": 21
+          },
+          "id": 16,
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "Azure Portal: Availability",
+              "url": "https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/68672ab8-de0c-40f1-8d1b-ffb20bd62c0f/resourceGroups/dotnet-eng-cluster/providers/microsoft.insights/components/dotnet-eng/availability"
+            },
+            {
+              "targetBlank": true,
+              "title": "Source Browser",
+              "url": "https://source.dot.net/"
+            }
+          ],
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "hidden",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "appInsights": {
+                "dimension": [],
+                "metricName": "select",
+                "timeGrain": "auto"
+              },
+              "azureLogAnalytics": {
+                "query": "//change this example to create your own time series query\n<table name>                                                              //the table to query (e.g. Usage, Heartbeat, Perf)\n| where $__timeFilter(TimeGenerated)                                      //this is a macro used to show the full chart’s time range, choose the datetime column here\n| summarize count() by <group by column>, bin(TimeGenerated, $__interval) //change “group by column” to a column in your table, such as “Computer”. The $__interval macro is used to auto-select the time grain. Can also use 1h, 5m etc.\n| order by TimeGenerated asc",
+                "resultFormat": "time_series",
+                "workspace": ""
+              },
+              "azureMonitor": {
+                "aggOptions": [],
+                "aggregation": "Average",
+                "alias": "",
+                "allowedTimeGrainsMs": [
+                  60000,
+                  300000,
+                  900000,
+                  1800000,
+                  3600000,
+                  21600000,
+                  43200000,
+                  86400000
+                ],
+                "dimensionFilter": "*",
+                "dimensionFilters": [
+                  {
+                    "dimension": "availabilityResult/name",
+                    "filter": "source-dot-net",
+                    "operator": "eq"
+                  }
+                ],
+                "metricDefinition": "Microsoft.Insights/components",
+                "metricName": "availabilityResults/availabilityPercentage",
+                "metricNamespace": "microsoft.insights/components",
+                "resourceGroup": "dotnet-eng-cluster",
+                "resourceName": "dotnet-eng",
+                "timeGrain": "auto",
+                "timeGrains": [],
+                "top": "10"
+              },
+              "azureResourceGraph": {
+                "resultFormat": "table"
+              },
+              "datasource": {
+                "type": "grafana-azure-monitor-datasource",
+                "uid": "F2XodEi7z"
+              },
+              "insightsAnalytics": {
+                "query": "",
+                "resultFormat": "time_series"
+              },
+              "queryType": "Azure Monitor",
+              "refId": "A",
+              "subscription": "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+              "subscriptions": [
+                "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+                "cab65fc3-d077-467d-931f-3932eabf36d3"
+              ]
+            }
+          ],
+          "thresholds": [
+            {
+              "colorMode": "critical",
+              "op": "lt",
+              "value": 99,
+              "visible": true
+            }
+          ],
+          "title": "Source Browser",
+          "type": "timeseries"
         }
       ],
-      "title": "Source Browser",
-      "type": "timeseries"
+      "title": "Other",
+      "type": "row"
     }
   ],
-  "refresh": "",
+  "refresh": "30s",
   "schemaVersion": 34,
   "style": "dark",
   "tags": [],
