@@ -39,13 +39,9 @@ if (-not (Test-Path $obj)) {
 $shortSubscription = $subscriptionId.ToString("N").Substring(0, 19)
 $stagingStorageAccountName = "stage$shortSubscription"
 
-Write-Host "ensuring storage account $stagingStorageAccountName exists"
-try {
-  $account = New-AzStorageAccount -ResourceGroupName "ARM_Deploy_Staging" -Name $stagingStorageAccountName -Location $location -SkuName Standard_LRS
-}
-catch {
-  $account = Get-AzStorageAccount -ResourceGroupName "ARM_Deploy_Staging" -Name $stagingStorageAccountName
-}
+# The storage account should be created already at that point as a prerequisite to the Helix system deployment
+Write-Host "fetching storage account $stagingStorageAccountName context"
+$storageAccountContext = New-AzStorageContext -StorageAccountName $stagingStorageAccountName -UseConnectedAccount
 
 $manifestFile = Join-Path $appPackagePath ApplicationManifest.xml
 $applicationTypeName = Select-Xml -Path $manifestFile -XPath "/*[local-name()='ApplicationManifest']/@ApplicationTypeName" | Select-Object -exp Node | Select-Object -exp '#text'
@@ -60,9 +56,9 @@ Compress-Archive -Path (Join-Path $appPackagePath "*") -DestinationPath $appPack
 Rename-Item $appPackageZip $appPackageFileName
 
 Write-Host "Uploading $appPackageFile to staging storage account"
-New-AzStorageContainer -Context $account.Context -Name "service-packages" -Permission Off -ErrorAction SilentlyContinue
-Set-AzStorageBlobContent -Context $account.Context -File $appPackageFile -Container "service-packages" -Blob $appPackageFileName -Force
-$packageSasUrl = New-AzStorageBlobSASToken -Context $account.Context -Container "service-packages" -Blob $appPackageFileName -Permission r -ExpiryTime ((Get-Date).AddHours(2)) -FullUri
+New-AzStorageContainer -Context $storageAccountContext -Name "service-packages" -Permission Off -ErrorAction SilentlyContinue
+Set-AzStorageBlobContent -Context $storageAccountContext -File $appPackageFile -Container "service-packages" -Blob $appPackageFileName -Force
+$packageSasUrl = New-AzStorageBlobSASToken -Context $storageAccountContext -Container "service-packages" -Blob $appPackageFileName -Permission r -ExpiryTime ((Get-Date).AddHours(2)) -FullUri
 
 $existingAppType = Get-AzServiceFabricApplicationType -ResourceGroupName $resourceGroupName -ClusterName $clusterName -Name $applicationTypeName -ErrorAction SilentlyContinue
 
