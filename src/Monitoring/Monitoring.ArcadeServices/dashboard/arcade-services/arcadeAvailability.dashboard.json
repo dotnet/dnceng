@@ -1161,7 +1161,7 @@
         "for": "5m",
         "frequency": "1m",
         "handler": 1,
-        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1308/-Alert-PCS-Background-Worker-Stopped)\n\nThe PCS background work items started to fail frequently.\n\n@dotnet/prodconsvcs",
+        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1308/-Alert-PCS-Background-Worker-Stopped)\n\nPCS appears to have stopped processing new WorkItems.\n\n@dotnet/prodconsvcs",
         "name": "PCS Background Worker Stopped",
         "noDataState": "alerting",
         "notifications": [
