@@ -1561,7 +1561,7 @@
           },
           "queryType": "Azure Log Analytics",
           "refId": "A",
-          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
+          "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
         }
       ],
       "thresholds": [
