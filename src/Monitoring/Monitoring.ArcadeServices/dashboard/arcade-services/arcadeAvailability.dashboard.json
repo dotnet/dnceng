@@ -46,7 +46,7 @@
               "params": [
                 80
               ],
-              "type": "gt"
+              "type": "lt"
             },
             "operator": {
               "type": "and"
@@ -71,7 +71,7 @@
         "handler": 1,
         "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1318/-Alert-PCS-high-git-push-failure-rate)\n\nPCS has a high `git push` failure rate, please investigate\n\n@dotnet/prodconsvcs",
         "name": "Git Push success rate alert",
-        "noDataState": "alerting",
+        "noDataState": "keep_state",
         "notifications": []
       },
       "datasource": {
@@ -112,6 +112,7 @@
             }
           },
           "mappings": [],
+          "max": 100,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -124,7 +125,8 @@
                 "value": 80
               }
             ]
-          }
+          },
+          "unit": "percent"
         },
         "overrides": []
       },
@@ -132,7 +134,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 0
+        "y": 9
       },
       "id": 66,
       "options": {
@@ -167,7 +169,7 @@
       "thresholds": [
         {
           "colorMode": "critical",
-          "op": "gt",
+          "op": "lt",
           "value": 80,
           "visible": true
         }
