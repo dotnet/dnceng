@@ -1337,6 +1337,7 @@
         "type": "grafana-azure-monitor-datasource",
         "uid": "F2XodEi7z"
       },
+      "description": "Number of first, second, third.. attempts of PCS work items",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1360,11 +1361,11 @@
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "never",
+            "showPoints": "auto",
             "spanNulls": false,
             "stacking": {
               "group": "A",
-              "mode": "normal"
+              "mode": "none"
             },
             "thresholdsStyle": {
               "mode": "off"
@@ -1383,8 +1384,7 @@
                 "value": 80
               }
             ]
-          },
-          "unit": "ms"
+          }
         },
         "overrides": []
       },
@@ -1394,23 +1394,21 @@
         "x": 0,
         "y": 33
       },
-      "id": 58,
+      "id": 70,
       "options": {
         "legend": {
-          "calcs": [
-            "sum"
-          ],
+          "calcs": [],
           "displayMode": "list",
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "multi"
+          "mode": "single"
         }
       },
       "targets": [
         {
           "azureLogAnalytics": {
-            "query": "customEvents\r\n| where name == \"GitClone\" and $__timeFilter(timestamp)\r\n| extend Duration = toint(customMeasurements[\"Duration\"])\r\n| summarize Duration=avg(Duration) by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "query": "traces\r\n| where message startswith \"Starting attempt\" and $__timeFilter(timestamp)\r\n| extend attemptNumber = tostring(customDimensions[\"attemptNumber\"])\r\n| summarize Count = count() by bin(timestamp, $__interval), attemptNumber\r\n| project timestamp, attemptNumber, Count\r\n| order by timestamp asc",
             "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
             "resultFormat": "time_series"
           },
@@ -1418,18 +1416,206 @@
             "dimensionFilters": [],
             "timeGrain": "auto"
           },
-          "database": "engineeringdata",
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
             "uid": "F2XodEi7z"
           },
           "queryType": "Azure Log Analytics",
           "refId": "A",
-          "resultFormat": "table",
           "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
         }
       ],
-      "title": "PCS Git Clones",
+      "title": "PSC WorkItem attempts",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "F2XodEi7z"
+      },
+      "description": "Number of Pull Request Updates failed by PCS (this just includes things like title and description, not the code)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 33
+      },
+      "id": 68,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "query": "customEvents\r\n| where name == \"PullRequestUpdateFailed\"\r\n| summarize TotalCount=count() by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]"
+          },
+          "azureMonitor": {
+            "dimensionFilters": [],
+            "timeGrain": "auto"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A",
+          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
+        }
+      ],
+      "title": "PCS Failed Pull Request Updates",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "F2XodEi7z"
+      },
+      "description": "Number of PCS work items with unhandled exceptions, even after retries",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 41
+      },
+      "id": 66,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "query": "customEvents\r\n| where name == \"WorkItemFailed\"\r\n| summarize TotalCount=count() by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]"
+          },
+          "azureMonitor": {
+            "dimensionFilters": [],
+            "timeGrain": "auto"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A",
+          "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
+        }
+      ],
+      "title": "PCS Unhandled Workitems",
       "type": "timeseries"
     },
     {
@@ -1505,7 +1691,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 33
+        "y": 41
       },
       "id": 54,
       "options": {
@@ -1595,6 +1781,106 @@
               }
             ]
           },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 49
+      },
+      "id": 58,
+      "options": {
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "query": "customEvents\r\n| where name == \"GitClone\" and $__timeFilter(timestamp)\r\n| extend Duration = toint(customMeasurements[\"Duration\"])\r\n| summarize Duration=avg(Duration) by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
+            "resultFormat": "time_series"
+          },
+          "azureMonitor": {
+            "dimensionFilters": [],
+            "timeGrain": "auto"
+          },
+          "database": "engineeringdata",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A",
+          "resultFormat": "table",
+          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
+        }
+      ],
+      "title": "PCS Git Clones",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "F2XodEi7z"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
           "unit": "none"
         },
         "overrides": []
@@ -1603,7 +1889,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 41
+        "y": 57
       },
       "id": 60,
       "options": {
@@ -1649,7 +1935,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 49
+        "y": 65
       },
       "id": 48,
       "panels": [
@@ -2454,7 +2740,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 50
+        "y": 66
       },
       "id": 52,
       "panels": [
