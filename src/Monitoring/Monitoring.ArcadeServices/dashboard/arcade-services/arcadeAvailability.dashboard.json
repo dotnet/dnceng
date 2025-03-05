@@ -1160,7 +1160,7 @@
         "for": "5m",
         "frequency": "1m",
         "handler": 1,
-        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1308/-Alert-PCS-Background-Worker-Stopped)\n\nThe PCS background work items started to fail frequently.\n\n@dotnet/prodconsvcs",
+        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1308/-Alert-PCS-Background-Worker-Stopped)\n\nPCS appears to have stopped processing new WorkItems.\n\n@dotnet/prodconsvcs",
         "name": "PCS Background Worker Stopped",
         "noDataState": "alerting",
         "notifications": [
@@ -1433,6 +1433,48 @@
       "type": "timeseries"
     },
     {
+      "alert": {
+        "alertRuleTags": {
+          "NotificationId": "6ggqnvwrunnru1zfl4g42dn9qjzanb8a"
+        },
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                80
+              ],
+              "type": "lt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "A",
+                "5m",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "avg"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "keep_state",
+        "for": "5m",
+        "frequency": "1m",
+        "handler": 1,
+        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1318/-Alert-PCS-high-git-push-failure-rate)\n\nPCS has a high `git push` failure rate, please investigate\n\n@dotnet/prodconsvcs",
+        "name": "Git Push success rate alert",
+        "noDataState": "keep_state",
+        "notifications": [
+          {
+            "uid": "statusHook"
+          }
+        ]
+      },
       "datasource": {
         "type": "grafana-azure-monitor-datasource",
         "uid": "F2XodEi7z"
@@ -1467,10 +1509,11 @@
               "mode": "none"
             },
             "thresholdsStyle": {
-              "mode": "off"
+              "mode": "line"
             }
           },
           "mappings": [],
+          "max": 100,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -1484,22 +1527,9 @@
               }
             ]
           },
-          "unit": "none"
+          "unit": "percent"
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Virtual CPUs"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "none"
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
@@ -1507,7 +1537,7 @@
         "x": 12,
         "y": 33
       },
-      "id": 54,
+      "id": 66,
       "options": {
         "legend": {
           "calcs": [],
@@ -1520,27 +1550,32 @@
       },
       "targets": [
         {
+          "azureLogAnalytics": {
+            "query": "customEvents\r\n| where name == \"GitPush\" and $__timeFilter(timestamp)\r\n| extend Success = tobool(customDimensions[\"Success\"])\r\n| summarize SuccessRate=100*countif(Success == true)/count() by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]"
+          },
           "azureMonitor": {
-            "aggregation": "Average",
-            "alias": "Virtual CPUs",
             "dimensionFilters": [],
-            "metricDefinition": "Microsoft.Insights/components",
-            "metricName": "performanceCounters/processCpuPercentage",
-            "metricNamespace": "Microsoft.Insights/components",
-            "resourceGroup": "[parameter(product-construction-service-resourcegroup)]",
-            "resourceName": "[parameter(product-construction-service-appinsights-resourcename)]",
             "timeGrain": "auto"
           },
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
             "uid": "F2XodEi7z"
           },
-          "queryType": "Azure Monitor",
+          "queryType": "Azure Log Analytics",
           "refId": "A",
           "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
         }
       ],
-      "title": "PCS CPU Usage",
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "op": "lt",
+          "value": 80,
+          "visible": true
+        }
+      ],
+      "title": "Git Push success rate",
       "type": "timeseries"
     },
     {
@@ -1641,6 +1676,117 @@
         }
       ],
       "title": "PCS Feed Cleaner",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "F2XodEi7z"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Virtual CPUs"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 41
+      },
+      "id": 54,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "azureMonitor": {
+            "aggregation": "Average",
+            "alias": "Virtual CPUs",
+            "dimensionFilters": [],
+            "metricDefinition": "Microsoft.Insights/components",
+            "metricName": "performanceCounters/processCpuPercentage",
+            "metricNamespace": "Microsoft.Insights/components",
+            "resourceGroup": "[parameter(product-construction-service-resourcegroup)]",
+            "resourceName": "[parameter(product-construction-service-appinsights-resourcename)]",
+            "timeGrain": "auto"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "queryType": "Azure Monitor",
+          "refId": "A",
+          "subscription": "fbd6122a-9ad3-42e4-976e-bccb82486856"
+        }
+      ],
+      "title": "PCS CPU Usage",
       "type": "timeseries"
     },
     {
