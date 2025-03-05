@@ -376,7 +376,7 @@
             "query": "customEvents\r\n| where name == \"WorkItemExecuted\" and $__timeFilter(timestamp)\r\n| extend Success = tobool(customDimensions[\"Success\"])\r\n| summarize Successful = countif(Success == true), Failed = countif(Success == false) by bin(timestamp, $__interval)\r\n| order by timestamp asc",
             "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
             "resultFormat": "time_series",
-            "workspace": "/subscriptions/68672ab8-de0c-40f1-8d1b-ffb20bd62c0f/resourcegroups/defaultresourcegroup-eus/providers/microsoft.operationalinsights/workspaces/defaultworkspace-68672ab8-de0c-40f1-8d1b-ffb20bd62c0f-eus"
+            "workspace": "[parameter(default-workspace-resourcepath)]"
           },
           "azureMonitor": {
             "dimensionFilters": [],
@@ -399,7 +399,7 @@
             "query": "customEvents\r\n| where name == \"WorkItemExecuted\" and $__timeFilter(timestamp)\r\n| extend Success = tobool(customDimensions[\"Success\"])\r\n| summarize SuccessRate=100*countif(Success == true)/count() by bin(timestamp, $__interval)\r\n| order by timestamp asc",
             "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
             "resultFormat": "time_series",
-            "workspace": "/subscriptions/68672ab8-de0c-40f1-8d1b-ffb20bd62c0f/resourcegroups/defaultresourcegroup-eus/providers/microsoft.operationalinsights/workspaces/defaultworkspace-68672ab8-de0c-40f1-8d1b-ffb20bd62c0f-eus"
+            "workspace": "[parameter(default-workspace-resourcepath)]"
           },
           "azureMonitor": {
             "dimensionFilters": [],
@@ -560,7 +560,7 @@
             "query": "exceptions\r\n| where $__timeFilter(timestamp) and problemId !contains \"SpaDefaultPageMiddleware\"\r\n| summarize Exceptions=count() by bin(timestamp, $__interval)\r\n| order by timestamp asc",
             "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
             "resultFormat": "time_series",
-            "workspace": "/subscriptions/68672ab8-de0c-40f1-8d1b-ffb20bd62c0f/resourcegroups/defaultresourcegroup-eus/providers/microsoft.operationalinsights/workspaces/defaultworkspace-68672ab8-de0c-40f1-8d1b-ffb20bd62c0f-eus"
+            "workspace": "[parameter(default-workspace-resourcepath)]"
           },
           "azureMonitor": {
             "dimensionFilters": [],
@@ -885,7 +885,7 @@
           },
           "queryType": "Azure Log Analytics",
           "refId": "A",
-          "subscription": "fbd6122a-9ad3-42e4-976e-bccb82486856"
+          "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
         }
       ],
       "title": "PCS Unhandled Workitems",
@@ -1209,7 +1209,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "fbd6122a-9ad3-42e4-976e-bccb82486856"
+          "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
         }
       ],
       "title": "PCS Background Queue Wait Time",
@@ -1308,7 +1308,7 @@
           "azureLogAnalytics": {
             "query": "//change this example to create your own time series query\n<table name>                                                              //the table to query (e.g. Usage, Heartbeat, Perf)\n| where $__timeFilter(TimeGenerated)                                      //this is a macro used to show the full chart’s time range, choose the datetime column here\n| summarize count() by <group by column>, bin(TimeGenerated, $__interval) //change “group by column” to a column in your table, such as “Computer”. The $__interval macro is used to auto-select the time grain. Can also use 1h, 5m etc.\n| order by TimeGenerated asc",
             "resultFormat": "time_series",
-            "workspace": ""
+            "workspace": "[parameter(emptystring)]"
           },
           "azureMonitor": {
             "aggOptions": [],
@@ -1348,7 +1348,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "fbd6122a-9ad3-42e4-976e-bccb82486856",
+          "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]",
           "subscriptions": [
             "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
             "cab65fc3-d077-467d-931f-3932eabf36d3"
@@ -1607,7 +1607,7 @@
           },
           "queryType": "Azure Log Analytics",
           "refId": "A",
-          "subscription": "fbd6122a-9ad3-42e4-976e-bccb82486856"
+          "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
         },
         {
           "azureLogAnalytics": {
@@ -1632,7 +1632,7 @@
           "hide": false,
           "queryType": "Azure Log Analytics",
           "refId": "B",
-          "subscription": "fbd6122a-9ad3-42e4-976e-bccb82486856"
+          "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
         }
       ],
       "title": "PCS HTTP Requests",
@@ -1843,7 +1843,7 @@
           },
           "queryType": "Azure Monitor",
           "refId": "A",
-          "subscription": "fbd6122a-9ad3-42e4-976e-bccb82486856"
+          "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
         }
       ],
       "title": "PCS CPU Usage",
@@ -1999,7 +1999,7 @@
               "azureLogAnalytics": {
                 "query": "//change this example to create your own time series query\n<table name>                                                              //the table to query (e.g. Usage, Heartbeat, Perf)\n| where $__timeFilter(TimeGenerated)                                      //this is a macro used to show the full chart’s time range, choose the datetime column here\n| summarize count() by <group by column>, bin(TimeGenerated, $__interval) //change “group by column” to a column in your table, such as “Computer”. The $__interval macro is used to auto-select the time grain. Can also use 1h, 5m etc.\n| order by TimeGenerated asc",
                 "resultFormat": "time_series",
-                "workspace": ""
+                "workspace": "[parameter(emptystring)]"
               },
               "azureMonitor": {
                 "aggOptions": [],
@@ -2175,7 +2175,7 @@
               "azureLogAnalytics": {
                 "query": "//change this example to create your own time series query\n<table name>                                                              //the table to query (e.g. Usage, Heartbeat, Perf)\n| where $__timeFilter(TimeGenerated)                                      //this is a macro used to show the full chart’s time range, choose the datetime column here\n| summarize count() by <group by column>, bin(TimeGenerated, $__interval) //change “group by column” to a column in your table, such as “Computer”. The $__interval macro is used to auto-select the time grain. Can also use 1h, 5m etc.\n| order by TimeGenerated asc",
                 "resultFormat": "time_series",
-                "workspace": ""
+                "workspace": "[parameter(emptystring)]"
               },
               "azureMonitor": {
                 "aggOptions": [],
@@ -2379,7 +2379,7 @@
               "azureLogAnalytics": {
                 "query": "//change this example to create your own time series query\n<table name>                                                              //the table to query (e.g. Usage, Heartbeat, Perf)\n| where $__timeFilter(TimeGenerated)                                      //this is a macro used to show the full chart’s time range, choose the datetime column here\n| summarize count() by <group by column>, bin(TimeGenerated, $__interval) //change “group by column” to a column in your table, such as “Computer”. The $__interval macro is used to auto-select the time grain. Can also use 1h, 5m etc.\n| order by TimeGenerated asc",
                 "resultFormat": "time_series",
-                "workspace": ""
+                "workspace": "[parameter(emptystring)]"
               },
               "azureMonitor": {
                 "aggOptions": [],
@@ -2560,7 +2560,7 @@
               "azureLogAnalytics": {
                 "query": "//change this example to create your own time series query\n<table name>                                                              //the table to query (e.g. Usage, Heartbeat, Perf)\n| where $__timeFilter(TimeGenerated)                                      //this is a macro used to show the full chart’s time range, choose the datetime column here\n| summarize count() by <group by column>, bin(TimeGenerated, $__interval) //change “group by column” to a column in your table, such as “Computer”. The $__interval macro is used to auto-select the time grain. Can also use 1h, 5m etc.\n| order by TimeGenerated asc",
                 "resultFormat": "time_series",
-                "workspace": ""
+                "workspace": "[parameter(emptystring)]"
               },
               "azureMonitor": {
                 "aggOptions": [],
@@ -2705,7 +2705,7 @@
               "azureLogAnalytics": {
                 "query": "//change this example to create your own time series query\n<table name>                                                              //the table to query (e.g. Usage, Heartbeat, Perf)\n| where $__timeFilter(TimeGenerated)                                      //this is a macro used to show the full chart’s time range, choose the datetime column here\n| summarize count() by <group by column>, bin(TimeGenerated, $__interval) //change “group by column” to a column in your table, such as “Computer”. The $__interval macro is used to auto-select the time grain. Can also use 1h, 5m etc.\n| order by TimeGenerated asc",
                 "resultFormat": "time_series",
-                "workspace": ""
+                "workspace": "[parameter(emptystring)]"
               },
               "azureMonitor": {
                 "aggOptions": [],
@@ -2889,7 +2889,7 @@
                 "query": "let r = requests | where $__timeFilter(timestamp);\nlet f = coalesce(toscalar(r | summarize min(timestamp)), ago(1d));\nlet t = coalesce(toscalar(r | summarize max(timestamp)), now());\nlet span=(t - f)/60;\nlet interval=case(span >= 1d, bin(span, 1d), span >= 1h, bin(span, 1h), 15m);\nlet intervalHours = interval / 1h;\nr\n| where success == false\n| make-series kind=nonempty valueCount=count() default=0 on timestamp in range(f, t, interval)\n| mv-expand timestamp to typeof(datetime), valueCount to typeof(double)\n| project timestamp, failuresCount=valueCount/intervalHours",
                 "resource": "/subscriptions/68672ab8-de0c-40f1-8d1b-ffb20bd62c0f/resourceGroups/monitoring/providers/microsoft.insights/components/DotNetEng-Status-Prod",
                 "resultFormat": "time_series",
-                "workspace": "/subscriptions/68672ab8-de0c-40f1-8d1b-ffb20bd62c0f/resourcegroups/defaultresourcegroup-eus/providers/microsoft.operationalinsights/workspaces/defaultworkspace-68672ab8-de0c-40f1-8d1b-ffb20bd62c0f-eus"
+                "workspace": "[parameter(default-workspace-resourcepath)]"
               },
               "azureMonitor": {
                 "aggOptions": [],
@@ -3063,7 +3063,7 @@
               "azureLogAnalytics": {
                 "query": "//change this example to create your own time series query\n<table name>                                                              //the table to query (e.g. Usage, Heartbeat, Perf)\n| where $__timeFilter(TimeGenerated)                                      //this is a macro used to show the full chart’s time range, choose the datetime column here\n| summarize count() by <group by column>, bin(TimeGenerated, $__interval) //change “group by column” to a column in your table, such as “Computer”. The $__interval macro is used to auto-select the time grain. Can also use 1h, 5m etc.\n| order by TimeGenerated asc",
                 "resultFormat": "time_series",
-                "workspace": ""
+                "workspace": "[parameter(emptystring)]"
               },
               "azureMonitor": {
                 "aggOptions": [],
