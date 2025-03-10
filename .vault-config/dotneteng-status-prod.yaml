@@ -25,15 +25,6 @@ secrets:
     parameters:
       environment: dotnet-eng-grafana.westus2.cloudapp.azure.com
   
-  nethelix-engsrv-kusto-connection-string-ingest:
-    type: kusto-connection-string
-    parameters:
-      adApplication:
-        location: helixkv
-        name: nethelix-prod-kusto-ad-application
-      dataSource: https://ingest-engsrvprod.kusto.windows.net:443
-      additionalParameters: Streaming=true;Authority Id=72f988bf-86f1-41af-91ab-2d7cd011db47
-
   build-monitor-hook-dotnet-eng-status-token:
     type: text
     parameters:
