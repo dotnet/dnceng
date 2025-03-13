@@ -15,7 +15,7 @@ We have three bits of guidance that everyone should follow:
 We've written up guidance in a few key repos, which should be applicable to all scenarios.
 
 - [General guidance and native code build (dotnet/runtime)](https://github.com/dotnet/runtime/blob/main/docs/project/os-onboarding.md)
-- [Managed code build (dotnet/aspnetcore)](https://github.com/dotnet/aspnetcore/issues/60281)
+- [Managed code build (dotnet/aspnetcore)](https://github.com/dotnet/aspnetcore/blob/main/docs/OnboardingNewOS.md)
 - [Guidelines for Platforms Tested in CI (dotnet/source-build)](https://github.com/dotnet/source-build/blob/main/Documentation/ci-platform-coverage-guidelines.md)
 - [Add a new Android API Level (dotnet/android)](https://github.com/dotnet/android/blob/main/Documentation/workflow/HowToAddNewApiLevel.md)
 - [Prereq container image lifecycle (dotnet/dotnet-buildtools-prereqs-docker)](https://github.com/dotnet/dotnet-buildtools-prereqs-docker/blob/main/lifecycle.md)
