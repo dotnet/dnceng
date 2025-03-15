@@ -2,8 +2,6 @@
   "KeyVaultUri": "",
 
   "KustoTimelineTelemetry": {
-    "IngestConnectionString": "[vault(nethelix-engsrv-kusto-connection-string-ingest)]",
-    "QueryConnectionString": "[vault(nethelix-engsrv-kusto-connection-string-query)]",
     "Database": "engineeringdata"
   },
   
