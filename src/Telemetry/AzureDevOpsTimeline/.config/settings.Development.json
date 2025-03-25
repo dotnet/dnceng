@@ -7,6 +7,8 @@
   "Interval": "0:30:00",
   "BuildBatchSize": 1000,
   "KustoTimelineTelemetry": {
-    "IngestConnectionString": ""
+    "KustoClusterUri": "https://engdata.westus2.kusto.windows.net",
+    "KustoIngestionUri": "https://ingest-engdata.westus2.kusto.windows.net",
+    "UseAzCliAuthentication": true
   }
 }

@@ -27,7 +27,7 @@
     "Database": "engineeringdata",
     "KustoClusterUri": "https://engsrvprod.westus.kusto.windows.net",
     "KustoIngestionUri": "https://ingest-engsrvprod.westus.kusto.windows.net",
-    "ManagedIdentityId": "f50325b8-f039-418d-90c6-6c13cafffb86",
+    "ManagedIdentityId": "d2580e46-e758-4778-a864-18f909438b45",
     "UseAzCliAuthentication": false
   }
 }
