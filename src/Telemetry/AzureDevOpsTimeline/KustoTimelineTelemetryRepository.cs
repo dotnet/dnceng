@@ -30,12 +30,23 @@ public sealed class KustoTimelineTelemetryRepository : ITimelineTelemetryReposit
     {
         _logger = logger;
 
-        var ingestKcsb = new KustoConnectionStringBuilder(options.Value.KustoIngestionUri).WithAadUserManagedIdentity(options.Value.ManagedIdentityId);
-        _ingest = KustoIngestFactory.CreateQueuedIngestClient(ingestKcsb);
+        // removing the ManagedIdentityId was a default setup in local debugging
+        if (string.IsNullOrEmpty(options.Value.ManagedIdentityId))
+        {
+            _logger.LogDebug("No ManagedIdentityId provided; will ignore ingest operations");
+            _ingest = new NullKustoIngestClient();
 
-        var kcsb = new KustoConnectionStringBuilder(options.Value.KustoClusterUri).WithAadUserManagedIdentity(options.Value.ManagedIdentityId);
-        _query = KustoClientFactory.CreateCslQueryProvider(kcsb);
-
+            var kcsb = new KustoConnectionStringBuilder(options.Value.KustoClusterUri).WithAadUserPromptAuthentication();
+            _query = KustoClientFactory.CreateCslQueryProvider(kcsb);
+        }
+        else
+        {
+            var ingestKcsb = new KustoConnectionStringBuilder(options.Value.KustoIngestionUri).WithAadUserManagedIdentity(options.Value.ManagedIdentityId);
+            _ingest = KustoIngestFactory.CreateQueuedIngestClient(ingestKcsb);
+            
+            var kcsb = new KustoConnectionStringBuilder(options.Value.KustoClusterUri).WithAadUserManagedIdentity(options.Value.ManagedIdentityId);
+            _query = KustoClientFactory.CreateCslQueryProvider(kcsb);
+        }
         _database = options.Value.Database;
     }
 
