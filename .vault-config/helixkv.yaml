@@ -4,6 +4,7 @@ storageLocation:
     subscription: a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1
     name: helixkv
 
+secrets:
   dn-bot-account-redmond:
     type: domain-account
     parameters:
