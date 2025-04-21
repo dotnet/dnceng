@@ -148,6 +148,8 @@ stages:
         enableCustomDeployment: true
         DeploymentType: zipDeploy
         RemoveAdditionalFilesFlag: true
+      env:
+        BuildNumber: $(Build.BuildNumber)
 
 - stage: postdeploy
   displayName: Post-Deployment
