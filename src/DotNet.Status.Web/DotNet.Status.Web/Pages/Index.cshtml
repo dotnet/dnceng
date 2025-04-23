@@ -1,12 +1,13 @@
 ﻿@page
 @using System.Security.Claims
+@using System.Reflection
 @{
     ViewData["Title"] = "Home page";
-    var buildNumber = Environment.GetEnvironmentVariable("BuildNumber") ?? "Unknown";
+    var appVersion = Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "Unknown";
 }
 
 .NET Engineering Status Reporting endpoint <br/>
-Deployed via build number: @buildNumber <br/>
+Deployed via build number: @appVersion <br/>
 
 To get/set tokens, go to <a href="@Url.Page("Token")">Tokens</a>
 
