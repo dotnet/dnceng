@@ -3,8 +3,10 @@
 @using System.Reflection
 @{
     ViewData["Title"] = "Home page";
-    var appVersion = Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "Unknown";
-}
+    var appVersion = Assembly.GetEntryAssembly()
+                        ?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                        ?.InformationalVersion?.ToString() ?? "Unknown";
+    }
 
 .NET Engineering Status Reporting endpoint <br/>
 Deployed via build number: @appVersion <br/>
