@@ -2,5 +2,11 @@
     "KeyVaultUri": "https://telemetryserviceprod.vault.azure.net/",
     "Secrets": {
         "ManagedIdentityId": "d2580e46-e758-4778-a864-18f909438b45"
+    },
+    "KustoTimelineTelemetry": {
+        "KustoClusterUri": "https://engsrvprod.westus.kusto.windows.net",
+        "KustoIngestionUri": "https://ingest-engsrvprod.westus.kusto.windows.net",
+        "ManagedIdentityId": "d2580e46-e758-4778-a864-18f909438b45",
+        "UseAzCliAuthentication": false
     }
 }

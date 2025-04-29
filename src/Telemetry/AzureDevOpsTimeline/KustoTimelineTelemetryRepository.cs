@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Kusto.Data;
 using Kusto.Data.Common;
 using Kusto.Data.Exceptions;
 using Kusto.Data.Net.Client;
@@ -25,21 +26,27 @@ public sealed class KustoTimelineTelemetryRepository : ITimelineTelemetryReposit
     private readonly ICslQueryProvider _query;
     private readonly string _database;
 
-    public KustoTimelineTelemetryRepository(ILogger<KustoTimelineTelemetryRepository> logger, IOptionsSnapshot<KustoTimelineTelemetryOptions> options)
+    public KustoTimelineTelemetryRepository(ILogger<KustoTimelineTelemetryRepository> logger, IOptionsSnapshot<KustoOptions> options)
     {
         _logger = logger;
 
-        // removing the IngestConnectionString was a default setup in local debugging
-        if (string.IsNullOrEmpty(options.Value.IngestConnectionString))
+        // removing the ManagedIdentityId was a default setup in local debugging
+        if (string.IsNullOrEmpty(options.Value.ManagedIdentityId))
         {
-            _logger.LogDebug("No ingest connection string provided; will ignore ingest operations");
+            _logger.LogDebug("No ManagedIdentityId provided; will ignore ingest operations");
             _ingest = new NullKustoIngestClient();
+
+            var kcsb = new KustoConnectionStringBuilder(options.Value.KustoClusterUri).WithAadUserPromptAuthentication();
+            _query = KustoClientFactory.CreateCslQueryProvider(kcsb);
         }
         else
         {
-            _ingest = KustoIngestFactory.CreateQueuedIngestClient(options.Value.IngestConnectionString);
+            var ingestKcsb = new KustoConnectionStringBuilder(options.Value.KustoIngestionUri).WithAadUserManagedIdentity(options.Value.ManagedIdentityId);
+            _ingest = KustoIngestFactory.CreateQueuedIngestClient(ingestKcsb);
+            
+            var kcsb = new KustoConnectionStringBuilder(options.Value.KustoClusterUri).WithAadUserManagedIdentity(options.Value.ManagedIdentityId);
+            _query = KustoClientFactory.CreateCslQueryProvider(kcsb);
         }
-        _query = KustoClientFactory.CreateCslQueryProvider(options.Value.QueryConnectionString);
         _database = options.Value.Database;
     }
 
