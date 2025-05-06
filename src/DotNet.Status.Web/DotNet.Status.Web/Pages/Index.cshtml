@@ -1,10 +1,15 @@
 ﻿@page
 @using System.Security.Claims
+@using System.Reflection
 @{
     ViewData["Title"] = "Home page";
-}
+    var appVersion = Assembly.GetEntryAssembly()
+                        ?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                        ?.InformationalVersion?.ToString() ?? "Unknown";
+    }
 
-.NET Engineering Status Reporting endpoint
+.NET Engineering Status Reporting endpoint <br/>
+Deployed via app version: @appVersion <br/>
 
 To get/set tokens, go to <a href="@Url.Page("Token")">Tokens</a>
 

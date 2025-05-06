@@ -169,22 +169,22 @@ public class Startup
     {
         if (!context.Response.Headers.ContainsKey("X-XSS-Protection"))
         {
-            context.Response.Headers.Add("X-XSS-Protection", "1");
+            context.Response.Headers.Append("X-XSS-Protection", "1");
         }
 
         if (!context.Response.Headers.ContainsKey("X-Frame-Options"))
         {
-            context.Response.Headers.Add("X-Frame-Options", "DENY");
+            context.Response.Headers.Append("X-Frame-Options", "DENY");
         }
 
         if (!context.Response.Headers.ContainsKey("X-Content-Type-Options"))
         {
-            context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
+            context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
         }
 
         if (!context.Response.Headers.ContainsKey("Referrer-Policy"))
         {
-            context.Response.Headers.Add("Referrer-Policy", "no-referrer-when-downgrade");
+            context.Response.Headers.Append("Referrer-Policy", "no-referrer-when-downgrade");
         }
         return next();
     }
@@ -287,7 +287,6 @@ public class Startup
         services.AddSingleton<IGitHubClientFactory, GitHubClientFactory>();
         services.AddSingleton<ITimelineIssueTriage, TimelineIssueTriage>();
         services.AddSingleton<ExponentialRetry>();
-        services.AddSingleton<ISystemClock, SystemClock>();
         services.AddSingleton<Microsoft.Extensions.Internal.ISystemClock, Microsoft.Extensions.Internal.SystemClock>();
         services.AddHttpClient();
         services.AddHealthReporting(
@@ -338,7 +337,7 @@ internal class NothingOptions : AuthenticationSchemeOptions
 
 internal class NothingHandler : AuthenticationHandler<NothingOptions>
 {
-    public NothingHandler(IOptionsMonitor<NothingOptions> options, ILoggerFactory logger, UrlEncoder encoder, Microsoft.AspNetCore.Authentication.ISystemClock clock) : base(options, logger, encoder, clock)
+    public NothingHandler(IOptionsMonitor<NothingOptions> options, ILoggerFactory logger, UrlEncoder encoder) : base(options, logger, encoder)
     {
     }
 

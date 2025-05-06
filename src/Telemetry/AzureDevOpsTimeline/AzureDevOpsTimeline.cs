@@ -10,11 +10,9 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -412,7 +410,7 @@ public sealed class AzureDevOpsTimeline : IServiceImplementation
             {
                 record.ImageName = await _buildLogScraper.ExtractMicrosoftHostedPoolImageNameAsync(project, record.Raw.Log.Url, cancellationToken);
             }
-            else if (record.Raw.WorkerName.StartsWith("NetCore1ESPool-"))
+            else if (record.Raw.WorkerName.StartsWith("NetCore1ESPool-") || record.Raw.WorkerName.StartsWith("NetCore-"))
             {
                 record.ImageName = await _buildLogScraper.ExtractOneESHostedPoolImageNameAsync(project, record.Raw.Log.Url, cancellationToken);
             }
