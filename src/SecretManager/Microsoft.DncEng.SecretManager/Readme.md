@@ -45,13 +45,13 @@ secrets:
       blob: keys.xml
       container: dp
       permissions: racwd
-  
+
   execution-storage-connection:
     type: azure-storage-connection-string
     parameters:
       subscription: <a guid>
       account: helixexecution
-  
+
   execution-storage-container-sas:
     type: azure-storage-container-sas-uri
     parameters:
@@ -219,7 +219,7 @@ This is the most common option, and is used to store secrets in an Azure Key Vau
 
 This location represents service connections in an Azure DevOps instance. This is designed to support strictly support connections that require Azure DevOps PATs (secret type `azure-devops-access-token`) to operate (all other service connections should be using SFI-compliant patterns).
 
-Note that it is not possible to read secrets generated for this storage location. 
+Note that it is not possible to read secrets generated for this storage location.
 
 ## Secret Types
 Each secret in the manifest has a specified type, and these types determine what parameters are required, and what ends up in the secret store. Some secret types require human interaction to generate and/or rotate. For such secrets the tool will prompt the user or fail if in a build context. Some secret types also produce multiple values. These values are all stored with additional suffixes in the secret store. Each type is documented below.
@@ -336,7 +336,7 @@ type: kusto-connection-string
 parameters:
   dataSource: the DataSource in the connection string
   initialCatalog: the InitialCatalog in the connection string
-  additionalParameters: and extra 
+  additionalParameters: and extra
   adApplication: SecretReference to the ad-application used for authentication
 ```
 
@@ -405,12 +405,30 @@ parameters:
 ```
 
 ### Domain Account
+
+CoreIdentity will likely send emails about domain account or account password expiration in advance of `secret-manager`
+failures when run non-interactively. It pays to update all three domain accounts together since it's a manual update
+to keep our key vaults and CoreIdentity in sync and at least their password expirations are currently close together.
+
 ```yaml
 type: domain-account
 parameters:
   accountName: full account name including domain
   description: additional description for rotation of the password
 ```
+
+Recommended update steps for each account are:
+
+- Visit <https://coreidentity.microsoft.com/manage/service> and review expiration dates for this bot
+  account. Will need to click on the name link (e.g.
+  <https://coreidentity.microsoft.com/manage/Service/redmond/dn-bot>) for the bot account to see both
+  password and account expiration dates.
+- Click on 'Extend' if the account itself is expired or will expire soon.
+- Click on 'Reset Password' if the password is expired or will expire soon.
+- Copy the generated password to the clipboard before doing anything else. Paste it when requested
+  below.
+- Run 'secret-manager --force-secret={parameters.AccountName}' to update the key vault with the
+  new password.
 
 ### Azure Active Directory Application
 Produces `<name>-app-id` and `<name>-app-secret`
