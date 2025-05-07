@@ -217,9 +217,9 @@ stages:
         versionSpec: 5.3.x
 
     - task: UseDotNet@2
-      displayName: Install .NET 6
+      displayName: Install .NET 8
       inputs:
-        version: 6.x
+        version: 8.x
 
     - task: AzureCLI@2
       inputs:
