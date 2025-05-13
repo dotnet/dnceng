@@ -51,6 +51,6 @@ public class DomainAccount : SecretType<DomainAccount.Parameters>
             "Expecting a valid password from CoreIdentity, containing at least 20 fairly random characters",
             value => value != null && value.Length >= 20 && !value.All(char.IsLetterOrDigit));
 
-        return new SecretData(newPassword, DateTimeOffset.MaxValue, _clock.UtcNow.AddMonths(6));
+        return new SecretData(newPassword, _clock.UtcNow.AddMonths(6), _clock.UtcNow.AddMonths(5));
     }
 }
