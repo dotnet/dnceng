@@ -9,12 +9,10 @@ using Azure.ResourceManager;
 using Azure.Security.KeyVault.Secrets;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.DncEng.CommandLineLib;
-using Microsoft.DncEng.Configuration.Extensions;
 using Microsoft.DncEng.SecretManager.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
-using Moq;
 
 namespace Microsoft.DncEng.SecretManager.Tests
 {
@@ -32,12 +30,19 @@ namespace Microsoft.DncEng.SecretManager.Tests
 
         public ScenarioTestsBase()
         {
-            _tokenCredential = new DefaultAzureCredential(
-                new DefaultAzureCredentialOptions
-                {
-                    TenantId = ConfigurationConstants.MsftAdTenantId,
-                    ManagedIdentityClientId = Environment.GetEnvironmentVariable("ARM_CLIENT_ID")
-                });
+            string clientId = Environment.GetEnvironmentVariable("AZURESUBSCRIPTION_CLIENT_ID");
+            string tenantId = Environment.GetEnvironmentVariable("AZURESUBSCRIPTION_TENANT_ID");
+            string serviceConnectionId = Environment.GetEnvironmentVariable("AZURESUBSCRIPTION_SERVICE_CONNECTION_ID");
+            string systemAccessToken = Environment.GetEnvironmentVariable("SYSTEM_ACCESSTOKEN");
+
+            if (!string.IsNullOrEmpty(clientId) && !string.IsNullOrEmpty(tenantId) && !string.IsNullOrEmpty(serviceConnectionId) && !string.IsNullOrEmpty(systemAccessToken))
+            {
+                _tokenCredential = new AzurePipelinesCredential(tenantId, clientId, serviceConnectionId, systemAccessToken);
+            }
+            else
+            {
+                _tokenCredential = new AzureCliCredential();
+            }
 
             _armClient = new(_tokenCredential, SubscriptionId);
         }

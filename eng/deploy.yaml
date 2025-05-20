@@ -189,9 +189,9 @@ stages:
       displayName: Install Correct .NET Version
       inputs:
         useGlobalJson: true
-    - script: dotnet publish $(Build.SourcesDirectory)\src\Monitoring\Sdk\Microsoft.DotNet.Monitoring.Sdk.csproj -f net8.0
+    - script: dotnet publish --configuration Release $(Build.SourcesDirectory)\src\Monitoring\Sdk\Microsoft.DotNet.Monitoring.Sdk.csproj -f net8.0
       displayName: Build Monitoring SDK
-    - script: dotnet build $(Build.SourcesDirectory)\src\Monitoring\Monitoring.ArcadeServices\Monitoring.ArcadeServices.proj -t:PublishGrafana -p:GrafanaAccessToken=$(grafana-admin-api-key) -p:GrafanaHost=$(GrafanaHost) -p:GrafanaKeyVaultName=$(GrafanaKeyVault) -p:ClientId=$(GrafanaClientId) -p:ServiceConnectionId=$(GrafanaServiceConnectionId) -p:SystemAccessToken=$(System.AccessToken) -p:GrafanaEnvironment=$(DeploymentEnvironment) -p:ParametersFile=parameters.json -v:normal
+    - script: dotnet build $(Build.SourcesDirectory)\src\Monitoring\Monitoring.ArcadeServices\Monitoring.ArcadeServices.proj --configuration Release -t:PublishGrafana -p:GrafanaAccessToken=$(grafana-admin-api-key) -p:GrafanaHost=$(GrafanaHost) -p:GrafanaKeyVaultName=$(GrafanaKeyVault) -p:ClientId=$(GrafanaClientId) -p:ServiceConnectionId=$(GrafanaServiceConnectionId) -p:SystemAccessToken=$(System.AccessToken) -p:GrafanaEnvironment=$(DeploymentEnvironment) -p:ParametersFile=parameters.json -v:normal
       displayName: Publish Grafana Dashboards
 
 - stage: validateDeployment
@@ -224,22 +224,10 @@ stages:
     - task: AzureCLI@2
       inputs:
         azureSubscription: 'secret-manager-scenario-tests'
-        addSpnToEnvironment: true
         scriptType: 'ps'
         scriptLocation: 'inlineScript'
         inlineScript: |
-          echo "##vso[task.setvariable variable=ARM_CLIENT_ID;isSecret=true]$env:servicePrincipalId" 
-          echo "##vso[task.setvariable variable=ARM_TENANT_ID;isSecret=true]$env:tenantId"
-          echo "##vso[task.setvariable variable=ARM_ID_TOKEN;isSecret=true]$env:idToken"
-  
-    - script: |
-        az login --service-principal -u $(ARM_CLIENT_ID) --tenant $(ARM_TENANT_ID) --allow-no-subscriptions --federated-token $(ARM_ID_TOKEN)
-      displayName: "Login to Azure"
-
-    - task: VSTest@2
+          dotnet test $(Pipeline.Workspace)/Microsoft.DncEng.SecretManager.ScenarioTests/Microsoft.DncEng.SecretManager.ScenarioTests.dll
+      env:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       displayName: Secret Manager Scenario Tests
-      inputs:
-        testSelector: testAssemblies
-        testAssemblyVer2: |
-          Microsoft.DncEng.SecretManager.ScenarioTests.dll
-        searchFolder: $(Pipeline.Workspace)/Microsoft.DncEng.SecretManager.ScenarioTests
