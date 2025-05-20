@@ -224,22 +224,10 @@ stages:
     - task: AzureCLI@2
       inputs:
         azureSubscription: 'secret-manager-scenario-tests'
-        addSpnToEnvironment: true
         scriptType: 'ps'
         scriptLocation: 'inlineScript'
         inlineScript: |
-          echo "##vso[task.setvariable variable=ARM_CLIENT_ID;isSecret=true]$env:servicePrincipalId" 
-          echo "##vso[task.setvariable variable=ARM_TENANT_ID;isSecret=true]$env:tenantId"
-          echo "##vso[task.setvariable variable=ARM_ID_TOKEN;isSecret=true]$env:idToken"
-  
-    - script: |
-        az login --service-principal -u $(ARM_CLIENT_ID) --tenant $(ARM_TENANT_ID) --allow-no-subscriptions --federated-token $(ARM_ID_TOKEN)
-      displayName: "Login to Azure"
-
-    - task: VSTest@2
+          dotnet test $(Pipeline.Workspace)/Microsoft.DncEng.SecretManager.ScenarioTests/Microsoft.DncEng.SecretManager.ScenarioTests.dll
+      env:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       displayName: Secret Manager Scenario Tests
-      inputs:
-        testSelector: testAssemblies
-        testAssemblyVer2: |
-          Microsoft.DncEng.SecretManager.ScenarioTests.dll
-        searchFolder: $(Pipeline.Workspace)/Microsoft.DncEng.SecretManager.ScenarioTests
