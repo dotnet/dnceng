@@ -134,7 +134,7 @@
       "targets": [
         {
           "azureLogAnalytics": {
-            "query": "exceptions\r\n| where $__timeFilter(timestamp) and problemId !contains \"SpaDefaultPageMiddleware\"\r\n| project Exception=problemId, Type=outerType\r\n| summarize Count=count() by Exception, Type\r\n| order by Count desc",
+            "query": "exceptions\r\n| where $__timeFilter(timestamp)\r\n| project Exception=problemId, Type=outerType\r\n| summarize Count=count() by Exception, Type\r\n| order by Count desc",
             "resource": "[parameter(product-construction-service-appinsights-resourcepath)]"
           },
           "azureMonitor": {
@@ -192,7 +192,11 @@
         "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1310/-Alert-PCS-Work-Item-Success-Rate-alert)\n\nThe PCS background work items started to fail frequently.\n\n@dotnet/prodconsvcs",
         "name": "PCS Work Item Success Rate alert",
         "noDataState": "alerting",
-        "notifications": []
+        "notifications": [
+          {
+            "uid": "statusHook"
+          }
+        ]
       },
       "datasource": {
         "type": "grafana-azure-monitor-datasource",
@@ -362,7 +366,9 @@
       ],
       "options": {
         "legend": {
-          "calcs": [],
+          "calcs": [
+            "sum"
+          ],
           "displayMode": "list",
           "placement": "bottom"
         },
@@ -810,6 +816,13 @@
             "align": "auto",
             "displayMode": "auto"
           },
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "Show operation logs",
+              "url": "https://dataexplorer.azure.com/dashboards/83ee5d57-8e86-454e-b0ee-69568a6c10e7?p-_startTime=24hours&p-_endTime=now&p-_operationId=v-${__data.fields[\"operationId\"]}﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿#8a5bc9bb-f9b8-4876-bbfa-94046fdf0174"
+            }
+          ],
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -956,7 +969,9 @@
       "interval": "5m",
       "options": {
         "legend": {
-          "calcs": [],
+          "calcs": [
+            "sum"
+          ],
           "displayMode": "list",
           "placement": "bottom"
         },
@@ -1575,11 +1590,11 @@
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "never",
+            "showPoints": "auto",
             "spanNulls": false,
             "stacking": {
               "group": "A",
-              "mode": "normal"
+              "mode": "none"
             },
             "thresholdsStyle": {
               "mode": "off"
@@ -1599,9 +1614,22 @@
               }
             ]
           },
-          "unit": "ms"
+          "unit": "none"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Virtual CPUs"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "none"
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
@@ -1609,42 +1637,40 @@
         "x": 12,
         "y": 41
       },
-      "id": 58,
+      "id": 54,
       "options": {
         "legend": {
-          "calcs": [
-            "sum"
-          ],
+          "calcs": [],
           "displayMode": "list",
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "multi"
+          "mode": "single"
         }
       },
       "targets": [
         {
-          "azureLogAnalytics": {
-            "query": "customEvents\r\n| where name == \"GitClone\" and $__timeFilter(timestamp)\r\n| extend Duration = toint(customMeasurements[\"Duration\"])\r\n| summarize Duration=avg(Duration) by bin(timestamp, $__interval)\r\n| order by timestamp asc",
-            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
-            "resultFormat": "time_series"
-          },
           "azureMonitor": {
+            "aggregation": "Average",
+            "alias": "Virtual CPUs",
             "dimensionFilters": [],
+            "metricDefinition": "Microsoft.Insights/components",
+            "metricName": "performanceCounters/processCpuPercentage",
+            "metricNamespace": "Microsoft.Insights/components",
+            "resourceGroup": "[parameter(product-construction-service-resourcegroup)]",
+            "resourceName": "[parameter(product-construction-service-appinsights-resourcename)]",
             "timeGrain": "auto"
           },
-          "database": "engineeringdata",
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
             "uid": "F2XodEi7z"
           },
-          "queryType": "Azure Log Analytics",
+          "queryType": "Azure Monitor",
           "refId": "A",
-          "resultFormat": "table",
-          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
+          "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
         }
       ],
-      "title": "PCS Git Clones",
+      "title": "PCS CPU Usage",
       "type": "timeseries"
     },
     {
@@ -1843,6 +1869,150 @@
             "scaleDistribution": {
               "type": "linear"
             },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 49
+      },
+      "id": 58,
+      "options": {
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "query": "customEvents\r\n| where name == \"GitClone\" and $__timeFilter(timestamp)\r\n| extend Duration = toint(customMeasurements[\"Duration\"])\r\n| summarize Duration=avg(Duration) by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
+            "resultFormat": "time_series"
+          },
+          "azureMonitor": {
+            "dimensionFilters": [],
+            "timeGrain": "auto"
+          },
+          "database": "engineeringdata",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A",
+          "resultFormat": "table",
+          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
+        }
+      ],
+      "title": "PCS Git Clones",
+      "type": "timeseries"
+    },
+    {
+      "alert": {
+        "alertRuleTags": {
+          "NotificationId": "aa1fe025a8954b6cad9866354ca041ee"
+        },
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                0
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "A",
+                "5m",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "count"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "keep_state",
+        "for": "5m",
+        "frequency": "5m",
+        "handler": 1,
+        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1346/-Alert-PCS-Disk-Space-Issues)\n\nThe PCS service is running out of disk space.\n\n@dotnet/prodconsvcs",
+        "name": "PCS Disk Space Issues alert",
+        "noDataState": "ok",
+        "notifications": [
+          {
+            "uid": "statusHook"
+          }
+        ]
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "F2XodEi7z"
+      },
+      "description": "Exceptions around disk space running out",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "red",
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
             "showPoints": "auto",
             "spanNulls": false,
             "stacking": {
@@ -1869,31 +2039,20 @@
           },
           "unit": "none"
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Virtual CPUs"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "none"
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 12,
-        "y": 49
+        "x": 0,
+        "y": 57
       },
-      "id": 54,
+      "id": 72,
       "options": {
         "legend": {
-          "calcs": [],
+          "calcs": [
+            "sum"
+          ],
           "displayMode": "list",
           "placement": "bottom"
         },
@@ -1903,27 +2062,32 @@
       },
       "targets": [
         {
+          "azureLogAnalytics": {
+            "query": "exceptions\r\n| where timestamp > now()-6h and (outerMessage contains \"No space left on device\" or innermostMessage contains \"No space left on device\")\r\n| summarize TotalCount=count() by bin(timestamp, 1h)\r\n| order by timestamp asc",
+            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]"
+          },
           "azureMonitor": {
-            "aggregation": "Average",
-            "alias": "Virtual CPUs",
             "dimensionFilters": [],
-            "metricDefinition": "Microsoft.Insights/components",
-            "metricName": "performanceCounters/processCpuPercentage",
-            "metricNamespace": "Microsoft.Insights/components",
-            "resourceGroup": "[parameter(product-construction-service-resourcegroup)]",
-            "resourceName": "[parameter(product-construction-service-appinsights-resourcename)]",
             "timeGrain": "auto"
           },
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
             "uid": "F2XodEi7z"
           },
-          "queryType": "Azure Monitor",
+          "queryType": "Azure Log Analytics",
           "refId": "A",
           "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
         }
       ],
-      "title": "PCS CPU Usage",
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "op": "gt",
+          "value": 0,
+          "visible": true
+        }
+      ],
+      "title": "PCS Disk Space Issues",
       "type": "timeseries"
     },
     {
@@ -2028,7 +2192,7 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 0,
+        "x": 12,
         "y": 57
       },
       "id": 66,
@@ -2086,8 +2250,8 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 100,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -2131,8 +2295,8 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 12,
-        "y": 57
+        "x": 0,
+        "y": 65
       },
       "id": 60,
       "options": {
@@ -2150,7 +2314,7 @@
       "targets": [
         {
           "azureLogAnalytics": {
-            "query": "traces\r\n| where $__timeFilter(timestamp) and cloud_RoleInstance startswith \"feed-cleaner-prod\" and message has \"cleaning finished\"\r\n| project\r\n    timestamp,\r\n    packagesCleaned = toint(customDimensions[\"count\"]),\r\n    packagesTotal = toint(customDimensions[\"totalCount\"])\r\n| summarize PackagesCleaned=sum(packagesCleaned), PackagesTotal=sum(packagesTotal) by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "query": "traces\r\n| where $__timeFilter(timestamp) and cloud_RoleInstance startswith \"feed-cleaner-prod\" and message has \"cleaning finished\"\r\n| project\r\n    timestamp,\r\n    packagesCleaned = toint(customDimensions[\"count\"]),\r\n    packagesTotal = toint(customDimensions[\"totalCount\"])\r\n| summarize PackagesCleaned=sum(packagesCleaned), PackagesTotal=sum(packagesTotal) by bin(timestamp, 24h)\r\n| order by timestamp asc",
             "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
             "resultFormat": "time_series"
           },
@@ -2178,7 +2342,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 65
+        "y": 73
       },
       "id": 48,
       "panels": [
@@ -2983,7 +3147,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 66
+        "y": 74
       },
       "id": 52,
       "panels": [
@@ -3355,7 +3519,7 @@
       "type": "row"
     }
   ],
-  "refresh": "30s",
+  "refresh": "",
   "schemaVersion": 34,
   "style": "dark",
   "tags": [],
