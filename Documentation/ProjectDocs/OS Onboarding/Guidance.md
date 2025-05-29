@@ -31,3 +31,4 @@ Notes:
 - [Support for Linux Distros (MS internal)](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/940/Support-for-Linux-Distros)
 - [Support for Apple Operating Systems (MS internal)](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/933/Support-for-Apple-Operating-Systems-(macOS-iOS-and-tvOS))
 - [Support for Windows Operating Systems (MS internal)](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/939/Support-for-Windows-Operating-Systems)
+- [Investigating Helix VM images](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/915/Investigating-Helix-VM-images)
