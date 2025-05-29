@@ -310,6 +310,13 @@ public class AzurePipelinesController : ControllerBase
                     newIssue.Labels.Add(label);
                 }
 
+                /*
+                 * We are sometimes seeing an OctoKit.ApiValidationException in the dotneteng-status app insights logs when creating issues.
+                 * This is potentially related to https://github.com/octokit/octokit.net/issues/612.
+                 * Adding logging here to help us track down the issue.
+                 */
+                _logger.LogInformation("Creating issue {owner}/{repo} with title '{issueTitle}' in the {milestone} milestone.", repo.Owner, repo.Name, newIssue.Title, newIssue.Milestone);
+
                 Issue issue = await github.Issue.Create(repo.Owner, repo.Name, newIssue);
 
                 _logger.LogInformation("Logged issue {owner}/{repo}#{issueNumber} for build failure", repo.Owner, repo.Name, issue.Number);
