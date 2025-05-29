@@ -154,6 +154,8 @@ public class AzurePipelinesController : ControllerBase
     private async Task ProcessBuildNotificationsAsync(IAzureDevOpsClient client, Build build)
     {
         const string fullBranchPrefix = "refs/heads/";
+        _logger.BeginScope("Processing build notification for build {buildId} in project {projectName} with definition {definitionPath} and branch {branch}",
+            build.Id, build.Project.Name, $"{build.Definition.Path}\\{build.Definition.Name}", build.SourceBranch);
 
         foreach (var monitor in _options.Value.Monitor.Builds)
         {
