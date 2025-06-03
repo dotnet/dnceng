@@ -2337,6 +2337,156 @@
       "type": "timeseries"
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                0
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "A",
+                "5m",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "avg"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "keep_state",
+        "for": "5m",
+        "frequency": "1m",
+        "handler": 1,
+        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1350/-Alert-PCS-container-job-execution-failing)\n\nThe PCS container job executions are failing\n\n@dotnet/prodconsvcs",
+        "name": "Container jobs failed executions alert",
+        "noDataState": "ok",
+        "notifications": [
+          {
+            "uid": "statusHook"
+          }
+        ]
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "F2XodEi7z"
+      },
+      "description": "Number of failed container job executions",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 100,
+            "gradientMode": "hue",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 65
+      },
+      "id": 74,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "pluginVersion": "8.3.6",
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "query": "ContainerAppSystemLogs_CL\r\n| where Log_s has \"has exited with status Failed\"\r\n| summarize TotalCount=count() by bin(TimeGenerated, $__interval)\r\n| project TimeGenerated, TotalCount",
+            "resource": "[parameter(product-construction-service-workspace-resourcepath)]"
+          },
+          "azureMonitor": {
+            "dimensionFilters": [],
+            "metricDefinition": "Microsoft.OperationalInsights/workspaces",
+            "metricNamespace": "Microsoft.OperationalInsights/workspaces",
+            "resourceGroup": "[parameter(product-construction-service-resourcegroup)]",
+            "resourceName": "[parameter(product-construction-service-workspace-resourcename)]",
+            "timeGrain": "auto"
+          },
+          "database": "engineeringdata",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A",
+          "resultFormat": "table",
+          "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
+        }
+      ],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "op": "gt",
+          "value": 0,
+          "visible": true
+        }
+      ],
+      "title": "Container job execution failures",
+      "type": "timeseries"
+    },
+    {
       "collapsed": true,
       "gridPos": {
         "h": 1,

@@ -154,6 +154,20 @@
     }
   },
   {
+    "Name": "product-construction-service-workspace-resourcepath",
+    "Values": {
+      "Staging": "/subscriptions/e6b5f9f5-0ca4-4351-879b-014d78400ec2/resourceGroups/product-construction-service/providers/Microsoft.OperationalInsights/workspaces/product-construction-service-workspace-int",
+      "Production": "/subscriptions/fbd6122a-9ad3-42e4-976e-bccb82486856/resourceGroups/product-construction-service/providers/Microsoft.OperationalInsights/workspaces/product-construction-service-workspace-prod"
+    }
+  },
+  {
+    "Name" : "product-construction-service-workspace-resourcename",
+    "Values": {
+      "Staging": "product-construction-service-workspace-int",
+      "Production": "product-construction-service-workspace-prod"
+    }
+  }
+  {
     "Name": "dotnet-product-construction-services-subscriptionid",
     "Values": {
       "Staging": "e6b5f9f5-0ca4-4351-879b-014d78400ec2",
