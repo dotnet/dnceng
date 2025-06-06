@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using DotNet.Status.Web.Controllers;
-using FluentAssertions;
+using AwesomeAssertions;
 using Kusto.Ingest;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.DotNet.Internal.Testing.DependencyInjection.Abstractions;

@@ -1,5 +1,5 @@
 using Azure.Core;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.DncEng.SecretManager.ServiceConnections;
 using Microsoft.Extensions.Options;
 using Microsoft.TeamFoundation.Build.WebApi;

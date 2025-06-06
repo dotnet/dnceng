@@ -9,7 +9,7 @@ using Microsoft.DotNet.Internal.AzureDevOps;
 using Microsoft.DotNet.Internal.Testing.Utility;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.DotNet.Internal.DependencyInjection;
 using Microsoft.DotNet.Internal.Testing.DependencyInjection.Abstractions;
 using Moq;

@@ -1,5 +1,5 @@
 ﻿using System;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.DncEng.SecretManager.StorageTypes;
 using NUnit.Framework;
 

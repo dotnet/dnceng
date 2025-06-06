@@ -1,6 +1,6 @@
 using DotNet.Status.Web.Controllers;
 using DotNet.Status.Web.Options;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.DotNet.Internal.Testing.Utility;
 using Microsoft.Extensions.DependencyInjection;

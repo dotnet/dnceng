@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.DncEng.CommandLineLib;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -90,7 +90,9 @@ secrets:
                 .Should()
                 .CompleteWithinAsync(new TimeSpan(0, 0, 5)))
             .Subject.Should().BeFalse();
-        data.Console.Errors.Should().HaveCountGreaterOrEqualTo(1).And.Subject.First().message.Should().Contain("Secret 'two' does not exist in manifest file.");
+        
+        data.Console.Errors.Should().NotBeEmpty();
+        Assert.That(data.Console.Errors.First().message, Does.Contain("Secret 'two' does not exist in manifest file."));
     }
 
     [Test]
@@ -136,6 +138,7 @@ secrets:
                 .Should()
                 .CompleteWithinAsync(new TimeSpan(0, 0, 5)))
             .Subject.Should().BeTrue();
+            
         data.Console.Errors.Should().BeEmpty();
     }
 
@@ -185,6 +188,7 @@ secrets:
                 .Should()
                 .CompleteWithinAsync(new TimeSpan(0, 0, 5)))
             .Subject.Should().BeTrue();
+            
         data.Console.Errors.Should().BeEmpty();
     }
 }
