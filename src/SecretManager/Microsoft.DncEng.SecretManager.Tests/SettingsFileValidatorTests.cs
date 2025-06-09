@@ -92,7 +92,7 @@ secrets:
             .Subject.Should().BeFalse();
         
         data.Console.Errors.Should().NotBeEmpty();
-        Assert.That(data.Console.Errors.First().message, Does.Contain("Secret 'two' does not exist in manifest file."));
+        data.Console.Errors.First().message.Should().Contain("Secret 'two' does not exist in manifest file.");
     }
 
     [Test]
