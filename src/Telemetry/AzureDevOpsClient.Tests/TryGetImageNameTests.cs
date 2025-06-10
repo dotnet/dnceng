@@ -1,4 +1,4 @@
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.DotNet.Internal.Testing.Utility;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
