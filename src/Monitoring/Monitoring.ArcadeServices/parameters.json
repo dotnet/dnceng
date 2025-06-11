@@ -166,7 +166,7 @@
       "Staging": "product-construction-service-workspace-int",
       "Production": "product-construction-service-workspace-prod"
     }
-  }
+  },
   {
     "Name": "dotnet-product-construction-services-subscriptionid",
     "Values": {
