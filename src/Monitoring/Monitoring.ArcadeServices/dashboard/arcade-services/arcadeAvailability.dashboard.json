@@ -2337,6 +2337,156 @@
       "type": "timeseries"
     },
     {
+      "alert": {
+        "alertRuleTags": {
+          "NotificationId": "0a5c68b0daf846ef83a66c6c70fd24ad"
+        },
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                0
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "A",
+                "5m",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "max"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "keep_state",
+        "for": "5m",
+        "frequency": "1m",
+        "handler": 1,
+        "message": "[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1350/-Alert-PCS-container-job-execution-failing)\n\nPlease note that this alert will fire every 12 hours as the list of failed jobs can change",
+        "name": "Container job execution failures alert",
+        "noDataState": "ok",
+        "notifications": [
+          {
+            "uid": "statusHook.imageless.12h_reminder"
+          }
+        ]
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "F2XodEi7z"
+      },
+      "description": "Shows container that failed their latest execution",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMax": 1,
+            "axisSoftMin": 0,
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "line+area"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 65
+      },
+      "id": 74,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "pluginVersion": "8.3.6",
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "query": "ContainerAppSystemLogs_CL\r\n| where TimeGenerated > ago(14d)\r\n| where Log_s has_any (\"has exited with status Succeeded\", \"has exited with status Failed\")\r\n| summarize arg_max(TimeGenerated, Log_s) by JobName_s\r\n| where Log_s has \"has exited with status Failed\"\r\n| project TimeGenerated,JobName=JobName_s, FailedJob=1",
+            "resource": "/subscriptions/fbd6122a-9ad3-42e4-976e-bccb82486856/resourceGroups/product-construction-service/providers/Microsoft.OperationalInsights/workspaces/product-construction-service-workspace-prod"
+          },
+          "azureMonitor": {
+            "dimensionFilters": [],
+            "metricDefinition": "Microsoft.OperationalInsights/workspaces",
+            "metricNamespace": "Microsoft.OperationalInsights/workspaces",
+            "resourceGroup": "[parameter(product-construction-service-resourcegroup)]",
+            "resourceName": "[parameter(product-construction-service-workspace-resourcename)]",
+            "timeGrain": "auto"
+          },
+          "database": "engineeringdata",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A",
+          "resultFormat": "table",
+          "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
+        }
+      ],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "op": "gt",
+          "value": 0,
+          "visible": true
+        }
+      ],
+      "title": "Container jobs with failed latest executions",
+      "type": "timeseries"
+    },
+    {
       "collapsed": true,
       "gridPos": {
         "h": 1,

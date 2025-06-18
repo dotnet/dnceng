@@ -4,7 +4,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.DncEng.CommandLineLib;
 using Microsoft.DncEng.SecretManager.Commands;
 using Microsoft.DncEng.SecretManager.StorageTypes;
