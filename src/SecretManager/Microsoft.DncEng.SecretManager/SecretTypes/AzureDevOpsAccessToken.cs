@@ -86,6 +86,25 @@ public class AzureDevOpsAccessToken : SecretType<AzureDevOpsAccessToken.Paramete
 
         var me = await profileClient.GetProfileAsync(new ProfileQueryContext(AttributesScope.Core), cancellationToken: cancellationToken);
         var accounts = await accountClient.GetAccountsByMemberAsync(me.Id, cancellationToken: cancellationToken);
+
+        // This effort to manually add info about mseng is a workaround. See dotnet/dnceng#5851.
+        bool msengOrgRequested = orgs.Contains("mseng", StringComparer.OrdinalIgnoreCase);
+
+        bool msengOrgInDiscoveredAccounts = accounts
+            .Where(account => account.AccountName.Equals("mseng", StringComparison.OrdinalIgnoreCase))
+            .Any();
+
+        if (msengOrgRequested && !msengOrgInDiscoveredAccounts)
+        {
+            Console.LogWarning("The 'mseng' organization was not found in the list of accounts and will be explicitly added. This is a work-around for dotnet/dnceng#5851.");
+            VisualStudio.Services.Account.Account msengAccount = new(Guid.Parse("0efb4611-d565-4cd1-9a64-7d6cb6d7d5f0"))
+            {
+                AccountName = "mseng"
+            };
+
+            accounts.Add(msengAccount);
+        }
+
         var accountGuidMap = accounts.ToDictionary(account => account.AccountName, account => account.AccountId, StringComparer.OrdinalIgnoreCase);
 
         var orgIds = orgs.Select(name => accountGuidMap[name]).ToArray();
