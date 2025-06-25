@@ -164,7 +164,7 @@
           {
             "evaluator": {
               "params": [
-                80
+                74
               ],
               "type": "lt"
             },
@@ -191,7 +191,7 @@
         "handler": 1,
         "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1310/-Alert-PCS-Work-Item-Success-Rate-alert)\n\nThe PCS background work items started to fail frequently.\n\n@dotnet/prodconsvcs",
         "name": "PCS Work Item Success Rate alert",
-        "noDataState": "alerting",
+        "noDataState": "keep_state",
         "notifications": [
           {
             "uid": "statusHook"
@@ -429,7 +429,7 @@
         {
           "colorMode": "critical",
           "op": "lt",
-          "value": 80,
+          "value": 74,
           "visible": true
         }
       ],
