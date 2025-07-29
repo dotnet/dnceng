@@ -39,6 +39,12 @@ public class ServiceConnectionVault : StorageLocationType<ServiceConnectionVault
         _serviceProvider = serviceProvider;
     }
 
+    /// <inheritdoc/>
+    public override void SetSecurityAuditLogger(SecurityAuditLogger auditLogger)
+    {
+        // No-op as this storage type does not require audit logging
+    }
+
     public override Task EnsureKeyAsync(ServiceConnectionVaultParameters parameters, string name, SecretManifest.Key config) => throw new NotImplementedException();
 
     /// <summary>

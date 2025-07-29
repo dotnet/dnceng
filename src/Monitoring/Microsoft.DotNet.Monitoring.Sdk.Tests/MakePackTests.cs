@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.DotNet.Monitoring.Sdk;
 using NUnit.Framework;
 using Newtonsoft.Json;

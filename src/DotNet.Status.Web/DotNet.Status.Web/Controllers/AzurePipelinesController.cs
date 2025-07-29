@@ -154,6 +154,8 @@ public class AzurePipelinesController : ControllerBase
     private async Task ProcessBuildNotificationsAsync(IAzureDevOpsClient client, Build build)
     {
         const string fullBranchPrefix = "refs/heads/";
+        using var _ = _logger.BeginScope("Processing build notification for build {buildId} in project {projectName} with definition {definitionPath} and branch {branch}",
+            build.Id, build.Project.Name, $"{build.Definition.Path}\\{build.Definition.Name}", build.SourceBranch);
 
         foreach (var monitor in _options.Value.Monitor.Builds)
         {
@@ -309,6 +311,13 @@ public class AzurePipelinesController : ControllerBase
                 {
                     newIssue.Labels.Add(label);
                 }
+
+                /*
+                 * We are sometimes seeing an OctoKit.ApiValidationException in the dotneteng-status app insights logs when creating issues.
+                 * This is potentially related to https://github.com/octokit/octokit.net/issues/612.
+                 * Adding logging here to help us track down the issue.
+                 */
+                _logger.LogInformation("Creating issue {owner}/{repo} with title '{issueTitle}' in the {milestone} milestone.", repo.Owner, repo.Name, newIssue.Title, newIssue.Milestone);
 
                 Issue issue = await github.Issue.Create(repo.Owner, repo.Name, newIssue);
 

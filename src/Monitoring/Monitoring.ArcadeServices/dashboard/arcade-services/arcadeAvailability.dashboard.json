@@ -18,7 +18,7 @@
       },
       {
         "datasource": "Deployment Annotations",
-        "enable": true,
+        "enable": false,
         "iconColor": "blue",
         "name": "Deployments",
         "target": {
@@ -57,12 +57,965 @@
       "fieldConfig": {
         "defaults": {
           "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Count"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 64
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Type"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 496
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 1
+      },
+      "id": 62,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Application Insights",
+          "url": "https://ms.portal.azure.com#@72f988bf-86f1-41af-91ab-2d7cd011db47/blade/Microsoft_OperationsManagementSuite_Workspace/Logs.ReactView/resourceId/%2Fsubscriptions%2Ffbd6122a-9ad3-42e4-976e-bccb82486856%2FresourceGroups%2Fproduct-construction-service%2Fproviders%2Fmicrosoft.insights%2Fcomponents%2Fproduct-construction-service-ai-prod/source/LogsBlade.AnalyticsShareLinkToQuery/q/H4sIAAAAAAAAA0utSE4tKMnMzysGAGAbcigKAAAA/timespan/P1D/limit/5000"
+        }
+      ],
+      "options": {
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "8.3.6",
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "query": "exceptions\r\n| where $__timeFilter(timestamp)\r\n| project Exception=problemId, Type=outerType\r\n| summarize Count=count() by Exception, Type\r\n| order by Count desc",
+            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]"
+          },
+          "azureMonitor": {
+            "dimensionFilters": [],
+            "timeGrain": "auto"
+          },
+          "database": "engineeringdata",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A",
+          "resultFormat": "table",
+          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
+        }
+      ],
+      "title": "PCS Most Frequent Exceptions",
+      "type": "table"
+    },
+    {
+      "alert": {
+        "alertRuleTags": {
+          "NotificationId": "d71fe025a8954b6cad9866354ca041ee"
+        },
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                74
+              ],
+              "type": "lt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "B",
+                "5m",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "avg"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "keep_state",
+        "for": "5m",
+        "frequency": "1m",
+        "handler": 1,
+        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1310/-Alert-PCS-Work-Item-Success-Rate-alert)\n\nThe PCS background work items started to fail frequently.\n\n@dotnet/prodconsvcs",
+        "name": "PCS Work Item Success Rate alert",
+        "noDataState": "keep_state",
+        "notifications": [
+          {
+            "uid": "statusHook"
+          }
+        ]
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "F2XodEi7z"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
             "mode": "palette-classic"
           },
           "custom": {
             "axisLabel": "",
             "axisPlacement": "auto",
-            "axisSoftMax": 100,
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Failed"
+            },
+            "properties": [
+              {
+                "id": "custom.fillOpacity",
+                "value": 12
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Successful"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "super-light-blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SuccessRate"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisSoftMax",
+                "value": 100
+              },
+              {
+                "id": "custom.axisSoftMin",
+                "value": 0
+              },
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "dark-green",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 3
+              },
+              {
+                "id": "custom.thresholdsStyle",
+                "value": {
+                  "mode": "line"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 1
+      },
+      "id": 64,
+      "interval": "5m",
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Application Insights",
+          "url": "https://ms.portal.azure.com#@72f988bf-86f1-41af-91ab-2d7cd011db47/blade/Microsoft_OperationsManagementSuite_Workspace/Logs.ReactView/resourceId/%2Fsubscriptions%2Ffbd6122a-9ad3-42e4-976e-bccb82486856%2FresourceGroups%2Fproduct-construction-service%2Fproviders%2Fmicrosoft.insights%2Fcomponents%2Fproduct-construction-service-ai-prod/source/LogsBlade.AnalyticsShareLinkToQuery/q/H4sIAAAAAAAAA0utSE4tKMnMzysGAGAbcigKAAAA/timespan/P1D/limit/5000"
+        }
+      ],
+      "options": {
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "query": "customEvents\r\n| where name == \"WorkItemExecuted\" and $__timeFilter(timestamp)\r\n| extend Success = tobool(customDimensions[\"Success\"])\r\n| summarize Successful = countif(Success == true), Failed = countif(Success == false) by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
+            "resultFormat": "time_series",
+            "workspace": "[parameter(default-workspace-resourcepath)]"
+          },
+          "azureMonitor": {
+            "dimensionFilters": [],
+            "timeGrain": "auto"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A",
+          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]",
+          "subscriptions": [
+            "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+            "cab65fc3-d077-467d-931f-3932eabf36d3"
+          ]
+        },
+        {
+          "azureLogAnalytics": {
+            "query": "customEvents\r\n| where name == \"WorkItemExecuted\" and $__timeFilter(timestamp)\r\n| extend Success = tobool(customDimensions[\"Success\"])\r\n| summarize SuccessRate=100*countif(Success == true)/count() by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
+            "resultFormat": "time_series",
+            "workspace": "[parameter(default-workspace-resourcepath)]"
+          },
+          "azureMonitor": {
+            "dimensionFilters": [],
+            "timeGrain": "auto"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "hide": false,
+          "queryType": "Azure Log Analytics",
+          "refId": "B",
+          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]",
+          "subscriptions": [
+            "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+            "cab65fc3-d077-467d-931f-3932eabf36d3"
+          ]
+        }
+      ],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "op": "lt",
+          "value": 74,
+          "visible": true
+        }
+      ],
+      "title": "PCS Work Item Success Rate",
+      "type": "timeseries"
+    },
+    {
+      "alert": {
+        "alertRuleTags": {
+          "NotificationId": "08f669cc1c3d325ee488666464"
+        },
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                15
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "A",
+                "5m",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "avg"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "keep_state",
+        "for": "5m",
+        "frequency": "1m",
+        "handler": 1,
+        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1311/-Alert-PCS-Exceptions-High)\n\nThe PCS background work items started to fail frequently.\n\n@dotnet/prodconsvcs",
+        "name": "PCS Exceptions High",
+        "noDataState": "ok",
+        "notifications": [
+          {
+            "uid": "statusHook"
+          }
+        ]
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "F2XodEi7z"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "red",
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 7,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 3,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 15
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "id": 46,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Application Insights",
+          "url": "https://ms.portal.azure.com#@72f988bf-86f1-41af-91ab-2d7cd011db47/blade/Microsoft_OperationsManagementSuite_Workspace/Logs.ReactView/resourceId/%2Fsubscriptions%2Ffbd6122a-9ad3-42e4-976e-bccb82486856%2FresourceGroups%2Fproduct-construction-service%2Fproviders%2Fmicrosoft.insights%2Fcomponents%2Fproduct-construction-service-ai-prod/source/LogsBlade.AnalyticsShareLinkToQuery/q/H4sIAAAAAAAAA0utSE4tKMnMzysGAGAbcigKAAAA/timespan/P1D/limit/5000"
+        }
+      ],
+      "options": {
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "query": "exceptions\r\n| where $__timeFilter(timestamp) and problemId !contains \"SpaDefaultPageMiddleware\"\r\n| summarize Exceptions=count() by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
+            "resultFormat": "time_series",
+            "workspace": "[parameter(default-workspace-resourcepath)]"
+          },
+          "azureMonitor": {
+            "dimensionFilters": [],
+            "timeGrain": "auto"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A",
+          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]",
+          "subscriptions": [
+            "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+            "cab65fc3-d077-467d-931f-3932eabf36d3"
+          ]
+        }
+      ],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "op": "gt",
+          "value": 15,
+          "visible": true
+        }
+      ],
+      "title": "PCS Exceptions",
+      "type": "timeseries"
+    },
+    {
+      "alert": {
+        "alertRuleTags": {
+          "NotificationId": "23909d48866646408f669cc1c3d325ee"
+        },
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                20
+              ],
+              "type": "lt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "B",
+                "5m",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "avg"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "5m",
+        "frequency": "1m",
+        "handler": 1,
+        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1308/-Alert-PCS-Background-Worker-Stopped)\n\nPCS appears to have stopped processing new WorkItems.\n\n@dotnet/prodconsvcs",
+        "name": "PCS Background Worker Stopped",
+        "noDataState": "alerting",
+        "notifications": [
+          {
+            "uid": "statusHook"
+          }
+        ]
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "F2XodEi7z"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": -1,
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "TotalCount"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "hidden"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "transparent",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 20
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "id": 57,
+      "interval": "5m",
+      "options": {
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "query": "customEvents\r\n| where name == \"WorkItemExecuted\" and $__timeFilter(timestamp)\r\n| extend Type=tostring(customDimensions[\"WorkItemType\"])\r\n| summarize Count=count() by bin(timestamp, $__interval), Type=replace_string(Type, \"WorkItem\", \"\")\r\n| order by timestamp asc",
+            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
+            "resultFormat": "time_series"
+          },
+          "azureMonitor": {
+            "dimensionFilters": [],
+            "timeGrain": "auto"
+          },
+          "database": "engineeringdata",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A",
+          "resultFormat": "table",
+          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
+        },
+        {
+          "azureLogAnalytics": {
+            "query": "customEvents\r\n| where name == \"WorkItemExecuted\"\r\n| summarize TotalCount=count() by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
+            "resultFormat": "time_series"
+          },
+          "azureMonitor": {
+            "dimensionFilters": [],
+            "timeGrain": "auto"
+          },
+          "database": "engineeringdata",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "hide": false,
+          "queryType": "Azure Log Analytics",
+          "refId": "B",
+          "resultFormat": "table",
+          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
+        }
+      ],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "op": "lt",
+          "value": 20,
+          "visible": true
+        }
+      ],
+      "title": "PCS Work Item Processed",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "F2XodEi7z"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          },
+          "links": [
+            {
+              "targetBlank": true,
+              "title": "Show operation logs",
+              "url": "https://dataexplorer.azure.com/dashboards/83ee5d57-8e86-454e-b0ee-69568a6c10e7?p-_startTime=24hours&p-_endTime=now&p-_operationId=v-${__data.fields[\"operationId\"]}﻿﻿﻿﻿﻿﻿﻿﻿﻿﻿#8a5bc9bb-f9b8-4876-bbfa-94046fdf0174"
+            }
+          ],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 17
+      },
+      "id": 71,
+      "links": [
+        {
+          "targetBlank": true,
+          "title": "Application Insights",
+          "url": "https://ms.portal.azure.com#@72f988bf-86f1-41af-91ab-2d7cd011db47/blade/Microsoft_OperationsManagementSuite_Workspace/Logs.ReactView/resourceId/%2Fsubscriptions%2Ffbd6122a-9ad3-42e4-976e-bccb82486856%2FresourceGroups%2Fproduct-construction-service%2Fproviders%2Fmicrosoft.insights%2Fcomponents%2Fproduct-construction-service-ai-prod/source/LogsBlade.AnalyticsShareLinkToQuery/q/H4sIAAAAAAAAAyspSkxOLeaqUSjPSC1KVcgvSC1KLMnMz4v3TFGwtVVQUgIAsp7qOSEAAAA%253D/timespan/P1D/limit/1000"
+        }
+      ],
+      "options": {
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "8.3.6",
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "query": "customEvents\r\n| where $__timeFilter(timestamp)\r\n| where name == \"WorkItemExecuted\"\r\n| extend attempt = toint(customDimensions[\"Attempt\"]), success = tobool(customDimensions[\"Success\"])\r\n| where success != true and attempt == 3\r\n| project timestamp, operation = operation_Name, operationId = operation_Id",
+            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]"
+          },
+          "azureMonitor": {
+            "dimensionFilters": [],
+            "timeGrain": "auto"
+          },
+          "database": "engineeringdata",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A",
+          "resultFormat": "table",
+          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
+        }
+      ],
+      "title": "PCS Unhandled Work Items",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "F2XodEi7z"
+      },
+      "description": "Count of attempts to process a specific PCS work item",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "3rd"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 17
+      },
+      "id": 70,
+      "interval": "5m",
+      "options": {
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "query": "customEvents\r\n| where name == \"WorkItemExecuted\" and $__timeFilter(timestamp)\r\n| extend Attempt = customDimensions[\"Attempt\"]\r\n| summarize 1st = countif(Attempt == 1), 2nd = countif(Attempt == 2), 3rd = countif(Attempt == 3) by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
+            "resultFormat": "time_series"
+          },
+          "azureMonitor": {
+            "dimensionFilters": [],
+            "timeGrain": "auto"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A",
+          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
+        }
+      ],
+      "title": "PSC work item attempts",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "F2XodEi7z"
+      },
+      "description": "Number of PCS work items with unhandled exceptions, even after retries",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
             "barAlignment": 0,
             "drawStyle": "line",
             "fillOpacity": 0,
@@ -109,7 +1062,416 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 1
+        "y": 25
+      },
+      "id": 66,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "query": "customEvents\r\n| where name == \"WorkItemExecuted\" and $__timeFilter(timestamp)\r\n| extend Success = tostring(customDimensions[\"Success\"])\r\n| extend Attempt = toint(customDimensions[\"Attempt\"])\r\n| where Success == \"False\" and Attempt == 3\r\n| summarize TotalCount=count() by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]"
+          },
+          "azureMonitor": {
+            "dimensionFilters": [],
+            "timeGrain": "auto"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A",
+          "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
+        }
+      ],
+      "title": "PCS Unhandled Workitems",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "F2XodEi7z"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Wait time (max)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "ms"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 25
+      },
+      "id": 55,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "azureMonitor": {
+            "aggregation": "Average",
+            "alias": "Wait time (max)",
+            "dimensionFilters": [],
+            "metricDefinition": "Microsoft.Insights/components",
+            "metricName": "pcs.queue.wait_time",
+            "metricNamespace": "Azure.ApplicationInsights",
+            "resourceGroup": "[parameter(product-construction-service-resourcegroup)]",
+            "resourceName": "[parameter(product-construction-service-appinsights-resourcename)]",
+            "timeGrain": "auto"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "queryType": "Azure Monitor",
+          "refId": "A",
+          "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
+        }
+      ],
+      "title": "PCS Background Queue Wait Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "F2XodEi7z"
+      },
+      "description": "Number of Pull Request Updates failed by PCS (this just includes things like title and description, not the code)",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 33
+      },
+      "id": 68,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "query": "customEvents\r\n| where name == \"PullRequestUpdateFailed\"\r\n| summarize TotalCount=count() by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]"
+          },
+          "azureMonitor": {
+            "dimensionFilters": [],
+            "timeGrain": "auto"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A",
+          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
+        }
+      ],
+      "title": "PCS Failed Pull Request Updates",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "F2XodEi7z"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 33
+      },
+      "id": 59,
+      "interval": "5m",
+      "options": {
+        "legend": {
+          "calcs": [
+            "max",
+            "mean"
+          ],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "query": "customEvents\r\n| where name == \"WorkItemExecuted\" and $__timeFilter(timestamp)\r\n| extend Duration = toint(customMeasurements[\"Duration\"])\r\n| summarize Duration = avg(Duration) by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
+            "resultFormat": "time_series"
+          },
+          "azureMonitor": {
+            "dimensionFilters": [],
+            "timeGrain": "auto"
+          },
+          "database": "engineeringdata",
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A",
+          "resultFormat": "table",
+          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
+        }
+      ],
+      "title": "PCS Work Item Duration",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "F2XodEi7z"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 30000
+              }
+            ]
+          },
+          "unit": "dtdurationms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 41
       },
       "id": 39,
       "links": [
@@ -205,7 +1567,6 @@
         "type": "grafana-azure-monitor-datasource",
         "uid": "F2XodEi7z"
       },
-      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -259,12 +1620,12 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Wait time (max)"
+              "options": "Virtual CPUs"
             },
             "properties": [
               {
                 "id": "unit",
-                "value": "ms"
+                "value": "none"
               }
             ]
           }
@@ -274,15 +1635,12 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 1
+        "y": 41
       },
-      "id": 55,
+      "id": 54,
       "options": {
         "legend": {
-          "calcs": [
-            "mean",
-            "max"
-          ],
+          "calcs": [],
           "displayMode": "list",
           "placement": "bottom"
         },
@@ -294,11 +1652,11 @@
         {
           "azureMonitor": {
             "aggregation": "Average",
-            "alias": "Wait time (max)",
+            "alias": "Virtual CPUs",
             "dimensionFilters": [],
             "metricDefinition": "Microsoft.Insights/components",
-            "metricName": "pcs.queue.wait_time",
-            "metricNamespace": "Azure.ApplicationInsights",
+            "metricName": "performanceCounters/processCpuPercentage",
+            "metricNamespace": "Microsoft.Insights/components",
             "resourceGroup": "[parameter(product-construction-service-resourcegroup)]",
             "resourceName": "[parameter(product-construction-service-appinsights-resourcename)]",
             "timeGrain": "auto"
@@ -312,7 +1670,7 @@
           "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
         }
       ],
-      "title": "PCS Background Queue Wait Time",
+      "title": "PCS CPU Usage",
       "type": "timeseries"
     },
     {
@@ -381,6 +1739,25 @@
                 "value": "none"
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "2xx"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.scaleDistribution",
+                "value": {
+                  "log": 2,
+                  "type": "log"
+                }
+              }
+            ]
           }
         ]
       },
@@ -388,7 +1765,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 9
+        "y": 49
       },
       "id": 63,
       "interval": "1m",
@@ -407,13 +1784,13 @@
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "multi"
         }
       },
       "targets": [
         {
           "azureLogAnalytics": {
-            "query": "requests\r\n| where $__timeFilter(timestamp)\r\n| summarize 2xx=countif(toint(resultCode)/100 == 2), 3xx=countif(toint(resultCode)/100 == 3), 4xx=countif(toint(resultCode)/100 == 4), 5xx=countif(toint(resultCode)/100 == 5) by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "query": "requests\r\n| where $__timeFilter(timestamp)\r\n| summarize 2xx=countif(toint(resultCode)/100 == 2) by bin(timestamp, $__interval)\r\n| order by timestamp asc",
             "resource": "[parameter(product-construction-service-appinsights-resourcepath)]"
           },
           "azureMonitor": {
@@ -433,345 +1810,36 @@
           },
           "queryType": "Azure Log Analytics",
           "refId": "A",
+          "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
+        },
+        {
+          "azureLogAnalytics": {
+            "query": "requests\r\n| where $__timeFilter(timestamp)\r\n| summarize 3xx=countif(toint(resultCode)/100 == 3), 4xx=countif(toint(resultCode)/100 == 4), 5xx=countif(toint(resultCode)/100 == 5) by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]"
+          },
+          "azureMonitor": {
+            "aggregation": "Average",
+            "alias": "Virtual CPUs",
+            "dimensionFilters": [],
+            "metricDefinition": "Microsoft.Insights/components",
+            "metricName": "performanceCounters/processCpuPercentage",
+            "metricNamespace": "Microsoft.Insights/components",
+            "resourceGroup": "[parameter(product-construction-service-resourcegroup)]",
+            "resourceName": "[parameter(product-construction-service-appinsights-resourcename)]",
+            "timeGrain": "auto"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "hide": false,
+          "queryType": "Azure Log Analytics",
+          "refId": "B",
           "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
         }
       ],
       "title": "PCS HTTP Requests",
       "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "grafana-azure-monitor-datasource",
-        "uid": "F2XodEi7z"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Virtual CPUs"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "none"
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 9
-      },
-      "id": 54,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "targets": [
-        {
-          "azureMonitor": {
-            "aggregation": "Average",
-            "alias": "Virtual CPUs",
-            "dimensionFilters": [],
-            "metricDefinition": "Microsoft.Insights/components",
-            "metricName": "performanceCounters/processCpuPercentage",
-            "metricNamespace": "Microsoft.Insights/components",
-            "resourceGroup": "[parameter(product-construction-service-resourcegroup)]",
-            "resourceName": "[parameter(product-construction-service-appinsights-resourcename)]",
-            "timeGrain": "auto"
-          },
-          "datasource": {
-            "type": "grafana-azure-monitor-datasource",
-            "uid": "F2XodEi7z"
-          },
-          "queryType": "Azure Monitor",
-          "refId": "A",
-          "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
-        }
-      ],
-      "title": "PCS CPU Usage",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "grafana-azure-monitor-datasource",
-        "uid": "F2XodEi7z"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "line"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 100
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 17
-      },
-      "id": 46,
-      "links": [
-        {
-          "targetBlank": true,
-          "title": "Application Insights",
-          "url": "https://ms.portal.azure.com#@72f988bf-86f1-41af-91ab-2d7cd011db47/blade/Microsoft_OperationsManagementSuite_Workspace/Logs.ReactView/resourceId/%2Fsubscriptions%2Ffbd6122a-9ad3-42e4-976e-bccb82486856%2FresourceGroups%2Fproduct-construction-service%2Fproviders%2Fmicrosoft.insights%2Fcomponents%2Fproduct-construction-service-ai-prod/source/LogsBlade.AnalyticsShareLinkToQuery/q/H4sIAAAAAAAAA0utSE4tKMnMzysGAGAbcigKAAAA/timespan/P1D/limit/5000"
-        }
-      ],
-      "options": {
-        "legend": {
-          "calcs": [
-            "sum"
-          ],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "targets": [
-        {
-          "azureLogAnalytics": {
-            "query": "exceptions\r\n| where $__timeFilter(timestamp)\r\n| summarize Exceptions=count() by bin(timestamp, $__interval)\r\n| order by timestamp asc",
-            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
-            "resultFormat": "time_series",
-            "workspace": "[parameter(default-workspace-resourcepath)]"
-          },
-          "azureMonitor": {
-            "dimensionFilters": [],
-            "timeGrain": "auto"
-          },
-          "datasource": {
-            "type": "grafana-azure-monitor-datasource",
-            "uid": "F2XodEi7z"
-          },
-          "queryType": "Azure Log Analytics",
-          "refId": "A",
-          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]",
-          "subscriptions": [
-            "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
-            "cab65fc3-d077-467d-931f-3932eabf36d3"
-          ]
-        }
-      ],
-      "thresholds": [
-        {
-          "colorMode": "critical",
-          "op": "gt",
-          "value": 100,
-          "visible": true
-        }
-      ],
-      "title": "PCS Exceptions",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "grafana-azure-monitor-datasource",
-        "uid": "F2XodEi7z"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "displayMode": "auto"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Problem"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 1164
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Count"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 64
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 17
-      },
-      "id": 62,
-      "links": [
-        {
-          "targetBlank": true,
-          "title": "Application Insights",
-          "url": "https://ms.portal.azure.com#@72f988bf-86f1-41af-91ab-2d7cd011db47/blade/Microsoft_OperationsManagementSuite_Workspace/Logs.ReactView/resourceId/%2Fsubscriptions%2Ffbd6122a-9ad3-42e4-976e-bccb82486856%2FresourceGroups%2Fproduct-construction-service%2Fproviders%2Fmicrosoft.insights%2Fcomponents%2Fproduct-construction-service-ai-prod/source/LogsBlade.AnalyticsShareLinkToQuery/q/H4sIAAAAAAAAA0utSE4tKMnMzysGAGAbcigKAAAA/timespan/P1D/limit/5000"
-        }
-      ],
-      "options": {
-        "footer": {
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": []
-      },
-      "pluginVersion": "8.3.6",
-      "targets": [
-        {
-          "azureLogAnalytics": {
-            "query": "exceptions\r\n| where $__timeFilter(timestamp)\r\n| project Exception=problemId, Method=method\r\n| summarize Count=count() by Exception, Method\r\n| order by Count desc",
-            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]"
-          },
-          "azureMonitor": {
-            "dimensionFilters": [],
-            "timeGrain": "auto"
-          },
-          "database": "engineeringdata",
-          "datasource": {
-            "type": "grafana-azure-monitor-datasource",
-            "uid": "F2XodEi7z"
-          },
-          "queryType": "Azure Log Analytics",
-          "refId": "A",
-          "resultFormat": "table",
-          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
-        }
-      ],
-      "title": "PCS Most Frequent Exceptions",
-      "type": "table"
     },
     {
       "datasource": {
@@ -832,8 +1900,8 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 0,
-        "y": 25
+        "x": 12,
+        "y": 49
       },
       "id": 58,
       "options": {
@@ -874,6 +1942,197 @@
       "type": "timeseries"
     },
     {
+      "alert": {
+        "alertRuleTags": {
+          "NotificationId": "aa1fe025a8954b6cad9866354ca041ee"
+        },
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                0
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "A",
+                "5m",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "count"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "keep_state",
+        "for": "5m",
+        "frequency": "5m",
+        "handler": 1,
+        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1346/-Alert-PCS-Disk-Space-Issues)\n\nThe PCS service is running out of disk space.\n\n@dotnet/prodconsvcs",
+        "name": "PCS Disk Space Issues alert",
+        "noDataState": "ok",
+        "notifications": [
+          {
+            "uid": "statusHook"
+          }
+        ]
+      },
+      "datasource": {
+        "type": "grafana-azure-monitor-datasource",
+        "uid": "F2XodEi7z"
+      },
+      "description": "Exceptions around disk space running out",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "red",
+            "mode": "fixed"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 57
+      },
+      "id": 72,
+      "options": {
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "azureLogAnalytics": {
+            "query": "exceptions\r\n| where timestamp > now()-6h and (outerMessage contains \"No space left on device\" or innermostMessage contains \"No space left on device\")\r\n| summarize TotalCount=count() by bin(timestamp, 1h)\r\n| order by timestamp asc",
+            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]"
+          },
+          "azureMonitor": {
+            "dimensionFilters": [],
+            "timeGrain": "auto"
+          },
+          "datasource": {
+            "type": "grafana-azure-monitor-datasource",
+            "uid": "F2XodEi7z"
+          },
+          "queryType": "Azure Log Analytics",
+          "refId": "A",
+          "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
+        }
+      ],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "op": "gt",
+          "value": 0,
+          "visible": true
+        }
+      ],
+      "title": "PCS Disk Space Issues",
+      "type": "timeseries"
+    },
+    {
+      "alert": {
+        "alertRuleTags": {
+          "NotificationId": "6ggqnvwrunnru1zfl4g42dn9qjzanb8a"
+        },
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                80
+              ],
+              "type": "lt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "A",
+                "5m",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "avg"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "keep_state",
+        "for": "5m",
+        "frequency": "1m",
+        "handler": 1,
+        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1318/-Alert-PCS-high-git-push-failure-rate)\n\nPCS has a high `git push` failure rate, please investigate\n\n@dotnet/prodconsvcs",
+        "name": "Git Push success rate alert",
+        "noDataState": "keep_state",
+        "notifications": [
+          {
+            "uid": "statusHook"
+          }
+        ]
+      },
       "datasource": {
         "type": "grafana-azure-monitor-datasource",
         "uid": "F2XodEi7z"
@@ -901,17 +2160,18 @@
             "scaleDistribution": {
               "type": "linear"
             },
-            "showPoints": "never",
+            "showPoints": "auto",
             "spanNulls": false,
             "stacking": {
               "group": "A",
-              "mode": "normal"
+              "mode": "none"
             },
             "thresholdsStyle": {
-              "mode": "off"
+              "mode": "line"
             }
           },
           "mappings": [],
+          "max": 100,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -925,7 +2185,7 @@
               }
             ]
           },
-          "unit": "none"
+          "unit": "percent"
         },
         "overrides": []
       },
@@ -933,45 +2193,47 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 25
+        "y": 57
       },
-      "id": 57,
-      "interval": "5m",
+      "id": 66,
       "options": {
         "legend": {
-          "calcs": [
-            "sum"
-          ],
+          "calcs": [],
           "displayMode": "list",
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "multi"
+          "mode": "single"
         }
       },
       "targets": [
         {
           "azureLogAnalytics": {
-            "query": "customEvents\r\n| where name == \"WorkItemExecuted\" and $__timeFilter(timestamp)\r\n| extend Type=tostring(customDimensions[\"WorkItemType\"])\r\n| summarize Count=count() by bin(timestamp, $__interval), Type=replace_string(Type, \"WorkItem\", \"\")\r\n| order by timestamp asc",
-            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
-            "resultFormat": "time_series"
+            "query": "customEvents\r\n| where name == \"GitPush\" and $__timeFilter(timestamp)\r\n| extend Success = tobool(customDimensions[\"Success\"])\r\n| summarize SuccessRate=100*countif(Success == true)/count() by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]"
           },
           "azureMonitor": {
             "dimensionFilters": [],
             "timeGrain": "auto"
           },
-          "database": "engineeringdata",
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
             "uid": "F2XodEi7z"
           },
           "queryType": "Azure Log Analytics",
           "refId": "A",
-          "resultFormat": "table",
-          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
+          "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
         }
       ],
-      "title": "PCS Work Item Processed",
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "op": "lt",
+          "value": 80,
+          "visible": true
+        }
+      ],
+      "title": "Git Push success rate",
       "type": "timeseries"
     },
     {
@@ -988,8 +2250,8 @@
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 100,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -1034,7 +2296,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 33
+        "y": 65
       },
       "id": 60,
       "options": {
@@ -1052,7 +2314,7 @@
       "targets": [
         {
           "azureLogAnalytics": {
-            "query": "traces\r\n| where $__timeFilter(timestamp) and cloud_RoleInstance startswith \"feed-cleaner-prod\" and message has \"cleaning finished\"\r\n| project\r\n    timestamp,\r\n    packagesCleaned = toint(customDimensions[\"count\"]),\r\n    packagesTotal = toint(customDimensions[\"totalCount\"])\r\n| summarize PackagesCleaned=sum(packagesCleaned), PackagesTotal=sum(packagesTotal) by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "query": "traces\r\n| where $__timeFilter(timestamp) and cloud_RoleInstance startswith \"feed-cleaner-prod\" and message has \"cleaning finished\"\r\n| project\r\n    timestamp,\r\n    packagesCleaned = toint(customDimensions[\"count\"]),\r\n    packagesTotal = toint(customDimensions[\"totalCount\"])\r\n| summarize PackagesCleaned=sum(packagesCleaned), PackagesTotal=sum(packagesTotal) by bin(timestamp, 24h)\r\n| order by timestamp asc",
             "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
             "resultFormat": "time_series"
           },
@@ -1075,10 +2337,53 @@
       "type": "timeseries"
     },
     {
+      "alert": {
+        "alertRuleTags": {
+          "NotificationId": "0a5c68b0daf846ef83a66c6c70fd24ad"
+        },
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                0
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "A",
+                "5m",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "max"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "keep_state",
+        "for": "5m",
+        "frequency": "1m",
+        "handler": 1,
+        "message": "[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1350/-Alert-PCS-container-job-execution-failing)\n\nPlease note that this alert will fire every 12 hours as the list of failed jobs can change",
+        "name": "Container job execution failures alert",
+        "noDataState": "ok",
+        "notifications": [
+          {
+            "uid": "statusHook.imageless.12h_reminder"
+          }
+        ]
+      },
       "datasource": {
         "type": "grafana-azure-monitor-datasource",
         "uid": "F2XodEi7z"
       },
+      "description": "Shows container that failed their latest execution",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1087,9 +2392,11 @@
           "custom": {
             "axisLabel": "",
             "axisPlacement": "auto",
+            "axisSoftMax": 1,
+            "axisSoftMin": 0,
             "barAlignment": 0,
             "drawStyle": "line",
-            "fillOpacity": 0,
+            "fillOpacity": 10,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -1103,13 +2410,13 @@
               "type": "linear"
             },
             "showPoints": "never",
-            "spanNulls": false,
+            "spanNulls": true,
             "stacking": {
               "group": "A",
-              "mode": "normal"
+              "mode": "none"
             },
             "thresholdsStyle": {
-              "mode": "off"
+              "mode": "line+area"
             }
           },
           "mappings": [],
@@ -1119,14 +2426,9 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
-          },
-          "unit": "ms"
+          }
         },
         "overrides": []
       },
@@ -1134,32 +2436,32 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 33
+        "y": 65
       },
-      "id": 59,
-      "interval": "5m",
+      "id": 74,
       "options": {
         "legend": {
-          "calcs": [
-            "max",
-            "mean"
-          ],
-          "displayMode": "list",
+          "calcs": [],
+          "displayMode": "table",
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "multi"
+          "mode": "single"
         }
       },
+      "pluginVersion": "8.3.6",
       "targets": [
         {
           "azureLogAnalytics": {
-            "query": "customEvents\r\n| where name == \"WorkItemExecuted\" and $__timeFilter(timestamp)\r\n| extend Duration = toint(customMeasurements[\"Duration\"])\r\n| summarize avg(Duration) by bin(timestamp, $__interval)\r\n| order by timestamp asc",
-            "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
-            "resultFormat": "time_series"
+            "query": "ContainerAppSystemLogs_CL\r\n| where TimeGenerated > ago(14d)\r\n| where Log_s has_any (\"has exited with status Succeeded\", \"has exited with status Failed\")\r\n| summarize arg_max(TimeGenerated, Log_s) by JobName_s\r\n| where Log_s has \"has exited with status Failed\"\r\n| project TimeGenerated,JobName=JobName_s, FailedJob=1",
+            "resource": "/subscriptions/fbd6122a-9ad3-42e4-976e-bccb82486856/resourceGroups/product-construction-service/providers/Microsoft.OperationalInsights/workspaces/product-construction-service-workspace-prod"
           },
           "azureMonitor": {
             "dimensionFilters": [],
+            "metricDefinition": "Microsoft.OperationalInsights/workspaces",
+            "metricNamespace": "Microsoft.OperationalInsights/workspaces",
+            "resourceGroup": "[parameter(product-construction-service-resourcegroup)]",
+            "resourceName": "[parameter(product-construction-service-workspace-resourcename)]",
             "timeGrain": "auto"
           },
           "database": "engineeringdata",
@@ -1170,19 +2472,27 @@
           "queryType": "Azure Log Analytics",
           "refId": "A",
           "resultFormat": "table",
-          "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
+          "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
         }
       ],
-      "title": "PCS Work Item Duration",
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "op": "gt",
+          "value": 0,
+          "visible": true
+        }
+      ],
+      "title": "Container jobs with failed latest executions",
       "type": "timeseries"
     },
     {
-      "collapsed": false,
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 41
+        "y": 73
       },
       "id": 48,
       "panels": [
@@ -1195,7 +2505,7 @@
             "h": 9,
             "w": 8,
             "x": 0,
-            "y": 20
+            "y": 50
           },
           "id": 2,
           "options": {
@@ -1279,7 +2589,7 @@
                 },
                 "reducer": {
                   "params": [],
-                  "type": "max"
+                  "type": "avg"
                 },
                 "type": "query"
               }
@@ -1367,7 +2677,7 @@
             "h": 9,
             "w": 8,
             "x": 8,
-            "y": 20
+            "y": 50
           },
           "id": 18,
           "links": [
@@ -1442,6 +2752,10 @@
               },
               "azureResourceGraph": {
                 "resultFormat": "table"
+              },
+              "datasource": {
+                "type": "grafana-azure-monitor-datasource",
+                "uid": "F2XodEi7z"
               },
               "insightsAnalytics": {
                 "query": "",
@@ -1569,7 +2883,7 @@
             "h": 9,
             "w": 8,
             "x": 16,
-            "y": 20
+            "y": 50
           },
           "id": 19,
           "links": [
@@ -1631,6 +2945,10 @@
               },
               "azureResourceGraph": {
                 "resultFormat": "table"
+              },
+              "datasource": {
+                "type": "grafana-azure-monitor-datasource",
+                "uid": "F2XodEi7z"
               },
               "insightsAnalytics": {
                 "query": "",
@@ -1756,7 +3074,7 @@
             "h": 9,
             "w": 16,
             "x": 0,
-            "y": 29
+            "y": 59
           },
           "id": 29,
           "options": {
@@ -1836,7 +3154,7 @@
             {
               "colorMode": "critical",
               "op": "lt",
-              "value": 20,
+              "value": 1,
               "visible": true
             }
           ],
@@ -1901,7 +3219,7 @@
             "h": 9,
             "w": 8,
             "x": 16,
-            "y": 29
+            "y": 59
           },
           "id": 30,
           "options": {
@@ -1974,12 +3292,12 @@
       "type": "row"
     },
     {
-      "collapsed": false,
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 42
+        "y": 74
       },
       "id": 52,
       "panels": [
@@ -2083,7 +3401,7 @@
             "h": 9,
             "w": 6,
             "x": 0,
-            "y": 21
+            "y": 51
           },
           "id": 44,
           "interval": "15m",
@@ -2247,7 +3565,7 @@
             "h": 9,
             "w": 6,
             "x": 6,
-            "y": 21
+            "y": 51
           },
           "id": 16,
           "links": [
@@ -2339,7 +3657,7 @@
             {
               "colorMode": "critical",
               "op": "lt",
-              "value": 99,
+              "value": 60,
               "visible": true
             }
           ],
@@ -2351,7 +3669,7 @@
       "type": "row"
     }
   ],
-  "refresh": "30s",
+  "refresh": "",
   "schemaVersion": 34,
   "style": "dark",
   "tags": [],
@@ -2359,7 +3677,7 @@
     "list": []
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {},

@@ -73,16 +73,12 @@ extends:
                   targetPath: $(Build.ArtifactStagingDirectory)/DotNet.Status.Web/package
                   artifactName: DotNetStatus
                 - output: pipelineArtifact
-                  displayName: 'Publish RolloutScorerAzureFunction'
-                  targetPath: $(Build.ArtifactStagingDirectory)/RolloutScorerAzureFunction/package
-                  artifactName: RolloutScorer
-                - output: pipelineArtifact
                   displayName: 'Publish Release Utilities Artifact'
                   targetPath: $(Build.ArtifactStagingDirectory)\eng
                   artifactName: ReleaseUtilities
                 - output: pipelineArtifact
                   displayName: 'Publish Secret Manager Scenario Tests'
-                  targetPath: $(Build.SourcesDirectory)\artifacts\bin\Microsoft.DncEng.SecretManager.ScenarioTests\$(_BuildConfig)\net6.0
+                  targetPath: $(Build.SourcesDirectory)\artifacts\bin\Microsoft.DncEng.SecretManager.ScenarioTests\$(_BuildConfig)\net8.0
                   artifactName: Microsoft.DncEng.SecretManager.ScenarioTests
             variables:
             # DotNet-Blob-Feed provides: dotnetfeed-storage-access-key-1
@@ -190,7 +186,7 @@ extends:
                 exit 0
               displayName: Copy Telemetry Project Artifacts
               
-            - script: $(Build.SourcesDirectory)\.dotnet\dotnet publish -o $(Build.ArtifactStagingDirectory)\DotNet.Status.Web\publish -f net6.0
+            - script: $(Build.SourcesDirectory)\.dotnet\dotnet publish -o $(Build.ArtifactStagingDirectory)\DotNet.Status.Web\publish -f net8.0
               workingDirectory: src\DotNet.Status.Web\DotNet.Status.Web
               displayName: dotnet publish DotNet.Status.Web
 
@@ -200,18 +196,6 @@ extends:
                 includeRootFolder: false
                 archiveType: zip
                 archiveFile: $(Build.ArtifactStagingDirectory)/DotNet.Status.Web/package/DotNetStatus.zip
-                replaceExistingArchive: true
-
-            - script: $(Build.SourcesDirectory)\.dotnet\dotnet publish -o $(Build.ArtifactStagingDirectory)\RolloutScorerAzureFunction\publish -f net6.0
-              workingDirectory: src/RolloutScorer/RolloutScorerAzureFunction
-              displayName: dotnet publish RolloutScorerAzureFunction
-
-            - task: ArchiveFiles@2
-              inputs:
-                rootFolderOrFile: $(Build.ArtifactStagingDirectory)/RolloutScorerAzureFunction/publish
-                includeRootFolder: false
-                archiveType: zip
-                archiveFile: $(Build.ArtifactStagingDirectory)/RolloutScorerAzureFunction/package/RolloutScorer.zip
                 replaceExistingArchive: true
 
             ## Prepare release utilities artifact

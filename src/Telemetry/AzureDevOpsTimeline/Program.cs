@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Kusto.Cloud.Platform.Utils;
 using Microsoft.DncEng.Configuration.Extensions;
 using Microsoft.DotNet.Internal.AzureDevOps;
 using Microsoft.DotNet.ServiceFabric.ServiceHost;
@@ -13,6 +12,7 @@ using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Internal;
 using System.Net.Http;
 using Microsoft.DotNet.Internal.DependencyInjection;
+using Microsoft.DotNet.Kusto;
 
 namespace Microsoft.DotNet.AzureDevOpsTimeline;
 
@@ -37,7 +37,7 @@ internal static class Program
                         services.Configure<AzureDevOpsClientOptions>("dnceng", "AzureDevOpsSettings:dnceng", (o, s) => s.Bind(o));
                         services.Configure<AzureDevOpsClientOptions>("dnceng-public", "AzureDevOpsSettings:dnceng-public", (o, s) => s.Bind(o));
 
-                        services.Configure<KustoTimelineTelemetryOptions>("KustoTimelineTelemetry", (o, s) =>
+                        services.Configure<KustoOptions>("KustoTimelineTelemetry", (o, s) =>
                         {
                             s.Bind(o);
                         });

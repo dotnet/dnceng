@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.DncEng.CommandLineLib;
 using Microsoft.DncEng.SecretManager.Commands;
 using Microsoft.DncEng.SecretManager.StorageTypes;
@@ -26,6 +24,7 @@ public class SynchronizeCommandTests
         var cancellationToken = cts.Token;
 
         var services = new ServiceCollection();
+
         services.AddSingleton(Mock.Of<IConsole>());
 
         var storageLocationTypeRegistry = new Mock<StorageLocationTypeRegistry>(MockBehavior.Strict);
@@ -47,6 +46,8 @@ public class SynchronizeCommandTests
 
             var storageLocationType = new Mock<StorageLocationType>(MockBehavior.Strict);
             storageLocationType.Protected().Setup("Dispose", true);
+            storageLocationType
+                .Setup(x => x.SetSecurityAuditLogger(It.IsAny<SecurityAuditLogger>()));
             storageLocationType
                 .Setup(storage => storage.ListSecretsAsync(It.IsAny<IDictionary<string, object>>()))
                 .ReturnsAsync(existingSecrets);

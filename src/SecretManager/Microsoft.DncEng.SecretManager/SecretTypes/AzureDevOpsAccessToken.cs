@@ -20,8 +20,6 @@ namespace Microsoft.DncEng.SecretManager.SecretTypes;
 [Name("azure-devops-access-token")]
 public class AzureDevOpsAccessToken : SecretType<AzureDevOpsAccessToken.Parameters>
 {
-    private readonly TimeSpan _rotateBeforeExpiration = TimeSpan.FromDays(-4);
-
     public class Parameters
     {
         public string Organizations { get; set; }
@@ -88,6 +86,25 @@ public class AzureDevOpsAccessToken : SecretType<AzureDevOpsAccessToken.Paramete
 
         var me = await profileClient.GetProfileAsync(new ProfileQueryContext(AttributesScope.Core), cancellationToken: cancellationToken);
         var accounts = await accountClient.GetAccountsByMemberAsync(me.Id, cancellationToken: cancellationToken);
+
+        // This effort to manually add info about mseng is a workaround. See dotnet/dnceng#5851.
+        bool msengOrgRequested = orgs.Contains("mseng", StringComparer.OrdinalIgnoreCase);
+
+        bool msengOrgInDiscoveredAccounts = accounts
+            .Where(account => account.AccountName.Equals("mseng", StringComparison.OrdinalIgnoreCase))
+            .Any();
+
+        if (msengOrgRequested && !msengOrgInDiscoveredAccounts)
+        {
+            Console.LogWarning("The 'mseng' organization was not found in the list of accounts and will be explicitly added. This is a work-around for dotnet/dnceng#5851.");
+            VisualStudio.Services.Account.Account msengAccount = new(Guid.Parse("0efb4611-d565-4cd1-9a64-7d6cb6d7d5f0"))
+            {
+                AccountName = "mseng"
+            };
+
+            accounts.Add(msengAccount);
+        }
+
         var accountGuidMap = accounts.ToDictionary(account => account.AccountName, account => account.AccountId, StringComparer.OrdinalIgnoreCase);
 
         var orgIds = orgs.Select(name => accountGuidMap[name]).ToArray();
@@ -99,7 +116,8 @@ public class AzureDevOpsAccessToken : SecretType<AzureDevOpsAccessToken.Paramete
             .ToArray();
 
         Console.WriteLine($"Creating new pat in orgs '{string.Join(" ", orgIds)}' with scopes '{string.Join(" ", scopes)}'");
-        var expiresOn = now.AddDays(7);
+        var rotatesOn = now.AddDays(1);
+        var expiresOn = now.AddDays(3);
         var newToken = await tokenClient.CreateSessionTokenAsync(new SessionToken
         {
             DisplayName = $"{context.SecretName} {now:u}",
@@ -114,6 +132,6 @@ public class AzureDevOpsAccessToken : SecretType<AzureDevOpsAccessToken.Paramete
             Console.LogWarning($"Issued token expires on {newToken.ValidTo}, which is more than 1 day from the requested duration of {expiresOn}. This is unexpected and may disrupt secret management.");
         }
 
-        return new SecretData(newToken.Token, expiresOn, expiresOn.Add(_rotateBeforeExpiration));
+        return new SecretData(newToken.Token, expiresOn, rotatesOn);
     }
 }
