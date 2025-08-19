@@ -1389,7 +1389,7 @@
       "targets": [
         {
           "azureLogAnalytics": {
-            "query": "customEvents\r\n| where name == \"WorkItemExecuted\" and $__timeFilter(timestamp)\r\n| extend Duration = toint(customMeasurements[\"Duration\"])\r\n| summarize Duration = avg(Duration) by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+            "query": "customEvents\r\n| where name == \"WorkItemExecuted\" and $__timeFilter(timestamp)\r\n| extend Duration = toint(customMeasurements[\"Duration\"])\r\n| summarize Duration = max(Duration) by bin(timestamp, $__interval)\r\n| order by timestamp asc",
             "resource": "[parameter(product-construction-service-appinsights-resourcepath)]",
             "resultFormat": "time_series"
           },
@@ -1601,6 +1601,7 @@
             }
           },
           "mappings": [],
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -1614,7 +1615,7 @@
               }
             ]
           },
-          "unit": "none"
+          "unit": "percent"
         },
         "overrides": [
           {
@@ -1640,7 +1641,9 @@
       "id": 54,
       "options": {
         "legend": {
-          "calcs": [],
+          "calcs": [
+            "max"
+          ],
           "displayMode": "list",
           "placement": "bottom"
         },
@@ -2454,7 +2457,7 @@
         {
           "azureLogAnalytics": {
             "query": "ContainerAppSystemLogs_CL\r\n| where TimeGenerated > ago(14d)\r\n| where Log_s has_any (\"has exited with status Succeeded\", \"has exited with status Failed\")\r\n| summarize arg_max(TimeGenerated, Log_s) by JobName_s\r\n| where Log_s has \"has exited with status Failed\"\r\n| project TimeGenerated,JobName=JobName_s, FailedJob=1",
-            "resource": "/subscriptions/fbd6122a-9ad3-42e4-976e-bccb82486856/resourceGroups/product-construction-service/providers/Microsoft.OperationalInsights/workspaces/product-construction-service-workspace-prod"
+            "resource": "[parameter(product-construction-service-workspace-resourcepath)]"
           },
           "azureMonitor": {
             "dimensionFilters": [],
@@ -3669,7 +3672,7 @@
       "type": "row"
     }
   ],
-  "refresh": "",
+  "refresh": "30s",
   "schemaVersion": 34,
   "style": "dark",
   "tags": [],
