@@ -164,7 +164,7 @@
           {
             "evaluator": {
               "params": [
-                80
+                74
               ],
               "type": "lt"
             },
@@ -191,7 +191,7 @@
         "handler": 1,
         "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1310/-Alert-PCS-Work-Item-Success-Rate-alert)\n\nThe PCS background work items started to fail frequently.\n\n@dotnet/prodconsvcs",
         "name": "PCS Work Item Success Rate alert",
-        "noDataState": "alerting",
+        "noDataState": "keep_state",
         "notifications": [
           {
             "uid": "statusHook"
@@ -429,7 +429,7 @@
         {
           "colorMode": "critical",
           "op": "lt",
-          "value": 80,
+          "value": 74,
           "visible": true
         }
       ],
@@ -2453,7 +2453,7 @@
       "targets": [
         {
           "azureLogAnalytics": {
-            "query": "ContainerAppSystemLogs_CL\r\n| where Log_s has_any (\"has exited with status Succeeded\", \"has exited with status Failed\")\r\n| summarize arg_max(TimeGenerated, Log_s) by JobName_s\r\n| where Log_s has \"has exited with status Failed\"\r\n| project TimeGenerated, JobName_s, 1\r\n",
+            "query": "ContainerAppSystemLogs_CL\r\n| where TimeGenerated > ago(14d)\r\n| where Log_s has_any (\"has exited with status Succeeded\", \"has exited with status Failed\")\r\n| summarize arg_max(TimeGenerated, Log_s) by JobName_s\r\n| where Log_s has \"has exited with status Failed\"\r\n| project TimeGenerated,JobName=JobName_s, FailedJob=1",
             "resource": "/subscriptions/fbd6122a-9ad3-42e4-976e-bccb82486856/resourceGroups/product-construction-service/providers/Microsoft.OperationalInsights/workspaces/product-construction-service-workspace-prod"
           },
           "azureMonitor": {
