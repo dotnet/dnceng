@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
-using FluentAssertions;
+using AwesomeAssertions;
 using NUnit.Framework;
 
 namespace Microsoft.DncEng.SecretManager.Tests;
