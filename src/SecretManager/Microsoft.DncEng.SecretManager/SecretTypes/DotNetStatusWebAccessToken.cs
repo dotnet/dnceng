@@ -17,11 +17,11 @@ public class DotNetStatusWebAccessToken : GenericAccessToken
 
     protected override bool HasExpiration => true;
 
-    protected override string HelpMessage => "Please login to https://{0}/Token using your GitHub account and create a new token.";
+    protected override string HelpMessage => "Please login to https://{0}/Token using the dotnet-bot GitHub account and create a new token.";
 
     protected override string TokenName => "DotNet Status Web Access Token";
 
-    protected override string TokenFormatDescription => "base64 url encoded with at least 24 characters";
+    protected override string TokenFormatDescription => "base64 encoded string with at least 24 characters";
 
     protected override IEnumerable<KeyValuePair<string, string>> EnvironmentToHost => new[]
     {
@@ -35,6 +35,9 @@ public class DotNetStatusWebAccessToken : GenericAccessToken
 
     protected override bool ValidateToken(string token)
     {
-        return Regex.IsMatch(token, "^[a-zA-Z0-9_\\-]{24,}$");
+        if (string.IsNullOrEmpty(token))
+            return false;
+            
+        return Regex.IsMatch(token, "^[A-Za-z0-9+/]{24,}={0,2}$");
     }
 }

@@ -1,0 +1,146 @@
+using FluentAssertions;
+using Microsoft.DncEng.CommandLineLib;
+using Microsoft.DncEng.SecretManager.SecretTypes;
+using Moq;
+using NUnit.Framework;
+
+namespace Microsoft.DncEng.SecretManager.Tests;
+
+[TestFixture]
+public class DotNetStatusWebAccessTokenTests
+{
+    private TestableDotNetStatusWebAccessToken _tokenValidator;
+    private Mock<ISystemClock> _mockClock;
+    private Mock<IConsole> _mockConsole;
+
+    [SetUp]
+    public void SetUp()
+    {
+        _mockClock = new Mock<ISystemClock>();
+        _mockConsole = new Mock<IConsole>();
+        _tokenValidator = new TestableDotNetStatusWebAccessToken(_mockClock.Object, _mockConsole.Object);
+    }
+
+    [Test]
+    [TestCase("abcdefghijklmnopqrstuvwx", true, Description = "Valid base64 token with exactly 24 characters")]
+    [TestCase("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", true, Description = "Valid base64 token with 64 characters")]
+    [TestCase("dGVzdFRva2VuVmFsdWUxMjM0NTY3ODkw", true, Description = "Valid base64 token with 32 characters")]
+    [TestCase("dGVzdFRva2VuVmFsdWUxMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQ1Njc4OTA=", true, Description = "Valid base64 token with padding")]
+    [TestCase("dGVzdFRva2VuVmFsdWUxMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQ1Njc4OTA==", true, Description = "Valid base64 token with double padding")]
+    [TestCase("ABC123def456GHI789jklm+/", true, Description = "Valid base64 token with mixed case and special chars (24 chars)")]
+    [TestCase("abcdefghijklmnopqrstuv", false, Description = "Invalid - less than 24 characters")]
+    [TestCase("ABC123def456GHI789jkl+/", false, Description = "Invalid - only 23 characters")]
+    [TestCase("", false, Description = "Invalid - empty string")]
+    [TestCase(null, false, Description = "Invalid - null token")]
+    [TestCase("abcdefghijklmnopqrstuvwx-", false, Description = "Invalid - contains dash (URL-safe base64 char)")]
+    [TestCase("abcdefghijklmnopqrstuvwx_", false, Description = "Invalid - contains underscore (URL-safe base64 char)")]
+    [TestCase("abcdefghijklmnopqrstuvwx@", false, Description = "Invalid - contains invalid character @")]
+    [TestCase("abcdefghijklmnopqrstuvwx#", false, Description = "Invalid - contains invalid character #")]
+    [TestCase("abcdefghijklmnopqrstuvwx$", false, Description = "Invalid - contains invalid character $")]
+    [TestCase("abcdefghijklmnopqrstuvwx%", false, Description = "Invalid - contains invalid character %")]
+    [TestCase("abcdefghijklmnopqrstuvwx!", false, Description = "Invalid - contains invalid character !")]
+    [TestCase("abcdefghijklmnopqrstuvwx===", false, Description = "Invalid - too many padding characters")]
+    [TestCase("=abcdefghijklmnopqrstuvwx", false, Description = "Invalid - padding at the beginning")]
+    [TestCase("abcdefgh=ijklmnopqrstuvwx", false, Description = "Invalid - padding in the middle")]
+    public void ValidateToken_ShouldReturnExpectedResult(string token, bool expectedResult)
+    {
+        // Act
+        var result = _tokenValidator.TestValidateToken(token);
+
+        // Assert
+        result.Should().Be(expectedResult);
+    }
+
+    [Test]
+    public void ValidateToken_WithExactly24Characters_ShouldReturnTrue()
+    {
+        // Arrange
+        var token = "ABCDEFGHIJKLMNOPQRSTUVwx"; // Exactly 24 chars
+
+        // Act
+        var result = _tokenValidator.TestValidateToken(token);
+
+        // Assert
+        result.Should().BeTrue();
+    }
+
+    [Test]
+    public void ValidateToken_WithLongValidToken_ShouldReturnTrue()
+    {
+        // Arrange
+        var token = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"; // Very long valid token
+
+        // Act
+        var result = _tokenValidator.TestValidateToken(token);
+
+        // Assert
+        result.Should().BeTrue();
+    }
+
+    [Test]
+    public void ValidateToken_WithWhitespace_ShouldReturnFalse()
+    {
+        // Arrange
+        var token = "abcdefghijklmnopqrstuvwx yz"; // Contains space
+
+        // Act
+        var result = _tokenValidator.TestValidateToken(token);
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Test]
+    public void ValidateToken_WithTabCharacter_ShouldReturnFalse()
+    {
+        // Arrange
+        var token = "abcdefghijklmnopqrstuvwx\tyz"; // Contains tab
+
+        // Act
+        var result = _tokenValidator.TestValidateToken(token);
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Test]
+    public void ValidateToken_WithNewlineCharacter_ShouldReturnFalse()
+    {
+        // Arrange
+        var token = "abcdefghijklmnopqrstuvwx\nyz"; // Contains newline
+
+        // Act
+        var result = _tokenValidator.TestValidateToken(token);
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Test]
+    public void ValidateToken_WithGeneratedAccessToken_ShouldReturnTrue()
+    {
+        // Example token generated by AzureTableTokenStore.IssueTokenAsync
+        var token = "CfDJ8ERbrxw293RPon+U/PyFDWSBzHtkuyq2nyOssvCIGYokTby0H4slwqFwC3eFo+IjnB9XkXtP/yGB18RLeAaZCwoU2KAkUn+BTi35QKOA9CM21x7GSeP2b4SxpdvfkltvM5G8rzHAJdz9zF/vHbNp4MhGUQk8MBSmLr4z7MAsYcDQCoZIu0+1jjw/679Jq+nFXhcHW+C4id81Sqqr57B79XM=";
+
+        // Act - Validate the token using the same logic that would validate 
+        // a token generated by AzureTableTokenStore.IssueTokenAsync
+        var result = _tokenValidator.TestValidateToken(token);
+
+        // Assert - The validation should pass for a properly formatted base64 token
+        result.Should().BeTrue();
+    }
+
+    // Test helper class to expose the protected ValidateToken method
+    private class TestableDotNetStatusWebAccessToken : DotNetStatusWebAccessToken
+    {
+        public TestableDotNetStatusWebAccessToken(ISystemClock clock, IConsole console) 
+            : base(clock, console)
+        {
+        }
+
+        public bool TestValidateToken(string token)
+        {
+            return ValidateToken(token);
+        }
+    }
+}
