@@ -1,4 +1,4 @@
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.DncEng.CommandLineLib;
 using Microsoft.DncEng.SecretManager.SecretTypes;
 using Moq;
