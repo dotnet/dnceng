@@ -1,0 +1,8 @@
+schemaVersion: 0.0.1
+isProduction: true
+accountableOwners:
+  service: 8835b1f3-0d22-4e28-bae0-65da04655ed4
+routing:
+  defaultAreaPath:
+    org: dnceng
+    path: internal\Dotnet-Core-Engineering

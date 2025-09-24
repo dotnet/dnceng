@@ -1,87 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.DncEng.CommandLineLib" Version="1.1.0-beta.25306.1">
+    <Dependency Name="Microsoft.DncEng.CommandLineLib" Version="1.1.0-beta.25451.1">
       <Uri>https://github.com/dotnet/dnceng-shared</Uri>
-      <Sha>417ff840230b8c3e5775edfa917604510ab3d49e</Sha>
+      <Sha>722dd1a2a590da93557884f491d08869edb19e24</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DncEng.Configuration.Extensions" Version="1.1.0-beta.25306.1">
+    <Dependency Name="Microsoft.DncEng.Configuration.Extensions" Version="1.1.0-beta.25451.1">
       <Uri>https://github.com/dotnet/dnceng-shared</Uri>
-      <Sha>417ff840230b8c3e5775edfa917604510ab3d49e</Sha>
+      <Sha>722dd1a2a590da93557884f491d08869edb19e24</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Authentication.Algorithms" Version="1.1.0-beta.25306.1">
+    <Dependency Name="Microsoft.DotNet.Authentication.Algorithms" Version="1.1.0-beta.25451.1">
       <Uri>https://github.com/dotnet/dnceng-shared</Uri>
-      <Sha>417ff840230b8c3e5775edfa917604510ab3d49e</Sha>
+      <Sha>722dd1a2a590da93557884f491d08869edb19e24</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.GitHub.Authentication" Version="1.1.0-beta.25306.1">
+    <Dependency Name="Microsoft.DotNet.GitHub.Authentication" Version="1.1.0-beta.25451.1">
       <Uri>https://github.com/dotnet/dnceng-shared</Uri>
-      <Sha>417ff840230b8c3e5775edfa917604510ab3d49e</Sha>
+      <Sha>722dd1a2a590da93557884f491d08869edb19e24</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Internal.DependencyInjection.Testing" Version="1.1.0-beta.25306.1">
+    <Dependency Name="Microsoft.DotNet.Internal.DependencyInjection.Testing" Version="1.1.0-beta.25451.1">
       <Uri>https://github.com/dotnet/dnceng-shared</Uri>
-      <Sha>417ff840230b8c3e5775edfa917604510ab3d49e</Sha>
+      <Sha>722dd1a2a590da93557884f491d08869edb19e24</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Internal.DependencyInjection" Version="1.1.0-beta.25306.1">
+    <Dependency Name="Microsoft.DotNet.Internal.DependencyInjection" Version="1.1.0-beta.25451.1">
       <Uri>https://github.com/dotnet/dnceng-shared</Uri>
-      <Sha>417ff840230b8c3e5775edfa917604510ab3d49e</Sha>
+      <Sha>722dd1a2a590da93557884f491d08869edb19e24</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Internal.Health" Version="1.1.0-beta.25306.1">
+    <Dependency Name="Microsoft.DotNet.Internal.Health" Version="1.1.0-beta.25451.1">
       <Uri>https://github.com/dotnet/dnceng-shared</Uri>
-      <Sha>417ff840230b8c3e5775edfa917604510ab3d49e</Sha>
+      <Sha>722dd1a2a590da93557884f491d08869edb19e24</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Internal.Testing.DependencyInjection.Abstractions" Version="1.1.0-beta.25306.1">
+    <Dependency Name="Microsoft.DotNet.Internal.Testing.DependencyInjection.Abstractions" Version="1.1.0-beta.25451.1">
       <Uri>https://github.com/dotnet/dnceng-shared</Uri>
-      <Sha>417ff840230b8c3e5775edfa917604510ab3d49e</Sha>
+      <Sha>722dd1a2a590da93557884f491d08869edb19e24</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Internal.Testing.DependencyInjectionCodeGen" Version="1.1.0-beta.25306.1">
+    <Dependency Name="Microsoft.DotNet.Internal.Testing.DependencyInjectionCodeGen" Version="1.1.0-beta.25451.1">
       <Uri>https://github.com/dotnet/dnceng-shared</Uri>
-      <Sha>417ff840230b8c3e5775edfa917604510ab3d49e</Sha>
+      <Sha>722dd1a2a590da93557884f491d08869edb19e24</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Internal.Testing.Utility" Version="1.1.0-beta.25306.1">
+    <Dependency Name="Microsoft.DotNet.Internal.Testing.Utility" Version="1.1.0-beta.25451.1">
       <Uri>https://github.com/dotnet/dnceng-shared</Uri>
-      <Sha>417ff840230b8c3e5775edfa917604510ab3d49e</Sha>
+      <Sha>722dd1a2a590da93557884f491d08869edb19e24</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Kusto" Version="1.1.0-beta.25306.1">
+    <Dependency Name="Microsoft.DotNet.Kusto" Version="1.1.0-beta.25451.1">
       <Uri>https://github.com/dotnet/dnceng-shared</Uri>
-      <Sha>417ff840230b8c3e5775edfa917604510ab3d49e</Sha>
+      <Sha>722dd1a2a590da93557884f491d08869edb19e24</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.ServiceFabric.ServiceHost" Version="1.1.0-beta.25306.1">
+    <Dependency Name="Microsoft.DotNet.ServiceFabric.ServiceHost" Version="1.1.0-beta.25451.1">
       <Uri>https://github.com/dotnet/dnceng-shared</Uri>
-      <Sha>417ff840230b8c3e5775edfa917604510ab3d49e</Sha>
+      <Sha>722dd1a2a590da93557884f491d08869edb19e24</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Services.Utility" Version="1.1.0-beta.25306.1">
+    <Dependency Name="Microsoft.DotNet.Services.Utility" Version="1.1.0-beta.25451.1">
       <Uri>https://github.com/dotnet/dnceng-shared</Uri>
-      <Sha>417ff840230b8c3e5775edfa917604510ab3d49e</Sha>
+      <Sha>722dd1a2a590da93557884f491d08869edb19e24</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Web.Authentication" Version="1.1.0-beta.25306.1">
+    <Dependency Name="Microsoft.DotNet.Web.Authentication" Version="1.1.0-beta.25451.1">
       <Uri>https://github.com/dotnet/dnceng-shared</Uri>
-      <Sha>417ff840230b8c3e5775edfa917604510ab3d49e</Sha>
+      <Sha>722dd1a2a590da93557884f491d08869edb19e24</Sha>
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="8.0.0-beta.25378.1">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="8.0.0-beta.25465.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>8dca4f8ae100b102230287f8cc1b75264c9f1a6f</Sha>
+      <Sha>4bd1c6c93b5a3b8bc864d2863469c3f2e489d0af</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.SignTool" Version="8.0.0-beta.25378.1">
+    <Dependency Name="Microsoft.DotNet.SignTool" Version="8.0.0-beta.25465.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>8dca4f8ae100b102230287f8cc1b75264c9f1a6f</Sha>
+      <Sha>4bd1c6c93b5a3b8bc864d2863469c3f2e489d0af</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="8.0.0-beta.25378.1">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="8.0.0-beta.25465.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>8dca4f8ae100b102230287f8cc1b75264c9f1a6f</Sha>
+      <Sha>4bd1c6c93b5a3b8bc864d2863469c3f2e489d0af</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="8.0.0-beta.25378.1">
+    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="8.0.0-beta.25465.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>8dca4f8ae100b102230287f8cc1b75264c9f1a6f</Sha>
+      <Sha>4bd1c6c93b5a3b8bc864d2863469c3f2e489d0af</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Git.IssueManager" Version="8.0.0-beta.25378.1">
+    <Dependency Name="Microsoft.DotNet.Git.IssueManager" Version="8.0.0-beta.25465.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>8dca4f8ae100b102230287f8cc1b75264c9f1a6f</Sha>
+      <Sha>4bd1c6c93b5a3b8bc864d2863469c3f2e489d0af</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.VersionTools" Version="8.0.0-beta.25378.1">
+    <Dependency Name="Microsoft.DotNet.VersionTools" Version="8.0.0-beta.25465.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>8dca4f8ae100b102230287f8cc1b75264c9f1a6f</Sha>
+      <Sha>4bd1c6c93b5a3b8bc864d2863469c3f2e489d0af</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
