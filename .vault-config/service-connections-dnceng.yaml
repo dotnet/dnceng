@@ -115,3 +115,30 @@ secrets:
             name: dn-bot-account-redmond
           organizations: dnceng
           scopes: packaging_write
+
+  dotnet-security-partners-enterprise-distro-partners-dotnet feed:
+  type: azure-devops-service-endpoint
+  parameters:
+    authorization:
+      type: azure-devops-access-token
+      parameters:
+        domainAccountName: dn-bot
+        domainAccountSecret:
+          location: helixkv
+          name: dn-bot-account-redmond
+        organizations: dnceng
+        scopes: packaging_write
+
+  dotnet-security-partners-servicing-partners-dotnet feed:
+  type: azure-devops-service-endpoint
+  parameters:
+    authorization:
+      type: azure-devops-access-token
+      parameters:
+        domainAccountName: dn-bot
+        domainAccountSecret:
+          location: helixkv
+          name: dn-bot-account-redmond
+        organizations: dnceng
+        scopes: packaging_write
+        
