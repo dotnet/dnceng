@@ -126,7 +126,7 @@ secrets:
         domainAccountSecret:
           location: helixkv
           name: dn-bot-account-redmond
-        organizations: dnceng
+        organizations: dotnet-security-partners
         scopes: packaging_write
 
   dotnet-security-partners-servicing-partners-dotnet feed:
@@ -139,6 +139,5 @@ secrets:
         domainAccountSecret:
           location: helixkv
           name: dn-bot-account-redmond
-        organizations: dnceng
+        organizations: dotnet-security-partners
         scopes: packaging_write
-        
