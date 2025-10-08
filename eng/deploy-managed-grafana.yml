@@ -1,0 +1,30 @@
+parameters:
+- name: ServiceConnectionName
+  type: string
+- name: ServiceConnectionClientId
+  type: string
+- name: ServiceConnectionId
+  type: string
+- name: DeploymentEnvironment
+  type: string
+- name: GrafanaWorkspaceName
+  type: string
+- name: GrafanaKeyVault
+  type: string
+- name: GrafanaVariableGroup
+  type: string
+
+
+stages:
+- stage: ProvisionGrafana
+  displayName: 'Provision Grafana Infrastructure'
+  jobs:
+  - template: /eng/provision-grafana.yaml@self
+    parameters:
+      DeploymentEnvironment: ${{ parameters.DeploymentEnvironment }}
+      ServiceConnectionName: ${{ parameters.ServiceConnectionName }}
+      GrafanaResourceGroup: 'monitoring-managed'
+      GrafanaWorkspaceName: ${{ parameters.GrafanaWorkspaceName }}
+      GrafanaLocation: 'westus2'
+      GrafanaKeyVault: ${{ parameters.GrafanaKeyVault }}
+      GrafanaVariableGroup: ${{ parameters.GrafanaVariableGroup }}

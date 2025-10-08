@@ -1,0 +1,180 @@
+# Azure Managed Grafana Provisioning Template
+# This template provisions Azure Managed Grafana workspaces as part of the deployment process
+
+parameters:
+- name: DeploymentEnvironment
+  type: string
+
+- name: ServiceConnectionName
+  type: string
+
+- name: GrafanaResourceGroup
+  type: string
+
+- name: GrafanaWorkspaceName
+  type: string
+
+- name: GrafanaLocation
+  type: string
+
+- name: GrafanaKeyVault
+  type: string
+
+- name: GrafanaVariableGroup
+  type: string
+
+- name: SkipGrafanaProvisioning
+  type: boolean
+  default: false
+
+variables:
+  - group: ${{ parameters.GrafanaVariableGroup }}
+
+jobs:
+- job: ProvisionGrafana
+  displayName: 'Provision Azure Managed Grafana'
+  condition: and(succeeded(), not('${{ parameters.SkipGrafanaProvisioning }}'))
+  pool:
+    name: NetCore1ESPool-Internal
+    demands: ImageOverride -equals 1es-windows-2022
+  
+  steps:
+  - checkout: self
+    displayName: 'Checkout Repository'
+
+  - task: AzureCLI@2
+    displayName: 'Install Bicep CLI'
+    inputs:
+      azureSubscription: '${{ parameters.ServiceConnectionName }}'
+      scriptType: 'pwsh'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        Write-Host "Installing Bicep CLI..."
+        az bicep install
+        az bicep version
+        Write-Host "✅ Bicep CLI installed successfully"
+
+  - task: AzureCLI@2
+    displayName: 'Validate Bicep Template'
+    inputs:
+      azureSubscription: '${{ parameters.ServiceConnectionName }}'
+      scriptType: 'pwsh'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        Write-Host "Validating Grafana Bicep template..."
+        if (!(Test-Path "azure-managed-grafana.bicep")) {
+          throw "Bicep template not found: azure-managed-grafana.bicep"
+        }
+        
+        az bicep build --file azure-managed-grafana.bicep
+        if ($LASTEXITCODE -ne 0) {
+          throw "Bicep template validation failed"
+        }
+        Write-Host "✅ Bicep template validation successful"
+
+  - task: AzureCLI@2
+    displayName: 'Ensure Resource Group Exists'
+    inputs:
+      azureSubscription: '${{ parameters.ServiceConnectionName }}'
+      scriptType: 'pwsh'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        $rgName = "${{ parameters.GrafanaResourceGroup }}"
+        $location = "${{ parameters.GrafanaLocation }}"
+        
+        Write-Host "Checking if resource group '$rgName' exists..."
+        $rg = az group show --name $rgName --query "name" --output tsv 2>$null
+        
+        if ($LASTEXITCODE -ne 0) {
+          Write-Host "Creating resource group '$rgName' in '$location'..."
+          az group create --name $rgName --location $location
+          if ($LASTEXITCODE -ne 0) {
+            throw "Failed to create resource group '$rgName'"
+          }
+          Write-Host "✅ Resource group created successfully"
+        } else {
+          Write-Host "✅ Resource group already exists"
+        }
+
+  - task: AzureResourceManagerTemplateDeployment@3
+    displayName: 'Deploy Grafana Workspace'
+    inputs:
+      deploymentScope: 'Resource Group'
+      azureResourceManagerConnection: '${{ parameters.ServiceConnectionName }}'
+      action: 'Create Or Update Resource Group'
+      resourceGroupName: '${{ parameters.GrafanaResourceGroup }}'
+      location: '${{ parameters.GrafanaLocation }}'
+      templateLocation: 'Linked artifact'
+      csmFile: 'azure-managed-grafana.bicep'
+      overrideParameters: |
+        -subscriptionId $(az account show --query id --output tsv)
+        -resourceGroupName "${{ parameters.GrafanaResourceGroup }}"
+        -location "${{ parameters.GrafanaLocation }}"
+        -grafanaWorkspaceName "${{ parameters.GrafanaWorkspaceName }}"
+        -skuName "Standard"
+        -dotnetEngServicesGroupObjectId "$(dotnet-eng-services-group-object-id)"
+      deploymentMode: 'Incremental'
+      deploymentName: 'grafana-${{ parameters.DeploymentEnvironment }}-$(Build.BuildNumber)'
+      deploymentOutputs: 'grafanaOutputs'
+
+  - task: AzureCLI@2
+    displayName: 'Verify Grafana Deployment'
+    inputs:
+      azureSubscription: '${{ parameters.ServiceConnectionName }}'
+      scriptType: 'pwsh'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        $workspaceName = "${{ parameters.GrafanaWorkspaceName }}"
+        $rgName = "${{ parameters.GrafanaResourceGroup }}"
+        
+        Write-Host "Verifying Grafana workspace deployment..."
+        
+        # Wait for deployment to complete
+        $maxAttempts = 30
+        $attempt = 0
+        do {
+          $attempt++
+          Write-Host "Verification attempt $attempt of $maxAttempts..."
+          
+          $workspace = az grafana show --name $workspaceName --resource-group $rgName 2>$null | ConvertFrom-Json
+          if ($workspace -and $workspace.properties.provisioningState -eq "Succeeded") {
+            break
+          }
+          
+          if ($attempt -lt $maxAttempts) {
+            Write-Host "Workspace not ready yet, waiting 30 seconds..."
+            Start-Sleep -Seconds 30
+          }
+        } while ($attempt -lt $maxAttempts)
+        
+        if (!$workspace) {
+          throw "Failed to verify Grafana workspace deployment"
+        }
+        
+        Write-Host "📊 Grafana Workspace Details:"
+        Write-Host "   Name: $($workspace.name)"
+        Write-Host "   URL: $($workspace.properties.endpoint)"
+        Write-Host "   Location: $($workspace.location)"
+        Write-Host "   SKU: $($workspace.sku.name)"
+        Write-Host "   Status: $($workspace.properties.provisioningState)"
+        Write-Host "   Identity: $($workspace.identity.principalId)"
+        
+        # Verify role assignments
+        Write-Host "Checking role assignments..."
+        $roleAssignments = az role assignment list --scope $workspace.id --query "[].{principalId:principalId, roleDefinitionName:roleDefinitionName}" 2>$null | ConvertFrom-Json
+        if ($roleAssignments) {
+          $roleAssignments | ForEach-Object { 
+            Write-Host "   Role: $($_.roleDefinitionName) - Principal: $($_.principalId)" 
+          }
+        } else {
+          Write-Host "   No role assignments found"
+        }
+        
+        # Store outputs for downstream usage
+        Write-Host "##vso[task.setvariable variable=GrafanaUrl;isOutput=true]$($workspace.properties.endpoint)"
+        Write-Host "##vso[task.setvariable variable=GrafanaPrincipalId;isOutput=true]$($workspace.identity.principalId)"
+        Write-Host "##vso[task.setvariable variable=GrafanaResourceId;isOutput=true]$($workspace.id)"
+        
+        Write-Host "✅ ${{ parameters.DeploymentEnvironment }} Grafana deployment verification completed"
+
+  
