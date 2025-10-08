@@ -27,9 +27,6 @@ parameters:
   type: boolean
   default: false
 
-variables:
-  - group: ${{ parameters.GrafanaVariableGroup }}
-
 jobs:
 - job: ProvisionGrafana
   displayName: 'Provision Azure Managed Grafana'
@@ -37,6 +34,9 @@ jobs:
   pool:
     name: NetCore1ESPool-Internal
     demands: ImageOverride -equals 1es-windows-2022
+  
+  variables:
+  - group: ${{ parameters.GrafanaVariableGroup }}
   
   steps:
   - checkout: self
