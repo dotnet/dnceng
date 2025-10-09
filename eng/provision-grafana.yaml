@@ -142,7 +142,7 @@ jobs:
         
         # Verify role assignments
         Write-Host "Checking role assignments..."
-        $roleAssignments = az role assignment list --scope $workspace.id --query "[].{principalId:principalId, roleDefinitionName:roleDefinitionName}" 2>$null | ConvertFrom-Json
+        $roleAssignments = az role assignment list --scope $workspace.id --query '[].{principalId:principalId, roleDefinitionName:roleDefinitionName}' 2>$null | ConvertFrom-Json
         if ($roleAssignments) {
           $roleAssignments | ForEach-Object { 
             Write-Host "   Role: $($_.roleDefinitionName) - Principal: $($_.principalId)" 
