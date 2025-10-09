@@ -13,10 +13,6 @@ parameters:
   type: string
 - name: GrafanaVariableGroup
   type: string
-- name: DotnetEngServicesGroupObjectId
-  type: string
-  default: "65d7fc1d-2744-4669-8779-5cd7d7a6b95b"
-
 
 stages:
 - stage: ProvisionGrafana
@@ -31,4 +27,3 @@ stages:
       GrafanaLocation: 'westus2'
       GrafanaKeyVault: ${{ parameters.GrafanaKeyVault }}
       GrafanaVariableGroup: ${{ parameters.GrafanaVariableGroup }}
-      DotnetEngServicesGroupObjectId: ${{ parameters.DotnetEngServicesGroupObjectId }}

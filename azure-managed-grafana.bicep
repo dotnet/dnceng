@@ -12,12 +12,6 @@ param grafanaWorkspaceName string
 ])
 param skuName string = 'Standard'
 
-@description('Object ID of the .NET Eng Services Azure AD group')
-param dotnetEngServicesGroupObjectId string = ''
-
-@description('Whether to create role assignment for .NET Eng Services group')
-param createRoleAssignment bool = true
-
 // Azure Managed Grafana Workspace
 resource grafanaWorkspace 'Microsoft.Dashboard/grafana@2023-09-01' = {
   name: grafanaWorkspaceName
@@ -37,17 +31,6 @@ resource grafanaWorkspace 'Microsoft.Dashboard/grafana@2023-09-01' = {
     grafanaIntegrations: {
       azureMonitorWorkspaceIntegrations: []
     }
-  }
-}
-
-// Role assignment to grant .NET Eng Services group Grafana Admin access
-resource grafanaAdminRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (createRoleAssignment && !empty(dotnetEngServicesGroupObjectId)) {
-  name: guid(grafanaWorkspace.id, dotnetEngServicesGroupObjectId, 'Grafana Admin')
-  scope: grafanaWorkspace
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '22926164-76b3-42b3-bc55-97df8dab3e41') // Grafana Admin role
-    principalId: dotnetEngServicesGroupObjectId
-    principalType: 'Group'
   }
 }
 
