@@ -99,6 +99,21 @@ jobs:
       deploymentOutputs: 'grafanaOutputs'
 
   - task: AzureCLI@2
+    displayName: 'Install Azure Managed Grafana Extension'
+    inputs:
+      azureSubscription: '${{ parameters.ServiceConnectionName }}'
+      scriptType: 'ps'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        Write-Host "Installing Azure CLI Azure Managed Grafana extension..."
+        az extension add --name amg --allow-preview-versions --yes
+        if ($LASTEXITCODE -ne 0) {
+          Write-Host "Warning: Failed to install amg extension, will use alternative verification method"
+        } else {
+          Write-Host "SUCCESS: Azure Managed Grafana extension installed"
+        }
+
+  - task: AzureCLI@2
     displayName: 'Verify Grafana Deployment'
     inputs:
       azureSubscription: '${{ parameters.ServiceConnectionName }}'
