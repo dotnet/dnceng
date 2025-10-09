@@ -106,7 +106,7 @@ jobs:
       scriptLocation: 'inlineScript'
       inlineScript: |
         Write-Host "Installing Azure CLI Azure Managed Grafana extension..."
-        az extension add --name amg --allow-preview-versions --yes
+        az extension add --name amg
         if ($LASTEXITCODE -ne 0) {
           Write-Host "Warning: Failed to install amg extension, will use alternative verification method"
         } else {
