@@ -30,7 +30,6 @@ parameters:
 jobs:
 - job: ProvisionGrafana
   displayName: 'Provision Azure Managed Grafana'
-  condition: and(succeeded(), not('${{ parameters.SkipGrafanaProvisioning }}'))
   pool:
     name: NetCore1ESPool-Internal
     demands: ImageOverride -equals 1es-windows-2022
