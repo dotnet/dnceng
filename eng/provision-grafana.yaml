@@ -23,6 +23,9 @@ parameters:
 - name: GrafanaVariableGroup
   type: string
 
+- name: DotnetEngServicesGroupObjectId
+  type: string
+
 - name: SkipGrafanaProvisioning
   type: boolean
   default: false
@@ -93,7 +96,7 @@ jobs:
       location: '${{ parameters.GrafanaLocation }}'
       templateLocation: 'Linked artifact'
       csmFile: 'azure-managed-grafana.bicep'
-      overrideParameters: '-location "${{ parameters.GrafanaLocation }}" -grafanaWorkspaceName "${{ parameters.GrafanaWorkspaceName }}" -skuName "Standard"'
+      overrideParameters: '-location "${{ parameters.GrafanaLocation }}" -grafanaWorkspaceName "${{ parameters.GrafanaWorkspaceName }}" -skuName "Standard" -dotnetEngServicesGroupObjectId "${{ parameters.DotnetEngServicesGroupObjectId }}" -createRoleAssignment true'
       deploymentMode: 'Incremental'
       deploymentName: 'grafana-${{ parameters.DeploymentEnvironment }}-$(Build.BuildNumber)'
       deploymentOutputs: 'grafanaOutputs'

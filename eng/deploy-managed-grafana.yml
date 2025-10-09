@@ -13,6 +13,8 @@ parameters:
   type: string
 - name: GrafanaVariableGroup
   type: string
+- name: DotnetEngServicesGroupObjectId
+  type: string
 
 
 stages:
@@ -28,3 +30,4 @@ stages:
       GrafanaLocation: 'westus2'
       GrafanaKeyVault: ${{ parameters.GrafanaKeyVault }}
       GrafanaVariableGroup: ${{ parameters.GrafanaVariableGroup }}
+      DotnetEngServicesGroupObjectId: ${{ parameters.DotnetEngServicesGroupObjectId }}
