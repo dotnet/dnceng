@@ -94,10 +94,20 @@ jobs:
       templateLocation: 'Linked artifact'
       csmFile: 'azure-managed-grafana.bicep'
       overrideParameters: |
-        -location "${{ parameters.GrafanaLocation }}"
-        -grafanaWorkspaceName "${{ parameters.GrafanaWorkspaceName }}"
-        -skuName "Standard"
-        -dotnetEngServicesGroupObjectId "$(dotnet-eng-services-group-object-id)"
+        {
+          "location": {
+            "value": "${{ parameters.GrafanaLocation }}"
+          },
+          "grafanaWorkspaceName": {
+            "value": "${{ parameters.GrafanaWorkspaceName }}"
+          },
+          "skuName": {
+            "value": "Standard"
+          },
+          "dotnetEngServicesGroupObjectId": {
+            "value": "$(dotnet-eng-services-group-object-id)"
+          }
+        }
       deploymentMode: 'Incremental'
       deploymentName: 'grafana-${{ parameters.DeploymentEnvironment }}-$(Build.BuildNumber)'
       deploymentOutputs: 'grafanaOutputs'
