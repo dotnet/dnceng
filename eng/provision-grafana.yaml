@@ -96,7 +96,7 @@ jobs:
       location: '${{ parameters.GrafanaLocation }}'
       templateLocation: 'Linked artifact'
       csmFile: 'azure-managed-grafana.bicep'
-      overrideParameters: '-location "${{ parameters.GrafanaLocation }}" -grafanaWorkspaceName "${{ parameters.GrafanaWorkspaceName }}" -skuName "Standard" -dotnetEngServicesGroupObjectId "${{ parameters.DotnetEngServicesGroupObjectId }}" -createRoleAssignment true'
+      overrideParameters: '-location "${{ parameters.GrafanaLocation }}" -grafanaWorkspaceName "${{ parameters.GrafanaWorkspaceName }}" -skuName "Standard" -dotnetEngServicesGroupObjectId "${{ parameters.DotnetEngServicesGroupObjectId }}" -createRoleAssignment false'
       deploymentMode: 'Incremental'
       deploymentName: 'grafana-${{ parameters.DeploymentEnvironment }}-$(Build.BuildNumber)'
       deploymentOutputs: 'grafanaOutputs'
@@ -175,5 +175,46 @@ jobs:
         Write-Host "##vso[task.setvariable variable=GrafanaResourceId;isOutput=true]$($workspace.id)"
         
         Write-Host "SUCCESS: ${{ parameters.DeploymentEnvironment }} Grafana deployment verification completed"
+
+  - task: AzureCLI@2
+    displayName: 'Assign Grafana Admin Role to .NET Eng Services'
+    continueOnError: true
+    inputs:
+      azureSubscription: '${{ parameters.ServiceConnectionName }}'
+      scriptType: 'ps'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        $workspaceName = "${{ parameters.GrafanaWorkspaceName }}"
+        $rgName = "${{ parameters.GrafanaResourceGroup }}"
+        $groupObjectId = "${{ parameters.DotnetEngServicesGroupObjectId }}"
+        
+        Write-Host "Attempting to assign Grafana Admin role to .NET Eng Services group..."
+        
+        # Get the Grafana workspace resource ID
+        $subscriptionId = az account show --query id --output tsv
+        $resourceId = "/subscriptions/$subscriptionId/resourceGroups/$rgName/providers/Microsoft.Dashboard/grafana/$workspaceName"
+        
+        # Check if role assignment already exists
+        $existingAssignment = az role assignment list --scope $resourceId --assignee $groupObjectId --role "Grafana Admin" --query "[0].id" --output tsv 2>$null
+        
+        if ($existingAssignment) {
+          Write-Host "SUCCESS: .NET Eng Services group already has Grafana Admin role"
+        } else {
+          # Try to assign the role
+          Write-Host "Assigning Grafana Admin role to .NET Eng Services group ($groupObjectId)..."
+          az role assignment create --assignee $groupObjectId --role "Grafana Admin" --scope $resourceId 2>$null
+          
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "SUCCESS: Grafana Admin role assigned to .NET Eng Services group"
+          } else {
+            Write-Host "WARNING: Failed to assign Grafana Admin role automatically"
+            Write-Host "Manual assignment required:"
+            Write-Host "  1. Go to Azure Portal > Resource Groups > $rgName > $workspaceName"
+            Write-Host "  2. Access control (IAM) > Add role assignment"
+            Write-Host "  3. Role: Grafana Admin"
+            Write-Host "  4. Assign access to: Group"
+            Write-Host "  5. Select: .NET Eng Services group"
+          }
+        }
 
   

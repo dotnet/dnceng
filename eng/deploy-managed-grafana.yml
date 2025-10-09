@@ -15,6 +15,7 @@ parameters:
   type: string
 - name: DotnetEngServicesGroupObjectId
   type: string
+  default: "65d7fc1d-2744-4669-8779-5cd7d7a6b95b"
 
 
 stages:

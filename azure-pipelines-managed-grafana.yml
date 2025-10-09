@@ -32,7 +32,7 @@ extends:
             ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/production') }}:
               DeploymentEnvironment: Staging
               ServiceConnectionName: dnceng-managed-grafana-staging
-              GrafanaWorkspaceName: dnceng-grafana-staging
+              GrafanaWorkspaceName: dnceng-grafana-staging-1
               GrafanaKeyVault: dnceng-grafana-int-kv
               GrafanaVariableGroup: Dnceng-Managed-Grafana-Staging-Vg
               ServiceConnectionClientId: 4ad9ae35-2d42-4245-a954-9003b7e31349
