@@ -33,9 +33,6 @@ jobs:
   pool:
     name: NetCore1ESPool-Internal
     demands: ImageOverride -equals 1es-windows-2022
-  templateContext:
-    type: releaseJob
-    isProduction: false  
   
   variables:
   - group: ${{ parameters.GrafanaVariableGroup }}
