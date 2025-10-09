@@ -57,7 +57,7 @@ jobs:
         if ($LASTEXITCODE -ne 0) {
           throw "Bicep template validation failed"
         }
-        Write-Host "✅ Bicep template validation successful"
+        Write-Host "SUCCESS: Bicep template validation successful"
 
   - task: AzureCLI@2
     displayName: 'Ensure Resource Group Exists'
@@ -78,9 +78,9 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             throw "Failed to create resource group '$rgName'"
           }
-          Write-Host "✅ Resource group created successfully"
+          Write-Host "SUCCESS: Resource group created successfully"
         } else {
-          Write-Host "✅ Resource group already exists"
+          Write-Host "SUCCESS: Resource group already exists"
         }
 
   - task: AzureResourceManagerTemplateDeployment@3
@@ -132,7 +132,7 @@ jobs:
           throw "Failed to verify Grafana workspace deployment"
         }
         
-        Write-Host "📊 Grafana Workspace Details:"
+        Write-Host "GRAFANA WORKSPACE DETAILS:"
         Write-Host "   Name: $($workspace.name)"
         Write-Host "   URL: $($workspace.properties.endpoint)"
         Write-Host "   Location: $($workspace.location)"
@@ -156,6 +156,6 @@ jobs:
         Write-Host "##vso[task.setvariable variable=GrafanaPrincipalId;isOutput=true]$($workspace.identity.principalId)"
         Write-Host "##vso[task.setvariable variable=GrafanaResourceId;isOutput=true]$($workspace.id)"
         
-        Write-Host "✅ ${{ parameters.DeploymentEnvironment }} Grafana deployment verification completed"
+        Write-Host "SUCCESS: ${{ parameters.DeploymentEnvironment }} Grafana deployment verification completed"
 
   
