@@ -94,8 +94,6 @@ jobs:
       templateLocation: 'Linked artifact'
       csmFile: 'azure-managed-grafana.bicep'
       overrideParameters: |
-        -subscriptionId $(az account show --query id --output tsv)
-        -resourceGroupName "${{ parameters.GrafanaResourceGroup }}"
         -location "${{ parameters.GrafanaLocation }}"
         -grafanaWorkspaceName "${{ parameters.GrafanaWorkspaceName }}"
         -skuName "Standard"
