@@ -42,22 +42,10 @@ jobs:
     displayName: 'Checkout Repository'
 
   - task: AzureCLI@2
-    displayName: 'Install Bicep CLI'
-    inputs:
-      azureSubscription: '${{ parameters.ServiceConnectionName }}'
-      scriptType: 'pwsh'
-      scriptLocation: 'inlineScript'
-      inlineScript: |
-        Write-Host "Installing Bicep CLI..."
-        az bicep install
-        az bicep version
-        Write-Host "✅ Bicep CLI installed successfully"
-
-  - task: AzureCLI@2
     displayName: 'Validate Bicep Template'
     inputs:
       azureSubscription: '${{ parameters.ServiceConnectionName }}'
-      scriptType: 'pwsh'
+      scriptType: 'ps'
       scriptLocation: 'inlineScript'
       inlineScript: |
         Write-Host "Validating Grafana Bicep template..."
@@ -75,7 +63,7 @@ jobs:
     displayName: 'Ensure Resource Group Exists'
     inputs:
       azureSubscription: '${{ parameters.ServiceConnectionName }}'
-      scriptType: 'pwsh'
+      scriptType: 'ps'
       scriptLocation: 'inlineScript'
       inlineScript: |
         $rgName = "${{ parameters.GrafanaResourceGroup }}"
@@ -120,7 +108,7 @@ jobs:
     displayName: 'Verify Grafana Deployment'
     inputs:
       azureSubscription: '${{ parameters.ServiceConnectionName }}'
-      scriptType: 'pwsh'
+      scriptType: 'ps'
       scriptLocation: 'inlineScript'
       inlineScript: |
         $workspaceName = "${{ parameters.GrafanaWorkspaceName }}"
