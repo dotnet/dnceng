@@ -254,7 +254,6 @@ extends:
             ServiceConnectionClientId: fc1eb341-aea4-4a11-8f80-d14b8775b2ba
             ServiceConnectionId: 4a511f6f-b538-48e6-a389-207e430634d1
 
-    - ${{ if in(variables['Build.SourceBranch'], 'refs/heads/haruna/managed-grafana-new', 'refs/heads/production')}}:
       - template: /eng/deploy-managed-grafana.yml@self
         parameters:
           ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/production') }}:

@@ -49,11 +49,11 @@ jobs:
       scriptLocation: 'inlineScript'
       inlineScript: |
         Write-Host "Validating Grafana Bicep template..."
-        if (!(Test-Path "azure-managed-grafana.bicep")) {
+        if (!(Test-Path "eng/deployment/azure-managed-grafana.bicep")) {
           throw "Bicep template not found: azure-managed-grafana.bicep"
         }
-        
-        az bicep build --file azure-managed-grafana.bicep
+
+        az bicep build --file eng/deployment/azure-managed-grafana.bicep
         if ($LASTEXITCODE -ne 0) {
           throw "Bicep template validation failed"
         }
@@ -92,7 +92,7 @@ jobs:
       resourceGroupName: '${{ parameters.GrafanaResourceGroup }}'
       location: '${{ parameters.GrafanaLocation }}'
       templateLocation: 'Linked artifact'
-      csmFile: 'azure-managed-grafana.bicep'
+      csmFile: 'eng/deployment/azure-managed-grafana.bicep'
       overrideParameters: '-location "${{ parameters.GrafanaLocation }}" -grafanaWorkspaceName "${{ parameters.GrafanaWorkspaceName }}" -skuName "Standard"'
       deploymentMode: 'Incremental'
       deploymentName: 'grafana-${{ parameters.DeploymentEnvironment }}-$(Build.BuildNumber)'
