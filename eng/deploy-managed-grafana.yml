@@ -17,6 +17,9 @@ parameters:
 stages:
 - stage: ProvisionGrafana
   displayName: 'Provision Grafana Infrastructure'
+  dependsOn:
+  - predeploy
+  - approval
   jobs:
   - template: /eng/provision-grafana.yaml@self
     parameters:
