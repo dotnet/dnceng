@@ -506,9 +506,10 @@ public sealed class AzureDevOpsClient : IAzureDevOpsClient
             {
                 try
                 {
-                    StringContent content = new StringContent(body, Encoding.UTF8, "application/json-patch+json");
+                    HttpRequestMessage request = new HttpRequestMessage(new HttpMethod("PATCH"), uri);
+                    request.Content = new StringContent(body, Encoding.UTF8, "application/json-patch+json");
 
-                    using (HttpResponseMessage response = await _httpClient.PatchAsync(uri, content, cancellationToken))
+                    using (HttpResponseMessage response = await _httpClient.SendAsync(request, cancellationToken))
                     {
                         response.EnsureSuccessStatusCode();
                         string responseBody = await response.Content.ReadAsStringAsync();

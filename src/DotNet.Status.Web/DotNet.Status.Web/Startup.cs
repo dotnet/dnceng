@@ -102,9 +102,16 @@ public class Startup
         services.Configure<AzureDevOpsClientOptions>("alert/dnceng", (AzureDevOpsClientOptions options) =>
         {
             IConfigurationSection alertSection = Configuration.GetSection("AzureDevOpsAlert");
-            options.Organization = alertSection.GetValue<string>("Organization") ?? "dnceng";
-            options.AccessToken = Configuration.GetSection("AzureDevOps:dnceng").GetValue<string>("AccessToken");
-            options.MaxParallelRequests = Configuration.GetSection("AzureDevOps:dnceng").GetValue<int>("MaxParallelRequests");
+            IConfigurationSection dncengSection = Configuration.GetSection("AzureDevOps:dnceng");
+            
+            string organization = alertSection.GetValue<string>("Organization");
+            options.Organization = !string.IsNullOrEmpty(organization) ? organization : "dnceng";
+            
+            string accessToken = dncengSection.GetValue<string>("AccessToken");
+            options.AccessToken = accessToken ?? string.Empty;
+            
+            int maxParallelRequests = dncengSection.GetValue<int>("MaxParallelRequests");
+            options.MaxParallelRequests = maxParallelRequests > 0 ? maxParallelRequests : 4;
         });
         
         services.Configure<BuildMonitorOptions>(Configuration.GetSection("BuildMonitor"));
