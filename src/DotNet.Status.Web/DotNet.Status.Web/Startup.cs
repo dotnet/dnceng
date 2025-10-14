@@ -96,6 +96,24 @@ public class Startup
         services.Configure<GitHubTokenProviderOptions>(Configuration.GetSection("GitHubAppAuth"));
         services.Configure<AzureDevOpsClientOptions>("dnceng", Configuration.GetSection("AzureDevOps:dnceng"));
         services.Configure<AzureDevOpsClientOptions>("build-monitor/dnceng", Configuration.GetSection("AzureDevOps:build-monitor/dnceng"));
+        services.Configure<AzureDevOpsAlertOptions>(Configuration.GetSection("AzureDevOpsAlert"));
+        
+        // Configure AzureDevOpsClientOptions for alert system based on AzureDevOpsAlert configuration
+        services.Configure<AzureDevOpsClientOptions>("alert/dnceng", (AzureDevOpsClientOptions options) =>
+        {
+            IConfigurationSection alertSection = Configuration.GetSection("AzureDevOpsAlert");
+            IConfigurationSection dncengSection = Configuration.GetSection("AzureDevOps:dnceng");
+            
+            string organization = alertSection.GetValue<string>("Organization");
+            options.Organization = !string.IsNullOrEmpty(organization) ? organization : "dnceng";
+            
+            string accessToken = dncengSection.GetValue<string>("AccessToken");
+            options.AccessToken = accessToken ?? string.Empty;
+            
+            int maxParallelRequests = dncengSection.GetValue<int>("MaxParallelRequests");
+            options.MaxParallelRequests = maxParallelRequests > 0 ? maxParallelRequests : 4;
+        });
+        
         services.Configure<BuildMonitorOptions>(Configuration.GetSection("BuildMonitor"));
         services.Configure<KustoOptions>(Configuration.GetSection("Kusto"));
         services.Configure<RcaOptions>(Configuration.GetSection("Rca"));
