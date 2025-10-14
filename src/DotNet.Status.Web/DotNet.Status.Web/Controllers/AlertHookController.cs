@@ -121,7 +121,11 @@ public class AlertHookController : ControllerBase
         }
             
         string icon = GetIcon(notification);
-        string image = !string.IsNullOrEmpty(notification.ImageUrl) ? $"<img src=\"{notification.ImageUrl}\" alt=\"Metric Graph\" />" : string.Empty;
+        string image = string.Empty;
+        if (!string.IsNullOrEmpty(notification.ImageUrl))
+        {
+            image = $"<img src=\"{notification.ImageUrl}\" alt=\"Metric Graph\" />";
+        }
 
         return $@":{icon}: Metric state changed to {notification.State}
 
@@ -131,7 +135,7 @@ public class AlertHookController : ControllerBase
 
 {image}
 
-<a href=\"{notification.RuleUrl}\">Go to rule</a>".Replace("\r\n","\n");
+<a href=""{notification.RuleUrl}"">Go to rule</a>".Replace("\r\n","\n");
     }
 
     private string GenerateWorkItemTitle(GrafanaNotification notification)
@@ -157,7 +161,11 @@ public class AlertHookController : ControllerBase
         }
 
         string icon = GetIcon(notification);
-        string image = !string.IsNullOrEmpty(notification.ImageUrl) ? $"<img src=\"{notification.ImageUrl}\" alt=\"Metric Graph\" />" : string.Empty;
+        string image = string.Empty;
+        if (!string.IsNullOrEmpty(notification.ImageUrl))
+        {
+            image = $"<img src=\"{notification.ImageUrl}\" alt=\"Metric Graph\" />";
+        }
 
         AzureDevOpsAlertOptions options = _azureDevOpsOptions.Value;
         
@@ -175,7 +183,7 @@ public class AlertHookController : ControllerBase
 
 {image}
 
-<a href=\"{notification.RuleUrl}\">Go to rule</a>
+<a href=""{notification.RuleUrl}"">Go to rule</a>
 
 {notificationTargets}
 
