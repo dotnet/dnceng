@@ -224,7 +224,7 @@ public sealed class AzureDevOpsClient : IAzureDevOpsClient
         patchDocuments.Add(tagsUpdate);
 
         string body = JsonConvert.SerializeObject(patchDocuments);
-        string json = (await PostJsonResult(builder.ToString(), body, cancellationToken)).Body;
+        string json = (await PatchJsonResult(builder.ToString(), body, cancellationToken)).Body;
         return JsonConvert.DeserializeObject<WorkItem>(json);
     }
 
@@ -494,6 +494,46 @@ public sealed class AzureDevOpsClient : IAzureDevOpsClient
     {
         var result = await GetJsonResult(changeUrl, cancellationToken);
         return JsonConvert.DeserializeObject<BuildChangeDetail>(result.Body);
+    }
+
+    private async Task<JsonResult> PatchJsonResult(string uri, string body, CancellationToken cancellationToken)
+    {
+        await _parallelism.WaitAsync(cancellationToken);
+        try
+        {
+            int retry = 5;
+            while (true)
+            {
+                try
+                {
+                    StringContent content = new StringContent(body, Encoding.UTF8, "application/json-patch+json");
+
+                    using (HttpResponseMessage response = await _httpClient.PatchAsync(uri, content, cancellationToken))
+                    {
+                        response.EnsureSuccessStatusCode();
+                        string responseBody = await response.Content.ReadAsStringAsync();
+                        response.Headers.TryGetValues("x-ms-continuationtoken",
+                            out IEnumerable<string>? continuationTokenHeaders);
+                        string? continuationToken = continuationTokenHeaders?.FirstOrDefault();
+                        JsonResult result = new JsonResult(responseBody, continuationToken);
+
+                        return result;
+                    }
+                }
+                catch (OperationCanceledException e) when (e.CancellationToken == cancellationToken)
+                {
+                    throw;
+                }
+                catch (Exception) when (retry-- > 0)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+                }
+            }
+        }
+        finally
+        {
+            _parallelism.Release();
+        }
     }
 }
 
