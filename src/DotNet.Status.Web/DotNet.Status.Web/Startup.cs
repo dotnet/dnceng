@@ -96,6 +96,17 @@ public class Startup
         services.Configure<GitHubTokenProviderOptions>(Configuration.GetSection("GitHubAppAuth"));
         services.Configure<AzureDevOpsClientOptions>("dnceng", Configuration.GetSection("AzureDevOps:dnceng"));
         services.Configure<AzureDevOpsClientOptions>("build-monitor/dnceng", Configuration.GetSection("AzureDevOps:build-monitor/dnceng"));
+        services.Configure<AzureDevOpsAlertOptions>(Configuration.GetSection("AzureDevOpsAlert"));
+        
+        // Configure AzureDevOpsClientOptions for alert system based on AzureDevOpsAlert configuration
+        services.Configure<AzureDevOpsClientOptions>("alert/dnceng", (AzureDevOpsClientOptions options) =>
+        {
+            IConfigurationSection alertSection = Configuration.GetSection("AzureDevOpsAlert");
+            options.Organization = alertSection.GetValue<string>("Organization") ?? "dnceng";
+            options.AccessToken = Configuration.GetSection("AzureDevOps:dnceng").GetValue<string>("AccessToken");
+            options.MaxParallelRequests = Configuration.GetSection("AzureDevOps:dnceng").GetValue<int>("MaxParallelRequests");
+        });
+        
         services.Configure<BuildMonitorOptions>(Configuration.GetSection("BuildMonitor"));
         services.Configure<KustoOptions>(Configuration.GetSection("Kusto"));
         services.Configure<RcaOptions>(Configuration.GetSection("Rca"));

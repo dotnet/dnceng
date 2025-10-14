@@ -163,6 +163,135 @@ public sealed class AzureDevOpsClient : IAzureDevOpsClient
         return JsonConvert.DeserializeObject<WorkItem>(json);
     }
 
+    public async Task<WorkItem?> CreateAlertWorkItem(string project, string title, string description, string[] tags, CancellationToken cancellationToken)
+    {
+        Dictionary<string, string> fields = new Dictionary<string, string>();
+        fields.Add("System.Title", title);
+        fields.Add("System.Description", description);
+        
+        if (tags != null && tags.Length > 0)
+        {
+            fields.Add("System.Tags", string.Join("; ", tags));
+        }
+
+        string json = await CreateWorkItem(project, "Issue", fields, cancellationToken);
+        return JsonConvert.DeserializeObject<WorkItem>(json);
+    }
+
+    public async Task<WorkItem?> UpdateWorkItemTags(string project, int workItemId, string[] tagsToAdd, string[] tagsToRemove, CancellationToken cancellationToken)
+    {
+        StringBuilder builder = GetProjectApiRootBuilder(project);
+        builder.Append($"wit/workitems/{workItemId}?api-version=6.0");
+
+        WorkItem? existingWorkItem = await GetWorkItem(project, workItemId, cancellationToken);
+        if (existingWorkItem == null)
+        {
+            return null;
+        }
+
+        string existingTags = existingWorkItem.Fields.TryGetValue("System.Tags", out object? tagsObj) 
+            ? tagsObj?.ToString() ?? string.Empty 
+            : string.Empty;
+
+        HashSet<string> tagSet = new HashSet<string>(
+            existingTags.Split(new[] { "; " }, StringSplitOptions.RemoveEmptyEntries)
+        );
+
+        if (tagsToRemove != null)
+        {
+            foreach (string tag in tagsToRemove)
+            {
+                tagSet.Remove(tag);
+            }
+        }
+
+        if (tagsToAdd != null)
+        {
+            foreach (string tag in tagsToAdd)
+            {
+                tagSet.Add(tag);
+            }
+        }
+
+        List<JsonPatchDocument> patchDocuments = new List<JsonPatchDocument>();
+        JsonPatchDocument tagsUpdate = new JsonPatchDocument()
+        {
+            From = null,
+            Op = "add",
+            Path = "/fields/System.Tags",
+            Value = string.Join("; ", tagSet)
+        };
+        patchDocuments.Add(tagsUpdate);
+
+        string body = JsonConvert.SerializeObject(patchDocuments);
+        string json = (await PostJsonResult(builder.ToString(), body, cancellationToken)).Body;
+        return JsonConvert.DeserializeObject<WorkItem>(json);
+    }
+
+    public async Task<string?> AddWorkItemComment(string project, int workItemId, string comment, CancellationToken cancellationToken)
+    {
+        StringBuilder builder = GetProjectApiRootBuilder(project);
+        builder.Append($"wit/workitems/{workItemId}/comments?api-version=6.0-preview");
+
+        JObject commentBody = new JObject
+        {
+            ["text"] = comment
+        };
+
+        string body = JsonConvert.SerializeObject(commentBody);
+        string json = (await PostJsonResult(builder.ToString(), body, cancellationToken)).Body;
+        return json;
+    }
+
+    public async Task<WorkItem[]?> QueryWorkItemsByTag(string project, string tag, CancellationToken cancellationToken)
+    {
+        StringBuilder builder = GetProjectApiRootBuilder(project);
+        builder.Append("wit/wiql?api-version=6.0");
+
+        string wiql = $@"SELECT [System.Id] FROM WorkItems WHERE [System.Tags] CONTAINS '{tag.Replace("'", "''")}' AND [System.State] <> 'Closed' AND [System.State] <> 'Resolved'";
+        
+        JObject queryBody = new JObject
+        {
+            ["query"] = wiql
+        };
+
+        string body = JsonConvert.SerializeObject(queryBody);
+        string json = (await PostJsonResult(builder.ToString(), body, cancellationToken)).Body;
+        
+        JObject result = JObject.Parse(json);
+        JArray? workItemRefs = (JArray?)result["workItems"];
+        
+        if (workItemRefs == null || workItemRefs.Count == 0)
+        {
+            return Array.Empty<WorkItem>();
+        }
+
+        List<WorkItem> workItems = new List<WorkItem>();
+        foreach (JToken workItemRef in workItemRefs)
+        {
+            int id = workItemRef["id"]?.Value<int>() ?? 0;
+            if (id > 0)
+            {
+                WorkItem? workItem = await GetWorkItem(project, id, cancellationToken);
+                if (workItem != null)
+                {
+                    workItems.Add(workItem);
+                }
+            }
+        }
+
+        return workItems.ToArray();
+    }
+
+    private async Task<WorkItem?> GetWorkItem(string project, int workItemId, CancellationToken cancellationToken)
+    {
+        StringBuilder builder = GetProjectApiRootBuilder(project);
+        builder.Append($"wit/workitems/{workItemId}?api-version=6.0");
+        
+        JsonResult result = await GetJsonResult(builder.ToString(), cancellationToken);
+        return JsonConvert.DeserializeObject<WorkItem>(result.Body);
+    }
+
     /// <summary>
     /// The method reads the logs as a stream, line by line and tries to match the regexes in order, one regex per line. 
     /// If the consecutive regexes match the lines, the last match is returned.
