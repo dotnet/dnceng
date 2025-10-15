@@ -117,7 +117,7 @@ jobs:
         Write-Host "Verifying Grafana workspace deployment..."
         
         # Wait for deployment to complete
-        $maxAttempts = 30
+        $maxAttempts = 5
         $attempt = 0
         do {
           $attempt++
