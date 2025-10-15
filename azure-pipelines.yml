@@ -278,13 +278,11 @@ extends:
             DeploymentEnvironment: Staging
             ServiceConnectionName: dnceng-managed-grafana-staging
             GrafanaWorkspaceName: dnceng-grafana-staging
-            GrafanaVariableGroup: Dnceng-Managed-Grafana-Staging-Vg
             ServiceConnectionClientId: 4ad9ae35-2d42-4245-a954-9003b7e31349
             ServiceConnectionId: f955b932-c7e3-48f7-9d67-4e6542b3568a
           ${{ else }}:
             DeploymentEnvironment: Production
             ServiceConnectionName: dnceng-managed-grafana
             GrafanaWorkspaceName: dnceng-grafana
-            GrafanaVariableGroup: Dnceng-Managed-Grafana-Vg
             ServiceConnectionClientId: 0ceeca1a-31e7-49ee-9bf4-15f14ed28fa4
             ServiceConnectionId: 332b249e-769b-49a9-9dc9-d82afe28ec0a

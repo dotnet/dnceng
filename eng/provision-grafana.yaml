@@ -17,9 +17,6 @@ parameters:
 - name: GrafanaLocation
   type: string
 
-- name: GrafanaVariableGroup
-  type: string
-
 - name: SkipGrafanaProvisioning
   type: boolean
   default: false
@@ -30,9 +27,6 @@ jobs:
   pool:
     name: NetCore1ESPool-Internal
     demands: ImageOverride -equals 1es-windows-2022
-  
-  variables:
-  - group: ${{ parameters.GrafanaVariableGroup }}
   
   steps:
   - checkout: self
