@@ -12,6 +12,12 @@ param grafanaWorkspaceName string
 ])
 param skuName string = 'Standard'
 
+@description('The Azure AD Object ID of the .NET Eng Services group')
+param dotnetEngServicesGroupId string = '65d7fc1d-2744-4669-8779-5cd7d7a6b95b'
+
+// Define the Grafana Admin role definition ID
+var grafanaAdminRoleId = '22926164-76b3-42b3-bc55-97df8dab3e41'
+
 // Azure Managed Grafana Workspace
 resource grafanaWorkspace 'Microsoft.Dashboard/grafana@2023-09-01' = {
   name: grafanaWorkspaceName
@@ -34,6 +40,17 @@ resource grafanaWorkspace 'Microsoft.Dashboard/grafana@2023-09-01' = {
   }
 }
 
+// Role assignment to grant Grafana Admin access to .NET Engineering Services group
+resource grafanaAdminRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(grafanaWorkspace.id, dotnetEngServicesGroupId, grafanaAdminRoleId)
+  scope: grafanaWorkspace
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', grafanaAdminRoleId)
+    principalId: dotnetEngServicesGroupId
+    principalType: 'Group'
+  }
+}
+
 // Output the Grafana workspace details
 output grafanaWorkspaceId string = grafanaWorkspace.id
 output grafanaWorkspaceName string = grafanaWorkspace.name
@@ -41,3 +58,4 @@ output grafanaWorkspaceUrl string = grafanaWorkspace.properties.endpoint
 output grafanaPrincipalId string = grafanaWorkspace.identity.principalId
 output grafanaTenantId string = grafanaWorkspace.identity.tenantId
 output grafanaWorkspaceLocation string = grafanaWorkspace.location
+output dotnetEngServicesRoleAssignmentId string = grafanaAdminRoleAssignment.id
