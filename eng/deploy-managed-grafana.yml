@@ -9,8 +9,6 @@ parameters:
   type: string
 - name: GrafanaWorkspaceName
   type: string
-- name: GrafanaKeyVault
-  type: string
 - name: GrafanaVariableGroup
   type: string
 
@@ -28,5 +26,4 @@ stages:
       GrafanaResourceGroup: 'monitoring-managed'
       GrafanaWorkspaceName: ${{ parameters.GrafanaWorkspaceName }}
       GrafanaLocation: 'westus2'
-      GrafanaKeyVault: ${{ parameters.GrafanaKeyVault }}
       GrafanaVariableGroup: ${{ parameters.GrafanaVariableGroup }}

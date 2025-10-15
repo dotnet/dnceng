@@ -17,9 +17,6 @@ parameters:
 - name: GrafanaLocation
   type: string
 
-- name: GrafanaKeyVault
-  type: string
-
 - name: GrafanaVariableGroup
   type: string
 
