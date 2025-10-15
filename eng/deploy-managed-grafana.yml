@@ -1,8 +1,6 @@
 parameters:
 - name: ServiceConnectionName
   type: string
-- name: ServiceConnectionClientId
-  type: string
 - name: ServiceConnectionId
   type: string
 - name: DeploymentEnvironment
