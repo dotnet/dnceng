@@ -6,6 +6,12 @@ pr:
     - main
     - production
 
+variables:
+  ${{ if eq(variables['System.PullRequest.TargetBranch'], 'refs/heads/production') }}:
+    ServiceConnectionName: 'dnceng-managed-grafana'
+  ${{ else }}:
+    ServiceConnectionName: 'dnceng-managed-grafana-staging'
+
 stages:
 - stage: build
   dependsOn: []
@@ -106,3 +112,21 @@ stages:
           displayName: Verify Secret Usages
 
         - template: /eng/test.yaml
+
+        - task: AzureCLI@2
+          displayName: 'Validate Grafana Bicep Template'
+          inputs:
+            azureSubscription: '$(ServiceConnectionName)'
+            scriptType: 'ps'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              Write-Host "Validating Grafana Bicep template..."
+              if (!(Test-Path "eng/deployment/azure-managed-grafana.bicep")) {
+                throw "Bicep template not found: azure-managed-grafana.bicep"
+              }
+
+              az bicep build --file eng/deployment/azure-managed-grafana.bicep
+              if ($LASTEXITCODE -ne 0) {
+                throw "Bicep template validation failed"
+              }
+              Write-Host "SUCCESS: Bicep template validation successful"
