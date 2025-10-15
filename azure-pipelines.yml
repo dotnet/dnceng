@@ -206,6 +206,24 @@ extends:
                 contents: '*'
                 targetFolder: $(Build.ArtifactStagingDirectory)\eng
 
+            - task: AzureCLI@2
+              displayName: 'Validate Grafana Bicep Template'
+              inputs:
+                azureSubscription: '$(ServiceConnectionName)'
+                scriptType: 'ps'
+                scriptLocation: 'inlineScript'
+                inlineScript: |
+                  Write-Host "Validating Grafana Bicep template..."
+                  if (!(Test-Path "eng/deployment/azure-managed-grafana.bicep")) {
+                    throw "Bicep template not found: azure-managed-grafana.bicep"
+                  }
+
+                  az bicep build --file eng/deployment/azure-managed-grafana.bicep
+                  if ($LASTEXITCODE -ne 0) {
+                    throw "Bicep template validation failed"
+                  }
+                  Write-Host "SUCCESS: Bicep template validation successful"
+
     - template: /eng/common/templates-official/post-build/post-build.yml@self
       parameters:
         enableSymbolValidation: false
