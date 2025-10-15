@@ -21,10 +21,6 @@ parameters:
   type: string
   default: 'Standard'
 
-- name: SkipGrafanaProvisioning
-  type: boolean
-  default: false
-
 jobs:
 - job: ProvisionGrafana
   displayName: 'Provision Azure Managed Grafana'
