@@ -157,9 +157,4 @@ jobs:
           Write-Host "   No role assignments found"
         }
         
-        # Store outputs for downstream usage
-        Write-Host "##vso[task.setvariable variable=GrafanaUrl;isOutput=true]$($workspace.properties.endpoint)"
-        Write-Host "##vso[task.setvariable variable=GrafanaPrincipalId;isOutput=true]$($workspace.identity.principalId)"
-        Write-Host "##vso[task.setvariable variable=GrafanaResourceId;isOutput=true]$($workspace.id)"
-        
         Write-Host "SUCCESS: ${{ parameters.DeploymentEnvironment }} Grafana deployment verification completed"
