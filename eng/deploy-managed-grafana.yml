@@ -19,6 +19,6 @@ stages:
     parameters:
       DeploymentEnvironment: ${{ parameters.DeploymentEnvironment }}
       ServiceConnectionName: ${{ parameters.ServiceConnectionName }}
-      GrafanaResourceGroup: 'monitoring-managed'
+      GrafanaResourceGroup: 'monitoring-managed-new'
       GrafanaWorkspaceName: ${{ parameters.GrafanaWorkspaceName }}
       GrafanaLocation: 'westus2'
