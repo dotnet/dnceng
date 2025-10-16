@@ -36,7 +36,7 @@ extends:
               ServiceConnectionId: 7829de7e-fb4e-4118-8370-475d6bc61905
             ${{ else }}:
               DeploymentEnvironment: Production
-              ServiceConnectionName: dnceng-managed-grafana
+              ServiceConnectionName: NetHelix
               GrafanaWorkspaceName: dnceng-grafana
-              ServiceConnectionId: 332b249e-769b-49a9-9dc9-d82afe28ec0a
+              ServiceConnectionId: a511f6f-b538-48e6-a389-207e430634d1
 
