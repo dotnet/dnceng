@@ -84,7 +84,7 @@ jobs:
       location: '${{ parameters.GrafanaLocation }}'
       templateLocation: 'Linked artifact'
       csmFile: 'eng/deployment/azure-managed-grafana.bicep'
-      overrideParameters: '-location "${{ parameters.GrafanaLocation }}" -grafanaWorkspaceName "${{ parameters.GrafanaWorkspaceName }}" -skuName "${{ parameters.GrafanaSkuName }}"'
+      overrideParameters: '-location "${{ parameters.GrafanaLocation }}" -grafanaWorkspaceName "${{ parameters.GrafanaWorkspaceName }}" -skuName "${{ parameters.GrafanaSkuName }}" -environment "${{ parameters.DeploymentEnvironment }}"'
       deploymentMode: 'Incremental'
       deploymentName: 'grafana-${{ parameters.DeploymentEnvironment }}-$(Build.BuildNumber)'
       deploymentOutputs: 'grafanaOutputs'
@@ -144,7 +144,25 @@ jobs:
         Write-Host "   Location: $($workspace.location)"
         Write-Host "   SKU: $($workspace.sku.name)"
         Write-Host "   Status: $($workspace.properties.provisioningState)"
-        Write-Host "   Identity: $($workspace.identity.principalId)"
+        Write-Host "   Identity Type: $($workspace.identity.type)"
+        
+        # Display user-assigned identity details
+        if ($workspace.identity.type -eq "UserAssigned") {
+          $userIdentities = $workspace.identity.userAssignedIdentities
+          if ($userIdentities) {
+            Write-Host "   User-Assigned Identities:"
+            $userIdentities.PSObject.Properties | ForEach-Object {
+              $identityId = $_.Name
+              $identityName = $identityId.Split('/')[-1]
+              Write-Host "     Name: $identityName"
+              Write-Host "     Resource ID: $identityId"
+              Write-Host "     Principal ID: $($_.Value.principalId)"
+              Write-Host "     Client ID: $($_.Value.clientId)"
+            }
+          }
+        } else {
+          Write-Host "   Principal ID: $($workspace.identity.principalId)"
+        }
         
         # Verify role assignments
         Write-Host "Checking role assignments..."

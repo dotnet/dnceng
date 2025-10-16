@@ -12,6 +12,20 @@ param grafanaWorkspaceName string
 ])
 param skuName string = 'Standard'
 
+@description('The deployment environment (Staging or Production)')
+param environment string
+
+// User-assigned managed identity for Grafana
+resource grafanaUserAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: environment == 'Production' ? 'dnceng-managed-grafana' : 'dnceng-managed-grafana-staging'
+  location: location
+  tags: {
+    Environment: environment
+    Purpose: 'Azure Managed Grafana'
+    Service: 'DncEng'
+  }
+}
+
 // Azure Managed Grafana Workspace
 resource grafanaWorkspace 'Microsoft.Dashboard/grafana@2023-09-01' = {
   name: grafanaWorkspaceName
@@ -20,7 +34,10 @@ resource grafanaWorkspace 'Microsoft.Dashboard/grafana@2023-09-01' = {
     name: skuName
   }
   identity: {
-    type: 'SystemAssigned'
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${grafanaUserAssignedIdentity.id}': {}
+    }
   }
   properties: {
     deterministicOutboundIP: 'Enabled'
@@ -38,6 +55,8 @@ resource grafanaWorkspace 'Microsoft.Dashboard/grafana@2023-09-01' = {
 output grafanaWorkspaceId string = grafanaWorkspace.id
 output grafanaWorkspaceName string = grafanaWorkspace.name
 output grafanaWorkspaceUrl string = grafanaWorkspace.properties.endpoint
-output grafanaPrincipalId string = grafanaWorkspace.identity.principalId
-output grafanaTenantId string = grafanaWorkspace.identity.tenantId
+output grafanaPrincipalId string = grafanaUserAssignedIdentity.properties.principalId
+output grafanaTenantId string = grafanaUserAssignedIdentity.properties.tenantId
 output grafanaWorkspaceLocation string = grafanaWorkspace.location
+output grafanaUserAssignedIdentityId string = grafanaUserAssignedIdentity.id
+output grafanaUserAssignedIdentityName string = grafanaUserAssignedIdentity.name
