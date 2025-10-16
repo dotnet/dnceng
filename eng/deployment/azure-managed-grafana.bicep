@@ -12,17 +12,77 @@ param grafanaWorkspaceName string
 ])
 param skuName string = 'Standard'
 
+@description('The pricing tier for the Grafana key vault')
+@allowed([
+  'standard'
+  'premium'
+])
+param kvSkuName string = 'standard'
+
+@description('The key vault sku family')
+@allowed([
+  'A'
+  'premium'
+])
+param kvSkuFamily string = 'A'
+
 @description('The deployment environment (Staging or Production)')
 param environment string
 
+@description('The tenant ID for Azure AD')
+param tenantId string = tenant().tenantId
+
 // User-assigned managed identity for Grafana
 resource grafanaUserAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: environment == 'Production' ? 'dnceng-managed-grafana' : 'dnceng-managed-grafana-1'
+  name: environment == 'Production' ? 'dnceng-managed-grafana' : 'dnceng-managed-grafana-staging'
   location: location
   tags: {
     Environment: environment
     Purpose: 'Azure Managed Grafana'
     Service: 'DncEng'
+  }
+}
+
+// Azure Key Vault for Grafana secrets
+resource grafanaKeyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
+  name: environment == 'Production' ? 'dnceng-grafana-prod-kv' : 'dnceng-grafana-int-kv'
+  location: location
+  tags: {
+    Environment: environment
+    Purpose: 'Azure Managed Grafana Secrets'
+    Service: 'DncEng'
+  }
+  properties: {
+    sku: {
+      family: kvSkuFamily
+      name: kvSkuName
+    }
+    tenantId: tenantId
+    enabledForDeployment: false
+    enabledForDiskEncryption: false
+    enabledForTemplateDeployment: true
+    enableSoftDelete: true
+    softDeleteRetentionInDays: 90
+    enableRbacAuthorization: true
+    enablePurgeProtection: true
+    publicNetworkAccess: 'Enabled'
+    networkAcls: {
+      bypass: 'AzureServices'
+      defaultAction: 'Allow'
+    }
+  }
+}
+
+// Grant Key Vault Secrets Officer role to Grafana managed identity
+var keyVaultSecretsOfficerRoleId = 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7'
+
+resource grafanaKeyVaultSecretsOfficerRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(grafanaKeyVault.id, grafanaUserAssignedIdentity.id, keyVaultSecretsOfficerRoleId)
+  scope: grafanaKeyVault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultSecretsOfficerRoleId)
+    principalId: grafanaUserAssignedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
   }
 }
 
@@ -60,3 +120,8 @@ output grafanaTenantId string = grafanaUserAssignedIdentity.properties.tenantId
 output grafanaWorkspaceLocation string = grafanaWorkspace.location
 output grafanaUserAssignedIdentityId string = grafanaUserAssignedIdentity.id
 output grafanaUserAssignedIdentityName string = grafanaUserAssignedIdentity.name
+
+// Output Key Vault details
+output keyVaultId string = grafanaKeyVault.id
+output keyVaultName string = grafanaKeyVault.name
+output keyVaultUri string = grafanaKeyVault.properties.vaultUri
