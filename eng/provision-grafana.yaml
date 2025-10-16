@@ -57,21 +57,24 @@ jobs:
       scriptType: 'ps'
       scriptLocation: 'inlineScript'
       inlineScript: |
+        $ErrorActionPreference = 'Continue'
         $rgName = "${{ parameters.GrafanaResourceGroup }}"
         $location = "${{ parameters.GrafanaLocation }}"
         
         Write-Host "Checking if resource group '$rgName' exists..."
-        $rg = az group show --name $rgName --query "name" --output tsv 2>$null
         
-        if ($LASTEXITCODE -ne 0) {
-          Write-Host "Creating resource group '$rgName' in '$location'..."
-          az group create --name $rgName --location $location
+        # Check if resource group exists
+        $exists = az group exists --name $rgName
+        
+        if ($exists -eq 'false') {
+          Write-Host "Resource group does not exist. Creating resource group '$rgName' in '$location'..."
+          az group create --name $rgName --location $location --output none
           if ($LASTEXITCODE -ne 0) {
             throw "Failed to create resource group '$rgName'"
           }
           Write-Host "SUCCESS: Resource group created successfully"
         } else {
-          Write-Host "SUCCESS: Resource group already exists"
+          Write-Host "SUCCESS: Resource group '$rgName' already exists"
         }
 
   - task: AzureResourceManagerTemplateDeployment@3
