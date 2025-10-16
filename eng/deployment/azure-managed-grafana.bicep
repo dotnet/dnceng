@@ -17,7 +17,7 @@ param environment string
 
 // User-assigned managed identity for Grafana
 resource grafanaUserAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: environment == 'Production' ? 'dnceng-managed-grafana' : 'dnceng-managed-grafana-staging'
+  name: environment == 'Production' ? 'dnceng-managed-grafana' : 'dnceng-managed-grafana-1'
   location: location
   tags: {
     Environment: environment
