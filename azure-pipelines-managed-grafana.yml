@@ -31,9 +31,9 @@ extends:
           parameters:
             ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/production') }}:
               DeploymentEnvironment: Staging
-              ServiceConnectionName: dnceng-managed-grafana-staging
+              ServiceConnectionName: NetHelixStaging
               GrafanaWorkspaceName: dnceng-grafana-staging
-              ServiceConnectionId: f955b932-c7e3-48f7-9d67-4e6542b3568a
+              ServiceConnectionId: 7829de7e-fb4e-4118-8370-475d6bc61905
             ${{ else }}:
               DeploymentEnvironment: Production
               ServiceConnectionName: dnceng-managed-grafana
