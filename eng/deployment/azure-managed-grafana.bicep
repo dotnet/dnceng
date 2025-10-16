@@ -73,14 +73,62 @@ resource grafanaKeyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   }
 }
 
-// Grant Key Vault Secrets Officer role to Grafana managed identity
+// Define Key Vault role IDs
 var keyVaultSecretsOfficerRoleId = 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7'
+var readerRoleId = 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
+var keyVaultCertificateUserRoleId = 'db79e9a7-68ee-4b58-9aeb-b90e7c24fcba'
+var keyVaultCryptoUserRoleId = '12338af0-0e69-4776-bea7-57ae8d297424'
+var keyVaultSecretsUserRoleId = '4633458b-17de-408a-b874-0445c86b69e6'
 
 resource grafanaKeyVaultSecretsOfficerRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(grafanaKeyVault.id, grafanaUserAssignedIdentity.id, keyVaultSecretsOfficerRoleId)
   scope: grafanaKeyVault
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultSecretsOfficerRoleId)
+    principalId: grafanaUserAssignedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Grant Reader role to Grafana managed identity
+resource grafanaKeyVaultReaderRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(grafanaKeyVault.id, grafanaUserAssignedIdentity.id, readerRoleId)
+  scope: grafanaKeyVault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', readerRoleId)
+    principalId: grafanaUserAssignedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Grant Key Vault Certificate User role to Grafana managed identity
+resource grafanaKeyVaultCertificateUserRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(grafanaKeyVault.id, grafanaUserAssignedIdentity.id, keyVaultCertificateUserRoleId)
+  scope: grafanaKeyVault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultCertificateUserRoleId)
+    principalId: grafanaUserAssignedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Grant Key Vault Crypto User role to Grafana managed identity
+resource grafanaKeyVaultCryptoUserRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(grafanaKeyVault.id, grafanaUserAssignedIdentity.id, keyVaultCryptoUserRoleId)
+  scope: grafanaKeyVault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultCryptoUserRoleId)
+    principalId: grafanaUserAssignedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Grant Key Vault Secrets User role to Grafana managed identity
+resource grafanaKeyVaultSecretsUserRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(grafanaKeyVault.id, grafanaUserAssignedIdentity.id, keyVaultSecretsUserRoleId)
+  scope: grafanaKeyVault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultSecretsUserRoleId)
     principalId: grafanaUserAssignedIdentity.properties.principalId
     principalType: 'ServicePrincipal'
   }
