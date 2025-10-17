@@ -32,6 +32,9 @@ param environment string
 @description('The tenant ID for Azure AD')
 param tenantId string = tenant().tenantId
 
+@description('The Azure AD Object ID of the .NET Engineering Services group')
+param dotnetEngServicesGroupId string = '65d7fc1d-2744-4669-8779-5cd7d7a6b95b'
+
 // User-assigned managed identity for Grafana
 resource grafanaUserAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: environment == 'Production' ? 'dnceng-managed-grafana' : 'dnceng-managed-grafana-staging'
@@ -79,6 +82,9 @@ var readerRoleId = 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
 var keyVaultCertificateUserRoleId = 'db79e9a7-68ee-4b58-9aeb-b90e7c24fcba'
 var keyVaultCryptoUserRoleId = '12338af0-0e69-4776-bea7-57ae8d297424'
 var keyVaultSecretsUserRoleId = '4633458b-17de-408a-b874-0445c86b69e6'
+
+// Define Grafana Admin role ID
+var grafanaAdminRoleId = '22926164-76b3-42b3-bc55-97df8dab3e41'
 
 resource grafanaKeyVaultSecretsOfficerRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(grafanaKeyVault.id, grafanaUserAssignedIdentity.id, keyVaultSecretsOfficerRoleId)
@@ -156,6 +162,17 @@ resource grafanaWorkspace 'Microsoft.Dashboard/grafana@2023-09-01' = {
     grafanaIntegrations: {
       azureMonitorWorkspaceIntegrations: []
     }
+  }
+}
+
+// Grant Grafana Admin role to .NET Engineering Services group
+resource dotnetEngServicesGrafanaAdminRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(grafanaWorkspace.id, dotnetEngServicesGroupId, grafanaAdminRoleId)
+  scope: grafanaWorkspace
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', grafanaAdminRoleId)
+    principalId: dotnetEngServicesGroupId
+    principalType: 'Group'
   }
 }
 
