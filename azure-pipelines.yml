@@ -274,13 +274,11 @@ extends:
 
       - template: /eng/deploy-managed-grafana.yml@self
         parameters:
+          ServiceConnectionName: 'Dotnet Engineering services'
+          ServiceConnectionId: dd8c2cfc-b9c9-452c-a168-ccd4240ada55
           ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/production') }}:
             DeploymentEnvironment: Staging
-            ServiceConnectionName: NetHelixStaging
             GrafanaWorkspaceName: dnceng-grafana-staging
-            ServiceConnectionId: 7829de7e-fb4e-4118-8370-475d6bc61905
           ${{ else }}:
             DeploymentEnvironment: Production
-            ServiceConnectionName: NetHelix
             GrafanaWorkspaceName: dnceng-grafana
-            ServiceConnectionId: a511f6f-b538-48e6-a389-207e430634d1
