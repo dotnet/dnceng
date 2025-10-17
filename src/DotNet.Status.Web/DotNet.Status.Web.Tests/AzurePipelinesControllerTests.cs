@@ -551,6 +551,80 @@ public partial class AzurePipelinesControllerTests
         VerifyGitHubCalls(testData, expectedIssueOwners, expectedIssueNames, expectedCommentOwners, expectedCommentNames);
     }
 
+    [Test]
+    public async Task BuildCompleteCreateAzureDevOpsWorkItem()
+    {
+        var buildEvent = new AzurePipelinesController.AzureDevOpsEvent<AzurePipelinesController.AzureDevOpsMinimalBuildResource>
+        {
+            Resource = new AzurePipelinesController.AzureDevOpsMinimalBuildResource
+            {
+                Id = 123456,
+                Url = "test-build-url"
+            },
+            ResourceContainers = new AzurePipelinesController.AzureDevOpsResourceContainers
+            {
+                Collection = new AzurePipelinesController.HasId
+                {
+                    Id = "test-collection-id"
+                },
+                Account = new AzurePipelinesController.HasId
+                {
+                    Id = "test-account-id"
+                },
+                Project = new AzurePipelinesController.HasId
+                {
+                    Id = "test-project-id"
+                }
+            }
+        };
+
+        var build = new JObject
+        {
+            ["_links"] = new JObject
+            {
+                ["web"] = new JObject
+                {
+                    ["href"] = "href"
+                }
+            },
+            ["buildNumber"] = "123456",
+            ["definition"] = new JObject
+            {
+                ["name"] = "path5",
+                ["path"] = "\\test\\definition"
+            },
+            ["finishTime"] = "05/01/2008 6:00:00",
+            ["id"] = "123",
+            ["project"] = new JObject
+            {
+                ["name"] = "test-project-name"
+            },
+            ["reason"] = "batchedCI",
+            ["requestedFor"] = new JObject
+            {
+                ["displayName"] = "requested-for"
+            },
+            ["result"] = "failed",
+            ["sourceBranch"] = "refs/heads/sourceBranch",
+            ["startTime"] = "05/01/2008 5:00:00",
+        };
+
+        await using TestData testData = await TestData.AzureDevOps.WithBuildData(build).BuildAsync();
+        var response = await testData.Controller.BuildComplete(buildEvent);
+        
+        // Verify Azure DevOps work item creation was called
+        testData.GitHubCalls.AzureDevOpsClient.Verify(
+            m => m.CreateBuildFailureWorkItem(
+                "test-ado-project",
+                "test\\area\\path",
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                "test-assignee",
+                It.IsAny<string[]>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
     [TestDependencyInjectionSetup]
     public static class TestDataConfiguration
     {
@@ -598,6 +672,14 @@ public partial class AzurePipelinesControllerTests
                                 DefinitionPath = "\\test\\definition\\path4",
                                 Branches = new string[] { "main", "release/*" },
                                 IssuesId = "third-issues"
+                            },
+                            new BuildMonitorOptions.AzurePipelinesOptions.BuildDescription
+                            {
+                                Project = "test-project-name",
+                                DefinitionPath = "\\test\\definition\\path5",
+                                Branches = new string[] { "sourceBranch" },
+                                Assignee = "test-assignee",
+                                IssuesId = "azuredevops-issues"
                             }
                         }
                     };
@@ -625,6 +707,52 @@ public partial class AzurePipelinesControllerTests
                             Name = "repo",
                             Labels = new string[] { "label2" },
                             UpdateExisting = true
+                        },
+                        new BuildMonitorOptions.IssuesOptions
+                        {
+                            Id = "azuredevops-issues",
+                            UseAzureDevOps = true,
+                            AzureDevOpsProject = "test-ado-project",
+                            AzureDevOpsAreaPath = "test\\area\\path",
+                            Labels = new string[] { "build-failure" }
+                        }
+                    };
+                }
+            );
+        }
+
+        public static void AzureDevOps(IServiceCollection collection)
+        {
+            collection.AddOptions();
+            collection.AddLogging(l => { l.AddProvider(new NUnitLogger()); });
+
+            collection.Configure<BuildMonitorOptions>(
+                options =>
+                {
+                    options.Monitor = new BuildMonitorOptions.AzurePipelinesOptions
+                    {
+                        Organization = "dnceng",
+                        Builds = new[]
+                        {
+                            new BuildMonitorOptions.AzurePipelinesOptions.BuildDescription
+                            {
+                                Project = "test-project-name",
+                                DefinitionPath = "\\test\\definition\\path5",
+                                Branches = new string[] { "sourceBranch" },
+                                Assignee = "test-assignee",
+                                IssuesId = "azuredevops-issues"
+                            }
+                        }
+                    };
+                    options.Issues = new[]
+                    {
+                        new BuildMonitorOptions.IssuesOptions
+                        {
+                            Id = "azuredevops-issues",
+                            UseAzureDevOps = true,
+                            AzureDevOpsProject = "test-ado-project",
+                            AzureDevOpsAreaPath = "test\\area\\path",
+                            Labels = new string[] { "build-failure" }
                         }
                     };
                 }
@@ -638,7 +766,7 @@ public partial class AzurePipelinesControllerTests
         }
 
         public static
-            Func<IServiceProvider, (List<string> IssueNames, List<string> IssueOwners, List<string> CommentNames, List<string> CommentOwners)>
+            Func<IServiceProvider, (List<string> IssueNames, List<string> IssueOwners, List<string> CommentNames, List<string> CommentOwners, Mock<IAzureDevOpsClient> AzureDevOpsClient)>
             GitHubCalls(IServiceCollection collection, JObject buildData, bool expectMatchingTitle)
         {
             var commentOwners = new List<string>();
@@ -720,6 +848,42 @@ public partial class AzurePipelinesControllerTests
             mockAzureDevOpsClient
                 .Setup(m => m.GetTimelineAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(new Timeline()));
+
+            // Setup Azure DevOps work item creation mocks
+            mockAzureDevOpsClient
+                .Setup(m => m.CreateBuildFailureWorkItem(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string[]>(),
+                    It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult((WorkItem?)new WorkItem
+                {
+                    Id = 12345,
+                    Fields = new Dictionary<string, object>()
+                }));
+
+            mockAzureDevOpsClient
+                .Setup(m => m.QueryWorkItemsByTitle(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult((WorkItem[]?)Array.Empty<WorkItem>()));
+
+            mockAzureDevOpsClient
+                .Setup(m => m.UpdateWorkItemComment(
+                    It.IsAny<string>(),
+                    It.IsAny<int>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()))
+                .Returns(Task.FromResult((WorkItem?)new WorkItem
+                {
+                    Id = 12345,
+                    Fields = new Dictionary<string, object>()
+                }));
                 
             var mockHttpClientFactory = new Mock<System.Net.Http.IHttpClientFactory>();
 
@@ -731,7 +895,7 @@ public partial class AzurePipelinesControllerTests
             collection.AddSingleton(mockHttpClientFactory.Object);
             collection.AddSingleton(ExponentialRetry.Default);
 
-            return _ => (issueNames, issueOwners, commentNames, commentOwners);
+            return _ => (issueNames, issueOwners, commentNames, commentOwners, mockAzureDevOpsClient);
         }
     }
 
