@@ -33,5 +33,10 @@ public class BuildMonitorOptions
         public string Name { get; set; }
         public string[] Labels { get; set; }
         public bool UpdateExisting { get; set; }
+        
+        // Azure DevOps work item settings
+        public string AzureDevOpsProject { get; set; }
+        public string AzureDevOpsAreaPath { get; set; }
+        public bool UseAzureDevOps { get; set; }
     }
 }
