@@ -179,7 +179,7 @@ jobs:
         }
         
         # Verify Key Vault
-        $kvName = if ("${{ parameters.DeploymentEnvironment }}" -eq "Production") { "dnceng-grafana-prod-kv" } else { "dnceng-grafana-int-kv" }
+        $kvName = if ("${{ parameters.DeploymentEnvironment }}" -eq "Production") { "dnceng-amg-prod-kv" } else { "dnceng-amg-int-kv" }
         Write-Host ""
         Write-Host "KEY VAULT DETAILS:"
         $keyVault = az keyvault show --name $kvName --resource-group $rgName --query '{name:name, vaultUri:properties.vaultUri, sku:properties.sku.name}' -o json 2>$null | ConvertFrom-Json

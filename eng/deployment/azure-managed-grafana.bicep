@@ -48,7 +48,7 @@ resource grafanaUserAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIden
 
 // Azure Key Vault for Grafana secrets
 resource grafanaKeyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
-  name: environment == 'Production' ? 'dnceng-grafana-prod-kv' : 'dnceng-grafana-int-kv'
+  name: environment == 'Production' ? 'dnceng-amg-prod-kv' : 'dnceng-amg-int-kv'
   location: location
   tags: {
     Environment: environment
