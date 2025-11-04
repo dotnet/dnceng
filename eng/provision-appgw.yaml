@@ -1,6 +1,4 @@
 parameters:
-  - name: SubscriptionId
-    type: string
   - name: ServiceConnection
     type: string
   - name: ResourceGroupName
@@ -61,7 +59,6 @@ steps:
     inputs:
       deploymentScope: 'Resource Group'
       azureResourceManagerConnection: ${{ parameters.ServiceConnection }}
-      subscriptionId: ${{ parameters.SubscriptionId }}
       action: 'Create Or Update Resource Group'
       resourceGroupName: ${{ parameters.ResourceGroupName }}
       location: ${{ parameters.Location }}

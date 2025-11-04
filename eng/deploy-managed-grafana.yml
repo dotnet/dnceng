@@ -1,8 +1,6 @@
 parameters:
 - name: ServiceConnectionName
   type: string
-- name: ServiceConnectionId
-  type: string
 - name: DeploymentEnvironment
   type: string
 - name: GrafanaWorkspaceName
@@ -39,7 +37,6 @@ stages:
     steps:
     - template: /eng/provision-appgw.yaml@self
       parameters:
-        SubscriptionId: ${{ parameters.ServiceConnectionId }}
         ServiceConnection: ${{ parameters.ServiceConnectionName }}
         ResourceGroupName: 'monitoring-managed'
         Environment: ${{ parameters.DeploymentEnvironment }}

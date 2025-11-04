@@ -30,7 +30,6 @@ extends:
         - template: /eng/deploy-managed-grafana.yml@self
           parameters:
             ServiceConnectionName: 'Dotnet Engineering services'
-            ServiceConnectionId: dd8c2cfc-b9c9-452c-a168-ccd4240ada55
             ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/production') }}:
               DeploymentEnvironment: Staging
               GrafanaWorkspaceName: dnceng-grafana-staging
