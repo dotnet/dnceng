@@ -7,6 +7,9 @@ parameters:
   type: string
 - name: GrafanaWorkspaceName
   type: string
+- name: EnableCustomDomain
+  type: boolean
+  default: true
 
 stages:
 - stage: ProvisionGrafana
@@ -22,3 +25,23 @@ stages:
       GrafanaResourceGroup: 'monitoring-managed'
       GrafanaWorkspaceName: ${{ parameters.GrafanaWorkspaceName }}
       GrafanaLocation: 'westus2'
+
+- stage: ProvisionApplicationGateway
+  displayName: 'Provision Application Gateway Custom Domain'
+  dependsOn: ProvisionGrafana
+  condition: and(succeeded(), eq(${{ parameters.EnableCustomDomain }}, true))
+  jobs:
+  - job: DeployApplicationGateway
+    displayName: 'Deploy Azure Application Gateway'
+    pool:
+      name: NetCore1ESPool-Internal
+      demands: ImageOverride -equals 1es-ubuntu-2204
+    steps:
+    - template: /eng/provision-appgw.yaml@self
+      parameters:
+        SubscriptionId: ${{ parameters.ServiceConnectionId }}
+        ServiceConnection: ${{ parameters.ServiceConnectionName }}
+        ResourceGroupName: 'monitoring-managed'
+        Environment: ${{ parameters.DeploymentEnvironment }}
+        GrafanaWorkspaceName: ${{ parameters.GrafanaWorkspaceName }}
+        Location: 'westus2'
