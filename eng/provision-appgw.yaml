@@ -1,0 +1,199 @@
+parameters:
+  - name: SubscriptionId
+    type: string
+  - name: ServiceConnection
+    type: string
+  - name: ResourceGroupName
+    type: string
+  - name: Environment
+    type: string
+  - name: GrafanaWorkspaceName
+    type: string
+  - name: Location
+    type: string
+    default: 'westus2'
+
+steps:
+  - task: AzureCLI@2
+    displayName: 'Validate Application Gateway Bicep Template'
+    inputs:
+      azureSubscription: ${{ parameters.ServiceConnection }}
+      scriptType: 'pscore'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        Write-Host "Validating Application Gateway Bicep template..."
+        az bicep build --file eng/deployment/azure-appgw-grafana.bicep
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "Bicep validation failed"
+          exit 1
+        }
+        Write-Host "✓ Application Gateway Bicep template is valid"
+
+  - task: AzureCLI@2
+    displayName: 'Get Grafana Endpoint'
+    inputs:
+      azureSubscription: ${{ parameters.ServiceConnection }}
+      scriptType: 'pscore'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        Write-Host "Retrieving Grafana workspace endpoint..."
+        $grafanaEndpointFull = az grafana show `
+          --name "${{ parameters.GrafanaWorkspaceName }}" `
+          --resource-group "${{ parameters.ResourceGroupName }}" `
+          --query "properties.endpoint" `
+          --output tsv
+        
+        if ([string]::IsNullOrEmpty($grafanaEndpointFull)) {
+          Write-Error "Failed to retrieve Grafana endpoint"
+          exit 1
+        }
+        
+        # Remove https:// prefix and trailing slash for Application Gateway backend
+        $grafanaEndpoint = $grafanaEndpointFull -replace '^https://', '' -replace '/$', ''
+        
+        Write-Host "Grafana Full Endpoint: $grafanaEndpointFull"
+        Write-Host "Grafana Backend FQDN: $grafanaEndpoint"
+        Write-Host "##vso[task.setvariable variable=GrafanaEndpoint]$grafanaEndpoint"
+        Write-Host "##vso[task.setvariable variable=GrafanaEndpointFull]$grafanaEndpointFull"
+
+  - task: AzureResourceManagerTemplateDeployment@3
+    displayName: 'Deploy Application Gateway for Grafana'
+    inputs:
+      deploymentScope: 'Resource Group'
+      azureResourceManagerConnection: ${{ parameters.ServiceConnection }}
+      subscriptionId: ${{ parameters.SubscriptionId }}
+      action: 'Create Or Update Resource Group'
+      resourceGroupName: ${{ parameters.ResourceGroupName }}
+      location: ${{ parameters.Location }}
+      templateLocation: 'Linked artifact'
+      csmFile: 'eng/deployment/azure-appgw-grafana.bicep'
+      overrideParameters: >-
+        -environment "${{ parameters.Environment }}"
+        -location "${{ parameters.Location }}"
+        -grafanaEndpoint "$(GrafanaEndpoint)"
+      deploymentMode: 'Incremental'
+      deploymentOutputs: 'AppGatewayOutputs'
+
+  - task: AzureCLI@2
+    displayName: 'Display Custom Domain Information'
+    inputs:
+      azureSubscription: ${{ parameters.ServiceConnection }}
+      scriptType: 'pscore'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        Write-Host "================================================"
+        Write-Host "APPLICATION GATEWAY CUSTOM DOMAIN DEPLOYED"
+        Write-Host "================================================"
+        
+        $outputs = '$(AppGatewayOutputs)' | ConvertFrom-Json
+        
+        $customDomain = $outputs.customDomainName.value
+        $customDomainUrl = $outputs.customDomainUrl.value
+        $accessUrl = $outputs.accessUrl.value
+        $publicIp = $outputs.publicIpAddress.value
+        $appGwName = $outputs.applicationGatewayName.value
+        
+        Write-Host ""
+        Write-Host "Environment: ${{ parameters.Environment }}"
+        Write-Host "Application Gateway: $appGwName"
+        Write-Host "Public IP Address: $publicIp"
+        Write-Host "Custom Domain: $customDomain"
+        Write-Host ""
+        Write-Host "================================================"
+        Write-Host "IMMEDIATE ACCESS (NO DNS SETUP REQUIRED)"
+        Write-Host "================================================"
+        Write-Host ""
+        Write-Host "🎉 Your Grafana is immediately accessible at:"
+        Write-Host "   $accessUrl"
+        Write-Host ""
+        Write-Host "The cloudapp.azure.com domain is automatically configured!"
+        Write-Host "No DNS records needed - the domain works right away."
+        Write-Host ""
+        Write-Host "Original Grafana Endpoint: $(GrafanaEndpointFull)"
+        Write-Host "Backend FQDN: $(GrafanaEndpoint)"
+        Write-Host ""
+        Write-Host "================================================"
+        Write-Host "NEXT STEPS"
+        Write-Host "================================================"
+        Write-Host "1. Wait 2-5 minutes for Application Gateway to become healthy"
+        Write-Host "2. Access Grafana at: $accessUrl"
+        Write-Host "3. HTTP traffic will be proxied to HTTPS backend"
+        Write-Host "4. Health probe monitors: $(GrafanaEndpointFull)/api/health"
+        Write-Host ""
+        Write-Host "The domain $customDomain is ready to use!"
+        Write-Host ""
+        Write-Host "================================================"
+
+  - task: AzureCLI@2
+    displayName: 'Verify Application Gateway Deployment'
+    inputs:
+      azureSubscription: ${{ parameters.ServiceConnection }}
+      scriptType: 'pscore'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        Write-Host "Verifying Application Gateway deployment..."
+        
+        $outputs = '$(AppGatewayOutputs)' | ConvertFrom-Json
+        $appGwName = $outputs.applicationGatewayName.value
+        $customDomain = $outputs.customDomainName.value
+        
+        $maxAttempts = 10
+        $attempt = 0
+        $verified = $false
+        
+        while ($attempt -lt $maxAttempts -and -not $verified) {
+          $attempt++
+          Write-Host "Verification attempt $attempt of $maxAttempts..."
+          
+          try {
+            $provisioningState = az network application-gateway show `
+              --name "$appGwName" `
+              --resource-group "${{ parameters.ResourceGroupName }}" `
+              --query "provisioningState" `
+              --output tsv
+            
+            Write-Host "Provisioning State: $provisioningState"
+            
+            if ($provisioningState -eq "Succeeded") {
+              Write-Host "✓ Application Gateway deployed successfully"
+              
+              # Check operational state
+              $operationalState = az network application-gateway show `
+                --name "$appGwName" `
+                --resource-group "${{ parameters.ResourceGroupName }}" `
+                --query "operationalState" `
+                --output tsv
+              
+              Write-Host "Operational State: $operationalState"
+              
+              if ($operationalState -eq "Running") {
+                Write-Host "✓ Application Gateway is running"
+                $verified = $true
+              } else {
+                Write-Host "Waiting for Application Gateway to start..."
+                Start-Sleep -Seconds 15
+              }
+            } else {
+              Write-Host "Application Gateway still provisioning..."
+              Start-Sleep -Seconds 15
+            }
+          } catch {
+            Write-Warning "Verification attempt $attempt failed: $_"
+            Start-Sleep -Seconds 15
+          }
+        }
+        
+        if (-not $verified) {
+          Write-Error "Failed to verify Application Gateway deployment after $maxAttempts attempts"
+          exit 1
+        }
+        
+        Write-Host "✓ Application Gateway deployment verified successfully"
+        Write-Host ""
+        Write-Host "🎉 SUCCESS! Grafana is now accessible at: http://$customDomain"
+        Write-Host ""
+        Write-Host "Note: Backend health probes may take an additional 2-5 minutes to show as healthy"
+        Write-Host "You can check status with:"
+        Write-Host "az network application-gateway show-backend-health \"
+        Write-Host "  --name $appGwName \"
+        Write-Host "  --resource-group ${{ parameters.ResourceGroupName }}"
