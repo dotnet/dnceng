@@ -35,7 +35,7 @@ stages:
     displayName: 'Deploy Azure Application Gateway'
     pool:
       name: NetCore1ESPool-Internal
-      demands: ImageOverride -equals 1es-ubuntu-2204
+      demands: ImageOverride -equals 1es-windows-2022
     steps:
     - template: /eng/provision-appgw.yaml@self
       parameters:
