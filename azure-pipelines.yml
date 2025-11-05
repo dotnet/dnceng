@@ -27,7 +27,7 @@ extends:
   parameters:
     pool:
       name: NetCore1ESPool-Internal
-      image: 1es-windows-2019
+      image: 1es-windows-2022
       os: windows
     sdl:
       policheck:
@@ -36,17 +36,6 @@ extends:
         enabled: true
    
     stages:
-    - stage: GitHub_Issue_Verification
-      displayName: GitHub Issue Verification
-      condition: and(eq(variables['Build.Reason'], 'PullRequest'), notIn(variables['System.PullRequest.TargetBranch'], 'refs/heads/production', 'production'), notIn(variables['System.PullRequest.SourceBranch'], 'refs/heads/production', 'production'))
-      jobs:
-      - job: VerifyGitHubIssue
-        displayName: Verify GitHub Issue Link included in all PRs
-        steps:
-        - checkout: self
-        - powershell: eng/enforce-issue.ps1 -PullRequestNumber $(System.PullRequest.PullRequestNumber) -RepositoryName $(Build.Repository.Name)
-          displayName: Enforce GitHub issue link presence
-
     - stage: build
       dependsOn: []
       displayName: Build
