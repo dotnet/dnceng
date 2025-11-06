@@ -64,8 +64,8 @@ steps:
       scriptLocation: 'filePath'
       scriptPath: 'eng/generate-appgw-cert.ps1'
       arguments: >-
-        -DnsName "dnceng-managed-grafana${{ eq(parameters.Environment, 'Staging') && '-staging' || '' }}.${{ parameters.Location }}.cloudapp.azure.com"
-        -KeyVaultName "${{ eq(parameters.Environment, 'Production') && 'dnceng-amg-prod-kv' || 'dnceng-amg-int-kv' }}"
+        -DnsName "dnceng-managed-grafana${{ eq(parameters.Environment, 'Staging') == true && '-staging' || '' }}.${{ parameters.Location }}.cloudapp.azure.com"
+        -KeyVaultName "${{ eq(parameters.Environment, 'Production') == true && 'dnceng-amg-prod-kv' || 'dnceng-amg-int-kv' }}"
         -ResourceGroupName "${{ parameters.ResourceGroupName }}"
         -Location "${{ parameters.Location }}"
 
@@ -169,12 +169,12 @@ steps:
         Write-Host "4. HTTPS traffic is proxied to Grafana HTTPS backend"
         Write-Host "5. Health probe monitors: $(GrafanaEndpointFull)/api/health"
         Write-Host ""
-        Write-Host "🔑 Certificate managed in Key Vault: $(KeyVaultName)"
+        Write-Host "   Certificate managed in Key Vault: $(KeyVaultName)"
         Write-Host "   Thumbprint: $(CertificateThumbprint)"
         Write-Host ""
-        Write-Host "⚠️  HTTP (port 80) is DISABLED - only HTTPS is supported"
+        Write-Host "    HTTP (port 80) is DISABLED - only HTTPS is supported"
         Write-Host ""
-        Write-Host "⚠️  For production, replace the self-signed certificate:"
+        Write-Host "    For production, replace the self-signed certificate:"
         Write-Host "   1. Import CA-signed certificate to Key Vault:"
         Write-Host "      az keyvault certificate import --vault-name $(KeyVaultName) \"
         Write-Host "        --name appgw-ssl-cert --file certificate.pfx"
