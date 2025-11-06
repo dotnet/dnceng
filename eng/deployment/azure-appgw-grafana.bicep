@@ -232,7 +232,7 @@ resource applicationGateway 'Microsoft.Network/applicationGateways@2023-05-01' =
           minServers: 0
           match: {
             statusCodes: [
-              '200-399'
+              '200-401'
             ]
           }
         }
