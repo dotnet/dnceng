@@ -34,6 +34,12 @@ param resourceTags object = {
   Service: 'DncEng'
 }
 
+@description('Key Vault secret ID for the SSL certificate. This is a URI/URL, not sensitive data.')
+param certSecretId string = ''
+
+@description('Resource ID of the user-assigned managed identity created during Grafana provisioning')
+param grafanaUserAssignedIdentityId string
+
 // Generate custom domain name based on environment and region
 // Format: dnceng-managed-grafana[-staging].{region}.cloudapp.azure.com
 var regionShortName = location == 'westus2' ? 'westus2' : location
@@ -46,12 +52,13 @@ var publicIpName = environment == 'Production' ? 'dnceng-grafana-pip' : 'dnceng-
 var vnetName = environment == 'Production' ? 'dnceng-grafana-vnet' : 'dnceng-grafana-staging-vnet'
 var subnetName = 'appgw-subnet'
 var backendPoolName = 'grafana-backend-pool'
-var frontendPortName = 'http-port'
+var frontendPortName = 'https-port'
 var frontendIpConfigName = 'appgw-frontend-ip'
 var httpSettingName = 'grafana-http-setting'
-var listenerName = 'http-listener'
-var ruleName = 'grafana-routing-rule'
+var listenerName = 'https-listener'
+var ruleName = 'https-routing-rule'
 var probeName = 'grafana-health-probe'
+var sslCertificateName = 'appgw-ssl-cert'
 
 // Virtual Network for Application Gateway
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
@@ -77,7 +84,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
   }
 }
 
-// Public IP for Application Gateway with custom DNS label (creates cloudapp.azure.com domain)
+// Public IP for Application Gateway with custom DNS label
 resource publicIp 'Microsoft.Network/publicIPAddresses@2023-05-01' = {
   name: publicIpName
   location: location
@@ -101,6 +108,12 @@ resource applicationGateway 'Microsoft.Network/applicationGateways@2023-05-01' =
   name: appGwName
   location: location
   tags: resourceTags
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${grafanaUserAssignedIdentityId}': {}
+    }
+  }
   properties: {
     sku: {
       name: skuName
@@ -131,7 +144,7 @@ resource applicationGateway 'Microsoft.Network/applicationGateways@2023-05-01' =
       {
         name: frontendPortName
         properties: {
-          port: 80
+          port: 443
         }
       }
     ]
@@ -147,6 +160,14 @@ resource applicationGateway 'Microsoft.Network/applicationGateways@2023-05-01' =
         }
       }
     ]
+    sslCertificates: certSecretId != '' ? [
+      {
+        name: sslCertificateName
+        properties: {
+          keyVaultSecretId: certSecretId
+        }
+      }
+    ] : []
     backendHttpSettingsCollection: [
       {
         name: httpSettingName
@@ -172,8 +193,11 @@ resource applicationGateway 'Microsoft.Network/applicationGateways@2023-05-01' =
           frontendPort: {
             id: resourceId('Microsoft.Network/applicationGateways/frontendPorts', appGwName, frontendPortName)
           }
-          protocol: 'Http'
+          protocol: 'Https'
           requireServerNameIndication: false
+          sslCertificate: certSecretId != '' ? {
+            id: resourceId('Microsoft.Network/applicationGateways/sslCertificates', appGwName, sslCertificateName)
+          } : null
         }
       }
     ]
@@ -221,13 +245,14 @@ resource applicationGateway 'Microsoft.Network/applicationGateways@2023-05-01' =
 // Outputs
 output applicationGatewayId string = applicationGateway.id
 output applicationGatewayName string = applicationGateway.name
+output applicationGatewayIdentity string = applicationGateway.identity.userAssignedIdentities[grafanaUserAssignedIdentityId].principalId
 output publicIpAddress string = publicIp.properties.ipAddress
 output publicDnsLabel string = publicDnsLabel
 output customDomainName string = customDomainName
-output customDomainUrl string = 'http://${customDomainName}'
+output customDomainUrl string = 'https://${customDomainName}'
 output vnetId string = vnet.id
 output vnetName string = vnet.name
 
 // Usage instructions
-output usageInstructions string = 'Access Grafana at: http://${customDomainName} (Application Gateway proxies HTTP to HTTPS backend)'
-output accessUrl string = 'http://${customDomainName}'
+output usageInstructions string = 'Access Grafana at: https://${customDomainName}'
+output accessUrl string = 'https://${customDomainName}'

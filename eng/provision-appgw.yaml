@@ -10,6 +10,8 @@ parameters:
   - name: Location
     type: string
     default: 'westus2'
+  - name: GrafanaIdentityId
+    type: string
 
 steps:
   - task: AzureCLI@2
@@ -54,6 +56,19 @@ steps:
         Write-Host "##vso[task.setvariable variable=GrafanaEndpoint]$grafanaEndpoint"
         Write-Host "##vso[task.setvariable variable=GrafanaEndpointFull]$grafanaEndpointFull"
 
+  - task: AzureCLI@2
+    displayName: 'Setup Certificate in Key Vault'
+    inputs:
+      azureSubscription: ${{ parameters.ServiceConnection }}
+      scriptType: 'pscore'
+      scriptLocation: 'filePath'
+      scriptPath: 'eng/generate-appgw-cert.ps1'
+      arguments: >-
+        -DnsName "dnceng-managed-grafana${{ eq(parameters.Environment, 'Staging') && '-staging' || '' }}.${{ parameters.Location }}.cloudapp.azure.com"
+        -KeyVaultName "${{ eq(parameters.Environment, 'Production') && 'dnceng-amg-prod-kv' || 'dnceng-amg-int-kv' }}"
+        -ResourceGroupName "${{ parameters.ResourceGroupName }}"
+        -Location "${{ parameters.Location }}"
+
   - task: AzureResourceManagerTemplateDeployment@3
     displayName: 'Deploy Application Gateway for Grafana'
     inputs:
@@ -68,8 +83,40 @@ steps:
         -environment "${{ parameters.Environment }}"
         -location "${{ parameters.Location }}"
         -grafanaEndpoint "$(GrafanaEndpoint)"
+        -certSecretId "$(KeyVaultSecretId)"
+        -grafanaUserAssignedIdentityId "${{ parameters.GrafanaIdentityId }}"
       deploymentMode: 'Incremental'
       deploymentOutputs: 'AppGatewayOutputs'
+
+  - task: AzureCLI@2
+    displayName: 'Grant Application Gateway Access to Key Vault'
+    inputs:
+      azureSubscription: ${{ parameters.ServiceConnection }}
+      scriptType: 'pscore'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        Write-Host "Granting Application Gateway managed identity access to Key Vault..."
+        
+        $outputs = '$(AppGatewayOutputs)' | ConvertFrom-Json
+        $appGwIdentity = $outputs.applicationGatewayIdentity.value
+        $kvName = "$(KeyVaultName)"
+        
+        Write-Host "Application Gateway Identity: $appGwIdentity"
+        Write-Host "Key Vault: $kvName"
+        
+        # Grant Get permission on secrets
+        az keyvault set-policy `
+          --name $kvName `
+          --object-id $appGwIdentity `
+          --secret-permissions get `
+          --output none
+        
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "Failed to grant Key Vault access"
+          exit 1
+        }
+        
+        Write-Host "✓ Application Gateway can now access certificates from Key Vault"
 
   - task: AzureCLI@2
     displayName: 'Display Custom Domain Information'
@@ -103,6 +150,10 @@ steps:
         Write-Host "🎉 Your Grafana is immediately accessible at:"
         Write-Host "   $accessUrl"
         Write-Host ""
+        Write-Host "🔒 HTTPS-only configuration"
+        Write-Host "   Certificate managed in Azure Key Vault"
+        Write-Host "   Self-signed certificate (browser will show security warning)"
+        Write-Host ""
         Write-Host "The cloudapp.azure.com domain is automatically configured!"
         Write-Host "No DNS records needed - the domain works right away."
         Write-Host ""
@@ -114,8 +165,20 @@ steps:
         Write-Host "================================================"
         Write-Host "1. Wait 2-5 minutes for Application Gateway to become healthy"
         Write-Host "2. Access Grafana at: $accessUrl"
-        Write-Host "3. HTTP traffic will be proxied to HTTPS backend"
-        Write-Host "4. Health probe monitors: $(GrafanaEndpointFull)/api/health"
+        Write-Host "3. Accept the self-signed certificate warning in your browser"
+        Write-Host "4. HTTPS traffic is proxied to Grafana HTTPS backend"
+        Write-Host "5. Health probe monitors: $(GrafanaEndpointFull)/api/health"
+        Write-Host ""
+        Write-Host "🔑 Certificate managed in Key Vault: $(KeyVaultName)"
+        Write-Host "   Thumbprint: $(CertificateThumbprint)"
+        Write-Host ""
+        Write-Host "⚠️  HTTP (port 80) is DISABLED - only HTTPS is supported"
+        Write-Host ""
+        Write-Host "⚠️  For production, replace the self-signed certificate:"
+        Write-Host "   1. Import CA-signed certificate to Key Vault:"
+        Write-Host "      az keyvault certificate import --vault-name $(KeyVaultName) \"
+        Write-Host "        --name appgw-ssl-cert --file certificate.pfx"
+        Write-Host "   2. Application Gateway auto-updates (no redeployment needed)"
         Write-Host ""
         Write-Host "The domain $customDomain is ready to use!"
         Write-Host ""
@@ -187,7 +250,8 @@ steps:
         
         Write-Host "✓ Application Gateway deployment verified successfully"
         Write-Host ""
-        Write-Host "🎉 SUCCESS! Grafana is now accessible at: http://$customDomain"
+        Write-Host "🎉 SUCCESS! Grafana is now accessible at: https://$customDomain"
+        Write-Host "   (HTTPS only - HTTP disabled)"
         Write-Host ""
         Write-Host "Note: Backend health probes may take an additional 2-5 minutes to show as healthy"
         Write-Host "You can check status with:"

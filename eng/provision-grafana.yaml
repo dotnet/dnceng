@@ -79,6 +79,7 @@ jobs:
 
   - task: AzureResourceManagerTemplateDeployment@3
     displayName: 'Deploy Grafana Workspace'
+    name: DeployGrafana
     inputs:
       deploymentScope: 'Resource Group'
       azureResourceManagerConnection: '${{ parameters.ServiceConnectionName }}'
@@ -91,6 +92,17 @@ jobs:
       deploymentMode: 'Incremental'
       deploymentName: 'grafana-${{ parameters.DeploymentEnvironment }}-$(Build.BuildNumber)'
       deploymentOutputs: 'grafanaOutputs'
+
+  - task: PowerShell@2
+    displayName: 'Export Grafana Identity for App Gateway'
+    name: ExportIdentity
+    inputs:
+      targetType: 'inline'
+      script: |
+        $outputs = '$(grafanaOutputs)' | ConvertFrom-Json
+        $identityId = $outputs.grafanaUserAssignedIdentityId.value
+        Write-Host "Grafana User-Assigned Identity ID: $identityId"
+        Write-Host "##vso[task.setvariable variable=GrafanaIdentityId;isOutput=true]$identityId"
 
   - task: AzureCLI@2
     displayName: 'Install Azure Managed Grafana Extension'
