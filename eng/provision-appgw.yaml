@@ -64,8 +64,8 @@ steps:
       scriptLocation: 'filePath'
       scriptPath: 'eng/generate-appgw-cert.ps1'
       arguments: >-
-        -DnsName "dnceng-managed-grafana${{ eq(parameters.Environment, 'Staging') == true && '-staging' || '' }}.${{ parameters.Location }}.cloudapp.azure.com"
-        -KeyVaultName "${{ eq(parameters.Environment, 'Production') == true && 'dnceng-amg-prod-kv' || 'dnceng-amg-int-kv' }}"
+        -DnsName "dnceng-managed-grafana${{ if(eq(parameters.Environment, 'Staging'), '-staging', '') }}.${{ parameters.Location }}.cloudapp.azure.com"
+        -KeyVaultName "${{ if(eq(parameters.Environment, 'Production'), 'dnceng-amg-prod-kv', 'dnceng-amg-int-kv') }}"
         -ResourceGroupName "${{ parameters.ResourceGroupName }}"
         -Location "${{ parameters.Location }}"
 
