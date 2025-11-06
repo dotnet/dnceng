@@ -78,6 +78,7 @@ resource grafanaKeyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
 
 // Define Key Vault role IDs
 var keyVaultSecretsOfficerRoleId = 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7'
+var keyVaultCertificatesOfficerRoleId = 'a4417e6f-fecd-4de8-b567-7b0420556985'
 var readerRoleId = 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
 var keyVaultCertificateUserRoleId = 'db79e9a7-68ee-4b58-9aeb-b90e7c24fcba'
 var keyVaultCryptoUserRoleId = '12338af0-0e69-4776-bea7-57ae8d297424'
@@ -113,6 +114,17 @@ resource grafanaKeyVaultCertificateUserRole 'Microsoft.Authorization/roleAssignm
   scope: grafanaKeyVault
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultCertificateUserRoleId)
+    principalId: grafanaUserAssignedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Grant Key Vault Certificates Officer role to Grafana managed identity
+resource grafanaKeyVaultCertificatesOfficerRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(grafanaKeyVault.id, grafanaUserAssignedIdentity.id, keyVaultCertificatesOfficerRoleId)
+  scope: grafanaKeyVault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultCertificatesOfficerRoleId)
     principalId: grafanaUserAssignedIdentity.properties.principalId
     principalType: 'ServicePrincipal'
   }
