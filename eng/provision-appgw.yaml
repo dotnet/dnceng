@@ -63,11 +63,18 @@ steps:
       scriptType: 'pscore'
       scriptLocation: 'filePath'
       scriptPath: 'eng/generate-appgw-cert.ps1'
-      arguments: >-
-        -DnsName "dnceng-managed-grafana${{ if(eq(parameters.Environment, 'Staging'), '-staging', '') }}.${{ parameters.Location }}.cloudapp.azure.com"
-        -KeyVaultName "${{ if(eq(parameters.Environment, 'Production'), 'dnceng-amg-prod-kv', 'dnceng-amg-int-kv') }}"
-        -ResourceGroupName "${{ parameters.ResourceGroupName }}"
-        -Location "${{ parameters.Location }}"
+      ${{ if eq(parameters.Environment, 'Staging') }}:
+        arguments: >-
+          -DnsName "dnceng-managed-grafana-staging.${{ parameters.Location }}.cloudapp.azure.com"
+          -KeyVaultName "dnceng-amg-int-kv"
+          -ResourceGroupName "${{ parameters.ResourceGroupName }}"
+          -Location "${{ parameters.Location }}"
+      ${{ if eq(parameters.Environment, 'Production') }}:
+        arguments: >-
+          -DnsName "dnceng-managed-grafana.${{ parameters.Location }}.cloudapp.azure.com"
+          -KeyVaultName "dnceng-amg-prod-kv"
+          -ResourceGroupName "${{ parameters.ResourceGroupName }}"
+          -Location "${{ parameters.Location }}"
 
   - task: AzureResourceManagerTemplateDeployment@3
     displayName: 'Deploy Application Gateway for Grafana'
