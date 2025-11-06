@@ -61,7 +61,7 @@ steps:
     inputs:
       azureSubscription: ${{ parameters.ServiceConnection }}
       scriptType: 'pscore'
-      scriptLocation: 'filePath'
+      scriptLocation: 'scriptPath'
       scriptPath: 'eng/generate-appgw-cert.ps1'
       ${{ if eq(parameters.Environment, 'Staging') }}:
         arguments: >-
