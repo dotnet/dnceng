@@ -160,19 +160,38 @@ steps:
         Write-Host "Application Gateway Identity: $appGwIdentity"
         Write-Host "Key Vault: $kvName"
         
-        # Grant Get permission on secrets
-        az keyvault set-policy `
-          --name $kvName `
-          --object-id $appGwIdentity `
-          --secret-permissions get `
-          --output none
+        # Get the Key Vault resource ID
+        $rgName = "${{ parameters.ResourceGroupName }}"
+        $kvId = az keyvault show --name $kvName --resource-group $rgName --query "id" --output tsv
         
-        if ($LASTEXITCODE -ne 0) {
-          Write-Error "Failed to grant Key Vault access"
-          exit 1
+        Write-Host "Key Vault ID: $kvId"
+        
+        # Check if role assignment already exists
+        $existingAssignment = az role assignment list `
+          --assignee $appGwIdentity `
+          --scope $kvId `
+          --role "Key Vault Secrets User" `
+          --query "[0].id" `
+          --output tsv
+        
+        if ($existingAssignment) {
+          Write-Host "✓ Application Gateway already has Key Vault Secrets User role"
+        } else {
+          Write-Host "Granting Key Vault Secrets User role (RBAC)..."
+          az role assignment create `
+            --role "Key Vault Secrets User" `
+            --assignee $appGwIdentity `
+            --scope $kvId `
+            --output none
+          
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "✓ Application Gateway can now access certificates from Key Vault"
+          } else {
+            Write-Error "Failed to grant Key Vault access"
+            exit 1
+          }
         }
-        
-        Write-Host "✓ Application Gateway can now access certificates from Key Vault"
+
 
   - task: AzureCLI@2
     displayName: 'Display Custom Domain Information'
