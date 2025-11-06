@@ -163,6 +163,92 @@ public sealed class AzureDevOpsClient : IAzureDevOpsClient
         return JsonConvert.DeserializeObject<WorkItem>(json);
     }
 
+    public async Task<WorkItem?> CreateBuildFailureWorkItem(string project, string areaPath, string title, string description, string? assignee, string[] tags, CancellationToken cancellationToken)
+    {
+        Dictionary<string, string> fields = new Dictionary<string, string>();
+        fields.Add("System.Title", title);
+        fields.Add("System.Description", description);
+
+        if (!string.IsNullOrEmpty(assignee))
+        {
+            fields.Add("System.AssignedTo", assignee);
+        }
+
+        if (!string.IsNullOrEmpty(areaPath))
+        {
+            fields.Add("System.AreaPath", areaPath);
+        }
+
+        if (tags != null && tags.Length > 0)
+        {
+            fields.Add("System.Tags", string.Join("; ", tags));
+        }
+
+        string json = await CreateWorkItem(project, "Issue", fields, cancellationToken);
+        return JsonConvert.DeserializeObject<WorkItem>(json);
+    }
+
+    public async Task<WorkItem?> UpdateWorkItemComment(string project, int workItemId, string comment, CancellationToken cancellationToken)
+    {
+        StringBuilder builder = GetProjectApiRootBuilder(project);
+        builder.Append($"wit/workitems/{workItemId}/comments?api-version=7.1-preview.3");
+
+        JObject commentBody = new JObject();
+        commentBody["text"] = comment;
+        string body = JsonConvert.SerializeObject(commentBody);
+
+        string json = (await PostJsonResult(builder.ToString(), body, cancellationToken)).Body;
+        
+        // After adding comment, get the updated work item
+        return await GetWorkItemAsync(project, workItemId, cancellationToken);
+    }
+
+    public async Task<WorkItem[]?> QueryWorkItemsByTitle(string project, string titlePrefix, string areaPath, CancellationToken cancellationToken)
+    {
+        StringBuilder builder = GetProjectApiRootBuilder(project);
+        builder.Append($"wit/wiql?api-version=6.0");
+
+        string wiql = $@"SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject] = '{project}' AND [System.Title] CONTAINS '{titlePrefix}' AND [System.AreaPath] UNDER '{areaPath}' AND [System.State] <> 'Closed' AND [System.State] <> 'Resolved'";
+        
+        JObject query = new JObject();
+        query["query"] = wiql;
+        string body = JsonConvert.SerializeObject(query);
+
+        string json = (await PostJsonResult(builder.ToString(), body, cancellationToken)).Body;
+        JObject result = JObject.Parse(json);
+        JArray? workItems = result["workItems"] as JArray;
+        
+        if (workItems == null || workItems.Count == 0)
+        {
+            return Array.Empty<WorkItem>();
+        }
+
+        List<WorkItem> results = new List<WorkItem>();
+        foreach (JToken item in workItems)
+        {
+            int id = item["id"]?.Value<int>() ?? 0;
+            if (id > 0)
+            {
+                WorkItem? workItem = await GetWorkItemAsync(project, id, cancellationToken);
+                if (workItem != null)
+                {
+                    results.Add(workItem);
+                }
+            }
+        }
+
+        return results.ToArray();
+    }
+
+    private async Task<WorkItem?> GetWorkItemAsync(string project, int workItemId, CancellationToken cancellationToken)
+    {
+        StringBuilder builder = GetProjectApiRootBuilder(project);
+        builder.Append($"wit/workitems/{workItemId}?api-version=6.0");
+        
+        JsonResult jsonResult = await GetJsonResult(builder.ToString(), cancellationToken);
+        return JsonConvert.DeserializeObject<WorkItem>(jsonResult.Body);
+    }
+
     /// <summary>
     /// The method reads the logs as a stream, line by line and tries to match the regexes in order, one regex per line. 
     /// If the consecutive regexes match the lines, the last match is returned.
@@ -248,7 +334,7 @@ public sealed class AzureDevOpsClient : IAzureDevOpsClient
         builder.Append($"wit/workitems/${type}?api-version=6.0");
 
         List<JsonPatchDocument> patchDocuments = new List<JsonPatchDocument>();
-        foreach(var field in fields)
+        foreach(KeyValuePair<string, string> field in fields)
         {
             JsonPatchDocument patchDocument = new JsonPatchDocument()
             {
@@ -261,15 +347,19 @@ public sealed class AzureDevOpsClient : IAzureDevOpsClient
             patchDocuments.Add(patchDocument);
         }
 
-        JsonPatchDocument areaPath = new JsonPatchDocument()
+        // Add default area path only if not already specified in fields
+        if (!fields.ContainsKey("System.AreaPath"))
         {
-            From = null,
-            Op = "add",
-            Path = "/fields/System.AreaPath",
-            Value = "internal\\Dotnet-Core-Engineering"
-        };
+            JsonPatchDocument areaPath = new JsonPatchDocument()
+            {
+                From = null,
+                Op = "add",
+                Path = "/fields/System.AreaPath",
+                Value = "internal\\Dotnet-Core-Engineering"
+            };
 
-        patchDocuments.Add(areaPath);
+            patchDocuments.Add(areaPath);
+        }
 
         string body = JsonConvert.SerializeObject(patchDocuments);
 
