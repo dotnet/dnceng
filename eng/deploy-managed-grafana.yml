@@ -28,6 +28,8 @@ stages:
   displayName: 'Provision Application Gateway Custom Domain'
   dependsOn: ProvisionGrafana
   condition: and(succeeded(), eq(${{ parameters.EnableCustomDomain }}, true))
+  variables:
+    GrafanaIdentityId: $[ stageDependencies.ProvisionGrafana.ProvisionGrafana.outputs['ExportIdentity.GrafanaIdentityId'] ]
   jobs:
   - job: DeployApplicationGateway
     displayName: 'Deploy Azure Application Gateway'
@@ -42,3 +44,4 @@ stages:
         Environment: ${{ parameters.DeploymentEnvironment }}
         GrafanaWorkspaceName: ${{ parameters.GrafanaWorkspaceName }}
         Location: 'westus2'
+        GrafanaIdentityId: $(GrafanaIdentityId)

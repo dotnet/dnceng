@@ -188,7 +188,7 @@ Write-Host ""
 Write-Host "2. Use the unversioned secret ID in Bicep template" -ForegroundColor Yellow
 Write-Host "   - This allows automatic certificate rotation" -ForegroundColor White
 Write-Host ""
-Write-Host "⚠️  Self-signed certificate notes:" -ForegroundColor Yellow
+Write-Host "    Self-signed certificate notes:" -ForegroundColor Yellow
 Write-Host "   - Browser will show security warning" -ForegroundColor White
 Write-Host "   - Valid for 12 months" -ForegroundColor White
 Write-Host "   - For production, replace with CA-signed certificate" -ForegroundColor White
