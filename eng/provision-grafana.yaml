@@ -104,6 +104,22 @@ jobs:
         Write-Host "Grafana User-Assigned Identity ID: $identityId"
         Write-Host "##vso[task.setvariable variable=GrafanaIdentityId;isOutput=true]$identityId"
 
+  - task: PowerShell@2
+    displayName: 'Export Grafana Endpoint and Key Vault for Dashboard Publishing'
+    name: ExportGrafanaInfo
+    inputs:
+      targetType: 'inline'
+      script: |
+        $outputs = '$(grafanaOutputs)' | ConvertFrom-Json
+        $endpoint = $outputs.grafanaWorkspaceUrl.value
+        $keyVaultName = $outputs.keyVaultName.value
+        
+        Write-Host "Grafana Endpoint: $endpoint"
+        Write-Host "Key Vault Name: $keyVaultName"
+        
+        Write-Host "##vso[task.setvariable variable=GrafanaEndpoint;isOutput=true]$endpoint"
+        Write-Host "##vso[task.setvariable variable=KeyVaultName;isOutput=true]$keyVaultName"
+
   - task: AzureCLI@2
     displayName: 'Install Azure Managed Grafana Extension'
     inputs:

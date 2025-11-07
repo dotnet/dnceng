@@ -45,3 +45,92 @@ stages:
         GrafanaWorkspaceName: ${{ parameters.GrafanaWorkspaceName }}
         Location: 'westus2'
         GrafanaIdentityId: $(GrafanaIdentityId)
+
+- stage: PublishDashboards
+  displayName: 'Publish Grafana Dashboards'
+  dependsOn: ProvisionGrafana
+  variables:
+    GrafanaEndpoint: $[ stageDependencies.ProvisionGrafana.ProvisionGrafana.outputs['ExportGrafanaInfo.GrafanaEndpoint'] ]
+    KeyVaultName: $[ stageDependencies.ProvisionGrafana.ProvisionGrafana.outputs['ExportGrafanaInfo.KeyVaultName'] ]
+  jobs:
+  - job: PublishDashboards
+    displayName: 'Publish Dashboards to Azure Managed Grafana'
+    pool:
+      name: NetCore1ESPool-Internal
+      demands: ImageOverride -equals 1es-windows-2022
+    steps:
+    - task: UseDotNet@2
+      displayName: 'Install Correct .NET Version'
+      inputs:
+        useGlobalJson: true
+    
+    - script: dotnet publish --configuration Release $(Build.SourcesDirectory)\src\Monitoring\Sdk\Microsoft.DotNet.Monitoring.Sdk.csproj -f net8.0
+      displayName: 'Build Monitoring SDK'
+    
+    - task: AzureCLI@2
+      displayName: 'Publish Grafana Dashboards'
+      inputs:
+        azureSubscription: ${{ parameters.ServiceConnectionName }}
+        scriptType: 'pscore'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          Write-Host "=========================================="
+          Write-Host "Publishing Dashboards to Azure Managed Grafana"
+          Write-Host "=========================================="
+          Write-Host "Grafana Endpoint: $(GrafanaEndpoint)"
+          Write-Host "Key Vault: $(KeyVaultName)"
+          Write-Host "Environment: ${{ parameters.DeploymentEnvironment }}"
+          Write-Host ""
+          
+          # Get the API token from Key Vault
+          $tokenSecretName = "grafana-admin-api-key"
+          Write-Host "Retrieving API token from Key Vault..."
+          
+          $apiToken = az keyvault secret show --vault-name "$(KeyVaultName)" --name $tokenSecretName --query "value" --output tsv
+          
+          if (-not $apiToken) {
+            Write-Error "Failed to retrieve Grafana API token from Key Vault. Please ensure the secret '$tokenSecretName' exists in $(KeyVaultName)"
+            Write-Host ""
+            Write-Host "To create the token:"
+            Write-Host "1. Go to: $(GrafanaEndpoint)"
+            Write-Host "2. Navigate to: Administration > Service accounts"
+            Write-Host "3. Create a service account with Admin role"
+            Write-Host "4. Generate a token"
+            Write-Host "5. Store in Key Vault: az keyvault secret set --vault-name $(KeyVaultName) --name $tokenSecretName --value '<token>'"
+            exit 1
+          }
+          
+          Write-Host "✓ API token retrieved successfully"
+          Write-Host ""
+          Write-Host "Publishing dashboards using MSBuild SDK..."
+          Write-Host ""
+          
+          # Get service connection details for authentication
+          $servicePrincipalId = $env:servicePrincipalId
+          $servicePrincipalKey = $env:servicePrincipalKey
+          
+          # Publish using the same MSBuild SDK as self-hosted Grafana
+          dotnet build $(Build.SourcesDirectory)\src\Monitoring\Monitoring.ArcadeServices\Monitoring.ArcadeServices.proj `
+            --configuration Release `
+            -t:PublishGrafana `
+            -p:GrafanaAccessToken=$apiToken `
+            -p:GrafanaHost="$(GrafanaEndpoint)" `
+            -p:GrafanaKeyVaultName="$(KeyVaultName)" `
+            -p:GrafanaEnvironment="${{ parameters.DeploymentEnvironment }}" `
+            -p:ParametersFile=parameters.json `
+            -v:normal
+          
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to publish dashboards to Grafana"
+            exit 1
+          }
+          
+          Write-Host ""
+          Write-Host "=========================================="
+          Write-Host "✓ SUCCESS! Dashboards Published"
+          Write-Host "=========================================="
+          Write-Host ""
+          Write-Host "View your dashboards at:"
+          Write-Host "$(GrafanaEndpoint)/dashboards"
+          Write-Host ""
+
