@@ -29,6 +29,9 @@ param kvSkuFamily string = 'A'
 @description('The deployment environment (Staging or Production)')
 param environment string
 
+@description('The name of the Key Vault for Grafana secrets')
+param keyVaultName string
+
 @description('The tenant ID for Azure AD')
 param tenantId string = tenant().tenantId
 
@@ -48,7 +51,7 @@ resource grafanaUserAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIden
 
 // Azure Key Vault for Grafana secrets
 resource grafanaKeyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
-  name: environment == 'Production' ? 'dnceng-amg-prod-kv' : 'dnceng-amg-int-kv'
+  name: keyVaultName
   location: location
   tags: {
     Environment: environment

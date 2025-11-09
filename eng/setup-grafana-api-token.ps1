@@ -9,10 +9,14 @@
     The deployment environment (Staging or Production)
 .PARAMETER ApiToken
     The Grafana API token (if you already have one)
+.PARAMETER KeyVaultName
+    The name of the Key Vault to store the token in (optional, defaults to environment-specific vault)
 .EXAMPLE
     .\setup-grafana-api-token.ps1 -Environment Staging
 .EXAMPLE
     .\setup-grafana-api-token.ps1 -Environment Production -ApiToken "glsa_xxx"
+.EXAMPLE
+    .\setup-grafana-api-token.ps1 -Environment Staging -KeyVaultName "custom-keyvault"
 #>
 
 param(
@@ -21,7 +25,10 @@ param(
     [string]$Environment,
     
     [Parameter(Mandatory=$false)]
-    [string]$ApiToken
+    [string]$ApiToken,
+    
+    [Parameter(Mandatory=$true)]
+    [string]$KeyVaultName
 )
 
 Set-StrictMode -Version Latest
@@ -30,7 +37,7 @@ $ErrorActionPreference = "Stop"
 # Determine workspace and Key Vault names
 $workspaceName = if ($Environment -eq "Production") { "dnceng-grafana" } else { "dnceng-grafana-staging" }
 $resourceGroup = "monitoring-managed"
-$keyVaultName = if ($Environment -eq "Production") { "dnceng-amg-prod-kv" } else { "dnceng-amg-int-kv" }
+$keyVaultName = $KeyVaultName
 $tokenSecretName = "grafana-admin-api-key"
 
 Write-Host "=========================================="

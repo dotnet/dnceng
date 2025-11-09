@@ -33,6 +33,8 @@ extends:
             ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/production') }}:
               DeploymentEnvironment: Staging
               GrafanaWorkspaceName: dnceng-grafana-staging
+              GrafanaKeyVault: dnceng-amg-int-kv
             ${{ else }}:
               DeploymentEnvironment: Production
               GrafanaWorkspaceName: dnceng-grafana
+              GrafanaKeyVault: dnceng-amg-prod-kv

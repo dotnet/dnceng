@@ -12,6 +12,8 @@ parameters:
     default: 'westus2'
   - name: GrafanaIdentityId
     type: string
+  - name: GrafanaKeyVault
+    type: string
 
 steps:
   - task: AzureCLI@2
@@ -65,7 +67,7 @@ steps:
       inlineScript: |
         Write-Host "Granting pipeline service principal Key Vault Certificates Officer role..."
         
-        $kvName = if ("${{ parameters.Environment }}" -eq "Production") { "dnceng-amg-prod-kv" } else { "dnceng-amg-int-kv" }
+        $kvName = "${{ parameters.GrafanaKeyVault }}"
         $rgName = "${{ parameters.ResourceGroupName }}"
         
         # Get the current service principal object ID
@@ -115,13 +117,13 @@ steps:
       ${{ if eq(parameters.Environment, 'Staging') }}:
         arguments: >-
           -DnsName "dnceng-managed-grafana-staging.${{ parameters.Location }}.cloudapp.azure.com"
-          -KeyVaultName "dnceng-amg-int-kv"
+          -KeyVaultName "${{ parameters.GrafanaKeyVault }}"
           -ResourceGroupName "${{ parameters.ResourceGroupName }}"
           -Location "${{ parameters.Location }}"
       ${{ if eq(parameters.Environment, 'Production') }}:
         arguments: >-
           -DnsName "dnceng-managed-grafana.${{ parameters.Location }}.cloudapp.azure.com"
-          -KeyVaultName "dnceng-amg-prod-kv"
+          -KeyVaultName "${{ parameters.GrafanaKeyVault }}"
           -ResourceGroupName "${{ parameters.ResourceGroupName }}"
           -Location "${{ parameters.Location }}"
 
