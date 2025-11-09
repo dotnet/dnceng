@@ -130,6 +130,9 @@ if (-not $ApiToken) {
     
     # Create service account using Azure CLI
     Write-Host "Creating service account 'grafana-admin'..."
+    Write-Host "Workspace: $workspaceName"
+    Write-Host "Resource Group: $resourceGroup"
+    Write-Host ""
     
     $serviceAccountJson = az grafana service-account create `
         --name $workspaceName `
@@ -140,27 +143,50 @@ if (-not $ApiToken) {
     
     if ($LASTEXITCODE -ne 0) {
         # Check if it already exists
-        if ($serviceAccountJson -like "*already exists*" -or $serviceAccountJson -like "*409*") {
+        if ($serviceAccountJson -like "*already exists*" -or $serviceAccountJson -like "*409*" -or $serviceAccountJson -like "*Conflict*") {
             Write-Host "⚠ Service account 'grafana-admin' already exists, retrieving it..."
             
             $listJson = az grafana service-account list `
                 --name $workspaceName `
                 --resource-group $resourceGroup `
-                -o json
+                -o json 2>&1
+            
+            if ($LASTEXITCODE -ne 0) {
+                Write-Error "Failed to list service accounts:"
+                Write-Host $listJson
+                Write-Host ""
+                Write-Host "This may be a permissions issue. Ensure the pipeline has access to the Grafana workspace."
+                exit 1
+            }
             
             $serviceAccounts = $listJson | ConvertFrom-Json
             $serviceAccount = $serviceAccounts | Where-Object { $_.name -eq "grafana-admin" } | Select-Object -First 1
             
             if (-not $serviceAccount) {
                 Write-Error "Failed to find existing service account 'grafana-admin'"
+                Write-Host "Available service accounts:"
+                $serviceAccounts | ForEach-Object { Write-Host "  - $($_.name) (ID: $($_.id))" }
                 exit 1
             }
             
             $serviceAccountId = $serviceAccount.id
             Write-Host "✓ Found existing service account with ID: $serviceAccountId"
         } else {
-            Write-Error "Failed to create service account:"
+            Write-Error "Failed to create service account. Details:"
+            Write-Host ""
+            Write-Host "Error output:"
             Write-Host $serviceAccountJson
+            Write-Host ""
+            Write-Host "Common causes:"
+            Write-Host "  1. Insufficient permissions - Pipeline needs Grafana Admin role"
+            Write-Host "  2. Grafana workspace not ready - Wait a few minutes and retry"
+            Write-Host "  3. Network connectivity issues"
+            Write-Host ""
+            Write-Host "To grant Grafana Admin role to the pipeline service principal:"
+            Write-Host "  az role assignment create \"
+            Write-Host "    --role 'Grafana Admin' \"
+            Write-Host "    --assignee <pipeline-sp-id> \"
+            Write-Host "    --scope /subscriptions/<sub-id>/resourceGroups/$resourceGroup/providers/Microsoft.Dashboard/grafana/$workspaceName"
             exit 1
         }
     } else {

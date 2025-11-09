@@ -63,6 +63,55 @@ stages:
       demands: ImageOverride -equals 1es-windows-2022
     steps:
     - task: AzureCLI@2
+      displayName: 'Grant Pipeline Service Principal Grafana Admin Role'
+      inputs:
+        azureSubscription: ${{ parameters.ServiceConnectionName }}
+        scriptType: 'pscore'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          Write-Host "Granting pipeline service principal Grafana Admin role..."
+          
+          $workspaceName = "${{ parameters.GrafanaWorkspaceName }}"
+          $rgName = "monitoring-managed"
+          
+          # Get the current service principal object ID
+          $spObjectId = az account show --query "user.name" --output tsv
+          Write-Host "Service Principal Object ID: $spObjectId"
+          
+          # Get the Grafana workspace resource ID
+          $grafanaId = az grafana show --name $workspaceName --resource-group $rgName --query "id" --output tsv
+          Write-Host "Grafana Workspace: $workspaceName"
+          Write-Host "Grafana ID: $grafanaId"
+          
+          # Check if role assignment already exists
+          $existingAssignment = az role assignment list `
+            --assignee $spObjectId `
+            --scope $grafanaId `
+            --role "Grafana Admin" `
+            --query "[0].id" `
+            --output tsv
+          
+          if ($existingAssignment) {
+            Write-Host "✓ Pipeline service principal already has Grafana Admin role"
+          } else {
+            Write-Host "Granting Grafana Admin role..."
+            az role assignment create `
+              --role "Grafana Admin" `
+              --assignee $spObjectId `
+              --scope $grafanaId `
+              --output none
+            
+            if ($LASTEXITCODE -eq 0) {
+              Write-Host "✓ Pipeline service principal granted Grafana Admin role"
+              Write-Host "⏱  Waiting 15 seconds for role assignment to propagate..."
+              Start-Sleep -Seconds 15
+            } else {
+              Write-Error "Failed to grant Grafana Admin role"
+              exit 1
+            }
+          }
+
+    - task: AzureCLI@2
       displayName: 'Create or Validate Grafana API Token'
       inputs:
         azureSubscription: ${{ parameters.ServiceConnectionName }}
