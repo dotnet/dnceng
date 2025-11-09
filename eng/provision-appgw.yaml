@@ -108,6 +108,55 @@ steps:
         }
 
   - task: AzureCLI@2
+    displayName: 'Grant Pipeline Service Principal Key Vault Secrets Access'
+    inputs:
+      azureSubscription: ${{ parameters.ServiceConnection }}
+      scriptType: 'pscore'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        Write-Host "Granting pipeline service principal Key Vault Secrets Officer role..."
+        
+        $kvName = "${{ parameters.GrafanaKeyVault }}"
+        $rgName = "${{ parameters.ResourceGroupName }}"
+        
+        # Get the current service principal object ID
+        $spObjectId = az account show --query "user.name" --output tsv
+        Write-Host "Service Principal Object ID: $spObjectId"
+        
+        # Get the Key Vault resource ID
+        $kvId = az keyvault show --name $kvName --resource-group $rgName --query "id" --output tsv
+        Write-Host "Key Vault: $kvName"
+        Write-Host "Key Vault ID: $kvId"
+        
+        # Check if role assignment already exists
+        $existingAssignment = az role assignment list `
+          --assignee $spObjectId `
+          --scope $kvId `
+          --role "Key Vault Secrets Officer" `
+          --query "[0].id" `
+          --output tsv
+        
+        if ($existingAssignment) {
+          Write-Host "✓ Pipeline service principal already has Key Vault Secrets Officer role"
+        } else {
+          Write-Host "Granting Key Vault Secrets Officer role..."
+          az role assignment create `
+            --role "Key Vault Secrets Officer" `
+            --assignee $spObjectId `
+            --scope $kvId `
+            --output none
+          
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "✓ Pipeline service principal granted Key Vault Secrets Officer role"
+            Write-Host "⏱  Waiting 30 seconds for role assignment to propagate..."
+            Start-Sleep -Seconds 30
+          } else {
+            Write-Error "Failed to grant Key Vault Secrets Officer role"
+            exit 1
+          }
+        }
+
+  - task: AzureCLI@2
     displayName: 'Setup Certificate in Key Vault'
     inputs:
       azureSubscription: ${{ parameters.ServiceConnection }}

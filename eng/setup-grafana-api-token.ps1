@@ -10,13 +10,11 @@
 .PARAMETER ApiToken
     The Grafana API token (if you already have one)
 .PARAMETER KeyVaultName
-    The name of the Key Vault to store the token in (optional, defaults to environment-specific vault)
+    The name of the Key Vault to store the token in
 .EXAMPLE
-    .\setup-grafana-api-token.ps1 -Environment Staging
+    .\setup-grafana-api-token.ps1 -Environment Staging -KeyVaultName "dnceng-amg-int-kv"
 .EXAMPLE
-    .\setup-grafana-api-token.ps1 -Environment Production -ApiToken "glsa_xxx"
-.EXAMPLE
-    .\setup-grafana-api-token.ps1 -Environment Staging -KeyVaultName "custom-keyvault"
+    .\setup-grafana-api-token.ps1 -Environment Production -KeyVaultName "dnceng-amg-prod-kv" -ApiToken "glsa_xxx"
 #>
 
 param(
@@ -239,6 +237,7 @@ if (-not $ApiToken.StartsWith("glsa_")) {
 # Store in Key Vault
 Write-Host ""
 Write-Host "Storing API token in Key Vault..."
+Write-Host "  Key Vault: $keyVaultName"
 
 try {
     az keyvault secret set `
@@ -251,10 +250,11 @@ try {
 } catch {
     Write-Error "Failed to store token in Key Vault: $_"
     Write-Host ""
-    Write-Host "Make sure you have the following permissions on the Key Vault:"
-    Write-Host "- Key Vault Secrets Officer (or Contributor)"
+    Write-Host "Make sure the pipeline service principal has the following permissions on the Key Vault:"
+    Write-Host "- Key Vault Secrets Officer (RBAC role)"
     Write-Host ""
-    Write-Host "You can grant yourself access with:"
+    Write-Host "This should be automatically granted during the ProvisionApplicationGateway stage."
+    Write-Host "If running manually, you can grant yourself access with:"
     Write-Host "az role assignment create --role 'Key Vault Secrets Officer' \"
     Write-Host "  --assignee <your-user-principal-id> \"
     Write-Host "  --scope /subscriptions/<subscription-id>/resourceGroups/$resourceGroup/providers/Microsoft.KeyVault/vaults/$keyVaultName"
