@@ -152,6 +152,35 @@ stages:
           Write-Host "Environment: ${{ parameters.DeploymentEnvironment }}"
           Write-Host ""
           
+          # Verify Key Vault access before attempting to read the token
+          Write-Host "Verifying Key Vault access..."
+          $canAccess = $false
+          $maxRetries = 5
+          $retryCount = 0
+          
+          while (-not $canAccess -and $retryCount -lt $maxRetries) {
+            try {
+              az keyvault secret list --vault-name "${{ parameters.GrafanaKeyVault }}" --query "[0].name" --output tsv 2>&1 | Out-Null
+              if ($LASTEXITCODE -eq 0) {
+                $canAccess = $true
+                Write-Host "✓ Key Vault access verified"
+              } else {
+                throw "Access denied"
+              }
+            } catch {
+              $retryCount++
+              if ($retryCount -lt $maxRetries) {
+                Write-Host "⏱  Waiting for Key Vault permissions to propagate (attempt $retryCount/$maxRetries)..."
+                Start-Sleep -Seconds 30
+              } else {
+                Write-Error "Unable to access Key Vault after $maxRetries attempts"
+                Write-Error "The pipeline service principal may not have the 'Key Vault Secrets Officer' role."
+                Write-Error "This should be automatically granted in the ProvisionGrafana stage."
+                exit 1
+              }
+            }
+          }
+          
           # Get the API token from Key Vault
           $tokenSecretName = "grafana-admin-api-key"
           Write-Host "Retrieving API token from Key Vault..."
