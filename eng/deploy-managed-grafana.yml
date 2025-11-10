@@ -128,6 +128,10 @@ stages:
     pool:
       name: NetCore1ESPool-Internal
       demands: ImageOverride -equals 1es-windows-2022
+    variables:
+      # Allow scripts to access the System.AccessToken for Azure authentication
+      - name: System.AccessToken
+        value: $(System.AccessToken)
     steps:
     - task: UseDotNet@2
       displayName: 'Install Correct .NET Version'
@@ -143,6 +147,7 @@ stages:
         azureSubscription: ${{ parameters.ServiceConnectionName }}
         scriptType: 'pscore'
         scriptLocation: 'inlineScript'
+        addSpnToEnvironment: true
         inlineScript: |
           Write-Host "=========================================="
           Write-Host "Publishing Dashboards to Azure Managed Grafana"
@@ -150,6 +155,11 @@ stages:
           Write-Host "Grafana Endpoint: $(GrafanaEndpoint)"
           Write-Host "Key Vault: ${{ parameters.GrafanaKeyVault }}"
           Write-Host "Environment: ${{ parameters.DeploymentEnvironment }}"
+          Write-Host ""
+          
+          # Get service principal client ID from environment variable set by Azure CLI task
+          $clientId = $env:servicePrincipalId
+          Write-Host "Service Principal Client ID: $clientId"
           Write-Host ""
           
           # Verify Key Vault access before attempting to read the token
@@ -199,6 +209,14 @@ stages:
           Write-Host "Publishing dashboards using MSBuild SDK..."
           Write-Host ""
           
+          # Get Azure DevOps service connection details for Key Vault authentication
+          $serviceConnectionId = "${{ parameters.ServiceConnectionName }}"
+          $systemAccessToken = "$(System.AccessToken)"
+          
+          # The ClientId is the service principal application (client) ID
+          # This comes from the service connection
+          Write-Host "Service Connection: $serviceConnectionId"
+          
           # Publish using the same MSBuild SDK as self-hosted Grafana
           dotnet build $(Build.SourcesDirectory)\src\Monitoring\Monitoring.ArcadeServices\Monitoring.ArcadeServices.proj `
             --configuration Release `
@@ -208,6 +226,9 @@ stages:
             -p:GrafanaKeyVaultName="${{ parameters.GrafanaKeyVault }}" `
             -p:GrafanaEnvironment="${{ parameters.DeploymentEnvironment }}" `
             -p:ParametersFile=parameters.json `
+            -p:ClientId="$clientId" `
+            -p:ServiceConnectionId="${{ parameters.ServiceConnectionName }}" `
+            -p:SystemAccessToken="$(System.AccessToken)" `
             -v:normal
           
           if ($LASTEXITCODE -ne 0) {
