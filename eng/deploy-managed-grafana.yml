@@ -1,6 +1,8 @@
 parameters:
 - name: ServiceConnectionName
   type: string
+- name: ServiceConnectionClientId
+  type: string
 - name: ServiceConnectionId
   type: string
 - name: DeploymentEnvironment
@@ -159,11 +161,6 @@ stages:
           Write-Host "Environment: ${{ parameters.DeploymentEnvironment }}"
           Write-Host ""
           
-          # Get service principal client ID from environment variable set by Azure CLI task
-          $clientId = $env:servicePrincipalId
-          Write-Host "Service Principal Client ID: $clientId"
-          Write-Host ""
-          
           # Verify Key Vault access before attempting to read the token
           Write-Host "Verifying Key Vault access..."
           $canAccess = $false
@@ -211,10 +208,6 @@ stages:
           Write-Host "Publishing dashboards using MSBuild SDK..."
           Write-Host ""
           
-          # Get Azure DevOps service connection details for Key Vault authentication
-          $serviceConnectionId = "${{ parameters.ServiceConnectionId }}"
-          $systemAccessToken = "$(System.AccessToken)"
-          
           # The ClientId is the service principal application (client) ID
           # This comes from the service connection
           Write-Host "Service Connection: ${{ parameters.ServiceConnectionName }}"
@@ -229,9 +222,9 @@ stages:
             -p:GrafanaKeyVaultName="${{ parameters.GrafanaKeyVault }}" `
             -p:GrafanaEnvironment="${{ parameters.DeploymentEnvironment }}" `
             -p:ParametersFile=parameters.json `
-            -p:ClientId="$clientId" `
-            -p:ServiceConnectionId="$serviceConnectionId" `
-            -p:SystemAccessToken="$systemAccessToken" `
+            -p:ClientId="${{ parameters.ServiceConnectionClientId }}" `
+            -p:ServiceConnectionId="${{ parameters.ServiceConnectionId }}" `
+            -p:SystemAccessToken="$(System.AccessToken)" `
             -v:normal
           
           if ($LASTEXITCODE -ne 0) {
