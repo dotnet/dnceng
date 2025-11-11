@@ -208,11 +208,6 @@ stages:
           Write-Host "Publishing dashboards using MSBuild SDK..."
           Write-Host ""
           
-          # The ClientId is the service principal application (client) ID
-          # This comes from the service connection
-          Write-Host "Service Connection: ${{ parameters.ServiceConnectionName }}"
-          Write-Host "Service Connection ID: $serviceConnectionId"
-          
           # Publish using the same MSBuild SDK as self-hosted Grafana
           dotnet build $(Build.SourcesDirectory)\src\Monitoring\Monitoring.ArcadeServices\Monitoring.ArcadeServices.proj `
             --configuration Release `
