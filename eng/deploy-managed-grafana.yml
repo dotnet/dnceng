@@ -1,6 +1,8 @@
 parameters:
 - name: ServiceConnectionName
   type: string
+- name: ServiceConnectionId
+  type: string
 - name: DeploymentEnvironment
   type: string
 - name: GrafanaWorkspaceName
@@ -210,12 +212,13 @@ stages:
           Write-Host ""
           
           # Get Azure DevOps service connection details for Key Vault authentication
-          $serviceConnectionId = "${{ parameters.ServiceConnectionName }}"
+          $serviceConnectionId = "${{ parameters.ServiceConnectionId }}"
           $systemAccessToken = "$(System.AccessToken)"
           
           # The ClientId is the service principal application (client) ID
           # This comes from the service connection
-          Write-Host "Service Connection: $serviceConnectionId"
+          Write-Host "Service Connection: ${{ parameters.ServiceConnectionName }}"
+          Write-Host "Service Connection ID: $serviceConnectionId"
           
           # Publish using the same MSBuild SDK as self-hosted Grafana
           dotnet build $(Build.SourcesDirectory)\src\Monitoring\Monitoring.ArcadeServices\Monitoring.ArcadeServices.proj `
@@ -227,8 +230,8 @@ stages:
             -p:GrafanaEnvironment="${{ parameters.DeploymentEnvironment }}" `
             -p:ParametersFile=parameters.json `
             -p:ClientId="$clientId" `
-            -p:ServiceConnectionId="${{ parameters.ServiceConnectionName }}" `
-            -p:SystemAccessToken="$(System.AccessToken)" `
+            -p:ServiceConnectionId="$serviceConnectionId" `
+            -p:SystemAccessToken="$systemAccessToken" `
             -v:normal
           
           if ($LASTEXITCODE -ne 0) {
