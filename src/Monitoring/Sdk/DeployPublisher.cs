@@ -62,7 +62,10 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
     {
         await PostDatasourcesAsync().ConfigureAwait(false);
 
-        await PostNotificationsAsync().ConfigureAwait(false);
+        // Skip notifications for Azure Managed Grafana - it uses Grafana Unified Alerting
+        // which has different APIs (/api/v1/provisioning/contact-points)
+        // TODO: Implement unified alerting support
+        // await PostNotificationsAsync().ConfigureAwait(false);
 
         await PostDashboardsAsync().ConfigureAwait(false);
     }
