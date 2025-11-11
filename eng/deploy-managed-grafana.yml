@@ -163,9 +163,11 @@ stages:
           
           # Verify Key Vault access before attempting to read the token
           Write-Host "Verifying Key Vault access..."
+          Write-Host "ℹ️  Note: Azure RBAC can take 5-10 minutes to propagate to Key Vault data plane"
           $canAccess = $false
           $maxRetries = 5
           $retryCount = 0
+          $waitSeconds = 45
           
           while (-not $canAccess -and $retryCount -lt $maxRetries) {
             try {
@@ -179,10 +181,10 @@ stages:
             } catch {
               $retryCount++
               if ($retryCount -lt $maxRetries) {
-                Write-Host "⏱  Waiting for Key Vault permissions to propagate (attempt $retryCount/$maxRetries)..."
-                Start-Sleep -Seconds 30
+                Write-Host "⏱  Waiting for Key Vault permissions to propagate (attempt $retryCount/$maxRetries, waiting $waitSeconds seconds)..."
+                Start-Sleep -Seconds $waitSeconds
               } else {
-                Write-Error "Unable to access Key Vault after $maxRetries attempts"
+                Write-Error "Unable to access Key Vault after $maxRetries attempts ($($maxRetries * $waitSeconds) seconds total)"
                 Write-Error "The pipeline service principal may not have the 'Key Vault Secrets Officer' role."
                 Write-Error "This should be automatically granted in the ProvisionGrafana stage."
                 exit 1

@@ -164,41 +164,15 @@ jobs:
           
           if ($LASTEXITCODE -eq 0) {
             Write-Host "✓ Pipeline service principal granted Key Vault Secrets Officer role"
-            Write-Host "⏱  Waiting 60 seconds for role assignment to propagate..."
-            Start-Sleep -Seconds 60
           } else {
             Write-Error "Failed to grant Key Vault Secrets Officer role"
             exit 1
           }
         }
         
-        # Verify the permission by attempting to list secrets
         Write-Host ""
-        Write-Host "Verifying Key Vault access..."
-        $canAccess = $false
-        $maxRetries = 3
-        $retryCount = 0
-        
-        while (-not $canAccess -and $retryCount -lt $maxRetries) {
-          try {
-            az keyvault secret list --vault-name $kvName --query "[0].name" --output tsv 2>&1 | Out-Null
-            if ($LASTEXITCODE -eq 0) {
-              $canAccess = $true
-              Write-Host "✓ Key Vault access verified successfully"
-            } else {
-              throw "Access denied"
-            }
-          } catch {
-            $retryCount++
-            if ($retryCount -lt $maxRetries) {
-              Write-Host "⏱  Waiting for permissions to propagate (attempt $retryCount/$maxRetries)..."
-              Start-Sleep -Seconds 30
-            } else {
-              Write-Warning "Unable to verify Key Vault access after $maxRetries attempts"
-              Write-Host "Continuing anyway - permissions may still propagate..."
-            }
-          }
-        }
+        Write-Host "ℹ️  Note: Azure RBAC permissions can take 5-10 minutes to propagate to Key Vault data plane"
+        Write-Host "ℹ️  The PublishDashboards stage has retry logic to handle propagation delays"
 
   - task: AzureCLI@2
     displayName: 'Install Azure Managed Grafana Extension'
