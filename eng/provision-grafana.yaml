@@ -175,6 +175,115 @@ jobs:
         Write-Host "ℹ️  The PublishDashboards stage has retry logic to handle propagation delays"
 
   - task: AzureCLI@2
+    displayName: 'Grant Grafana Identity Monitoring Reader Access'
+    inputs:
+      azureSubscription: '${{ parameters.ServiceConnectionName }}'
+      scriptType: 'pscore'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        Write-Host "=========================================="
+        Write-Host "Granting Monitoring Reader to Grafana Identity"
+        Write-Host "=========================================="
+        Write-Host ""
+        
+        $workspaceName = "${{ parameters.GrafanaWorkspaceName }}"
+        $rgName = "${{ parameters.GrafanaResourceGroup }}"
+        $environment = "${{ parameters.DeploymentEnvironment }}"
+        
+        # Get the user-assigned managed identity (name matches Bicep template)
+        $managedIdentityName = if ($environment -eq 'Production') { 'dnceng-managed-grafana' } else { 'dnceng-managed-grafana-staging' }
+        Write-Host "Retrieving managed identity: $managedIdentityName"
+        
+        $identity = az identity show --name $managedIdentityName --resource-group $rgName --query '{principalId:principalId, clientId:clientId}' --output json | ConvertFrom-Json
+        
+        if (-not $identity) {
+          Write-Error "Failed to retrieve managed identity: $managedIdentityName"
+          exit 1
+        }
+        
+        $principalId = $identity.principalId
+        $clientId = $identity.clientId
+        
+        Write-Host "✓ Managed Identity: $managedIdentityName"
+        Write-Host "✓ Principal ID: $principalId"
+        Write-Host "✓ Client ID: $clientId"
+        Write-Host ""
+        
+        # Define common subscriptions shared across all environments
+        $commonSubscriptions = @(
+          @{name="HelixStaging"; id="cab65fc3-d077-467d-931f-3932eabf36d3"},
+          @{name="dnceng-internaltooling"; id="84a65c9a-787d-45da-b10a-3a1cefce8060"},
+          @{name="Dotnet Engineering services"; id="a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1"},
+          @{name="Helix"; id="68672ab8-de0c-40f1-8d1b-ffb20bd62c0f"}
+        )
+        
+        # Add environment-specific subscriptions
+        $subscriptions = @()
+        if ($environment -eq "Staging") {
+          $subscriptions += @{name=".NET Product Construction Services - Staging"; id="e6b5f9f5-0ca4-4351-879b-014d78400ec2"}
+        } else {
+          $subscriptions += @{name=".NET Product Construction Services"; id="fbd6122a-9ad3-42e4-976e-bccb82486856"}
+        }
+        $subscriptions += $commonSubscriptions
+        
+        Write-Host "Granting Monitoring Reader role on $($subscriptions.Count) subscriptions..."
+        Write-Host ""
+        
+        $monitoringReaderRoleId = "43d0d8ad-25c7-4714-9337-8ba259a9fe05"
+        $successCount = 0
+        $failCount = 0
+        
+        foreach ($sub in $subscriptions) {
+          Write-Host "Processing: $($sub.name) ($($sub.id))"
+          
+          # Check if role assignment already exists
+          $existingAssignment = az role assignment list `
+            --assignee $principalId `
+            --role "Monitoring Reader" `
+            --scope "/subscriptions/$($sub.id)" `
+            --query "[0].id" `
+            --output tsv 2>$null
+          
+          if ($existingAssignment) {
+            Write-Host "  ✓ Role assignment already exists"
+            $successCount++
+          } else {
+            Write-Host "  Creating role assignment..."
+            
+            $result = az role assignment create `
+              --role "Monitoring Reader" `
+              --assignee-object-id $principalId `
+              --assignee-principal-type ServicePrincipal `
+              --scope "/subscriptions/$($sub.id)" `
+              --output none 2>&1
+            
+            if ($LASTEXITCODE -eq 0) {
+              Write-Host "  ✓ Role assignment created successfully"
+              $successCount++
+            } else {
+              Write-Warning "  ⚠ Failed to create role assignment"
+              Write-Warning "  Error: $result"
+              $failCount++
+            }
+          }
+          Write-Host ""
+        }
+        
+        Write-Host "=========================================="
+        Write-Host "Role Assignment Summary"
+        Write-Host "=========================================="
+        Write-Host "✓ Successful: $successCount / $($subscriptions.Count)"
+        if ($failCount -gt 0) {
+          Write-Host "⚠ Failed: $failCount / $($subscriptions.Count)"
+          Write-Host ""
+          Write-Host "Note: Some failures may be due to lack of permissions on target subscriptions."
+          Write-Host "These role assignments may need to be granted manually by subscription owners."
+        }
+        Write-Host ""
+        Write-Host "ℹ️  RBAC propagation can take 2-5 minutes for Azure Monitor queries to work"
+        Write-Host ""
+
+  - task: AzureCLI@2
     displayName: 'Install Azure Managed Grafana Extension'
     inputs:
       azureSubscription: '${{ parameters.ServiceConnectionName }}'
