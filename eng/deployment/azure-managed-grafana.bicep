@@ -90,6 +90,56 @@ var keyVaultSecretsUserRoleId = '4633458b-17de-408a-b874-0445c86b69e6'
 // Define Grafana Admin role ID
 var grafanaAdminRoleId = '22926164-76b3-42b3-bc55-97df8dab3e41'
 
+// Subscription IDs for Azure Monitor access
+var stagingSubscriptions = [
+  {
+    name: 'DotNetProductConstructionServicesStaging'
+    id: 'e6b5f9f5-0ca4-4351-879b-014d78400ec2'
+  }
+  {
+    name: 'HelixStaging'
+    id: 'cab65fc3-d077-467d-931f-3932eabf36d3'
+  }
+  {
+    name: 'DncEngInternalTooling'
+    id: '84a65c9a-787d-45da-b10a-3a1cefce8060'
+  }
+  {
+    name: 'DotnetEngineeringServices'
+    id: 'a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1'
+  }
+  {
+    name: 'Helix'
+    id: '68672ab8-de0c-40f1-8d1b-ffb20bd62c0f'
+  }
+]
+
+var productionSubscriptions = [
+  {
+    name: 'DotNetProductConstructionServices'
+    id: 'fbd6122a-9ad3-42e4-976e-bccb82486856'
+  }
+  {
+    name: 'HelixStaging'
+    id: 'cab65fc3-d077-467d-931f-3932eabf36d3'
+  }
+  {
+    name: 'DncEngInternalTooling'
+    id: '84a65c9a-787d-45da-b10a-3a1cefce8060'
+  }
+  {
+    name: 'DotnetEngineeringServices'
+    id: 'a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1'
+  }
+  {
+    name: 'Helix'
+    id: '68672ab8-de0c-40f1-8d1b-ffb20bd62c0f'
+  }
+]
+
+// Select subscription list based on environment
+var monitoringSubscriptions = environment == 'Production' ? productionSubscriptions : stagingSubscriptions
+
 resource grafanaKeyVaultSecretsOfficerRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(grafanaKeyVault.id, grafanaUserAssignedIdentity.id, keyVaultSecretsOfficerRoleId)
   scope: grafanaKeyVault
@@ -179,6 +229,18 @@ resource grafanaWorkspace 'Microsoft.Dashboard/grafana@2023-09-01' = {
     }
   }
 }
+
+// Grant Monitoring Reader role to Grafana managed identity on multiple subscriptions
+// This allows Azure Monitor datasources to query metrics and logs
+module grafanaMonitoringReaderRoles 'grafana-monitoring-reader.bicep' = [for sub in monitoringSubscriptions: {
+  name: 'monitoringReader-${sub.name}-${environment}'
+  scope: subscription(sub.id)
+  params: {
+    grafanaPrincipalId: grafanaUserAssignedIdentity.properties.principalId
+    environment: environment
+    identityResourceId: grafanaUserAssignedIdentity.id
+  }
+}]
 
 // Grant Grafana Admin role to .NET Engineering Services group
 resource dotnetEngServicesGrafanaAdminRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
