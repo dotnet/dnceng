@@ -62,10 +62,8 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
     {
         await PostDatasourcesAsync().ConfigureAwait(false);
 
-        // Skip notifications for Azure Managed Grafana - it uses Grafana Unified Alerting
-        // which has different APIs (/api/v1/provisioning/contact-points)
-        // TODO: Implement unified alerting support
-        // await PostNotificationsAsync().ConfigureAwait(false);
+        // Post contact points for unified alerting (Azure Managed Grafana)
+        await PostContactPointsAsync().ConfigureAwait(false);
 
         await PostDashboardsAsync().ConfigureAwait(false);
     }
@@ -115,6 +113,35 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
             await ReplaceVaultAsync(data);
 
             await GrafanaClient.CreateNotificationChannelAsync(data).ConfigureAwait(false);
+        }
+    }
+
+    private async Task PostContactPointsAsync()
+    {
+        // Check if notification directory exists (optional feature)
+        if (!Directory.Exists(EnvironmentNotificationDirectory))
+        {
+            Log.LogMessage(MessageImportance.Low, "No notification directory found at {0}, skipping contact points", EnvironmentNotificationDirectory);
+            return;
+        }
+
+        foreach (string notificationPath in Directory.GetFiles(EnvironmentNotificationDirectory,
+                     "*" + NotificationExtension,
+                     SearchOption.AllDirectories))
+        {
+            JObject data;
+            using (var sr = new StreamReader(notificationPath))
+            using (var jr = new JsonTextReader(sr))
+            {
+                data = await JObject.LoadAsync(jr).ConfigureAwait(false);
+            }
+
+            string name = data.Value<string>("name");
+            Log.LogMessage(MessageImportance.Normal, "Posting contact point {0}...", name);
+
+            await ReplaceVaultAsync(data);
+
+            await GrafanaClient.CreateContactPointAsync(data).ConfigureAwait(false);
         }
     }
 

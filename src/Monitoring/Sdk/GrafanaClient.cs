@@ -185,6 +185,31 @@ public sealed class GrafanaClient : IDisposable
         );
     }
 
+    public async Task CreateContactPointAsync(JObject contactPoint)
+    {
+        string name = contactPoint.Value<string>("name");
+        
+        // Check if contact point already exists by name
+        JObject existing = await GetContactPointAsync(name).ConfigureAwait(false);
+        
+        if (existing != null)
+        {
+            // Update existing contact point using PUT
+            var uri = new Uri(new Uri(_baseUrl), $"/api/v1/provisioning/contact-points/{Uri.EscapeDataString(name)}");
+            
+            // Preserve the existing uid
+            contactPoint["uid"] = existing.Value<string>("uid");
+            
+            await SendObjectAsync(contactPoint, uri, HttpMethod.Put).ConfigureAwait(false);
+        }
+        else
+        {
+            // Create new contact point using POST
+            var uri = new Uri(new Uri(_baseUrl), "/api/v1/provisioning/contact-points");
+            await SendObjectAsync(contactPoint, uri, HttpMethod.Post).ConfigureAwait(false);
+        }
+    }
+
     private async Task<JObject> CreateOrUpdateAsync<TExternalId>(
         JObject data,
         TExternalId id,
@@ -308,6 +333,26 @@ public sealed class GrafanaClient : IDisposable
 
         using (HttpResponseMessage response = await _client.GetAsync(uri).ConfigureAwait(false))
         {
+            await response.EnsureSuccessWithContentAsync();
+
+            using (Stream stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+            using (var streamReader = new StreamReader(stream))
+            using (var jsonReader = new JsonTextReader(streamReader))
+            {
+                return await JObject.LoadAsync(jsonReader).ConfigureAwait(false);
+            }
+        }
+    }
+
+    public async Task<JObject> GetContactPointAsync(string name)
+    {
+        var uri = new Uri(new Uri(_baseUrl), $"/api/v1/provisioning/contact-points/{Uri.EscapeDataString(name)}");
+
+        using (HttpResponseMessage response = await _client.GetAsync(uri).ConfigureAwait(false))
+        {
+            if (response.StatusCode == HttpStatusCode.NotFound)
+                return null;
+
             await response.EnsureSuccessWithContentAsync();
 
             using (Stream stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
