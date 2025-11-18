@@ -1,0 +1,162 @@
+{
+  "uid": "helix-api-availability",
+  "title": "Helix API availability",
+  "condition": "C",
+  "data": [
+    {
+      "refId": "A",
+      "queryType": "Azure Monitor",
+      "datasourceUid": "F2XodEi7z",
+      "relativeTimeRange": {
+        "from": 86400,
+        "to": 0
+      },
+      "model": {
+        "azureMonitor": {
+          "aggregation": "Average",
+          "alias": "{{ availabilityresult/location }}",
+          "allowedTimeGrainsMs": [
+            60000,
+            300000,
+            900000,
+            1800000,
+            3600000,
+            21600000,
+            43200000,
+            86400000
+          ],
+          "dimensionFilter": "*",
+          "dimensionFilters": [
+            {
+              "dimension": "availabilityResult/name",
+              "filter": "Helix API",
+              "operator": "eq"
+            },
+            {
+              "dimension": "availabilityResult/location",
+              "filter": "*",
+              "operator": "eq"
+            }
+          ],
+          "metricDefinition": "microsoft.insights/components",
+          "metricName": "availabilityResults/availabilityPercentage",
+          "metricNamespace": "microsoft.insights/components",
+          "resources": [
+            {
+              "metricNamespace": "microsoft.insights/components",
+              "resourceGroup": "helixinfrarg",
+              "resourceName": "helix-prod",
+              "subscription": "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f"
+            }
+          ],
+          "timeGrain": "auto",
+          "top": "10"
+        },
+        "datasource": {
+          "type": "grafana-azure-monitor-datasource",
+          "uid": "F2XodEi7z"
+        },
+        "queryType": "Azure Monitor",
+        "refId": "A",
+        "subscription": "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+        "subscriptions": [
+          "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+          "cab65fc3-d077-467d-931f-3932eabf36d3"
+        ]        
+      }
+    },
+    {
+      "refId": "B",
+      "queryType": "",
+      "datasourceUid": "-100",
+      "model": {
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "A",
+                "30m",
+                "now"
+              ]
+            },
+            "type": "query"
+          }
+        ],
+        "datasource": {
+          "type": "__expr__",
+          "uid": "-100"
+        },
+        "expression": "A",
+        "reducer": "mean",
+        "refId": "B",
+        "type": "reduce"
+      },
+      "relativeTimeRange": {
+        "from": 1800,
+        "to": 0
+      }
+    },
+    {
+      "refId": "C",
+      "queryType": "",
+      "datasourceUid": "-100",
+      "model": {
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                99
+              ],
+              "type": "lt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "B"
+              ]
+            },
+            "type": "query"
+          }
+        ],
+        "datasource": {
+          "type": "__expr__",
+          "uid": "-100"
+        },
+        "expression": "B",
+        "refId": "C",
+        "type": "threshold"
+      }
+    }
+  ],
+  "noDataState": "KeepLast",
+  "execErrState": "KeepLast",
+  "for": "5m",
+  "frequency": "1m",
+  "annotations": {
+    "description": "Helix API availability alert!"
+  },
+  "labels": {
+    "NotificationId": "6179576701874a7abc440a574cf636d0"
+  },
+  "folderUID": "arcade-services",
+  "ruleGroup": "Helix Alerts",
+  "intervalMs": 900000,
+  "isPaused": false,
+  "notification_settings": {
+    "receiver": ".NET Status Alert",
+    "group_by": [
+      "alertname"
+    ],
+    "group_wait": "5m",
+    "repeat_interval": "4h"
+  }
+}

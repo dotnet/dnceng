@@ -364,6 +364,46 @@ public sealed class GrafanaClient : IDisposable
         }
     }
 
+    public async Task CreateAlertRuleAsync(JObject alertRule)
+    {
+        string uid = alertRule.Value<string>("uid");
+        
+        // Check if alert rule already exists
+        var getUri = new Uri(new Uri(_baseUrl), $"/api/v1/provisioning/alert-rules/{Uri.EscapeDataString(uid)}");
+        
+        using (HttpResponseMessage existCheck = await _client.GetAsync(getUri).ConfigureAwait(false))
+        {
+            if (existCheck.StatusCode == HttpStatusCode.NotFound)
+            {
+                // Create new alert rule
+                var createUri = new Uri(new Uri(_baseUrl), "/api/v1/provisioning/alert-rules");
+                await SendObjectAsync(alertRule, createUri, HttpMethod.Post).ConfigureAwait(false);
+            }
+            else
+            {
+                // Update existing alert rule
+                await existCheck.EnsureSuccessWithContentAsync();
+                
+                // Get existing version and provenance
+                using (Stream stream = await existCheck.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                using (var streamReader = new StreamReader(stream))
+                using (var jsonReader = new JsonTextReader(streamReader))
+                {
+                    JObject existing = await JObject.LoadAsync(jsonReader).ConfigureAwait(false);
+                    
+                    // Preserve id and updated timestamp
+                    if (existing.TryGetValue("id", out JToken idToken))
+                        alertRule["id"] = idToken;
+                    if (existing.TryGetValue("updated", out JToken updatedToken))
+                        alertRule["updated"] = updatedToken;
+                }
+                
+                var updateUri = new Uri(new Uri(_baseUrl), $"/api/v1/provisioning/alert-rules/{Uri.EscapeDataString(uid)}");
+                await SendObjectAsync(alertRule, updateUri, HttpMethod.Put).ConfigureAwait(false);
+            }
+        }
+    }
+
     public void Dispose()
     {
         _client?.Dispose();

@@ -52,6 +52,7 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
         
     private string EnvironmentDatasourceDirectory => Path.Combine(DatasourceDirectory, _environment);
     private string EnvironmentNotificationDirectory => Path.Combine(NotificationDirectory, _environment);
+    private string AlertRuleDirectory => Path.Combine(Path.GetDirectoryName(NotificationDirectory), "alertrules", _environment);
 
     public void Dispose()
     {
@@ -64,6 +65,9 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
 
         // Post contact points for unified alerting (Azure Managed Grafana)
         await PostContactPointsAsync().ConfigureAwait(false);
+
+        // Post alert rules for unified alerting (Azure Managed Grafana)
+        await PostAlertRulesAsync().ConfigureAwait(false);
 
         await PostDashboardsAsync().ConfigureAwait(false);
     }
@@ -142,6 +146,62 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
             await ReplaceVaultAsync(data);
 
             await GrafanaClient.CreateContactPointAsync(data).ConfigureAwait(false);
+        }
+    }
+
+    private async Task PostAlertRulesAsync()
+    {
+        // Check if alert rules directory exists (optional feature)
+        if (!Directory.Exists(AlertRuleDirectory))
+        {
+            Log.LogMessage(MessageImportance.Low, "No alert rules directory found at {0}, skipping alert rules", AlertRuleDirectory);
+            return;
+        }
+
+        Log.LogMessage(MessageImportance.High, "Loading parameters from: {0}", Path.GetFullPath(_parameterFile));
+        Log.LogMessage(MessageImportance.High, "Parameters file exists: {0}", File.Exists(_parameterFile));
+
+        // Load parameters for deparameterization
+        List<Parameter> parameters;
+        using (StreamReader sr = new StreamReader(_parameterFile))
+        using (JsonReader jr = new JsonTextReader(sr))
+        {
+            JsonSerializer jsonSerializer = new JsonSerializer();
+            parameters = jsonSerializer.Deserialize<List<Parameter>>(jr);
+        }
+
+        if (parameters == null || parameters.Count == 0)
+        {
+            Log.LogError("Failed to load parameters from {0}", _parameterFile);
+            return;
+        }
+
+        Log.LogMessage(MessageImportance.High, "Loaded {0} parameters from {1}", parameters.Count, _parameterFile);
+
+        foreach (string alertRulePath in Directory.GetFiles(AlertRuleDirectory,
+                     "*" + AlertRuleExtension,
+                     SearchOption.AllDirectories))
+        {
+            JObject data;
+            using (var sr = new StreamReader(alertRulePath))
+            using (var jr = new JsonTextReader(sr))
+            {
+                data = await JObject.LoadAsync(jr).ConfigureAwait(false);
+            }
+
+            string uid = data.Value<string>("uid");
+            string title = data.Value<string>("title");
+            Log.LogMessage(MessageImportance.Normal, "Posting alert rule {0} ({1})...", uid, title);
+
+            // Replace [parameter(...)] placeholders with environment-specific values
+            data = GrafanaSerialization.DeparameterizeDashboard(data, parameters, _environment);
+
+            // Log the final JSON for debugging
+            Log.LogMessage(MessageImportance.High, "Alert JSON after parameter replacement: {0}", data.ToString(Formatting.Indented));
+
+            await ReplaceVaultAsync(data);
+
+            await GrafanaClient.CreateAlertRuleAsync(data).ConfigureAwait(false);
         }
     }
 

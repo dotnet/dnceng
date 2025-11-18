@@ -1,0 +1,140 @@
+{
+  "uid": "pcs-container-job-execution-failures",
+  "title": "Container job execution failures alert",
+  "condition": "C",
+  "data": [
+    {
+      "refId": "A",
+      "queryType": "Azure Log Analytics",
+      "datasourceUid": "F2XodEi7z",
+      "relativeTimeRange": {
+        "from": 86400,
+        "to": 0
+      },
+      "model": {
+        "azureLogAnalytics": {
+          "dashboardTime": true,
+          "query": "ContainerAppSystemLogs_CL\r\n| where TimeGenerated > ago(14d)\r\n| where Log_s has_any (\"has exited with status Succeeded\", \"has exited with status Failed\")\r\n| summarize arg_max(TimeGenerated, Log_s) by JobName_s\r\n| where Log_s has \"has exited with status Failed\"\r\n| project TimeGenerated,JobName=JobName_s, FailedJob=1",
+          "resources": [
+            "[parameter(product-construction-service-workspace-resourcepath)]"
+          ],
+          "resultFormat": "time_series",
+          "workspace": "[parameter(product-construction-service-workspace-resourcepath)]"
+        },
+        "azureMonitor": {
+          "dimensionFilters": [],
+          "metricNamespace": "Microsoft.OperationalInsights/workspaces",
+          "region": "westus2",
+          "resources": [
+            {
+              "metricNamespace": "Microsoft.OperationalInsights/workspaces",
+              "region": "westus2",
+              "resourceGroup": "product-construction-service",
+              "resourceName": "[parameter(product-construction-service-workspace-resourcename)]",
+              "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
+            }
+          ],
+          "timeGrain": "auto"
+        },
+        "datasource": {
+          "type": "grafana-azure-monitor-datasource",
+          "uid": "F2XodEi7z"
+        },
+        "queryType": "Azure Log Analytics",
+        "refId": "A",
+        "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]",
+        "subscriptions": [
+          "fbd6122a-9ad3-42e4-976e-bccb82486856",
+          "e6b5f9f5-0ca4-4351-879b-014d78400ec2"
+        ]
+      }
+    },
+    {
+      "refId": "B",
+      "queryType": "",
+      "datasourceUid": "-100",
+      "model": {
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "A",
+                "5m",
+                "now"
+              ]
+            },
+            "type": "query"
+          }
+        ],
+        "datasource": {
+          "type": "__expr__",
+          "uid": "-100"
+        },
+        "expression": "A",
+        "reducer": "max",
+        "refId": "B",
+        "type": "reduce"
+      },
+      "relativeTimeRange": {
+        "from": 300,
+        "to": 0
+      }
+    },
+    {
+      "refId": "C",
+      "queryType": "",
+      "datasourceUid": "-100",
+      "model": {
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [0],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": ["B"]
+            },
+            "type": "query"
+          }
+        ],
+        "datasource": {
+          "type": "__expr__",
+          "uid": "-100"
+        },
+        "expression": "B",
+        "refId": "C",
+        "type": "threshold"
+      }
+    }
+  ],
+  "noDataState": "OK",
+  "execErrState": "KeepLast",
+  "for": "5m",
+  "frequency": "1m",
+  "annotations": {
+    "description": "[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1350/-Alert-PCS-container-job-execution-failing)\\n\\nPlease note that this alert will fire every 12 hours as the list of failed jobs can change"
+  },
+  "labels": {
+    "NotificationId": "0a5c68b0daf846ef83a66c6c70fd24ad"
+  },
+  "folderUID": "arcade-services",
+  "ruleGroup": "PCS Alerts",
+  "intervalMs": 900000,
+  "isPaused": false,
+  "notification_settings": {
+    "receiver": ".NET Status Alert (no image, 12h reminder)",
+    "group_by": ["alertname"],
+    "group_wait": "5m",
+    "repeat_interval": "12h"
+  }
+}
