@@ -11,9 +11,6 @@ parameters:
   type: string
 - name: GrafanaKeyVault
   type: string
-- name: EnableCustomDomain
-  type: boolean
-  default: true
 
 stages:
 - stage: ProvisionGrafana
@@ -34,7 +31,6 @@ stages:
 - stage: ProvisionApplicationGateway
   displayName: 'Provision Application Gateway Custom Domain'
   dependsOn: ProvisionGrafana
-  condition: and(succeeded(), eq(${{ parameters.EnableCustomDomain }}, true))
   variables:
     GrafanaIdentityId: $[ stageDependencies.ProvisionGrafana.ProvisionGrafana.outputs['ExportIdentity.GrafanaIdentityId'] ]
   jobs:
@@ -133,7 +129,6 @@ stages:
       name: NetCore1ESPool-Internal
       demands: ImageOverride -equals 1es-windows-2022
     variables:
-      # Allow scripts to access the System.AccessToken for Azure authentication
       - name: System.AccessToken
         value: $(System.AccessToken)
     steps:
@@ -157,19 +152,17 @@ stages:
           Write-Host "Publishing Dashboards to Azure Managed Grafana"
           Write-Host "=========================================="
           Write-Host "Grafana Endpoint: $(GrafanaEndpoint)"
-          Write-Host "Key Vault: ${{ parameters.GrafanaKeyVault }}"
           Write-Host "Environment: ${{ parameters.DeploymentEnvironment }}"
           Write-Host ""
           
           # Get the API token from Key Vault with retry logic for RBAC propagation
           $tokenSecretName = "grafana-admin-api-key"
           Write-Host "Retrieving API token from Key Vault..."
-          Write-Host "ℹ️  Note: Azure RBAC can take 5-10 minutes to propagate to Key Vault data plane"
           
           $apiToken = $null
-          $maxRetries = 12
+          $maxRetries = 5
           $retryCount = 0
-          $waitSeconds = 30
+          $waitSeconds = 60
           
           while (-not $apiToken -and $retryCount -lt $maxRetries) {
             try {
@@ -197,9 +190,6 @@ stages:
                 Write-Error "2. The SetupToken job failed to create the token"
                 Write-Error "3. The pipeline service principal doesn't have Key Vault Secrets Officer role"
                 Write-Error ""
-                Write-Error "Please check:"
-                Write-Error "- SetupToken job logs for errors"
-                Write-Error "- ProvisionGrafana stage logs for RBAC assignment status"
                 exit 1
               }
             }
