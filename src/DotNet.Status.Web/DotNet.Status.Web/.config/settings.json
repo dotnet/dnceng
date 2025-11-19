@@ -61,7 +61,7 @@
         {
           "Project": "internal",
           "DefinitionPath": "\\dotnet\\arcade\\arcade-official-ci",
-          "Branches": [ "main" ],
+          "Branches": [ "main", "release/*" ],
           "IssuesId": "dotnet-dnceng-first-responder"
         },
         {
