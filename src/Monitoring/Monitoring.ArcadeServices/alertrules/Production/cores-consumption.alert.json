@@ -1,0 +1,114 @@
+{
+    "uid": "cores-consumption",
+    "title": "Cores consumption",
+    "condition": "C",
+    "data": [
+        {
+            "refId": "A",
+            "queryType": "Azure Log Analytics",
+            "datasourceUid": "F2XodEi7z",
+            "relativeTimeRange": {
+                "from": 21600,
+                "to": 0
+            },
+            "model": {
+                "azureLogAnalytics": {
+                    "query": "let quotaPerSubscription = customEvents \n| where $__timeFilter(timestamp)\n| where name == \"AzureSubscriptionQuotaLimit\"\n| project \n    quota = toint(customMeasurements.quota),\n    subscription = tostring(customDimensions.subscriptionId),\n    timestamp\n| summarize arg_max(timestamp, quota) by subscription\n| project quota, subscription;\ncustomEvents\n| where $__timeFilter(timestamp)\n| where name == 'AzureResourceUsage'\n| where customDimensions.name == \"standardDv3Family\" or customDimensions.name == \"standardDAv4Family\"\n| project \n    cores = toreal(customMeasurements.current),\n    subscription = tostring(customDimensions.subscription),\n    timestamp\n| join kind=inner quotaPerSubscription on subscription\n| project ['limit'] = quota, cores, timestamp, subscription\n| extend ['percent of limit'] = iff(['limit'] == 0, 0.0, cores/['limit'] * 100)\n| summarize ['percent of limit'] = max(['percent of limit']) by bin(timestamp, $__interval), subscription\n| order by timestamp asc",
+                    "resource": "[parameter(dotnet-eng-appinsights-resourcepath)]",
+                    "resultFormat": "time_series",
+                    "workspace": "[parameter(default-workspace-resourcepath)]"
+                },
+                "azureMonitor": {
+                    "dimensionFilters": [],
+                    "timeGrain": "auto",
+                    "top": "10"
+                },
+                "datasource": {
+                    "type": "grafana-azure-monitor-datasource",
+                    "uid": "F2XodEi7z"
+                },
+                "queryType": "Azure Log Analytics",
+                "refId": "A",
+                "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]",
+                "subscriptions": [
+                    "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+                    "cab65fc3-d077-467d-931f-3932eabf36d3"
+                ]
+            }
+        },
+        {
+            "refId": "B",
+            "queryType": "",
+            "datasourceUid": "-100",
+            "model": {
+                "datasource": {
+                    "type": "__expr__",
+                    "uid": "-100"
+                },
+                "expression": "A",
+                "reducer": "mean",
+                "refId": "B",
+                "type": "reduce"
+            },
+            "relativeTimeRange": {
+                "from": 300,
+                "to": 0
+            }
+        },
+        {
+            "refId": "C",
+            "queryType": "",
+            "datasourceUid": "-100",
+            "model": {
+                "conditions": [
+                    {
+                        "evaluator": {
+                            "params": [
+                                95
+                            ],
+                            "type": "gt"
+                        },
+                        "operator": {
+                            "type": "and"
+                        },
+                        "query": {
+                            "params": [
+                                "B"
+                            ]
+                        },
+                        "type": "query"
+                    }
+                ],
+                "datasource": {
+                    "type": "__expr__",
+                    "uid": "-100"
+                },
+                "expression": "B",
+                "refId": "C",
+                "type": "threshold"
+            }
+        }
+    ],
+    "noDataState": "KeepLast",
+    "execErrState": "KeepLast",
+    "for": "5m",
+    "frequency": "1m",
+    "annotations": {
+        "description": "Cores consumption by Autoscaler is above 95% of limit"
+    },
+    "labels": {
+        "NotificationId": "66b2ef8da5c74a2fbbc7d6739f55e4e8"
+    },
+    "folderUID": "arcade-services",
+    "ruleGroup": "Azure Quota Alerts",
+    "intervalMs": 900000,
+    "isPaused": false,
+    "notification_settings": {
+        "receiver": ".NET Status Alert",
+        "group_by": [
+            "alertname"
+        ],
+        "group_wait": "5m",
+        "repeat_interval": "4h"
+    }
+}
