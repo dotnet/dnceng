@@ -192,16 +192,8 @@ resource dotnetEngServicesGrafanaAdminRole 'Microsoft.Authorization/roleAssignme
 }
 
 // Output the Grafana workspace details
-output grafanaWorkspaceId string = grafanaWorkspace.id
-output grafanaWorkspaceName string = grafanaWorkspace.name
 output grafanaWorkspaceUrl string = grafanaWorkspace.properties.endpoint
-output grafanaPrincipalId string = grafanaUserAssignedIdentity.properties.principalId
-output grafanaTenantId string = grafanaUserAssignedIdentity.properties.tenantId
-output grafanaWorkspaceLocation string = grafanaWorkspace.location
 output grafanaUserAssignedIdentityId string = grafanaUserAssignedIdentity.id
-output grafanaUserAssignedIdentityName string = grafanaUserAssignedIdentity.name
 
 // Output Key Vault details
-output keyVaultId string = grafanaKeyVault.id
 output keyVaultName string = grafanaKeyVault.name
-output keyVaultUri string = grafanaKeyVault.properties.vaultUri
