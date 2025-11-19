@@ -13,14 +13,14 @@ param grafanaEndpoint string
   'Standard_v2'
   'WAF_v2'
 ])
-param skuName string = 'Standard_v2'
+param skuName string = 'WAF_v2'
 
 @description('The SKU tier for Application Gateway')
 @allowed([
   'Standard_v2'
   'WAF_v2'
 ])
-param skuTier string = 'Standard_v2'
+param skuTier string = 'WAF_v2'
 
 @description('The capacity (instance count) for Application Gateway')
 @minValue(1)
@@ -50,6 +50,7 @@ var customDomainName = '${publicDnsLabel}.${regionShortName}.cloudapp.azure.com'
 var appGwName = environment == 'Production' ? 'dnceng-grafana-appgw' : 'dnceng-grafana-staging-appgw'
 var publicIpName = environment == 'Production' ? 'dnceng-grafana-pip' : 'dnceng-grafana-staging-pip'
 var vnetName = environment == 'Production' ? 'dnceng-grafana-vnet' : 'dnceng-grafana-staging-vnet'
+var wafPolicyName = environment == 'Production' ? 'dnceng-grafana-waf-policy' : 'dnceng-grafana-staging-waf-policy'
 var subnetName = 'appgw-subnet'
 var backendPoolName = 'grafana-backend-pool'
 var frontendPortName = 'https-port'
@@ -59,6 +60,34 @@ var listenerName = 'https-listener'
 var ruleName = 'https-routing-rule'
 var probeName = 'grafana-health-probe'
 var sslCertificateName = 'appgw-ssl-cert'
+
+// WAF Policy
+resource wafPolicy 'Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies@2023-05-01' = {
+  name: wafPolicyName
+  location: location
+  tags: resourceTags
+  properties: {
+    policySettings: {
+      requestBodyCheck: true
+      maxRequestBodySizeInKb: 128
+      fileUploadLimitInMb: 100
+      state: 'Enabled'
+      mode: 'Prevention'
+    }
+    managedRules: {
+      managedRuleSets: [
+        {
+          ruleSetType: 'OWASP'
+          ruleSetVersion: '3.2'
+        }
+        {
+          ruleSetType: 'Microsoft_BotManagerRuleSet'
+          ruleSetVersion: '1.0'
+        }
+      ]
+    }
+  }
+}
 
 // Virtual Network for Application Gateway
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
@@ -119,6 +148,9 @@ resource applicationGateway 'Microsoft.Network/applicationGateways@2023-05-01' =
       name: skuName
       tier: skuTier
       capacity: capacity
+    }
+    firewallPolicy: {
+      id: wafPolicy.id
     }
     gatewayIPConfigurations: [
       {
@@ -243,16 +275,9 @@ resource applicationGateway 'Microsoft.Network/applicationGateways@2023-05-01' =
 }
 
 // Outputs
-output applicationGatewayId string = applicationGateway.id
 output applicationGatewayName string = applicationGateway.name
 output applicationGatewayIdentity string = applicationGateway.identity.userAssignedIdentities[grafanaUserAssignedIdentityId].principalId
 output publicIpAddress string = publicIp.properties.ipAddress
-output publicDnsLabel string = publicDnsLabel
 output customDomainName string = customDomainName
 output customDomainUrl string = 'https://${customDomainName}'
-output vnetId string = vnet.id
-output vnetName string = vnet.name
-
-// Usage instructions
-output usageInstructions string = 'Access Grafana at: https://${customDomainName}'
 output accessUrl string = 'https://${customDomainName}'
