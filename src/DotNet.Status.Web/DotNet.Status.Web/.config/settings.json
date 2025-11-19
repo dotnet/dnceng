@@ -60,7 +60,7 @@
         },
         {
           "Project": "internal",
-          "DefinitionPath": "\\dotnet\\arcade\\dotnet-arcade-ci",
+          "DefinitionPath": "\\dotnet\\arcade\\arcade-official-ci",
           "Branches": [ "main" ],
           "IssuesId": "dotnet-dnceng-first-responder"
         },
