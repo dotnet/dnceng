@@ -189,25 +189,49 @@ public sealed class GrafanaClient : IDisposable
     {
         string name = contactPoint.Value<string>("name");
         
-        // Check if contact point already exists by name
-        JObject existing = await GetContactPointAsync(name).ConfigureAwait(false);
+        // List all contact points to find if one with this name already exists
+        var listUri = new Uri(new Uri(_baseUrl), "/api/v1/provisioning/contact-points");
         
-        if (existing != null)
+        using (HttpResponseMessage listResponse = await _client.GetAsync(listUri).ConfigureAwait(false))
         {
-            // Update existing contact point using PUT
-            var uri = new Uri(new Uri(_baseUrl), $"/api/v1/provisioning/contact-points/{Uri.EscapeDataString(name)}");
+            await listResponse.EnsureSuccessWithContentAsync();
             
-            // Preserve the existing uid
-            contactPoint["uid"] = existing.Value<string>("uid");
+            JArray allContactPoints;
+            using (Stream stream = await listResponse.Content.ReadAsStreamAsync().ConfigureAwait(false))
+            using (var streamReader = new StreamReader(stream))
+            using (var jsonReader = new JsonTextReader(streamReader))
+            {
+                allContactPoints = await JArray.LoadAsync(jsonReader).ConfigureAwait(false);
+            }
             
-            await SendObjectAsync(contactPoint, uri, HttpMethod.Put).ConfigureAwait(false);
+            // Find existing contact point by name
+            JObject existing = null;
+            foreach (JToken item in allContactPoints)
+            {
+                if (item is JObject cp && cp.Value<string>("name") == name)
+                {
+                    existing = cp;
+                    break;
+                }
+            }
+            
+            if (existing != null)
+            {
+                // Update existing contact point using UID
+                string existingUid = existing.Value<string>("uid");
+                var updateUri = new Uri(new Uri(_baseUrl), $"/api/v1/provisioning/contact-points/{Uri.EscapeDataString(existingUid)}");
+                
+                // Preserve the existing uid
+                contactPoint["uid"] = existingUid;
+                
+                await SendObjectAsync(contactPoint, updateUri, HttpMethod.Put).ConfigureAwait(false);
+                return;
+            }
         }
-        else
-        {
-            // Create new contact point using POST
-            var uri = new Uri(new Uri(_baseUrl), "/api/v1/provisioning/contact-points");
-            await SendObjectAsync(contactPoint, uri, HttpMethod.Post).ConfigureAwait(false);
-        }
+        
+        // Create new contact point using POST only if not found
+        var createUri = new Uri(new Uri(_baseUrl), "/api/v1/provisioning/contact-points");
+        await SendObjectAsync(contactPoint, createUri, HttpMethod.Post).ConfigureAwait(false);
     }
 
     private async Task<JObject> CreateOrUpdateAsync<TExternalId>(
