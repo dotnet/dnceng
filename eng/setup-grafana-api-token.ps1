@@ -1,21 +1,4 @@
 #!/usr/bin/env pwsh
-<#
-.SYNOPSIS
-    Sets up Grafana API token in Key Vault for dashboard publishing
-.DESCRIPTION
-    This script helps you create and store a Grafana API token in Azure Key Vault
-    for use by the dashboard publishing pipeline.
-.PARAMETER Environment
-    The deployment environment (Staging or Production)
-.PARAMETER ApiToken
-    The Grafana API token (if you already have one)
-.PARAMETER KeyVaultName
-    The name of the Key Vault to store the token in
-.EXAMPLE
-    .\setup-grafana-api-token.ps1 -Environment Staging -KeyVaultName "dnceng-amg-int-kv"
-.EXAMPLE
-    .\setup-grafana-api-token.ps1 -Environment Production -KeyVaultName "dnceng-amg-prod-kv" -ApiToken "glsa_xxx"
-#>
 
 param(
     [Parameter(Mandatory=$true)]
@@ -110,9 +93,6 @@ if (-not $ApiToken) {
     Write-Host "Automated Service Account Creation"
     Write-Host "=========================================="
     Write-Host ""
-    Write-Host "This will automatically create a Grafana service account and token."
-    Write-Host "Using Azure CLI to authenticate to Grafana..."
-    Write-Host ""
     
     # Check if AMG extension is installed
     Write-Host "Checking Azure CLI Grafana extension..."
@@ -195,8 +175,8 @@ if (-not $ApiToken) {
     
     Write-Host ""
     
-    # Create service account token (expires in 1 day = 86400 seconds)
-    Write-Host "Creating service account token (expires in 1 day)..."
+    # Create service account token (expires in 30 days = 2592000 seconds)
+    Write-Host "Creating service account token (expires in 30 days)..."
     
     $tokenName = "ci-cd-token-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
     
@@ -205,7 +185,7 @@ if (-not $ApiToken) {
         --resource-group $resourceGroup `
         --service-account $serviceAccountId `
         --token $tokenName `
-        --time-to-live "1d" `
+        --time-to-live "30d" `
         -o json
     
     if ($LASTEXITCODE -ne 0) {
@@ -220,7 +200,7 @@ if (-not $ApiToken) {
     Write-Host "✓ Service account token created"
     Write-Host "  Token name: $tokenName"
     Write-Host "  Token ID: $($tokenResponse.id)"
-    Write-Host "  Expires in: 1 day (86400 seconds)"
+    Write-Host "  Expires in: 30 days (2592000 seconds)"
     Write-Host ""
 }
 
@@ -272,13 +252,4 @@ Write-Host "  Secret:    $tokenSecretName"
 Write-Host ""
 Write-Host "The pipeline can now publish dashboards to:"
 Write-Host "  $grafanaEndpoint"
-Write-Host ""
-Write-Host "To test dashboard publishing locally, run:"
-Write-Host "  dotnet build src\Monitoring\Monitoring.ArcadeServices\Monitoring.ArcadeServices.proj \"
-Write-Host "    -t:PublishGrafana \"
-Write-Host "    -p:GrafanaHost=$grafanaEndpoint \"
-Write-Host "    -p:GrafanaAccessToken=<token> \"
-Write-Host "    -p:GrafanaKeyVaultName=$keyVaultName \"
-Write-Host "    -p:GrafanaEnvironment=$Environment \"
-Write-Host "    -p:ParametersFile=parameters.json"
 Write-Host ""
