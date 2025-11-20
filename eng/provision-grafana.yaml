@@ -338,7 +338,6 @@ jobs:
         Write-Host "   Location: $($workspace.location)"
         Write-Host "   SKU: $($workspace.sku.name)"
         Write-Host "   Status: $($workspace.properties.provisioningState)"
-        Write-Host "   Identity Type: $($workspace.identity.type)"
         
         # Display user-assigned identity details
         if ($workspace.identity.type -eq "UserAssigned") {
@@ -350,8 +349,6 @@ jobs:
               $identityName = $identityId.Split('/')[-1]
               Write-Host "     Name: $identityName"
               Write-Host "     Resource ID: $identityId"
-              Write-Host "     Principal ID: $($_.Value.principalId)"
-              Write-Host "     Client ID: $($_.Value.clientId)"
             }
           }
         } else {
