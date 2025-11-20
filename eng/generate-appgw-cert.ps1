@@ -1,22 +1,4 @@
 #!/usr/bin/env pwsh
-<#
-.SYNOPSIS
-    Generate or retrieve SSL certificate from Azure Key Vault for Application Gateway
-.DESCRIPTION
-    Creates a self-signed certificate in Azure Key Vault for the cloudapp.azure.com custom domain.
-    If the certificate already exists, it retrieves the secret URI.
-    Application Gateway references the certificate directly from Key Vault via managed identity.
-.PARAMETER DnsName
-    The DNS name for the certificate (e.g., dnceng-managed-grafana-staging.westus2.cloudapp.azure.com)
-.PARAMETER KeyVaultName
-    The name of the Azure Key Vault to store the certificate
-.PARAMETER CertificateName
-    The name of the certificate in Key Vault (default: appgw-ssl-cert)
-.PARAMETER ResourceGroupName
-    The resource group name for the Key Vault
-.EXAMPLE
-    .\generate-appgw-cert.ps1 -DnsName "dnceng-managed-grafana-staging.westus2.cloudapp.azure.com" -KeyVaultName "dnceng-kv" -ResourceGroupName "monitoring-managed"
-#>
 
 param(
     [Parameter(Mandatory = $true)]
@@ -175,23 +157,6 @@ $issuer = $certDetails.policy.issuerParameters.name
 Write-Host "Thumbprint: $thumbprint" -ForegroundColor White
 Write-Host "Issuer: $issuer" -ForegroundColor White
 Write-Host "Expires: $expiryDate" -ForegroundColor White
-Write-Host ""
-
-Write-Host "================================================" -ForegroundColor Cyan
-Write-Host "Next Steps" -ForegroundColor Cyan
-Write-Host "================================================" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "1. Grant Application Gateway access to Key Vault" -ForegroundColor Yellow
-Write-Host "   - Enable managed identity on Application Gateway" -ForegroundColor White
-Write-Host "   - Grant 'Get' permission on secrets to the identity" -ForegroundColor White
-Write-Host ""
-Write-Host "2. Use the unversioned secret ID in Bicep template" -ForegroundColor Yellow
-Write-Host "   - This allows automatic certificate rotation" -ForegroundColor White
-Write-Host ""
-Write-Host "    Self-signed certificate notes:" -ForegroundColor Yellow
-Write-Host "   - Browser will show security warning" -ForegroundColor White
-Write-Host "   - Valid for 12 months" -ForegroundColor White
-Write-Host "   - For production, replace with CA-signed certificate" -ForegroundColor White
 Write-Host ""
 
 # Output for pipeline use
