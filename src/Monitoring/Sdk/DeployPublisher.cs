@@ -63,10 +63,8 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
     {
         await PostDatasourcesAsync().ConfigureAwait(false);
 
-        // Post contact points for unified alerting (Azure Managed Grafana)
         await PostContactPointsAsync().ConfigureAwait(false);
 
-        // Post alert rules for unified alerting (Azure Managed Grafana)
         await PostAlertRulesAsync().ConfigureAwait(false);
 
         await PostDashboardsAsync().ConfigureAwait(false);
@@ -151,7 +149,7 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
 
     private async Task PostAlertRulesAsync()
     {
-        // Check if alert rules directory exists (optional feature)
+        // Check if alert rules directory exists 
         if (!Directory.Exists(AlertRuleDirectory))
         {
             Log.LogMessage(MessageImportance.Low, "No alert rules directory found at {0}, skipping alert rules", AlertRuleDirectory);
