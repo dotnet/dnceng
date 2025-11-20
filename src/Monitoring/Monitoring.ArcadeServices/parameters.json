@@ -173,5 +173,12 @@
       "Staging": "e6b5f9f5-0ca4-4351-879b-014d78400ec2",
       "Production": "fbd6122a-9ad3-42e4-976e-bccb82486856"
     }
+  },
+  {
+    "Name": "home-dashboard-uid",
+    "Values": {
+      "Staging": "home",
+      "Production": "home"
+    }
   }
 ]

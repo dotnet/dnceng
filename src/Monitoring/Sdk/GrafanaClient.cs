@@ -130,26 +130,32 @@ public sealed class GrafanaClient : IDisposable
         }
     }
 
-    public Task<JObject> CreateFolderAsync(string uid, string title)
+    public async Task<JObject> CreateFolderAsync(string uid, string title)
     {
+        // First try to get the folder - if it exists, just return it
+        // This handles the built-in "general" folder which can't be updated
+        var getUri = new Uri(new Uri(_baseUrl), $"/api/folders/{Uri.EscapeDataString(uid)}");
+        using (HttpResponseMessage getResponse = await _client.GetAsync(getUri).ConfigureAwait(false))
+        {
+            if (getResponse.IsSuccessStatusCode)
+            {
+                using (Stream stream = await getResponse.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                using (var streamReader = new StreamReader(stream))
+                using (var jsonReader = new JsonTextReader(streamReader))
+                {
+                    return await JObject.LoadAsync(jsonReader).ConfigureAwait(false);
+                }
+            }
+        }
+
+        // Folder doesn't exist, create it
         var folder = new JObject
         {
             {"uid", uid},
             {"title", title},
         };
 
-        return CreateOrUpdateAsync(
-            folder,
-            folder.Value<string>("uid"),
-            u => $"/api/folders/{Uri.EscapeDataString(u)}",
-            "/api/folders",
-            _ => (HttpMethod.Put, $"/api/folders/{uid}"),
-            (d, x) =>
-            {
-                d.Remove("uid");
-                d["version"] = x.Value<int>("version");
-            }
-        );
+        return await SendObjectAsync(folder, new Uri(new Uri(_baseUrl), "/api/folders")).ConfigureAwait(false);
     }
         
     public Task CreateDatasourceAsync(JObject datasource)
@@ -426,6 +432,17 @@ public sealed class GrafanaClient : IDisposable
                 await SendObjectAsync(alertRule, updateUri, HttpMethod.Put).ConfigureAwait(false);
             }
         }
+    }
+
+    public async Task SetHomeDashboardAsync(string dashboardUid)
+    {
+        var preferences = new JObject
+        {
+            {"homeDashboardUID", dashboardUid}
+        };
+
+        var uri = new Uri(new Uri(_baseUrl), "/api/org/preferences");
+        await SendObjectAsync(preferences, uri, HttpMethod.Put).ConfigureAwait(false);
     }
 
     public void Dispose()

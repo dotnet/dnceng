@@ -68,6 +68,8 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
         await PostAlertRulesAsync().ConfigureAwait(false);
 
         await PostDashboardsAsync().ConfigureAwait(false);
+
+        await SetHomeDashboardAsync().ConfigureAwait(false);
     }
 
     private async Task PostDatasourcesAsync()
@@ -366,5 +368,41 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
     {
         Uri vaultUri = new($"https://{_keyVaultName}.vault.azure.net/");
         return new SecretClient(vaultUri, _tokenCredential);
+    }
+
+    private async Task SetHomeDashboardAsync()
+    {
+        // Load parameters to get home dashboard UID
+        List<Parameter> parameters;
+        using (StreamReader sr = new StreamReader(_parameterFile))
+        using (JsonReader jr = new JsonTextReader(sr))
+        {
+            JsonSerializer jsonSerializer = new JsonSerializer();
+            parameters = jsonSerializer.Deserialize<List<Parameter>>(jr);
+        }
+
+        if (parameters == null)
+        {
+            Log.LogMessage(MessageImportance.Normal, "No parameters file found, skipping home dashboard configuration");
+            return;
+        }
+
+        // Find the home-dashboard-uid parameter
+        var homeDashboardParam = parameters.FirstOrDefault(p => p.Name == "home-dashboard-uid");
+        if (homeDashboardParam == null || !homeDashboardParam.Values.TryGetValue(_environment, out string dashboardUid))
+        {
+            Log.LogMessage(MessageImportance.Normal, "No home-dashboard-uid parameter found for environment {0}, skipping home dashboard configuration", _environment);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(dashboardUid))
+        {
+            Log.LogMessage(MessageImportance.Normal, "Home dashboard UID is empty, skipping home dashboard configuration");
+            return;
+        }
+
+        Log.LogMessage(MessageImportance.Normal, "Setting home dashboard to: {0}", dashboardUid);
+        await GrafanaClient.SetHomeDashboardAsync(dashboardUid).ConfigureAwait(false);
+        Log.LogMessage(MessageImportance.Normal, "Successfully set home dashboard");
     }
 }
