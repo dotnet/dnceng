@@ -28,28 +28,6 @@ stages:
       GrafanaLocation: 'westus2'
       GrafanaKeyVault: ${{ parameters.GrafanaKeyVault }}
 
-- stage: ProvisionApplicationGateway
-  displayName: 'Provision Application Gateway Custom Domain'
-  dependsOn: ProvisionGrafana
-  variables:
-    GrafanaIdentityId: $[ stageDependencies.ProvisionGrafana.ProvisionGrafana.outputs['ExportIdentity.GrafanaIdentityId'] ]
-  jobs:
-  - job: DeployApplicationGateway
-    displayName: 'Deploy Azure Application Gateway'
-    pool:
-      name: NetCore1ESPool-Internal
-      demands: ImageOverride -equals 1es-windows-2022
-    steps:
-    - template: /eng/provision-appgw.yaml@self
-      parameters:
-        ServiceConnection: ${{ parameters.ServiceConnectionName }}
-        ResourceGroupName: 'monitoring-managed'
-        Environment: ${{ parameters.DeploymentEnvironment }}
-        GrafanaWorkspaceName: ${{ parameters.GrafanaWorkspaceName }}
-        Location: 'westus2'
-        GrafanaIdentityId: $(GrafanaIdentityId)
-        GrafanaKeyVault: ${{ parameters.GrafanaKeyVault }}
-
 - stage: PublishDashboards
   displayName: 'Publish Grafana Dashboards'
   dependsOn: ProvisionGrafana
