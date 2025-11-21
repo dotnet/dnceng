@@ -361,3 +361,4 @@ MigrationBackup/
 
 # some ide stuff
 .idea
+.nuget/nuget.exe
