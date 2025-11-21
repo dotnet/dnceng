@@ -1,6 +1,9 @@
 
 using Azure;
 using Azure.Core;
+using Azure.Identity;
+using Azure.Messaging.EventHubs;
+using Azure.Messaging.EventHubs.Producer;
 using Azure.ResourceManager.EventHubs;
 using Azure.ResourceManager.EventHubs.Models;
 using Azure.Security.KeyVault.Secrets;
@@ -78,6 +81,37 @@ secrets:
             Assert.That(accessKeysRotated, Has.Count.EqualTo(1));
             connectionStringSecret = await client.GetSecretAsync(connectionStringSecretName);
             Assert.That(connectionStringSecret.Value.Value, Is.EqualTo(accessKeysRotated.First()));
+        }
+
+        [Test]
+        public async Task ManagedIdentityConnectionTest()
+        {
+            // Test direct managed identity connection to the same Event Hub
+            var credential = new DefaultAzureCredential();
+            string fullyQualifiedNamespace = $"{Namespace}.servicebus.windows.net";
+            
+            var producer = new EventHubProducerClient(fullyQualifiedNamespace, Name, credential);
+            
+            try
+            {
+                // Test that we can connect and get partition information
+                var partitions = await producer.GetPartitionIdsAsync();
+                Assert.That(partitions, Is.Not.Empty, "Should be able to get partition IDs using managed identity");
+                
+                // Test that we can send a test event
+                var testEvent = new EventData("MI test message");
+                await producer.SendAsync(new[] { testEvent });
+                
+                Assert.Pass("Managed identity authentication successful");
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail($"Managed identity authentication failed: {ex.Message}");
+            }
+            finally
+            {
+                await producer.DisposeAsync();
+            }
         }
 
         [OneTimeTearDown]
