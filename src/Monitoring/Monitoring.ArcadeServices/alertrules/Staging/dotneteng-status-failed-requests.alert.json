@@ -18,19 +18,10 @@
           "workspace": "/subscriptions/68672ab8-de0c-40f1-8d1b-ffb20bd62c0f/resourcegroups/defaultresourcegroup-eus/providers/microsoft.operationalinsights/workspaces/defaultworkspace-68672ab8-de0c-40f1-8d1b-ffb20bd62c0f-eus"
         },
         "azureMonitor": {
+          "dimensionFilter": "*",
           "dimensionFilters": [],
-          "metricNamespace": "microsoft.insights/components",
-          "region": "eastus",
-          "resources": [
-            {
-              "metricNamespace": "microsoft.insights/components",
-              "region": "eastus",
-              "resourceGroup": "monitoring",
-              "resourceName": "DotNetEng-Status-Prod",
-              "subscription": "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f"
-            }
-          ],
-          "timeGrain": "auto"
+          "timeGrain": "auto",
+          "top": "10"
         },
         "datasource": {
           "type": "grafana-azure-monitor-datasource",
@@ -133,7 +124,6 @@
   "isPaused": false,
   "notification_settings": {
     "receiver": ".NET Status Alert",
-    "group_by": ["alertname"],
     "group_wait": "5m",
     "repeat_interval": "4h"
   }

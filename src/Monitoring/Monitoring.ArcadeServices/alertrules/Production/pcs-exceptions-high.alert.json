@@ -23,16 +23,6 @@
         },
         "azureMonitor": {
           "dimensionFilters": [],
-          "hide": false,
-          "metricNamespace": "microsoft.insights/components",
-          "resources": [
-            {
-              "metricNamespace": "microsoft.insights/components",
-              "resourceGroup": "product-construction-service",
-              "resourceName": "product-construction-service-ai-int",
-              "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
-            }
-          ],
           "timeGrain": "auto"
         },
         "datasource": {
@@ -132,7 +122,6 @@
   "isPaused": false,
   "notification_settings": {
     "receiver": ".NET Status Alert",
-    "group_by": ["alertname"],
     "group_wait": "5m",
     "repeat_interval": "4h"
   }

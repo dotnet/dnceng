@@ -23,17 +23,6 @@
         },
         "azureMonitor": {
           "dimensionFilters": [],
-          "metricNamespace": "microsoft.insights/components",
-          "region": "westus2",
-          "resources": [
-            {
-              "metricNamespace": "microsoft.insights/components",
-              "region": "westus2",
-              "resourceGroup": "product-construction-service",
-              "resourceName": "product-construction-service-ai-int",
-              "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
-            }
-          ],
           "timeGrain": "auto"
         },
         "datasource": {
@@ -42,11 +31,7 @@
         },
         "queryType": "Azure Log Analytics",
         "refId": "A",
-        "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]",
-        "subscriptions": [
-          "fbd6122a-9ad3-42e4-976e-bccb82486856",
-          "e6b5f9f5-0ca4-4351-879b-014d78400ec2"
-        ]
+        "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
       }
     },
     {
@@ -69,16 +54,6 @@
         },
         "azureMonitor": {
           "dimensionFilters": [],
-          "hide": false,
-          "metricNamespace": "microsoft.insights/components",
-          "resources": [
-            {
-              "metricNamespace": "microsoft.insights/components",
-              "resourceGroup": "product-construction-service",
-              "resourceName": "product-construction-service-ai-int",
-              "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
-            }
-          ],
           "timeGrain": "auto"
         },
         "datasource": {
@@ -88,11 +63,7 @@
         "hide": false,
         "queryType": "Azure Log Analytics",
         "refId": "B",
-        "subscription": "[dotnet-eng-appinsights-subscriptionid)]",
-        "subscriptions": [
-          "fbd6122a-9ad3-42e4-976e-bccb82486856",
-          "e6b5f9f5-0ca4-4351-879b-014d78400ec2"
-        ]
+        "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
       }
     },
     {
@@ -179,7 +150,6 @@
   "isPaused": false,
   "notification_settings": {
     "receiver": ".NET Status Alert",
-    "group_by": ["alertname"],
     "group_wait": "5m",
     "repeat_interval": "4h"
   }

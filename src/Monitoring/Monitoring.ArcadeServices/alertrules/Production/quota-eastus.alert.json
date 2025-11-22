@@ -15,8 +15,10 @@
           "workspace": "[parameter(default-workspace-resourcepath)]"
         },
         "azureMonitor": {
+          "dimensionFilter": "*",
           "dimensionFilters": [],
-          "timeGrain": "auto"
+          "timeGrain": "auto",
+          "top": "10"
         },
         "datasource": {
           "type": "grafana-azure-monitor-datasource",
@@ -31,7 +33,7 @@
         ]
       },
       "relativeTimeRange": {
-        "from": 300,
+        "from": 86400,
         "to": 0
       }
     },
@@ -40,6 +42,25 @@
       "queryType": "",
       "datasourceUid": "-100",
       "model": {
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "A",
+                "5m",
+                "now"
+              ]
+            },
+            "type": "query"
+          }
+        ],
         "datasource": {
           "type": "__expr__",
           "uid": "-100"
@@ -69,7 +90,7 @@
               "type": "and"
             },
             "query": {
-              "params": ["C"]
+              "params": ["B"]
             },
             "type": "query"
           }
@@ -87,6 +108,7 @@
   "noDataState": "KeepLast",
   "execErrState": "KeepLast",
   "for": "5m",
+  "frequency": "1m",
   "annotations": {
     "description": "An Azure Resource Quota is nearing its limit in region eastus!"
   },
@@ -95,11 +117,10 @@
   },
   "folderUID": "arcade-services",
   "ruleGroup": "Azure Quota Alerts",
-  "intervalSeconds": 60,
+  "intervalMs": 900000,
   "isPaused": false,
   "notification_settings": {
     "receiver": ".NET Status Alert",
-    "group_by": ["alertname"],
     "group_wait": "5m",
     "repeat_interval": "4h"
   }

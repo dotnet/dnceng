@@ -29,7 +29,7 @@
             {
               "metricNamespace": "Microsoft.OperationalInsights/workspaces",
               "region": "westus2",
-              "resourceGroup": "product-construction-service",
+              "resourceGroup": "[parameter(product-construction-service-resourcegroup)]",
               "resourceName": "[parameter(product-construction-service-workspace-resourcename)]",
               "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]"
             }
@@ -133,7 +133,6 @@
   "isPaused": false,
   "notification_settings": {
     "receiver": ".NET Status Alert (no image, 12h reminder)",
-    "group_by": ["alertname"],
     "group_wait": "5m",
     "repeat_interval": "12h"
   }

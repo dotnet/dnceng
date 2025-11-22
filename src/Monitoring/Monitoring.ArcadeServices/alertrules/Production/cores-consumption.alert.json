@@ -19,6 +19,7 @@
                     "workspace": "[parameter(default-workspace-resourcepath)]"
                 },
                 "azureMonitor": {
+                    "dimensionFilter": "*",
                     "dimensionFilters": [],
                     "timeGrain": "auto",
                     "top": "10"
@@ -105,9 +106,6 @@
     "isPaused": false,
     "notification_settings": {
         "receiver": ".NET Status Alert",
-        "group_by": [
-            "alertname"
-        ],
         "group_wait": "5m",
         "repeat_interval": "4h"
     }
