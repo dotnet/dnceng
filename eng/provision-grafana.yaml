@@ -327,6 +327,7 @@ jobs:
             ClusterUri = "https://engdata.westus2.kusto.windows.net"
             Database = "engineeringdata"
             ResourceGroup = "helixstagingkusto"
+            SubscriptionId = "cab65fc3-d077-467d-931f-3932eabf36d3"  # HelixStaging subscription
           }
         } else {
           $kustoConfig += @{
@@ -334,6 +335,7 @@ jobs:
             ClusterUri = "https://engsrvprod.westus.kusto.windows.net"
             Database = "engineeringdata"
             ResourceGroup = "helixprodkusto"
+            SubscriptionId = "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f"  # Helix production subscription
           }
         }
         
@@ -345,71 +347,71 @@ jobs:
         
         foreach ($cluster in $kustoConfig) {
           Write-Host "Processing: $($cluster.ClusterName) - $($cluster.Database)"
+          Write-Host "  Resource Group: $($cluster.ResourceGroup)"
+          Write-Host "  Subscription: $($cluster.SubscriptionId)"
           
-          # Construct the AAD principal string for Kusto
-          $aadPrincipal = "aadapp=$clientId"
+          # Use principal-assignment API directly with known resource group
+          Write-Host "  Creating database principal assignment..."
           
-          # Create the Kusto command to add database viewer
-          $kustoCommand = ".add database ['$($cluster.Database)'] viewers ('$aadPrincipal') 'Grafana Managed Identity - $managedIdentityName'"
-          
-          Write-Host "  Executing Kusto command..."
-          Write-Host "  Command: $kustoCommand"
-          
-          # Execute the command using Azure CLI
           try {
-            $result = az kusto script create `
+            $assignmentResult = az kusto database-principal-assignment create `
               --cluster-name $cluster.ClusterName `
               --database-name $cluster.Database `
+              --principal-assignment-name "grafana-$environment-viewer" `
+              --principal-id $principalId `
+              --principal-type App `
+              --role Viewer `
               --resource-group $cluster.ResourceGroup `
-              --script-content $kustoCommand `
-              --name "grant-grafana-access-$(Get-Date -Format 'yyyyMMddHHmmss')" `
-              --force-update-tag "$(Get-Date -Format 'yyyyMMddHHmmss')" `
-              --continue-on-errors false `
-              --output none 2>&1
+              --subscription $cluster.SubscriptionId `
+              --tenant-id "72f988bf-86f1-41af-91ab-2d7cd011db47" `
+              --output json 2>&1
             
             if ($LASTEXITCODE -eq 0) {
               Write-Host "  ✓ Database viewer permission granted successfully"
               $successCount++
+            } elseif ($assignmentResult -like "*already exists*" -or $assignmentResult -like "*AlreadyExists*" -or $assignmentResult -like "*Conflict*") {
+              Write-Host "  ✓ Database viewer permission already exists"
+              $successCount++
             } else {
               Write-Warning "  ⚠ Failed to grant database viewer permission"
-              Write-Warning "  Error: $result"
-              Write-Host "  ℹ️  Attempting alternative method using principal-assignment..."
-              
-              # Alternative: Use principal-assignment API
-              try {
-                az kusto database-principal-assignment create `
-                  --cluster-name $cluster.ClusterName `
-                  --database-name $cluster.Database `
-                  --principal-assignment-name "grafana-$environment-viewer" `
-                  --principal-id $principalId `
-                  --principal-type App `
-                  --role Viewer `
-                  --resource-group $cluster.ResourceGroup `
-                  --tenant-id "72f988bf-86f1-41af-91ab-2d7cd011db47" `
-                  --output none 2>&1
-                
-                if ($LASTEXITCODE -eq 0) {
-                  Write-Host "  ✓ Database viewer permission granted via principal-assignment"
-                  $successCount++
-                } else {
-                  Write-Error "  ✗ Both methods failed to grant database access"
-                  $failCount++
-                }
-              } catch {
-                Write-Error "  ✗ Both methods failed to grant database access"
-                Write-Error "  Exception: $($_.Exception.Message)"
-                $failCount++
-              }
+              Write-Warning "  Error: $assignmentResult"
+              Write-Host ""
+              Write-Host "  Manual grant required - run this in Kusto Query Editor ($($cluster.ClusterUri)):"
+              Write-Host "  .add database ['$($cluster.Database)'] viewers ('aadapp=$clientId') 'Grafana Managed Identity'"
+              $failCount++
             }
           } catch {
-            Write-Error "  ✗ Failed to execute Kusto command"
-            Write-Error "  Exception: $($_.Exception.Message)"
+            Write-Warning "  ⚠ Exception occurred: $($_.Exception.Message)"
+            Write-Host ""
+            Write-Host "  Manual grant required - run this in Kusto Query Editor ($($cluster.ClusterUri)):"
+            Write-Host "  .add database ['$($cluster.Database)'] viewers ('aadapp=$clientId') 'Grafana Managed Identity'"
+              Write-Warning "  Error: $assignmentResult"
+              Write-Host ""
+              Write-Host "  Manual grant required - run this in Kusto Query Editor ($($cluster.ClusterUri)):"
+              Write-Host "  .add database ['$($cluster.Database)'] viewers ('aadapp=$clientId') 'Grafana Managed Identity'"
+              $failCount++
+            }
+          } catch {
+            Write-Warning "  ⚠ Exception occurred: $($_.Exception.Message)"
+            Write-Host ""
+            Write-Host "  Manual grant required - run this in Kusto Query Editor ($($cluster.ClusterUri)):"
+            Write-Host "  .add database ['$($cluster.Database)'] viewers ('aadapp=$clientId') 'Grafana Managed Identity'"
             $failCount++
           }
           
           Write-Host ""
         }
         
+        Write-Host "=========================================="
+        Write-Host "Kusto Access Grant Summary"
+        Write-Host "=========================================="
+        Write-Host "✓ Successful: $successCount / $($kustoConfig.Count)"
+        if ($failCount -gt 0) {
+          Write-Host "⚠ Failed: $failCount / $($kustoConfig.Count)"
+          Write-Host ""
+          Write-Host "Note: Manual Kusto grants may be required."
+          Write-Host "The pipeline will continue, but dashboards using Kusto data may not work until permissions are granted."
+        }
         Write-Host ""
         Write-Host "ℹ️  Kusto permission changes are effective immediately"
         Write-Host ""
