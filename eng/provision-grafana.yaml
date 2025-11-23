@@ -385,17 +385,6 @@ jobs:
             Write-Host ""
             Write-Host "  Manual grant required - run this in Kusto Query Editor ($($cluster.ClusterUri)):"
             Write-Host "  .add database ['$($cluster.Database)'] viewers ('aadapp=$clientId') 'Grafana Managed Identity'"
-              Write-Warning "  Error: $assignmentResult"
-              Write-Host ""
-              Write-Host "  Manual grant required - run this in Kusto Query Editor ($($cluster.ClusterUri)):"
-              Write-Host "  .add database ['$($cluster.Database)'] viewers ('aadapp=$clientId') 'Grafana Managed Identity'"
-              $failCount++
-            }
-          } catch {
-            Write-Warning "  ⚠ Exception occurred: $($_.Exception.Message)"
-            Write-Host ""
-            Write-Host "  Manual grant required - run this in Kusto Query Editor ($($cluster.ClusterUri)):"
-            Write-Host "  .add database ['$($cluster.Database)'] viewers ('aadapp=$clientId') 'Grafana Managed Identity'"
             $failCount++
           }
           
