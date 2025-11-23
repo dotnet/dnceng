@@ -284,6 +284,104 @@ jobs:
         Write-Host ""
 
   - task: AzureCLI@2
+    displayName: 'Grant Pipeline Service Principal Kusto Permissions'
+    inputs:
+      azureSubscription: '${{ parameters.ServiceConnectionName }}'
+      scriptType: 'pscore'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        Write-Host "=========================================="
+        Write-Host "Granting Pipeline Service Principal Kusto Contributor Role"
+        Write-Host "=========================================="
+        Write-Host ""
+        
+        $environment = "${{ parameters.DeploymentEnvironment }}"
+        
+        # Get the current service principal identity
+        $currentUser = az account show --query 'user.name' -o tsv
+        Write-Host "Current service principal: $currentUser"
+        Write-Host ""
+        
+        # Define Kusto clusters based on environment
+        $kustoConfig = @()
+        
+        if ($environment -eq "Staging") {
+          $kustoConfig += @{
+            ClusterName = "engdata"
+            ResourceGroup = "helixstagingkusto"
+            SubscriptionId = "cab65fc3-d077-467d-931f-3932eabf36d3"
+          }
+        } else {
+          $kustoConfig += @{
+            ClusterName = "engsrvprod"
+            ResourceGroup = "helixprodkusto"
+            SubscriptionId = "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f"
+          }
+        }
+        
+        Write-Host "Granting Kusto Contributor role on Kusto clusters..."
+        Write-Host ""
+        
+        $successCount = 0
+        $failCount = 0
+        
+        foreach ($cluster in $kustoConfig) {
+          Write-Host "Processing: $($cluster.ClusterName)"
+          Write-Host "  Resource Group: $($cluster.ResourceGroup)"
+          Write-Host "  Subscription: $($cluster.SubscriptionId)"
+          
+          $clusterScope = "/subscriptions/$($cluster.SubscriptionId)/resourceGroups/$($cluster.ResourceGroup)/providers/Microsoft.Kusto/clusters/$($cluster.ClusterName)"
+          
+          # Check if role assignment already exists
+          $existingAssignment = az role assignment list `
+            --assignee $currentUser `
+            --role "Contributor" `
+            --scope $clusterScope `
+            --query "[0].id" `
+            --output tsv 2>$null
+          
+          if ($existingAssignment) {
+            Write-Host "  ✓ Role assignment already exists"
+            $successCount++
+          } else {
+            Write-Host "  Creating Contributor role assignment..."
+            
+            $result = az role assignment create `
+              --role "Contributor" `
+              --assignee $currentUser `
+              --scope $clusterScope `
+              --output none 2>&1
+            
+            if ($LASTEXITCODE -eq 0) {
+              Write-Host "  ✓ Role assignment created successfully"
+              $successCount++
+            } else {
+              Write-Warning "  ⚠ Failed to create role assignment"
+              Write-Warning "  Error: $result"
+              Write-Warning "  This may need to be granted manually by subscription owners."
+              $failCount++
+            }
+          }
+          
+          Write-Host ""
+        }
+        
+        Write-Host "=========================================="
+        Write-Host "Pipeline Kusto Permissions Summary"
+        Write-Host "=========================================="
+        Write-Host "✓ Successful: $successCount / $($kustoConfig.Count)"
+        if ($failCount -gt 0) {
+          Write-Warning "⚠ Failed: $failCount / $($kustoConfig.Count)"
+          Write-Warning ""
+          Write-Warning "Note: Pipeline service principal needs Contributor role on Kusto clusters."
+          Write-Warning "Kusto database permission grants may fail until this is resolved."
+        }
+        Write-Host ""
+        
+        # Don't fail the pipeline if this step fails - it can be done manually
+        exit 0
+
+  - task: AzureCLI@2
     displayName: 'Grant Grafana Identity Kusto Database Access'
     inputs:
       azureSubscription: '${{ parameters.ServiceConnectionName }}'
@@ -396,14 +494,18 @@ jobs:
         Write-Host "=========================================="
         Write-Host "✓ Successful: $successCount / $($kustoConfig.Count)"
         if ($failCount -gt 0) {
-          Write-Host "⚠ Failed: $failCount / $($kustoConfig.Count)"
-          Write-Host ""
-          Write-Host "Note: Manual Kusto grants may be required."
-          Write-Host "The pipeline will continue, but dashboards using Kusto data may not work until permissions are granted."
+          Write-Warning "⚠ Failed: $failCount / $($kustoConfig.Count)"
+          Write-Warning ""
+          Write-Warning "Note: Manual Kusto grants are required."
+          Write-Warning "The pipeline will continue, but dashboards using Kusto data may not work until permissions are granted."
         }
         Write-Host ""
         Write-Host "ℹ️  Kusto permission changes are effective immediately"
         Write-Host ""
+        
+        # Exit successfully even if some grants failed - this is not a critical error
+        # Manual grants can be done via the commands provided above
+        exit 0
 
   - task: AzureCLI@2
     displayName: 'Install Azure Managed Grafana Extension'
