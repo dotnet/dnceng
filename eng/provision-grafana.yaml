@@ -284,6 +284,137 @@ jobs:
         Write-Host ""
 
   - task: AzureCLI@2
+    displayName: 'Grant Grafana Identity Kusto Database Access'
+    inputs:
+      azureSubscription: '${{ parameters.ServiceConnectionName }}'
+      scriptType: 'pscore'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        Write-Host "=========================================="
+        Write-Host "Granting Kusto Database Access to Grafana Identity"
+        Write-Host "=========================================="
+        Write-Host ""
+        
+        $workspaceName = "${{ parameters.GrafanaWorkspaceName }}"
+        $rgName = "${{ parameters.GrafanaResourceGroup }}"
+        $environment = "${{ parameters.DeploymentEnvironment }}"
+        
+        # Get the user-assigned managed identity
+        $managedIdentityName = if ($environment -eq 'Production') { 'dnceng-managed-grafana' } else { 'dnceng-managed-grafana-staging' }
+        Write-Host "Retrieving managed identity: $managedIdentityName"
+        
+        $identity = az identity show --name $managedIdentityName --resource-group $rgName --query '{principalId:principalId, clientId:clientId}' --output json | ConvertFrom-Json
+        
+        if (-not $identity) {
+          Write-Error "Failed to retrieve managed identity: $managedIdentityName"
+          exit 1
+        }
+        
+        $principalId = $identity.principalId
+        $clientId = $identity.clientId
+        
+        Write-Host "✓ Managed Identity: $managedIdentityName"
+        Write-Host "✓ Principal ID: $principalId"
+        Write-Host "✓ Client ID: $clientId"
+        Write-Host ""
+        
+        # Define Kusto clusters and databases based on environment
+        $kustoConfig = @()
+        
+        if ($environment -eq "Staging") {
+          $kustoConfig += @{
+            ClusterName = "engdata"
+            ClusterUri = "https://engdata.westus2.kusto.windows.net"
+            Database = "engineeringdata"
+            ResourceGroup = "helixstagingkusto"
+          }
+        } else {
+          $kustoConfig += @{
+            ClusterName = "engsrvprod"
+            ClusterUri = "https://engsrvprod.westus.kusto.windows.net"
+            Database = "engineeringdata"
+            ResourceGroup = "helixprodkusto"
+          }
+        }
+        
+        Write-Host "Granting database viewer permissions on Kusto clusters..."
+        Write-Host ""
+        
+        $successCount = 0
+        $failCount = 0
+        
+        foreach ($cluster in $kustoConfig) {
+          Write-Host "Processing: $($cluster.ClusterName) - $($cluster.Database)"
+          
+          # Construct the AAD principal string for Kusto
+          $aadPrincipal = "aadapp=$clientId"
+          
+          # Create the Kusto command to add database viewer
+          $kustoCommand = ".add database ['$($cluster.Database)'] viewers ('$aadPrincipal') 'Grafana Managed Identity - $managedIdentityName'"
+          
+          Write-Host "  Executing Kusto command..."
+          Write-Host "  Command: $kustoCommand"
+          
+          # Execute the command using Azure CLI
+          try {
+            $result = az kusto script create `
+              --cluster-name $cluster.ClusterName `
+              --database-name $cluster.Database `
+              --resource-group $cluster.ResourceGroup `
+              --script-content $kustoCommand `
+              --name "grant-grafana-access-$(Get-Date -Format 'yyyyMMddHHmmss')" `
+              --force-update-tag "$(Get-Date -Format 'yyyyMMddHHmmss')" `
+              --continue-on-errors false `
+              --output none 2>&1
+            
+            if ($LASTEXITCODE -eq 0) {
+              Write-Host "  ✓ Database viewer permission granted successfully"
+              $successCount++
+            } else {
+              Write-Warning "  ⚠ Failed to grant database viewer permission"
+              Write-Warning "  Error: $result"
+              Write-Host "  ℹ️  Attempting alternative method using principal-assignment..."
+              
+              # Alternative: Use principal-assignment API
+              try {
+                az kusto database-principal-assignment create `
+                  --cluster-name $cluster.ClusterName `
+                  --database-name $cluster.Database `
+                  --principal-assignment-name "grafana-$environment-viewer" `
+                  --principal-id $principalId `
+                  --principal-type App `
+                  --role Viewer `
+                  --resource-group $cluster.ResourceGroup `
+                  --tenant-id "72f988bf-86f1-41af-91ab-2d7cd011db47" `
+                  --output none 2>&1
+                
+                if ($LASTEXITCODE -eq 0) {
+                  Write-Host "  ✓ Database viewer permission granted via principal-assignment"
+                  $successCount++
+                } else {
+                  Write-Error "  ✗ Both methods failed to grant database access"
+                  $failCount++
+                }
+              } catch {
+                Write-Error "  ✗ Both methods failed to grant database access"
+                Write-Error "  Exception: $($_.Exception.Message)"
+                $failCount++
+              }
+            }
+          } catch {
+            Write-Error "  ✗ Failed to execute Kusto command"
+            Write-Error "  Exception: $($_.Exception.Message)"
+            $failCount++
+          }
+          
+          Write-Host ""
+        }
+        
+        Write-Host ""
+        Write-Host "ℹ️  Kusto permission changes are effective immediately"
+        Write-Host ""
+
+  - task: AzureCLI@2
     displayName: 'Install Azure Managed Grafana Extension'
     inputs:
       azureSubscription: '${{ parameters.ServiceConnectionName }}'
