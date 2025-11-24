@@ -1195,7 +1195,8 @@
             "dimensionFilters": [],
             "metricDefinition": "Microsoft.Insights/components",
             "metricName": "pcs.queue.wait_time",
-            "metricNamespace": "Azure.ApplicationInsights",
+            "customNamespace": "Azure.ApplicationInsights",
+            "metricNamespace": "Microsoft.Insights/components",
             "resourceGroup": "[parameter(product-construction-service-resourcegroup)]",
             "resourceName": "[parameter(product-construction-service-appinsights-resourcename)]",
             "timeGrain": "auto"
