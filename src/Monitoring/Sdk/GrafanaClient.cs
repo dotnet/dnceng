@@ -436,13 +436,24 @@ public sealed class GrafanaClient : IDisposable
 
     public async Task SetHomeDashboardAsync(string dashboardUid)
     {
+        // Set organization preferences (home dashboard and timezone)
         var preferences = new JObject
         {
-            {"homeDashboardUID", dashboardUid}
+            {"homeDashboardUID", dashboardUid},
+            {"timezone", "browser"}
         };
 
-        var uri = new Uri(new Uri(_baseUrl), "/api/org/preferences");
-        await SendObjectAsync(preferences, uri, HttpMethod.Put).ConfigureAwait(false);
+        var preferencesUri = new Uri(new Uri(_baseUrl), "/api/org/preferences");
+        await SendObjectAsync(preferences, preferencesUri, HttpMethod.Put).ConfigureAwait(false);
+
+        // Set organization name
+        var orgDetails = new JObject
+        {
+            {"name", ".NET Engineering Services"}
+        };
+
+        var orgUri = new Uri(new Uri(_baseUrl), "/api/org");
+        await SendObjectAsync(orgDetails, orgUri, HttpMethod.Put).ConfigureAwait(false);
     }
 
     public void Dispose()
