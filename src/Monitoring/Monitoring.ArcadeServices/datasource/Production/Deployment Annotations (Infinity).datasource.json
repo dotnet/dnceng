@@ -1,0 +1,16 @@
+{
+  "uid": "deployment-annotations-infinity",
+  "name": "Deployment Annotations (Infinity)",
+  "type": "yesoreyeram-infinity-datasource",
+  "access": "proxy",
+  "url": "https://dotneteng-status.azurewebsites.net",
+  "jsonData": {
+    "tlsSkipVerify": false,
+    "httpHeaderName1": "Authorization"
+  },
+  "secureJsonData": {
+    "httpHeaderValue1": "[vault(dotneteng-status-auth-header)]"
+  },
+  "isDefault": false,
+  "readOnly": false
+}
