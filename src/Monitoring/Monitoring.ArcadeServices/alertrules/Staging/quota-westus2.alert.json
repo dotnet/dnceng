@@ -91,11 +91,15 @@
   "for": "5m",
   "frequency": "1m",
   "annotations": {
+    "__dashboardUid__": "quota",
+    "__panelId__": "13",
     "description": "An Azure Resource Quota is nearing its limit in region westus2!"
   },
   "labels": {
     "NotificationId": "44aff3c937c042caa09f821ae923c26c"
   },
+  "__dashboardUid__": "quota",
+  "__panelId__": "13",
   "folderUID": "arcade-services",
   "ruleGroup": "Azure Quota Alerts",
   "intervalMs": 900000,

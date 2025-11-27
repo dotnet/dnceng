@@ -112,14 +112,18 @@
         "conditions": [
           {
             "evaluator": {
-              "params": [20],
+              "params": [
+                20
+              ],
               "type": "lt"
             },
             "operator": {
               "type": "and"
             },
             "query": {
-              "params": ["C"]
+              "params": [
+                "C"
+              ]
             },
             "type": "query"
           }
@@ -139,11 +143,15 @@
   "for": "5m",
   "frequency": "1m",
   "annotations": {
+    "__dashboardUid__": "arcadeAvailability",
+    "__panelId__": "57",
     "description": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1308/-Alert-PCS-Background-Worker-Stopped)\n\nPCS appears to have stopped processing new WorkItems.\n\n@dotnet/prodconsvcs"
   },
   "labels": {
     "NotificationId": "23909d48866646408f669cc1c3d325ee"
   },
+  "__dashboardUid__": "arcadeAvailability",
+  "__panelId__": "57",
   "folderUID": "arcade-services",
   "ruleGroup": "PCS Alerts",
   "intervalMs": 900000,

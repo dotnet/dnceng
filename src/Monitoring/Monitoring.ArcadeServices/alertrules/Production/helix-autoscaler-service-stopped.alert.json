@@ -139,11 +139,15 @@
   "for": "5m",
   "frequency": "1m",
   "annotations": {
+    "__dashboardUid__": "arcadeAvailability",
+    "__panelId__": "29",
     "description": "Helix AutoScaler Service has stopped running - no traces detected in the last 30 minutes."
   },
   "labels": {
     "NotificationId": "6213d3c5ce9a46278343bf075798e46f"
   },
+  "__dashboardUid__": "arcadeAvailability",
+  "__panelId__": "29",
   "folderUID": "arcade-services",
   "ruleGroup": "Helix Alerts",
   "intervalMs": 900000,

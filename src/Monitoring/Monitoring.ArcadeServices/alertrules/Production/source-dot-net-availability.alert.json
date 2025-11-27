@@ -136,11 +136,15 @@
   "for": "15m",
   "frequency": "1m",
   "annotations": {
+    "__dashboardUid__": "arcadeAvailability",
+    "__panelId__": "16",
     "description": "source.dot.net availability is low!"
   },
   "labels": {
     "NotificationId": "fb8faaf7600740f98a1c2db076cd1712"
   },
+  "__dashboardUid__": "arcadeAvailability",
+  "__panelId__": "16",
   "folderUID": "arcade-services",
   "ruleGroup": "Source Browser Alerts",
   "intervalSeconds": 900000,

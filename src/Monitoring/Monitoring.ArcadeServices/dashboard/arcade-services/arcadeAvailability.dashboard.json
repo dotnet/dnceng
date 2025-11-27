@@ -17,15 +17,28 @@
         "type": "dashboard"
       },
       {
-        "datasource": "Deployment Annotations",
-        "enable": false,
+        "datasource": {
+          "type": "yesoreyeram-infinity-datasource",
+          "uid": "deployment-annotations-infinity"
+        },
+        "enable": true,
+        "hide": false,
         "iconColor": "blue",
         "name": "Deployments",
         "target": {
-          "limit": 100,
-          "matchAny": false,
-          "tags": [],
-          "type": "dashboard"
+          "columns": [],
+          "filters": [],
+          "type": "json",
+          "source": "url",
+          "url": "/api/annotations/grafana?from=${__from:date:iso}&to=${__to:date:iso}",
+          "url_options": {
+            "data": "",
+            "method": "GET"
+          },
+          "format": "dataframe",
+          "format_version": "1.0",
+          "parser": "backend",
+          "root_selector": ""
         }
       }
     ]
@@ -130,7 +143,6 @@
         "showHeader": true,
         "sortBy": []
       },
-      "pluginVersion": "8.3.6",
       "targets": [
         {
           "azureLogAnalytics": {
@@ -2199,7 +2211,7 @@
         "x": 12,
         "y": 57
       },
-      "id": 66,
+      "id": 75,
       "options": {
         "legend": {
           "calcs": [],
@@ -2520,12 +2532,11 @@
             "showOptions": "current",
             "sortOrder": 1,
             "stateFilter": {
-              "alerting": false,
-              "execution_error": false,
-              "no_data": false,
-              "ok": false,
-              "paused": false,
-              "pending": false
+              "firing": true,
+              "noData": true,
+              "normal": true,
+              "error": true,
+              "pending": true
             },
             "tags": []
           },
@@ -3687,5 +3698,6 @@
   "timepicker": {},
   "timezone": "",
   "title": "Service Availability",
+  "uid": "arcadeAvailability",
   "weekStart": ""
 }

@@ -62,7 +62,7 @@
         "subscriptions": [
           "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
           "cab65fc3-d077-467d-931f-3932eabf36d3"
-        ]        
+        ]
       }
     },
     {
@@ -142,11 +142,15 @@
   "for": "5m",
   "frequency": "1m",
   "annotations": {
+    "__dashboardUid__": "arcadeAvailability",
+    "__panelId__": "18",
     "description": "Helix API availability alert!"
   },
   "labels": {
     "NotificationId": "6179576701874a7abc440a574cf636d0"
   },
+  "__dashboardUid__": "arcadeAvailability",
+  "__panelId__": "18",
   "folderUID": "arcade-services",
   "ruleGroup": "Helix Alerts",
   "intervalMs": 900000,

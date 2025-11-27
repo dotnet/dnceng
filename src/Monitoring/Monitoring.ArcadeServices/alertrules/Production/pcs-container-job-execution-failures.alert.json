@@ -122,11 +122,15 @@
   "for": "5m",
   "frequency": "1m",
   "annotations": {
+    "__dashboardUid__": "arcadeAvailability",
+    "__panelId__": "74",
     "description": "[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1350/-Alert-PCS-container-job-execution-failing)\\n\\nPlease note that this alert will fire every 12 hours as the list of failed jobs can change"
   },
   "labels": {
     "NotificationId": "0a5c68b0daf846ef83a66c6c70fd24ad"
   },
+  "__dashboardUid__": "arcadeAvailability",
+  "__panelId__": "74",
   "folderUID": "arcade-services",
   "ruleGroup": "PCS Alerts",
   "intervalMs": 900000,

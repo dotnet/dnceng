@@ -151,11 +151,15 @@
     "for": "5m",
     "frequency": "1m",
     "annotations": {
+        "__dashboardUid__": "arcadeAvailability",
+        "__panelId__": "64",
         "description": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1310/-Alert-PCS-Work-Item-Success-Rate-alert)\n\nThe PCS background work items started to fail frequently.\n\n@dotnet/prodconsvcs"
     },
     "labels": {
         "NotificationId": "d71fe025a8954b6cad9866354ca041ee"
     },
+    "__dashboardUid__": "arcadeAvailability",
+    "__panelId__": "64",
     "folderUID": "arcade-services",
     "ruleGroup": "PCS Alerts",
     "intervalMs": 900000,

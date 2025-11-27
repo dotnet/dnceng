@@ -111,11 +111,15 @@
   "for": "5m",
   "frequency": "1m",
   "annotations": {
+    "__dashboardUid__": "arcadeAvailability",
+    "__panelId__": "75",
     "description": "[!IMPORTANT]\\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1318/-Alert-PCS-high-git-push-failure-rate)\\n\\nPCS has a high `git push` failure rate, please investigate\\n\\n@dotnet/prodconsvcs"
   },
   "labels": {
     "NotificationId": "6ggqnvwrunnru1zfl4g42dn9qjzanb8a"
   },
+  "__dashboardUid__": "arcadeAvailability",
+  "__panelId__": "75",
   "folderUID": "arcade-services",
   "ruleGroup": "PCS Alerts",
   "intervalSeconds": 60,

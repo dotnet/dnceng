@@ -150,11 +150,15 @@
   "for": "5m",
   "frequency": "5m",
   "annotations": {
+    "__dashboardUid__": "home",
+    "__panelId__": "10",
     "description": "95 percentile of work item waiting times is over 35 minutes. Test queues only."
   },
   "labels": {
     "NotificationId": "work-items-waiting-time-test-queues"
   },
+  "__dashboardUid__": "home",
+  "__panelId__": "10",
   "folderUID": "arcade-services",
   "ruleGroup": "Helix Queue Alerts",
   "intervalMs": 300000,

@@ -131,11 +131,15 @@
   "for": "5m",
   "frequency": "1m",
   "annotations": {
+    "__dashboardUid__": "arcadeAvailability",
+    "__panelId__": "19",
     "description": "Helix API Average Response Time is high!"
   },
   "labels": {
     "NotificationId": "24cae10d9eca44079e7cf3d47f148497"
   },
+  "__dashboardUid__": "arcadeAvailability",
+    "__panelId__": "19",
   "folderUID": "arcade-services",
   "ruleGroup": "Helix Alerts",
   "intervalMs": 900000,

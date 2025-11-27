@@ -111,11 +111,15 @@
   "for": "5m",
   "frequency": "1m",
   "annotations": {
+    "__dashboardUid__": "arcadeAvailability",
+    "__panelId__": "46",
     "description": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1311/-Alert-PCS-Exceptions-High)\n\nThe PCS background work items started to fail frequently.\n\n@dotnet/prodconsvcs"
   },
   "labels": {
     "NotificationId": "08f669cc1c3d325ee488666464"
   },
+  "__dashboardUid__": "arcadeAvailability",
+  "__panelId__": "46",
   "folderUID": "arcade-services",
   "ruleGroup": "PCS Alerts",
   "intervalMs": 900000,
