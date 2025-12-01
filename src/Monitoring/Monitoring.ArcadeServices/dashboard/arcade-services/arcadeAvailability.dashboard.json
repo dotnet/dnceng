@@ -2529,6 +2529,7 @@
             "dashboardAlerts": true,
             "dashboardTitle": "",
             "maxItems": 10,
+            "showInactiveAlerts": true,
             "showOptions": "current",
             "sortOrder": 1,
             "stateFilter": {
