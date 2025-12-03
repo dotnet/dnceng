@@ -48,7 +48,7 @@
       },
       "id": 6,
       "options": {
-        "folderId": 46,
+        "folderId": "[parameter(arcade-services-folderid)]",
         "maxItems": 10,
         "query": "",
         "showHeadings": false,
@@ -69,7 +69,7 @@
       },
       "id": 7,
       "options": {
-        "folderId": 92,
+        "folderId": "[parameter(helix-service-folderid)]",
         "maxItems": 10,
         "query": "",
         "showHeadings": false,

@@ -161,7 +161,7 @@
     }
   },
   {
-    "Name" : "product-construction-service-workspace-resourcename",
+    "Name": "product-construction-service-workspace-resourcename",
     "Values": {
       "Staging": "product-construction-service-workspace-int",
       "Production": "product-construction-service-workspace-prod"
@@ -179,6 +179,20 @@
     "Values": {
       "Staging": "home",
       "Production": "home"
+    }
+  },
+  {
+    "Name": "arcade-services-folderid",
+    "Values": {
+      "Staging": "46",
+      "Production": "37"
+    }
+  },
+  {
+    "Name": "helix-service-folderid",
+    "Values": {
+      "Staging": "92",
+      "Production": "41"
     }
   }
 ]

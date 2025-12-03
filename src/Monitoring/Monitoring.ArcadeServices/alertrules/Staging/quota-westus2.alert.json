@@ -33,7 +33,7 @@
         ]
       },
       "relativeTimeRange": {
-        "from": 86400,
+        "from": 600,
         "to": 0
       }
     },

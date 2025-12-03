@@ -8,7 +8,7 @@
       "queryType": "Azure Log Analytics",
       "datasourceUid": "F2XodEi7z",
       "relativeTimeRange": {
-        "from": 86400,
+        "from": 300,
         "to": 0
       },
       "model": {
@@ -43,25 +43,6 @@
       "queryType": "",
       "datasourceUid": "-100",
       "model": {
-        "conditions": [
-          {
-            "evaluator": {
-              "params": [],
-              "type": "gt"
-            },
-            "operator": {
-              "type": "and"
-            },
-            "query": {
-              "params": [
-                "A",
-                "5m",
-                "now"
-              ]
-            },
-            "type": "query"
-          }
-        ],
         "datasource": {
           "type": "__expr__",
           "uid": "-100"

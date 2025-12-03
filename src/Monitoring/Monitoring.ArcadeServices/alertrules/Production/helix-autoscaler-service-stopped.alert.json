@@ -8,7 +8,7 @@
       "queryType": "Azure Monitor",
       "datasourceUid": "F2XodEi7z",
       "relativeTimeRange": {
-        "from": 86400,
+        "from": 1800,
         "to": 0
       },
       "model": {
@@ -71,25 +71,6 @@
         "to": 0
       },
       "model": {
-        "conditions": [
-          {
-            "evaluator": {
-              "params": [],
-              "type": "gt"
-            },
-            "operator": {
-              "type": "and"
-            },
-            "query": {
-              "params": [
-                "A",
-                "30m",
-                "now"
-              ]
-            },
-            "type": "query"
-          }
-        ],
         "datasource": {
           "type": "__expr__",
           "uid": "-100"

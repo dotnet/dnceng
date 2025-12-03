@@ -36,8 +36,8 @@
         ]
       },
       "relativeTimeRange": {
-        "from": 86400,
-        "to": 0
+        "from": 3600,
+        "to": 600
       }
     },
     {
@@ -45,25 +45,6 @@
       "queryType": "",
       "datasourceUid": "-100",
       "model": {
-        "conditions": [
-          {
-            "evaluator": {
-              "params": [],
-              "type": "gt"
-            },
-            "operator": {
-              "type": "and"
-            },
-            "query": {
-              "params": [
-                "A",
-                "1h",
-                "now-10m"
-              ]
-            },
-            "type": "query"
-          }
-        ],
         "datasource": {
           "type": "__expr__",
           "uid": "-100"
