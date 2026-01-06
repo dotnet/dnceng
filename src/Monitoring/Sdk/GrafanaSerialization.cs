@@ -211,7 +211,17 @@ public static class GrafanaSerialization
                 throw new ArgumentException($"Dashboard contains parameter \"{parameterName}\" but definition does not contain value for environment \"{environment}\".");
             }
 
-            JToken newToken = new JValue(value);
+            // Convert "true"/"false" strings to boolean
+            JToken newToken;
+            if (bool.TryParse(value, out bool boolValue))
+            {
+                newToken = new JValue(boolValue);
+            }
+            else
+            {
+                newToken = new JValue(value);
+            }
+            
             token.Replace(newToken);
         }
 

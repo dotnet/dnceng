@@ -52,7 +52,22 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
         
     private string EnvironmentDatasourceDirectory => Path.Combine(DatasourceDirectory, _environment);
     private string EnvironmentNotificationDirectory => Path.Combine(NotificationDirectory, _environment);
-    private string AlertRuleDirectory => Path.Combine(Path.GetDirectoryName(NotificationDirectory), "alertrules", _environment);
+    private string AlertRuleDirectory
+    {
+        get
+        {
+            string baseDir = Path.Combine(Path.GetDirectoryName(NotificationDirectory), "alertrules");
+            string environmentSpecificDir = Path.Combine(baseDir, _environment);
+            
+            // If environment-specific folder exists, use it; otherwise fall back to base directory
+            if (Directory.Exists(environmentSpecificDir))
+            {
+                return environmentSpecificDir;
+            }
+            
+            return baseDir;
+        }
+    }
 
     public void Dispose()
     {

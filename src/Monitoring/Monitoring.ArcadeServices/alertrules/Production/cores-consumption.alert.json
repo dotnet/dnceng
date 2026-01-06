@@ -109,7 +109,7 @@
     "folderUID": "arcade-services",
     "ruleGroup": "Azure Quota Alerts",
     "intervalMs": 900000,
-    "isPaused": false,
+    "isPaused": true,
     "notification_settings": {
         "receiver": ".NET Status Alert",
         "group_wait": "5m",

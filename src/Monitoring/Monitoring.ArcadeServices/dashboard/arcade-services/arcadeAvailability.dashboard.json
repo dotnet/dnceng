@@ -3335,10 +3335,12 @@
                 },
                 "query": {
                   "params": [
-                    "A",
-                    "1h",
-                    "now-10m"
-                  ]
+                    "A"
+                  ],
+                  "relativeTimeRange": {
+                    "from": 3600,
+                    "to": 600
+                  }
                 },
                 "reducer": {
                   "params": [],
