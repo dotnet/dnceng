@@ -13,11 +13,8 @@ parameters:
   type: string
 
 stages:
-- stage: ProvisionGrafana
-  displayName: 'Provision Grafana Infrastructure'
-  # dependsOn:
-  # - predeploy
-  # - approval
+- stage: DeployGrafana
+  displayName: 'Deploy Grafana Infrastructure and Dashboards'
   jobs:
   - template: /eng/provision-grafana.yaml@self
     parameters:
@@ -28,13 +25,76 @@ stages:
       GrafanaLocation: 'westus2'
       GrafanaKeyVault: ${{ parameters.GrafanaKeyVault }}
 
-- stage: PublishDashboards
-  displayName: 'Publish Grafana Dashboards'
-  dependsOn: ProvisionGrafana
-  variables:
-    GrafanaEndpoint: $[ stageDependencies.ProvisionGrafana.ProvisionGrafana.outputs['ExportGrafanaInfo.GrafanaEndpoint'] ]
-  jobs:
   - job: SetupToken
+    dependsOn: ProvisionGrafana
+    displayName: 'Setup Grafana API Token'
+    variables:
+      GrafanaEndpoint: $[ dependencies.ProvisionGrafana.outputs['ExportGrafanaInfo.GrafanaEndpoint'] ]
+    pool:
+      name: NetCore1ESPool-Internal
+      demands: ImageOverride -equals 1es-windows-2022
+    steps:
+    - task: AzureCLI@2
+      displayName: 'Grant Pipeline Service Principal Grafana Admin Role'
+      inputs:
+        azureSubscription: ${{ parameters.ServiceConnectionName }}
+        scriptType: 'pscore'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          Write-Host "Granting pipeline service principal Grafana Admin role..."
+          
+          $workspaceName = "${{ parameters.GrafanaWorkspaceName }}"
+          $rgName = "monitoring-managed"
+          
+          # Get the current service principal object ID
+          $spObjectId = az account show --query "user.name" --output tsv
+          Write-Host "Service Principal Object ID: $spObjectId"
+          
+          # Get the Grafana workspace resource ID
+          $grafanaId = az grafana show --name $workspaceName --resource-group $rgName --query "id" --output tsv
+          Write-Host "Grafana Workspace: $workspaceName"
+          Write-Host "Grafana ID: $grafanaId"
+          
+          # Check if role assignment already exists
+          $existingAssignment = az role assignment list `
+            --assignee $spObjectId `
+            --scope $grafanaId `
+            --role "Grafana Admin" `
+            --query "[0].id" `
+            --output tsv
+          
+          if ($existingAssignment) {
+            Write-Host "✓ Pipeline service principal already has Grafana Admin role"
+          } else {
+            Write-Host "Granting Grafana Admin role..."
+            az role assignment create `
+              --role "Grafana Admin" `
+              --assignee $spObjectId `
+              --scope $grafanaId `
+              --output none
+            
+            if ($LASTEXITCODE -eq 0) {
+              Write-Host "✓ Pipeline service principal granted Grafana Admin role"
+              Write-Host "⏱  Waiting 15 seconds for role assignment to propagate..."
+              Start-Sleep -Seconds 15
+            } else {
+              Write-Error "Failed to grant Grafana Admin role"
+              exit 1
+            }
+          }
+
+    - task: AzureCLI@2
+      displayName: 'Create or Validate Grafana API Token'
+      inputs:
+        azureSubscription: ${{ parameters.ServiceConnectionName }}
+        scriptType: 'pscore'
+        scriptLocation: 'scriptPath'
+        scriptPath: 'eng/setup-grafana-api-token.ps1'
+        arguments: >-
+          -Environment "${{ parameters.DeploymentEnvironment }}"
+          -KeyVaultName "${{ parameters.GrafanaKeyVault }}"
+
+  - job: PublishDashboards
     displayName: 'Setup Grafana API Token'
     pool:
       name: NetCore1ESPool-Internal
@@ -102,13 +162,15 @@ stages:
 
   - job: PublishDashboards
     displayName: 'Publish Dashboards to Azure Managed Grafana'
-    dependsOn: SetupToken
+    dependsOn: 
+    - ProvisionGrafana
+    - SetupToken
     pool:
       name: NetCore1ESPool-Internal
       demands: ImageOverride -equals 1es-windows-2022
     variables:
-      - name: System.AccessToken
-        value: $(System.AccessToken)
+      GrafanaEndpoint: $[ dependencies.ProvisionGrafana.outputs['ExportGrafanaInfo.GrafanaEndpoint'] ]
+      System.AccessToken: $(System.AccessToken)
     steps:
     - task: UseDotNet@2
       displayName: 'Install Correct .NET Version'
