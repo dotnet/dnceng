@@ -1,15 +1,15 @@
 parameters:
-- name: ServiceConnectionName
+- name: AMGServiceConnectionName
   type: string
-- name: ServiceConnectionClientId
+- name: AMGServiceConnectionClientId
   type: string
-- name: ServiceConnectionId
+- name: AMGServiceConnectionId
   type: string
-- name: DeploymentEnvironment
+- name: AMGDeploymentEnvironment
   type: string
-- name: GrafanaWorkspaceName
+- name: AMGGrafanaWorkspaceName
   type: string
-- name: GrafanaKeyVault
+- name: AMGGrafanaKeyVault
   type: string
 
 stages:
@@ -18,13 +18,12 @@ stages:
   jobs:
   - template: /eng/provision-grafana.yaml@self
     parameters:
-      DeploymentEnvironment: ${{ parameters.DeploymentEnvironment }}
-      ServiceConnectionName: ${{ parameters.ServiceConnectionName }}
+      DeploymentEnvironment: ${{ parameters.AMGDeploymentEnvironment }}
+      ServiceConnectionName: ${{ parameters.AMGServiceConnectionName }}
       GrafanaResourceGroup: 'monitoring-managed'
-      GrafanaWorkspaceName: ${{ parameters.GrafanaWorkspaceName }}
+      GrafanaWorkspaceName: ${{ parameters.AMGGrafanaWorkspaceName }}
       GrafanaLocation: 'westus2'
-      GrafanaKeyVault: ${{ parameters.GrafanaKeyVault }}
-
+      GrafanaKeyVault: ${{ parameters.AMGGrafanaKeyVault }}
   - job: SetupToken
     dependsOn: ProvisionGrafana
     displayName: 'Setup Grafana API Token'
@@ -37,13 +36,13 @@ stages:
     - task: AzureCLI@2
       displayName: 'Grant Pipeline Service Principal Grafana Admin Role'
       inputs:
-        azureSubscription: ${{ parameters.ServiceConnectionName }}
+        azureSubscription: ${{ parameters.AMGServiceConnectionName }}
         scriptType: 'pscore'
         scriptLocation: 'inlineScript'
         inlineScript: |
           Write-Host "Granting pipeline service principal Grafana Admin role..."
           
-          $workspaceName = "${{ parameters.GrafanaWorkspaceName }}"
+          $workspaceName = "${{ parameters.AMGGrafanaWorkspaceName }}"
           $rgName = "monitoring-managed"
           
           # Get the current service principal object ID
@@ -86,13 +85,13 @@ stages:
     - task: AzureCLI@2
       displayName: 'Create or Validate Grafana API Token'
       inputs:
-        azureSubscription: ${{ parameters.ServiceConnectionName }}
+        azureSubscription: ${{ parameters.AMGServiceConnectionName }}
         scriptType: 'pscore'
         scriptLocation: 'scriptPath'
         scriptPath: 'eng/setup-grafana-api-token.ps1'
         arguments: >-
-          -Environment "${{ parameters.DeploymentEnvironment }}"
-          -KeyVaultName "${{ parameters.GrafanaKeyVault }}"
+          -Environment "${{ parameters.AMGDeploymentEnvironment }}"
+          -KeyVaultName "${{ parameters.AMGGrafanaKeyVault }}"
 
   - job: PublishDashboards
     displayName: 'Publish Dashboards to Azure Managed Grafana'
@@ -117,7 +116,7 @@ stages:
     - task: AzureCLI@2
       displayName: 'Publish Grafana Dashboards'
       inputs:
-        azureSubscription: ${{ parameters.ServiceConnectionName }}
+        azureSubscription: ${{ parameters.AMGServiceConnectionName }}
         scriptType: 'pscore'
         scriptLocation: 'inlineScript'
         addSpnToEnvironment: true
@@ -126,7 +125,7 @@ stages:
           Write-Host "Publishing Dashboards to Azure Managed Grafana"
           Write-Host "=========================================="
           Write-Host "Grafana Endpoint: $(GrafanaEndpoint)"
-          Write-Host "Environment: ${{ parameters.DeploymentEnvironment }}"
+          Write-Host "Environment: ${{ parameters.AMGDeploymentEnvironment }}"
           Write-Host ""
           
           # Get the API token from Key Vault with retry logic for RBAC propagation
@@ -140,7 +139,7 @@ stages:
           
           while (-not $apiToken -and $retryCount -lt $maxRetries) {
             try {
-              $apiToken = az keyvault secret show --vault-name "${{ parameters.GrafanaKeyVault }}" --name $tokenSecretName --query "value" --output tsv 2>&1
+              $apiToken = az keyvault secret show --vault-name "${{ parameters.AMGGrafanaKeyVault }}" --name $tokenSecretName --query "value" --output tsv 2>&1
               
               if ($LASTEXITCODE -eq 0 -and $apiToken -and $apiToken.Trim()) {
                 Write-Host "✓ API token retrieved successfully from Key Vault"
@@ -157,7 +156,7 @@ stages:
               } else {
                 Write-Error "Unable to retrieve API token after $maxRetries attempts ($($maxRetries * $waitSeconds) seconds total)"
                 Write-Error "Secret name: $tokenSecretName"
-                Write-Error "Key Vault: ${{ parameters.GrafanaKeyVault }}"
+                Write-Error "Key Vault: ${{ parameters.AMGGrafanaKeyVault }}"
                 Write-Error ""
                 Write-Error "Possible causes:"
                 Write-Error "1. RBAC permissions haven't propagated yet (can take 5-10 minutes)"
@@ -179,11 +178,11 @@ stages:
             -t:PublishGrafana `
             -p:GrafanaAccessToken=$apiToken `
             -p:GrafanaHost="$(GrafanaEndpoint)" `
-            -p:GrafanaKeyVaultName="${{ parameters.GrafanaKeyVault }}" `
-            -p:GrafanaEnvironment="${{ parameters.DeploymentEnvironment }}" `
+            -p:GrafanaKeyVaultName="${{ parameters.AMGGrafanaKeyVault }}" `
+            -p:GrafanaEnvironment="${{ parameters.AMGDeploymentEnvironment }}" `
             -p:ParametersFile=parameters.json `
-            -p:ClientId="${{ parameters.ServiceConnectionClientId }}" `
-            -p:ServiceConnectionId="${{ parameters.ServiceConnectionId }}" `
+            -p:ClientId="${{ parameters.AMGServiceConnectionClientId }}" `
+            -p:ServiceConnectionId="${{ parameters.AMGServiceConnectionId }}" `
             -p:SystemAccessToken="$(System.AccessToken)" `
             -v:normal
           

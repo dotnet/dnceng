@@ -15,6 +15,18 @@ parameters:
   type: string
 - name: StatusVariableGroup
   type: string
+- name: AMGServiceConnectionName
+  type: string
+- name: AMGServiceConnectionClientId
+  type: string
+- name: AMGServiceConnectionId
+  type: string
+- name: AMGDeploymentEnvironment
+  type: string
+- name: AMGGrafanaWorkspaceName
+  type: string
+- name: AMGGrafanaKeyVault
+  type: string
 
   # --- Secret Variable group requirements ---
   # dotnet-build-bot-dotnet-eng-status-token
@@ -142,6 +154,15 @@ stages:
         enableCustomDeployment: true
         DeploymentType: zipDeploy
         RemoveAdditionalFilesFlag: true
+
+- template: /deploy-managed-grafana.yml@self
+  parameters:
+    AMGServiceConnectionName: ${{ parameters.AMGServiceConnectionName }}
+    AMGServiceConnectionId: ${{ parameters.AMGServiceConnectionId }}
+    AMGServiceConnectionClientId: ${{ parameters.AMGServiceConnectionClientId }}
+    AMGDeploymentEnvironment: ${{ parameters.AMGDeploymentEnvironment }}
+    AMGGrafanaWorkspaceName: ${{ parameters.AMGGrafanaWorkspaceName }}
+    AMGGrafanaKeyVault: ${{ parameters.AMGGrafanaKeyVault }}
 
 - stage: postdeploy
   displayName: Post-Deployment
