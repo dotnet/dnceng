@@ -2,7 +2,7 @@ trigger:
   batch: true
   branches:
     include:
-    - haruna/managed-grafana-new
+    # - haruna/managed-grafana-new
     - production
 pr: none
 
