@@ -155,7 +155,7 @@ stages:
         DeploymentType: zipDeploy
         RemoveAdditionalFilesFlag: true
 
-- template: /deploy-managed-grafana.yml@self
+- template: /eng/deploy-managed-grafana.yml@self
   parameters:
     AMGServiceConnectionName: ${{ parameters.AMGServiceConnectionName }}
     AMGServiceConnectionId: ${{ parameters.AMGServiceConnectionId }}
