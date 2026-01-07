@@ -244,7 +244,7 @@ extends:
           -TsaCodebaseName "Dnceng"
           -TsaPublish $True
           -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)/eng/PoliCheckExclusions.xml")'
-    - ${{ if in(variables['Build.SourceBranch'], 'refs/heads/main', 'refs/heads/production')}}:
+    - ${{ if in(variables['Build.SourceBranch'], 'refs/heads/haruna/managed-grafana-new', 'refs/heads/main', 'refs/heads/production')}}:
       - template: /eng/deploy.yaml@self
         parameters:
           ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/production') }}:

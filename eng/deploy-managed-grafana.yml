@@ -97,7 +97,6 @@ stages:
   - job: PublishDashboards
     displayName: 'Publish Dashboards to Azure Managed Grafana'
     dependsOn: 
-    - ProvisionGrafana
     - SetupToken
     pool:
       name: NetCore1ESPool-Internal

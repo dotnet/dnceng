@@ -156,7 +156,7 @@ stages:
     demands: ImageOverride -equals 1es-windows-2019
   dependsOn:
   - deploy
-  - ProvisionGrafana
+  - DeployGrafana
   variables:
   - group: ${{ parameters.StatusVariableGroup }}
   - group: ${{ parameters.GrafanaVariableGroup }}
@@ -202,7 +202,7 @@ stages:
     demands: ImageOverride -equals 1es-windows-2019
   dependsOn:
   - deploy
-  - ProvisionGrafana
+  - DeployGrafana
   jobs:
   - job: scenario
     displayName: Scenario tests
