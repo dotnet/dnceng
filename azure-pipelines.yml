@@ -272,13 +272,17 @@ extends:
             ServiceConnectionClientId: fc1eb341-aea4-4a11-8f80-d14b8775b2ba
             ServiceConnectionId: 4a511f6f-b538-48e6-a389-207e430634d1
 
+    ${{ if in(variables['Build.SourceBranch'], 'refs/heads/haruna/managed-grafana-new', 'refs/heads/production')}}:
       - template: /eng/deploy-managed-grafana.yml@self
         parameters:
           ServiceConnectionName: 'Dotnet Engineering services'
           ServiceConnectionId: dd8c2cfc-b9c9-452c-a168-ccd4240ada55
+          ServiceConnectionClientId: fc1eb341-aea4-4a11-8f80-d14b8775b2ba
           ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/production') }}:
             DeploymentEnvironment: Staging
             GrafanaWorkspaceName: dnceng-grafana-staging
+            GrafanaKeyVault: dnceng-amg-int-kv
           ${{ else }}:
             DeploymentEnvironment: Production
             GrafanaWorkspaceName: dnceng-grafana
+            GrafanaKeyVault: dnceng-amg-prod-kv
