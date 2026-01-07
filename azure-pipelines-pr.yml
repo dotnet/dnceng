@@ -7,10 +7,7 @@ pr:
     - production
 
 variables:
-  ${{ if eq(variables['System.PullRequest.TargetBranch'], 'refs/heads/production') }}:
-    ServiceConnectionName: 'dnceng-managed-grafana'
-  ${{ else }}:
-    ServiceConnectionName: 'dnceng-managed-grafana-staging'
+  ServiceConnectionName: 'Dotnet Engineering services'
 
 stages:
 - stage: build

@@ -7,6 +7,8 @@ variables:
   - name: _DotNetArtifactsCategory
     value: .NETCore
   - group: SDL_Settings
+  - name: ServiceConnectionName
+    value: 'Dotnet Engineering services'
 
 trigger:
   batch: true
