@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using DotNet.Status.Web.Models;
 using DotNet.Status.Web.Options;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.DotNet.GitHub.Authentication;
 using Microsoft.Extensions.Logging;
@@ -19,6 +20,7 @@ namespace DotNet.Status.Web.Controllers;
 
 [ApiController]
 [Route("api/alert")]
+[AllowAnonymous]
 public class AlertHookController : ControllerBase
 {
     public const string NotificationIdLabel = "Grafana Alert";
