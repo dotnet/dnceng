@@ -20,7 +20,6 @@ namespace DotNet.Status.Web.Controllers;
 
 [ApiController]
 [Route("api/alert")]
-[AllowAnonymous]
 public class AlertHookController : ControllerBase
 {
     public const string NotificationIdLabel = "Grafana Alert";
