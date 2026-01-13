@@ -96,7 +96,7 @@ stages:
   displayName: Deploy
   pool:
     name: NetCore1ESPool-Internal-NoMSI
-    demands: ImageOverride -equals 1es-windows-2019
+    demands: ImageOverride -equals 1es-windows-2022
   dependsOn:
   - predeploy
   - approval
@@ -108,7 +108,7 @@ stages:
     displayName: Deploy telemetry service fabric application
     pool:
       name: NetCore1ESPool-Internal-NoMSI
-      demands: ImageOverride -equals 1es-windows-2019
+      demands: ImageOverride -equals 1es-windows-2022
     steps:
     - download: current
       artifact: TelemetryApplication
@@ -137,7 +137,7 @@ stages:
     displayName: Deploy dotnet-status web app
     pool:
       name: NetCore1ESPool-Internal-NoMSI
-      demands: ImageOverride -equals 1es-windows-2019
+      demands: ImageOverride -equals 1es-windows-2022
     steps:
     - download: current
       artifact: DotNetStatus
@@ -168,7 +168,7 @@ stages:
   displayName: Post-Deployment
   pool:
     name: NetCore1ESPool-Internal-NoMSI
-    demands: ImageOverride -equals 1es-windows-2019
+    demands: ImageOverride -equals 1es-windows-2022
   dependsOn:
   - deploy
   - DeployGrafana
@@ -192,7 +192,7 @@ stages:
   displayName: Validate deployment
   pool:
     name: NetCore1ESPool-Internal
-    demands: ImageOverride -equals 1es-windows-2019
+    demands: ImageOverride -equals 1es-windows-2022
   dependsOn:
   - deploy
   - DeployGrafana
