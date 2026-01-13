@@ -5,8 +5,6 @@ storageLocation:
     name: dnceng-amg-prod-kv
 
 secrets:
-  # Copy only the secrets needed for Azure Managed Grafana datasources and notifications
-  
   # API token for DotNet Status website
   dotnet-build-bot-dotnet-eng-status-token:
     type: text

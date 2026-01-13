@@ -4,9 +4,7 @@ storageLocation:
     subscription: a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1
     name: dnceng-amg-int-kv
 
-secrets:
-  # Copy only the secrets needed for Azure Managed Grafana datasources and notifications
-  
+secrets:  
   # API token for DotNet Status website
   dotnet-build-bot-dotnet-eng-status-token:
     type: text
