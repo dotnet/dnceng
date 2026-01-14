@@ -6,9 +6,6 @@ pr:
     - main
     - production
 
-variables:
-  ServiceConnectionName: 'Dotnet Engineering services'
-
 stages:
 - stage: build
   dependsOn: []
@@ -113,7 +110,7 @@ stages:
         - task: AzureCLI@2
           displayName: 'Validate Grafana Bicep Template'
           inputs:
-            azureSubscription: '$(ServiceConnectionName)'
+            azureSubscription: Dotnet Engineering services
             scriptType: 'ps'
             scriptLocation: 'inlineScript'
             inlineScript: |
