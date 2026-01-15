@@ -106,6 +106,15 @@ Agent writes an append-only, structured section including:
 - Timestamp  
 - Wiki link  
 
+### 3a. **Brief Agent Comment on the Work Item**
+Whenever the agent triages or re‑triages a work item, it posts a **short comment** indicating that triage occurred,  
+and includes a **direct link to the “Triage agent” section** where the full historical record and detailed reasoning are stored.
+
+This ensures:
+- Comments stay concise  
+- Users immediately know triage occurred  
+- Full fidelity details remain centralized and well‑structured  
+
 ### 4. Wiki‑Published, Versioned Triage Bar
 - Triage bar lives in DNCEng wiki  
 - MCP tooling interprets it  
