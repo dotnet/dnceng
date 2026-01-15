@@ -5,6 +5,13 @@ storageLocation:
     name: dnceng-amg-prod-kv
 
 secrets:
+  # API token for Azure Managed Grafana (staging)
+  grafana-admin-api-key:
+    type: azure-managed-grafana-api-key
+    parameters:
+      description: Service account token for Azure Managed Grafana staging workspace
+      environment: production
+
   # API token for DotNet Status website
   dotnet-build-bot-dotnet-eng-status-token:
     type: text
