@@ -1,8 +1,5 @@
 # DNCEng Operational Triage Agent — One Pager
 
-## Engineer
-Christopher Costa
-
 ## Description
 Automated triage system for DNCEng Tasks under  
 `internal\.NET Engineering Services\Operations`, ensuring transparent and consistent priority assignment.
