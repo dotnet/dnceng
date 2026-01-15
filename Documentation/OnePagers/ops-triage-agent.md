@@ -37,6 +37,16 @@ A functioning system where:
 ## Motivation
 Azure DevOps Tags/Labels must remain strictly **filtering/query metadata**, not programmatic switches.
 
+The team adheres to the principle that **Azure DevOps Tags/Labels must not be used as operational signals**.  Use of Tags / Labels for programmatic decision making / operations leads to non-intuitive experiences and area expertise requirements.
+
+Tags should remain strictly for **querying and filtering**, not automation triggers.
+
+Separating concerns between:
+- **Pure logic (MCP tooling)**  
+- **Execution agent (Azure job, CLI, Foundry)**  
+
+ensures a predictable, inspectable system that avoids “hidden behaviors” and reduces dependency on tribal knowledge.
+
 The system’s architecture reinforces this by:
 - Making MCP tooling **pure business logic with zero dependencies on authentication or external APIs**
 - Keeping **all operational and security responsibilities in the agent layer**
