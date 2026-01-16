@@ -34,6 +34,10 @@ A functioning system where:
 - A read-only “Triage agent” section is created and appended to
 - Triage decisions follow a versioned wiki-based triage bar
 
+### Metrics
+
+As a metric for evaluating the effectiveness of the triage agent, we should review all work items which are triaged by the agent.  If a user, or users, or triage team have examined an issue and adjusted the assigned priority, then we can quickly generate a measure of how many issues the agent triaged correctly / incorrectly on an on-going basis.  There will be scenarios where the agent actually triaged appropriately and the work item lacked sufficient context for a different priority assignment but a user has additional information and decides to re-triage based on external knowledge but hopefully those occurences are rare.  If it turns out to be a frequent case where external knowledge is not captured in the work item, then we should re-examine our processes to try to encourage more value be added to the work item itself.
+
 ## Motivation
 Azure DevOps Tags/Labels must remain strictly **filtering/query metadata**, not programmatic switches.
 
@@ -153,6 +157,9 @@ This reduces risk and simplifies compliance.
 - Wiki-based rule versioning  
 - Dry-run modes  
 - Controlled rollout via agent configuration  
+
+
+## Metrics
 
 ## Task Breakdown
 
