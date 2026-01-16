@@ -161,7 +161,7 @@
     }
   },
   {
-    "Name" : "product-construction-service-workspace-resourcename",
+    "Name": "product-construction-service-workspace-resourcename",
     "Values": {
       "Staging": "product-construction-service-workspace-int",
       "Production": "product-construction-service-workspace-prod"
@@ -172,6 +172,27 @@
     "Values": {
       "Staging": "e6b5f9f5-0ca4-4351-879b-014d78400ec2",
       "Production": "fbd6122a-9ad3-42e4-976e-bccb82486856"
+    }
+  },
+  {
+    "Name": "home-dashboard-uid",
+    "Values": {
+      "Staging": "home",
+      "Production": "home"
+    }
+  },
+  {
+    "Name": "arcade-services-folderid",
+    "Values": {
+      "Staging": "46",
+      "Production": "37"
+    }
+  },
+  {
+    "Name": "helix-service-folderid",
+    "Values": {
+      "Staging": "92",
+      "Production": "41"
     }
   }
 ]

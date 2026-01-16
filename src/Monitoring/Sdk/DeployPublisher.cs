@@ -52,6 +52,22 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
         
     private string EnvironmentDatasourceDirectory => Path.Combine(DatasourceDirectory, _environment);
     private string EnvironmentNotificationDirectory => Path.Combine(NotificationDirectory, _environment);
+    private string AlertRuleDirectory
+    {
+        get
+        {
+            string baseDir = Path.Combine(Path.GetDirectoryName(NotificationDirectory), "alertrules");
+            string environmentSpecificDir = Path.Combine(baseDir, _environment);
+            
+            // If environment-specific folder exists, use it; otherwise fall back to base directory
+            if (Directory.Exists(environmentSpecificDir))
+            {
+                return environmentSpecificDir;
+            }
+            
+            return baseDir;
+        }
+    }
 
     public void Dispose()
     {
@@ -62,9 +78,13 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
     {
         await PostDatasourcesAsync().ConfigureAwait(false);
 
-        await PostNotificationsAsync().ConfigureAwait(false);
+        await PostContactPointsAsync().ConfigureAwait(false);
+
+        await PostAlertRulesAsync().ConfigureAwait(false);
 
         await PostDashboardsAsync().ConfigureAwait(false);
+
+        await SetHomeDashboardAsync().ConfigureAwait(false);
     }
 
     private async Task PostDatasourcesAsync()
@@ -112,6 +132,91 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
             await ReplaceVaultAsync(data);
 
             await GrafanaClient.CreateNotificationChannelAsync(data).ConfigureAwait(false);
+        }
+    }
+
+    private async Task PostContactPointsAsync()
+    {
+        // Check if notification directory exists (optional feature)
+        if (!Directory.Exists(EnvironmentNotificationDirectory))
+        {
+            Log.LogMessage(MessageImportance.Low, "No notification directory found at {0}, skipping contact points", EnvironmentNotificationDirectory);
+            return;
+        }
+
+        foreach (string notificationPath in Directory.GetFiles(EnvironmentNotificationDirectory,
+                     "*" + NotificationExtension,
+                     SearchOption.AllDirectories))
+        {
+            JObject data;
+            using (var sr = new StreamReader(notificationPath))
+            using (var jr = new JsonTextReader(sr))
+            {
+                data = await JObject.LoadAsync(jr).ConfigureAwait(false);
+            }
+
+            string name = data.Value<string>("name");
+            Log.LogMessage(MessageImportance.Normal, "Posting contact point {0}...", name);
+
+            await ReplaceVaultAsync(data);
+
+            await GrafanaClient.CreateContactPointAsync(data).ConfigureAwait(false);
+        }
+    }
+
+    private async Task PostAlertRulesAsync()
+    {
+        // Check if alert rules directory exists 
+        if (!Directory.Exists(AlertRuleDirectory))
+        {
+            Log.LogMessage(MessageImportance.Low, "No alert rules directory found at {0}, skipping alert rules", AlertRuleDirectory);
+            return;
+        }
+
+        Log.LogMessage(MessageImportance.High, "Loading parameters from: {0}", Path.GetFullPath(_parameterFile));
+        Log.LogMessage(MessageImportance.High, "Parameters file exists: {0}", File.Exists(_parameterFile));
+
+        // Load parameters for deparameterization
+        List<Parameter> parameters;
+        using (StreamReader sr = new StreamReader(_parameterFile))
+        using (JsonReader jr = new JsonTextReader(sr))
+        {
+            JsonSerializer jsonSerializer = new JsonSerializer();
+            parameters = jsonSerializer.Deserialize<List<Parameter>>(jr);
+        }
+
+        if (parameters == null || parameters.Count == 0)
+        {
+            Log.LogError("Failed to load parameters from {0}", _parameterFile);
+            return;
+        }
+
+        Log.LogMessage(MessageImportance.High, "Loaded {0} parameters from {1}", parameters.Count, _parameterFile);
+
+        foreach (string alertRulePath in Directory.GetFiles(AlertRuleDirectory,
+                     "*" + AlertRuleExtension,
+                     SearchOption.AllDirectories))
+        {
+            JObject data;
+            using (var sr = new StreamReader(alertRulePath))
+            using (var jr = new JsonTextReader(sr))
+            {
+                data = await JObject.LoadAsync(jr).ConfigureAwait(false);
+            }
+
+            string uid = data.Value<string>("uid");
+            string title = data.Value<string>("title");
+            Log.LogMessage(MessageImportance.Normal, "Posting alert rule {0} ({1})...", uid, title);
+
+            // Replace [parameter(...)] placeholders with environment-specific values
+            data = GrafanaSerialization.DeparameterizeDashboard(data, parameters, _environment);
+
+            // Log the final JSON for debugging
+            Log.LogMessage(MessageImportance.High, "Alert JSON after parameter replacement: {0}", data.ToString(Formatting.Indented));
+
+            await ReplaceVaultAsync(data);
+
+            await GrafanaClient.CreateAlertRuleAsync(data).ConfigureAwait(false);
         }
     }
 
@@ -278,5 +383,41 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
     {
         Uri vaultUri = new($"https://{_keyVaultName}.vault.azure.net/");
         return new SecretClient(vaultUri, _tokenCredential);
+    }
+
+    private async Task SetHomeDashboardAsync()
+    {
+        // Load parameters to get home dashboard UID
+        List<Parameter> parameters;
+        using (StreamReader sr = new StreamReader(_parameterFile))
+        using (JsonReader jr = new JsonTextReader(sr))
+        {
+            JsonSerializer jsonSerializer = new JsonSerializer();
+            parameters = jsonSerializer.Deserialize<List<Parameter>>(jr);
+        }
+
+        if (parameters == null)
+        {
+            Log.LogMessage(MessageImportance.Normal, "No parameters file found, skipping home dashboard configuration");
+            return;
+        }
+
+        // Find the home-dashboard-uid parameter
+        var homeDashboardParam = parameters.FirstOrDefault(p => p.Name == "home-dashboard-uid");
+        if (homeDashboardParam == null || !homeDashboardParam.Values.TryGetValue(_environment, out string dashboardUid))
+        {
+            Log.LogMessage(MessageImportance.Normal, "No home-dashboard-uid parameter found for environment {0}, skipping home dashboard configuration", _environment);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(dashboardUid))
+        {
+            Log.LogMessage(MessageImportance.Normal, "Home dashboard UID is empty, skipping home dashboard configuration");
+            return;
+        }
+
+        Log.LogMessage(MessageImportance.Normal, "Setting home dashboard to: {0}", dashboardUid);
+        await GrafanaClient.SetHomeDashboardAsync(dashboardUid).ConfigureAwait(false);
+        Log.LogMessage(MessageImportance.Normal, "Successfully set home dashboard");
     }
 }

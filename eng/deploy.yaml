@@ -15,11 +15,17 @@ parameters:
   type: string
 - name: StatusVariableGroup
   type: string
-- name: GrafanaHost
+- name: AMGServiceConnectionName
   type: string
-- name: GrafanaKeyVault
+- name: AMGServiceConnectionClientId
   type: string
-- name: GrafanaVariableGroup
+- name: AMGServiceConnectionId
+  type: string
+- name: AMGDeploymentEnvironment
+  type: string
+- name: AMGGrafanaWorkspaceName
+  type: string
+- name: AMGGrafanaKeyVault
   type: string
 
   # --- Secret Variable group requirements ---
@@ -149,6 +155,15 @@ stages:
         DeploymentType: zipDeploy
         RemoveAdditionalFilesFlag: true
 
+- template: /eng/deploy-managed-grafana.yml@self
+  parameters:
+    AMGServiceConnectionName: ${{ parameters.AMGServiceConnectionName }}
+    AMGServiceConnectionId: ${{ parameters.AMGServiceConnectionId }}
+    AMGServiceConnectionClientId: ${{ parameters.AMGServiceConnectionClientId }}
+    AMGDeploymentEnvironment: ${{ parameters.AMGDeploymentEnvironment }}
+    AMGGrafanaWorkspaceName: ${{ parameters.AMGGrafanaWorkspaceName }}
+    AMGGrafanaKeyVault: ${{ parameters.AMGGrafanaKeyVault }}
+
 - stage: postdeploy
   displayName: Post-Deployment
   pool:
@@ -156,19 +171,9 @@ stages:
     demands: ImageOverride -equals 1es-windows-2022
   dependsOn:
   - deploy
+  - DeployGrafana
   variables:
   - group: ${{ parameters.StatusVariableGroup }}
-  - group: ${{ parameters.GrafanaVariableGroup }}
-  - name: DeploymentEnvironment
-    value: ${{ parameters.DeploymentEnvironment }}
-  - name: GrafanaHost
-    value: ${{ parameters.GrafanaHost }}
-  - name: GrafanaKeyVault
-    value: ${{ parameters.GrafanaKeyVault }}
-  - name: GrafanaClientId
-    value: ${{ parameters.ServiceConnectionClientId }}
-  - name: GrafanaServiceConnectionId
-    value: ${{ parameters.ServiceConnectionId }}
   jobs:
   - job: notifyEndDeployment
     displayName: Notify deployment end
@@ -182,17 +187,6 @@ stages:
         serviceConnection: ${{ parameters.DotNetStatusEndpoint }}
         method: POST
         urlSuffix: /dnceng/$(Build.BuildNumber)/end
-  - job: updateMetrics
-    displayName: Update Grafana Metrics
-    steps:
-    - task: UseDotNet@2
-      displayName: Install Correct .NET Version
-      inputs:
-        useGlobalJson: true
-    - script: dotnet publish --configuration Release $(Build.SourcesDirectory)\src\Monitoring\Sdk\Microsoft.DotNet.Monitoring.Sdk.csproj -f net8.0
-      displayName: Build Monitoring SDK
-    - script: dotnet build $(Build.SourcesDirectory)\src\Monitoring\Monitoring.ArcadeServices\Monitoring.ArcadeServices.proj --configuration Release -t:PublishGrafana -p:GrafanaAccessToken=$(grafana-admin-api-key) -p:GrafanaHost=$(GrafanaHost) -p:GrafanaKeyVaultName=$(GrafanaKeyVault) -p:ClientId=$(GrafanaClientId) -p:ServiceConnectionId=$(GrafanaServiceConnectionId) -p:SystemAccessToken=$(System.AccessToken) -p:GrafanaEnvironment=$(DeploymentEnvironment) -p:ParametersFile=parameters.json -v:normal
-      displayName: Publish Grafana Dashboards
 
 - stage: validateDeployment
   displayName: Validate deployment
@@ -201,6 +195,7 @@ stages:
     demands: ImageOverride -equals 1es-windows-2022
   dependsOn:
   - deploy
+  - DeployGrafana
   jobs:
   - job: scenario
     displayName: Scenario tests
