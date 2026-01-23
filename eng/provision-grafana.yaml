@@ -97,7 +97,7 @@ jobs:
       deploymentOutputs: 'grafanaOutputs'
 
   - task: PowerShell@2
-    displayName: 'Export Grafana Identity for App Gateway'
+    displayName: 'Export Grafana Identity'
     name: ExportIdentity
     inputs:
       targetType: 'inline'

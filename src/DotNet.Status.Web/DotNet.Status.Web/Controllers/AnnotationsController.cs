@@ -143,11 +143,6 @@ public class AnnotationsController : ControllerBase
         return annotationEntries;
     }
 
-    /// <summary>
-    /// Native Grafana annotations endpoint. Returns annotations in the format expected by
-    /// Grafana's built-in annotation queries.
-    /// Supports both POST with body and GET with query parameters.
-    /// </summary>
     [HttpPost]
     [HttpGet]
     [Route("grafana")]

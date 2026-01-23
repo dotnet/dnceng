@@ -133,7 +133,6 @@ public sealed class GrafanaClient : IDisposable
     public async Task<JObject> CreateFolderAsync(string uid, string title)
     {
         // First try to get the folder - if it exists, just return it
-        // This handles the built-in "general" folder which can't be updated
         var getUri = new Uri(new Uri(_baseUrl), $"/api/folders/{Uri.EscapeDataString(uid)}");
         using (HttpResponseMessage getResponse = await _client.GetAsync(getUri).ConfigureAwait(false))
         {
