@@ -142,4 +142,87 @@ public class AnnotationsController : ControllerBase
 
         return annotationEntries;
     }
+
+    [HttpPost]
+    [HttpGet]
+    [Route("grafana")]
+    public async Task<ActionResult<IEnumerable<GrafanaAnnotation>>> GetGrafanaAnnotations(
+        [FromBody(EmptyBodyBehavior = Microsoft.AspNetCore.Mvc.ModelBinding.EmptyBodyBehavior.Allow)] GrafanaAnnotationQuery query,
+        [FromQuery] string from,
+        [FromQuery] string to,
+        CancellationToken cancellationToken)
+    {
+        DateTime fromDate, toDate;
+        
+        if (query?.Range != null)
+        {
+            // POST request with body
+            fromDate = query.Range.From;
+            toDate = query.Range.To;
+        }
+        else if (!string.IsNullOrEmpty(from) && !string.IsNullOrEmpty(to))
+        {
+            // GET request with query parameters
+            if (!DateTime.TryParse(from, out fromDate) || !DateTime.TryParse(to, out toDate))
+            {
+                return BadRequest("Invalid date format");
+            }
+        }
+        else
+        {
+            return BadRequest("Missing date range");
+        }
+
+        IEnumerable<string> services = (query?.Annotation?.Query?.Split(',') ?? Array.Empty<string>())
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Select(s => s.Trim());
+
+        if (services.Count() > _maximumServerCount)
+        {
+            return new List<GrafanaAnnotation>();
+        }
+
+        StringBuilder filterBuilder = new StringBuilder();
+        filterBuilder.Append($"Started gt datetime'{fromDate:O}' and Ended lt datetime'{toDate:O}'");
+        if (services.Any())
+        {
+            filterBuilder.Append(" and (");
+            filterBuilder.Append(string.Join(" or ", services.Select(s => $"PartitionKey eq '{s}'")));
+            filterBuilder.Append(')');
+        }
+
+        string filter = filterBuilder.ToString();
+        _logger.LogTrace("Compiled Grafana annotation filter query: {Query}", filter);
+
+        TableClient tableClient = await GetCloudTable();
+        IAsyncEnumerable<DeploymentEntity> entityQuery = tableClient.QueryAsync<DeploymentEntity>(
+            filter: filter,
+            cancellationToken: cancellationToken);
+
+        List<GrafanaAnnotation> annotations = new List<GrafanaAnnotation>();
+        await foreach (DeploymentEntity entity in entityQuery)
+        {
+            if (entity.Started == null && entity.Ended == null)
+            {
+                continue;
+            }
+
+            var annotation = new GrafanaAnnotation
+            {
+                Time = entity.Started?.ToUnixTimeMilliseconds() ?? entity.Ended.Value.ToUnixTimeMilliseconds(),
+                Title = $"Deployment of {entity.Service}",
+                Tags = new[] { "deployment", "deploy", $"deploy-{entity.Service}", entity.Service },
+                Text = $"Service: {entity.Service}"
+            };
+
+            if (entity.Started != null && entity.Ended != null)
+            {
+                annotation.TimeEnd = entity.Ended.Value.ToUnixTimeMilliseconds();
+            }
+
+            annotations.Add(annotation);
+        }
+
+        return annotations;
+    }
 }

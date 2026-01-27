@@ -1,0 +1,113 @@
+{
+  "uid": "pcs-disk-space-issues",
+  "title": "PCS Disk Space Issues alert",
+  "condition": "C",
+  "data": [
+    {
+      "refId": "A",
+      "queryType": "Azure Log Analytics",
+      "datasourceUid": "F2XodEi7z",
+      "relativeTimeRange": {
+        "from": 300,
+        "to": 0
+      },
+      "model": {
+        "azureLogAnalytics": {
+          "dashboardTime": true,
+          "query": "exceptions\r\n| where timestamp > now()-6h and (outerMessage contains \"No space left on device\" or innermostMessage contains \"No space left on device\")\r\n| summarize TotalCount=count() by bin(timestamp, 1h)\r\n| order by timestamp asc",
+          "resources": [
+            "[parameter(product-construction-service-appinsights-resourcepath)]"
+          ],
+          "resultFormat": "time_series",
+          "workspace": "[parameter(product-construction-service-workspace-resourcepath)]"
+        },
+        "azureMonitor": {
+          "dimensionFilters": [],
+          "timeGrain": "auto"
+        },
+        "datasource": {
+          "type": "grafana-azure-monitor-datasource",
+          "uid": "F2XodEi7z"
+        },
+        "queryType": "Azure Log Analytics",
+        "refId": "A",
+        "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]",
+        "subscriptions": [
+          "fbd6122a-9ad3-42e4-976e-bccb82486856",
+          "e6b5f9f5-0ca4-4351-879b-014d78400ec2"
+        ]
+      }
+    },
+    {
+      "refId": "B",
+      "queryType": "",
+      "datasourceUid": "-100",
+      "model": {
+        "datasource": {
+          "type": "__expr__",
+          "uid": "-100"
+        },
+        "expression": "A",
+        "reducer": "count",
+        "refId": "B",
+        "type": "reduce"
+      },
+      "relativeTimeRange": {
+        "from": 300,
+        "to": 0
+      }
+    },
+    {
+      "refId": "C",
+      "queryType": "",
+      "datasourceUid": "-100",
+      "model": {
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [0],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": ["B"]
+            },
+            "type": "query"
+          }
+        ],
+        "datasource": {
+          "type": "__expr__",
+          "uid": "-100"
+        },
+        "expression": "B",
+        "refId": "C",
+        "type": "threshold"
+      }
+    }
+  ],
+  "noDataState": "OK",
+  "execErrState": "KeepLast",
+  "for": "5m",
+  "frequency": "5m",
+  "annotations": {
+    "__dashboardUid__": "arcadeAvailability",
+  "__panelId__": "72",
+    "description": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1346/-Alert-PCS-Disk-Space-Issues)\n\nThe PCS service is running out of disk space.\n\n@dotnet/prodconsvcs"
+  },
+  "labels": {
+    "NotificationId": "aa1fe025a8954b6cad9866354ca041ee"
+  },
+  "__dashboardUid__": "arcadeAvailability",
+  "__panelId__": "72",
+  "folderUID": "arcade-services",
+  "ruleGroup": "PCS Alerts",
+  "intervalMs": 900000,
+  "isPaused": false,
+  "notification_settings": {
+    "receiver": ".NET Status Alert",
+    "group_wait": "5m",
+    "repeat_interval": "4h"
+  }
+}

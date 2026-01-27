@@ -1,0 +1,383 @@
+# Azure Managed Grafana Provisioning Template
+# This template provisions Azure Managed Grafana workspaces as part of the deployment process
+
+parameters:
+- name: DeploymentEnvironment
+  type: string
+
+- name: ServiceConnectionName
+  type: string
+
+- name: GrafanaResourceGroup
+  type: string
+
+- name: GrafanaWorkspaceName
+  type: string
+
+- name: GrafanaLocation
+  type: string
+
+- name: GrafanaSkuName
+  type: string
+  default: 'Standard'
+
+- name: GrafanaKeyVault
+  type: string
+
+jobs:
+- job: ProvisionGrafana
+  displayName: 'Provision Azure Managed Grafana'
+  pool:
+    name: NetCore1ESPool-Internal
+    demands: ImageOverride -equals 1es-windows-2022
+  
+  steps:
+  - checkout: self
+    displayName: 'Checkout Repository'
+
+  - task: AzureCLI@2
+    displayName: 'Validate Bicep Template'
+    inputs:
+      azureSubscription: '${{ parameters.ServiceConnectionName }}'
+      scriptType: 'ps'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        Write-Host "Validating Grafana Bicep template..."
+        if (!(Test-Path "eng/deployment/azure-managed-grafana.bicep")) {
+          throw "Bicep template not found: azure-managed-grafana.bicep"
+        }
+
+        az bicep build --file eng/deployment/azure-managed-grafana.bicep
+        if ($LASTEXITCODE -ne 0) {
+          throw "Bicep template validation failed"
+        }
+        Write-Host "SUCCESS: Bicep template validation successful"
+
+  - task: AzureCLI@2
+    displayName: 'Ensure Resource Group Exists'
+    inputs:
+      azureSubscription: '${{ parameters.ServiceConnectionName }}'
+      scriptType: 'ps'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        $ErrorActionPreference = 'Continue'
+        $rgName = "${{ parameters.GrafanaResourceGroup }}"
+        $location = "${{ parameters.GrafanaLocation }}"
+        
+        Write-Host "Checking if resource group '$rgName' exists..."
+        
+        # Check if resource group exists
+        $exists = az group exists --name $rgName
+        
+        if ($exists -eq 'false') {
+          Write-Host "Resource group does not exist. Creating resource group '$rgName' in '$location'..."
+          az group create --name $rgName --location $location --output none
+          if ($LASTEXITCODE -ne 0) {
+            throw "Failed to create resource group '$rgName'"
+          }
+          Write-Host "SUCCESS: Resource group created successfully"
+        } else {
+          Write-Host "SUCCESS: Resource group '$rgName' already exists"
+        }
+
+  - task: AzureResourceManagerTemplateDeployment@3
+    displayName: 'Deploy Grafana Workspace'
+    name: DeployGrafana
+    inputs:
+      deploymentScope: 'Resource Group'
+      azureResourceManagerConnection: '${{ parameters.ServiceConnectionName }}'
+      action: 'Create Or Update Resource Group'
+      resourceGroupName: '${{ parameters.GrafanaResourceGroup }}'
+      location: '${{ parameters.GrafanaLocation }}'
+      templateLocation: 'Linked artifact'
+      csmFile: 'eng/deployment/azure-managed-grafana.bicep'
+      overrideParameters: '-location "${{ parameters.GrafanaLocation }}" -grafanaWorkspaceName "${{ parameters.GrafanaWorkspaceName }}" -skuName "${{ parameters.GrafanaSkuName }}" -environment "${{ parameters.DeploymentEnvironment }}" -keyVaultName "${{ parameters.GrafanaKeyVault }}"'
+      deploymentMode: 'Incremental'
+      deploymentName: 'grafana-${{ parameters.DeploymentEnvironment }}-$(Build.BuildNumber)'
+      deploymentOutputs: 'grafanaOutputs'
+
+  - task: PowerShell@2
+    displayName: 'Export Grafana Identity'
+    name: ExportIdentity
+    inputs:
+      targetType: 'inline'
+      script: |
+        $outputs = '$(grafanaOutputs)' | ConvertFrom-Json
+        $identityId = $outputs.grafanaUserAssignedIdentityId.value
+        Write-Host "Grafana User-Assigned Identity ID: $identityId"
+        Write-Host "##vso[task.setvariable variable=GrafanaIdentityId;isOutput=true]$identityId"
+
+  - task: PowerShell@2
+    displayName: 'Export Grafana Endpoint and Key Vault for Dashboard Publishing'
+    name: ExportGrafanaInfo
+    inputs:
+      targetType: 'inline'
+      script: |
+        $outputs = '$(grafanaOutputs)' | ConvertFrom-Json
+        $endpoint = $outputs.grafanaWorkspaceUrl.value
+        $keyVaultName = $outputs.keyVaultName.value
+        
+        Write-Host "Grafana Endpoint: $endpoint"
+        Write-Host "Key Vault Name: $keyVaultName"
+        
+        Write-Host "##vso[task.setvariable variable=GrafanaEndpoint;isOutput=true]$endpoint"
+        Write-Host "##vso[task.setvariable variable=KeyVaultName;isOutput=true]$keyVaultName"
+
+  - task: AzureCLI@2
+    displayName: 'Grant Pipeline Service Principal Key Vault Secrets Access'
+    inputs:
+      azureSubscription: '${{ parameters.ServiceConnectionName }}'
+      scriptType: 'pscore'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        Write-Host "Granting pipeline service principal Key Vault Secrets Officer role..."
+        
+        $kvName = "${{ parameters.GrafanaKeyVault }}"
+        $rgName = "${{ parameters.GrafanaResourceGroup }}"
+        
+        # Get the current service principal object ID
+        $spObjectId = az account show --query "user.name" --output tsv
+        Write-Host "Service Principal Object ID: $spObjectId"
+        
+        # Get the Key Vault resource ID
+        $kvId = az keyvault show --name $kvName --resource-group $rgName --query "id" --output tsv
+        Write-Host "Key Vault: $kvName"
+        Write-Host "Key Vault ID: $kvId"
+        
+        # Check if role assignment already exists
+        $existingAssignment = az role assignment list `
+          --assignee $spObjectId `
+          --scope $kvId `
+          --role "Key Vault Secrets Officer" `
+          --query "[0].id" `
+          --output tsv
+        
+        if ($existingAssignment) {
+          Write-Host "✓ Pipeline service principal already has Key Vault Secrets Officer role"
+        } else {
+          Write-Host "Granting Key Vault Secrets Officer role..."
+          az role assignment create `
+            --role "Key Vault Secrets Officer" `
+            --assignee $spObjectId `
+            --scope $kvId `
+            --output none
+          
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "✓ Pipeline service principal granted Key Vault Secrets Officer role"
+          } else {
+            Write-Error "Failed to grant Key Vault Secrets Officer role"
+            exit 1
+          }
+        }
+        
+        Write-Host ""
+        Write-Host "ℹ️  Note: Azure RBAC permissions can take 5-10 minutes to propagate to Key Vault data plane"
+        Write-Host "ℹ️  The PublishDashboards stage has retry logic to handle propagation delays"
+
+  - task: AzureCLI@2
+    displayName: 'Grant Grafana Identity Monitoring Reader Access'
+    inputs:
+      azureSubscription: '${{ parameters.ServiceConnectionName }}'
+      scriptType: 'pscore'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        Write-Host "=========================================="
+        Write-Host "Granting Monitoring Reader to Grafana Identity"
+        Write-Host "=========================================="
+        Write-Host ""
+        
+        $workspaceName = "${{ parameters.GrafanaWorkspaceName }}"
+        $rgName = "${{ parameters.GrafanaResourceGroup }}"
+        $environment = "${{ parameters.DeploymentEnvironment }}"
+        
+        # Get the user-assigned managed identity (name matches Bicep template)
+        $managedIdentityName = if ($environment -eq 'Production') { 'dnceng-managed-grafana' } else { 'dnceng-managed-grafana-staging' }
+        Write-Host "Retrieving managed identity: $managedIdentityName"
+        
+        $identity = az identity show --name $managedIdentityName --resource-group $rgName --query '{principalId:principalId, clientId:clientId}' --output json | ConvertFrom-Json
+        
+        if (-not $identity) {
+          Write-Error "Failed to retrieve managed identity: $managedIdentityName"
+          exit 1
+        }
+        
+        $principalId = $identity.principalId
+        $clientId = $identity.clientId
+        
+        Write-Host "✓ Managed Identity: $managedIdentityName"
+        Write-Host "✓ Principal ID: $principalId"
+        Write-Host "✓ Client ID: $clientId"
+        Write-Host ""
+        
+        # Define common subscriptions shared across all environments
+        $commonSubscriptions = @(
+          @{name="HelixStaging"; id="cab65fc3-d077-467d-931f-3932eabf36d3"},
+          @{name="dnceng-internaltooling"; id="84a65c9a-787d-45da-b10a-3a1cefce8060"},
+          @{name="Dotnet Engineering services"; id="a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1"},
+          @{name="Helix"; id="68672ab8-de0c-40f1-8d1b-ffb20bd62c0f"}
+        )
+        
+        # Add environment-specific subscriptions
+        $subscriptions = @()
+        if ($environment -eq "Staging") {
+          $subscriptions += @{name=".NET Product Construction Services - Staging"; id="e6b5f9f5-0ca4-4351-879b-014d78400ec2"}
+        } else {
+          $subscriptions += @{name=".NET Product Construction Services"; id="fbd6122a-9ad3-42e4-976e-bccb82486856"}
+        }
+        $subscriptions += $commonSubscriptions
+        
+        Write-Host "Granting Monitoring Reader role on $($subscriptions.Count) subscriptions..."
+        Write-Host ""
+        
+        $monitoringReaderRoleId = "43d0d8ad-25c7-4714-9337-8ba259a9fe05"
+        $successCount = 0
+        $failCount = 0
+        
+        foreach ($sub in $subscriptions) {
+          Write-Host "Processing: $($sub.name) ($($sub.id))"
+          
+          # Check if role assignment already exists
+          $existingAssignment = az role assignment list `
+            --assignee $principalId `
+            --role "Monitoring Reader" `
+            --scope "/subscriptions/$($sub.id)" `
+            --query "[0].id" `
+            --output tsv 2>$null
+          
+          if ($existingAssignment) {
+            Write-Host "  ✓ Role assignment already exists"
+            $successCount++
+          } else {
+            Write-Host "  Creating role assignment..."
+            
+            $result = az role assignment create `
+              --role "Monitoring Reader" `
+              --assignee-object-id $principalId `
+              --assignee-principal-type ServicePrincipal `
+              --scope "/subscriptions/$($sub.id)" `
+              --output none 2>&1
+            
+            if ($LASTEXITCODE -eq 0) {
+              Write-Host "  ✓ Role assignment created successfully"
+              $successCount++
+            } else {
+              Write-Warning "  ⚠ Failed to create role assignment"
+              Write-Warning "  Error: $result"
+              $failCount++
+            }
+          }
+          Write-Host ""
+        }
+        
+        Write-Host "=========================================="
+        Write-Host "Role Assignment Summary"
+        Write-Host "=========================================="
+        Write-Host "✓ Successful: $successCount / $($subscriptions.Count)"
+        if ($failCount -gt 0) {
+          Write-Host "⚠ Failed: $failCount / $($subscriptions.Count)"
+          Write-Host ""
+          Write-Host "Note: Some failures may be due to lack of permissions on target subscriptions."
+          Write-Host "These role assignments may need to be granted manually by subscription owners."
+        }
+        Write-Host ""
+        Write-Host "ℹ️  RBAC propagation can take 2-5 minutes for Azure Monitor queries to work"
+        Write-Host ""
+
+  - task: AzureCLI@2
+    displayName: 'Install Azure Managed Grafana Extension'
+    inputs:
+      azureSubscription: '${{ parameters.ServiceConnectionName }}'
+      scriptType: 'ps'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        Write-Host "Installing Azure CLI Azure Managed Grafana extension..."
+        az extension add --name amg
+        if ($LASTEXITCODE -ne 0) {
+          Write-Host "Warning: Failed to install amg extension, will use alternative verification method"
+        } else {
+          Write-Host "SUCCESS: Azure Managed Grafana extension installed"
+        }
+
+  - task: AzureCLI@2
+    displayName: 'Verify Grafana Deployment'
+    inputs:
+      azureSubscription: '${{ parameters.ServiceConnectionName }}'
+      scriptType: 'ps'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        $workspaceName = "${{ parameters.GrafanaWorkspaceName }}"
+        $rgName = "${{ parameters.GrafanaResourceGroup }}"
+        
+        Write-Host "Verifying Grafana workspace deployment..."
+        
+        # Wait for deployment to complete
+        $maxAttempts = 5
+        $attempt = 0
+        do {
+          $attempt++
+          Write-Host "Verification attempt $attempt of $maxAttempts..."
+          
+          $workspace = az grafana show --name $workspaceName --resource-group $rgName 2>$null | ConvertFrom-Json
+          if ($workspace -and $workspace.properties.provisioningState -eq "Succeeded") {
+            break
+          }
+          
+          if ($attempt -lt $maxAttempts) {
+            Write-Host "Workspace not ready yet, waiting 30 seconds..."
+            Start-Sleep -Seconds 30
+          }
+        } while ($attempt -lt $maxAttempts)
+        
+        if (!$workspace) {
+          throw "Failed to verify Grafana workspace deployment"
+        }
+        
+        Write-Host "GRAFANA WORKSPACE DETAILS:"
+        Write-Host "   Name: $($workspace.name)"
+        Write-Host "   URL: $($workspace.properties.endpoint)"
+        Write-Host "   Location: $($workspace.location)"
+        Write-Host "   SKU: $($workspace.sku.name)"
+        Write-Host "   Status: $($workspace.properties.provisioningState)"
+        
+        # Display user-assigned identity details
+        if ($workspace.identity.type -eq "UserAssigned") {
+          $userIdentities = $workspace.identity.userAssignedIdentities
+          if ($userIdentities) {
+            Write-Host "   User-Assigned Identities:"
+            $userIdentities.PSObject.Properties | ForEach-Object {
+              $identityId = $_.Name
+              $identityName = $identityId.Split('/')[-1]
+              Write-Host "     Name: $identityName"
+              Write-Host "     Resource ID: $identityId"
+            }
+          }
+        } else {
+          Write-Host "   Principal ID: $($workspace.identity.principalId)"
+        }
+        
+        # Verify role assignments
+        Write-Host "Checking role assignments..."
+        $roleAssignments = az role assignment list --scope $workspace.id --query '[].{principalId:principalId, roleDefinitionName:roleDefinitionName}' 2>$null | ConvertFrom-Json
+        if ($roleAssignments) {
+          $roleAssignments | ForEach-Object { 
+            Write-Host "   Role: $($_.roleDefinitionName) - Principal: $($_.principalId)" 
+          }
+        } else {
+          Write-Host "   No role assignments found"
+        }
+        
+        # Verify Key Vault
+        $kvName = "${{ parameters.GrafanaKeyVault }}"
+        Write-Host ""
+        Write-Host "KEY VAULT DETAILS:"
+        $keyVault = az keyvault show --name $kvName --resource-group $rgName --query '{name:name, vaultUri:properties.vaultUri, sku:properties.sku.name}' -o json 2>$null | ConvertFrom-Json
+        if ($keyVault) {
+          Write-Host "   Name: $($keyVault.name)"
+          Write-Host "   Vault URI: $($keyVault.vaultUri)"
+          Write-Host "   SKU: $($keyVault.sku)"
+          Write-Host "   Status: Configured"
+        } else {
+          Write-Host "   Status: Not found or not accessible"
+        }
+        
+        Write-Host "SUCCESS: ${{ parameters.DeploymentEnvironment }} Grafana deployment verification completed"

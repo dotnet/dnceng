@@ -1,0 +1,117 @@
+{
+  "uid": "pcs-git-push-success-rate",
+  "title": "Git Push success rate alert",
+  "condition": "C",
+  "data": [
+    {
+      "refId": "A",
+      "queryType": "Azure Log Analytics",
+      "datasourceUid": "F2XodEi7z",
+      "model": {
+        "azureLogAnalytics": {
+          "dashboardTime": true,
+          "query": "customEvents\r\n| where name == \"GitPush\" and $__timeFilter(timestamp)\r\n| extend Success = tobool(customDimensions[\"Success\"])\r\n| summarize SuccessRate=100*countif(Success == true)/count() by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+          "resources": [
+            "[parameter(product-construction-service-appinsights-resourcepath)]"
+          ],
+          "resultFormat": "time_series",
+          "workspace": "[parameter(product-construction-service-workspace-resourcepath)]"
+        },
+        "azureMonitor": {
+          "dimensionFilters": [],
+          "timeGrain": "auto"
+        },
+        "datasource": {
+          "type": "grafana-azure-monitor-datasource",
+          "uid": "F2XodEi7z"
+        },
+        "queryType": "Azure Log Analytics",
+        "refId": "A",
+        "subscription": "[parameter(dotnet-product-construction-services-subscriptionid)]",
+        "subscriptions": [
+          "fbd6122a-9ad3-42e4-976e-bccb82486856",
+          "e6b5f9f5-0ca4-4351-879b-014d78400ec2"
+        ]
+      },
+      "relativeTimeRange": {
+        "from": 300,
+        "to": 0
+      }
+    },
+    {
+      "refId": "B",
+      "queryType": "",
+      "datasourceUid": "-100",
+      "model": {
+        "datasource": {
+          "type": "__expr__",
+          "uid": "-100"
+        },
+        "expression": "A",
+        "reducer": "mean",
+        "refId": "B",
+        "type": "reduce"
+      },
+      "relativeTimeRange": {
+        "from": 300,
+        "to": 0
+      }
+    },
+    {
+      "refId": "C",
+      "queryType": "",
+      "datasourceUid": "-100",
+      "model": {
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                80
+              ],
+              "type": "lt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "B"
+              ]
+            },
+            "type": "query"
+          }
+        ],
+        "datasource": {
+          "type": "__expr__",
+          "uid": "-100"
+        },
+        "expression": "B",
+        "refId": "C",
+        "type": "threshold"
+      }
+    }
+  ],
+  "noDataState": "KeepLast",
+  "execErrState": "KeepLast",
+  "for": "5m",
+  "frequency": "1m",
+  "annotations": {
+    "__dashboardUid__": "arcadeAvailability",
+    "__panelId__": "75",
+    "description": "[!IMPORTANT]\\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1318/-Alert-PCS-high-git-push-failure-rate)\\n\\nPCS has a high `git push` failure rate, please investigate\\n\\n@dotnet/prodconsvcs"
+  },
+  "labels": {
+    "NotificationId": "6ggqnvwrunnru1zfl4g42dn9qjzanb8a"
+  },
+  "__dashboardUid__": "arcadeAvailability",
+  "__panelId__": "75",
+  "folderUID": "arcade-services",
+  "ruleGroup": "PCS Alerts",
+  "intervalSeconds": 60,
+  "isPaused": false,
+  "notification_settings": {
+    "receiver": ".NET Status Alert",
+    "group_wait": "5m",
+    "repeat_interval": "4h"
+  }
+}
