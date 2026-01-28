@@ -1,0 +1,24 @@
+storageLocation:
+  type: azure-key-vault
+  parameters:
+    subscription: a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1
+    name: dnceng-amg-prod-kv
+
+secrets:
+  # API token for DotNet Status website
+  dotnet-build-bot-dotnet-eng-status-token:
+    type: text
+    parameters:
+      description: API token from https://dotneteng-status.azurewebsites.net/ - Generated using dotnet-build-bot account
+    
+  # Authorization header for Deployment Annotations datasource
+  dotneteng-status-auth-header:
+    type: text
+    parameters:
+      description: "Bearer token for status API - Format: Bearer <dotnet-build-bot-dotnet-eng-status-token>"
+  
+  # Teams webhook URL for alert notifications
+  fr-bot-notifications-teams-notification-url:
+    type: text
+    parameters:
+      description: Teams Incoming Webhook URL - Do not rotate

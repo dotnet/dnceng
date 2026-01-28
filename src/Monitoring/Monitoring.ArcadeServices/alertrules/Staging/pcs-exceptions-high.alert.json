@@ -1,0 +1,117 @@
+{
+  "uid": "pcs-exceptions-high",
+  "title": "PCS Exceptions High",
+  "condition": "C",
+  "data": [
+    {
+      "refId": "A",
+      "queryType": "Azure Log Analytics",
+      "datasourceUid": "F2XodEi7z",
+      "relativeTimeRange": {
+        "from": 300,
+        "to": 0
+      },
+      "model": {
+        "azureLogAnalytics": {
+          "dashboardTime": true,
+          "query": "exceptions\r\n| where $__timeFilter(timestamp) and problemId !contains \"SpaDefaultPageMiddleware\"\r\n| summarize Exceptions=count() by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+          "resources": [
+            "[parameter(product-construction-service-appinsights-resourcepath)]"
+          ],
+          "resultFormat": "time_series",
+          "workspace": "[parameter(default-workspace-resourcepath)]"
+        },
+        "azureMonitor": {
+          "dimensionFilters": [],
+          "timeGrain": "auto"
+        },
+        "datasource": {
+          "type": "grafana-azure-monitor-datasource",
+          "uid": "F2XodEi7z"
+        },
+        "queryType": "Azure Log Analytics",
+        "refId": "A",
+        "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]",
+        "subscriptions": [
+          "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+          "cab65fc3-d077-467d-931f-3932eabf36d3"
+        ]
+      }
+    },
+    {
+      "refId": "B",
+      "queryType": "",
+      "datasourceUid": "-100",
+      "relativeTimeRange": {
+        "from": 300,
+        "to": 0
+      },
+      "model": {
+        "datasource": {
+          "type": "__expr__",
+          "uid": "-100"
+        },
+        "expression": "A",
+        "reducer": "mean",
+        "refId": "B",
+        "type": "reduce"
+      }
+    },
+    {
+      "refId": "C",
+      "queryType": "",
+      "datasourceUid": "-100",
+      "model": {
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                15
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "B"
+              ]
+            },
+            "type": "query"
+          }
+        ],
+        "datasource": {
+          "type": "__expr__",
+          "uid": "-100"
+        },
+        "expression": "B",
+        "refId": "C",
+        "type": "threshold"
+      }
+    }
+  ],
+  "noDataState": "OK",
+  "execErrState": "KeepLast",
+  "for": "5m",
+  "frequency": "1m",
+  "annotations": {
+    "__dashboardUid__": "arcadeAvailability",
+    "__panelId__": "46",
+    "description": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1311/-Alert-PCS-Exceptions-High)\n\nThe PCS background work items started to fail frequently.\n\n@dotnet/prodconsvcs"
+  },
+  "labels": {
+    "NotificationId": "08f669cc1c3d325ee488666464"
+  },
+  "dashboardUid": "arcadeAvailability",
+  "panelId": "46",
+  "folderUID": "arcade-services",
+  "ruleGroup": "PCS Alerts",
+  "intervalMs": 900000,
+  "isPaused": false,
+  "notification_settings": {
+    "receiver": ".NET Status Alert",
+    "group_wait": "5m",
+    "repeat_interval": "4h"
+  }
+}
