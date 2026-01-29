@@ -129,6 +129,26 @@ public class MockAzureClient : IAzureDevOpsClient
         throw new NotImplementedException();
     }
 
+    public Task<WorkItem?> CreateAlertWorkItem(string project, string title, string description, string[] tags, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<WorkItem?> UpdateWorkItemTags(string project, int workItemId, string[] tagsToAdd, string[] tagsToRemove, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<string?> AddWorkItemComment(string project, int workItemId, string comment, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<WorkItem[]?> QueryWorkItemsByTag(string project, string tag, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
     public Task<string?> MatchLogLineSequence(string logUri, IReadOnlyList<Regex> regexes, CancellationToken cancellationToken)
     {
         return Task.FromResult(_urlDictionary.GetOrDefault(logUri, null));
