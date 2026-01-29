@@ -17,15 +17,28 @@
         "type": "dashboard"
       },
       {
-        "datasource": "Deployment Annotations",
-        "enable": false,
+        "datasource": {
+          "type": "yesoreyeram-infinity-datasource",
+          "uid": "deployment-annotations-infinity"
+        },
+        "enable": true,
+        "hide": false,
         "iconColor": "blue",
         "name": "Deployments",
         "target": {
-          "limit": 100,
-          "matchAny": false,
-          "tags": [],
-          "type": "dashboard"
+          "columns": [],
+          "filters": [],
+          "type": "json",
+          "source": "url",
+          "url": "/api/annotations/grafana?from=${__from:date:iso}&to=${__to:date:iso}",
+          "url_options": {
+            "data": "",
+            "method": "GET"
+          },
+          "format": "dataframe",
+          "format_version": "1.0",
+          "parser": "backend",
+          "root_selector": ""
         }
       }
     ]
@@ -130,7 +143,6 @@
         "showHeader": true,
         "sortBy": []
       },
-      "pluginVersion": "8.3.6",
       "targets": [
         {
           "azureLogAnalytics": {
@@ -1195,7 +1207,8 @@
             "dimensionFilters": [],
             "metricDefinition": "Microsoft.Insights/components",
             "metricName": "pcs.queue.wait_time",
-            "metricNamespace": "Azure.ApplicationInsights",
+            "customNamespace": "Azure.ApplicationInsights",
+            "metricNamespace": "Microsoft.Insights/components",
             "resourceGroup": "[parameter(product-construction-service-resourcegroup)]",
             "resourceName": "[parameter(product-construction-service-appinsights-resourcename)]",
             "timeGrain": "auto"
@@ -2198,7 +2211,7 @@
         "x": 12,
         "y": 57
       },
-      "id": 66,
+      "id": 75,
       "options": {
         "legend": {
           "calcs": [],
@@ -2516,15 +2529,15 @@
             "dashboardAlerts": true,
             "dashboardTitle": "",
             "maxItems": 10,
+            "showInactiveAlerts": true,
             "showOptions": "current",
             "sortOrder": 1,
             "stateFilter": {
-              "alerting": false,
-              "execution_error": false,
-              "no_data": false,
-              "ok": false,
-              "paused": false,
-              "pending": false
+              "firing": true,
+              "noData": true,
+              "normal": true,
+              "error": true,
+              "pending": true
             },
             "tags": []
           },
@@ -3322,10 +3335,12 @@
                 },
                 "query": {
                   "params": [
-                    "A",
-                    "1h",
-                    "now-10m"
-                  ]
+                    "A"
+                  ],
+                  "relativeTimeRange": {
+                    "from": 3600,
+                    "to": 600
+                  }
                 },
                 "reducer": {
                   "params": [],
@@ -3686,5 +3701,6 @@
   "timepicker": {},
   "timezone": "",
   "title": "Service Availability",
+  "uid": "arcadeAvailability",
   "weekStart": ""
 }

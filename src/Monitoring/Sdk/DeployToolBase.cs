@@ -12,6 +12,7 @@ public abstract class DeployToolBase
     protected const string DashboardExtension = ".dashboard.json";
     protected const string DatasourceExtension = ".datasource.json";
     protected const string NotificationExtension = ".notification.json";
+    protected const string AlertRuleExtension = ".alert.json";
     protected const string BaseUidTagPrefix = "baseuid:";
     protected const string SourceTagPrefix = "source:";
 
@@ -81,5 +82,10 @@ public abstract class DeployToolBase
     protected static string GetNameFromDatasourceFile(string fileName)
     {
         return fileName.Substring(0, fileName.Length - DatasourceExtension.Length);
+    }
+
+    protected static string GetUidFromAlertRuleFile(string fileName)
+    {
+        return fileName.Substring(0, fileName.Length - AlertRuleExtension.Length);
     }
 }

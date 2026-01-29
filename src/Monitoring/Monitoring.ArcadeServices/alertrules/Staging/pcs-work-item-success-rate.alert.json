@@ -1,0 +1,153 @@
+{
+    "uid": "pcs-work-item-success-rate",
+    "title": "PCS Work Item Success Rate alert",
+    "condition": "D",
+    "data": [
+        {
+            "refId": "A",
+            "queryType": "Azure Log Analytics",
+            "datasourceUid": "F2XodEi7z",
+            "relativeTimeRange": {
+                "from": 300,
+                "to": 0
+            },
+            "model": {
+                "azureLogAnalytics": {
+                    "dashboardTime": true,
+                    "query": "customEvents\r\n| where name == \"WorkItemExecuted\" and $__timeFilter(timestamp)\r\n| extend Success = tobool(customDimensions[\"Success\"])\r\n| summarize Successful = countif(Success == true), Failed = countif(Success == false) by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+                    "resources": [
+                        "[parameter(product-construction-service-appinsights-resourcepath)]"
+                    ],
+                    "resultFormat": "time_series",
+                    "workspace": "[parameter(default-workspace-resourcepath)]"
+                },
+                "azureMonitor": {
+                    "dimensionFilters": [],
+                    "timeGrain": "auto"
+                },
+                "datasource": {
+                    "type": "grafana-azure-monitor-datasource",
+                    "uid": "F2XodEi7z"
+                },
+                "queryType": "Azure Log Analytics",
+                "refId": "A",
+                "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]",
+                "subscriptions": [
+                    "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+                    "cab65fc3-d077-467d-931f-3932eabf36d3"
+                ]
+            }
+        },
+        {
+            "refId": "B",
+            "queryType": "Azure Log Analytics",
+            "datasourceUid": "F2XodEi7z",
+            "model": {
+                "azureLogAnalytics": {
+                    "dashboardTime": true,
+                    "query": "customEvents\r\n| where name == \"WorkItemExecuted\" and $__timeFilter(timestamp)\r\n| extend Success = tobool(customDimensions[\"Success\"])\r\n| summarize SuccessRate=100*countif(Success == true)/count() by bin(timestamp, $__interval)\r\n| order by timestamp asc",
+                    "resources": [
+                        "[parameter(product-construction-service-appinsights-resourcepath)]"
+                    ],
+                    "resultFormat": "time_series",
+                    "workspace": "[parameter(default-workspace-resourcepath)]"
+                },
+                "azureMonitor": {
+                    "dimensionFilters": [],
+                    "timeGrain": "auto"
+                },
+                "datasource": {
+                    "type": "grafana-azure-monitor-datasource",
+                    "uid": "F2XodEi7z"
+                },
+                "hide": false,
+                "queryType": "Azure Log Analytics",
+                "refId": "B",
+                "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]",
+                "subscriptions": [
+                    "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+                    "cab65fc3-d077-467d-931f-3932eabf36d3"
+                ]
+            },
+            "relativeTimeRange": {
+                "from": 300,
+                "to": 0
+            }
+        },
+        {
+            "refId": "C",
+            "queryType": "",
+            "datasourceUid": "-100",
+            "relativeTimeRange": {
+                "from": 300,
+                "to": 0
+            },
+            "model": {
+                "datasource": {
+                    "type": "__expr__",
+                    "uid": "-100"
+                },
+                "expression": "B",
+                "reducer": "mean",
+                "refId": "C",
+                "type": "reduce"
+            }
+        },
+        {
+            "refId": "D",
+            "queryType": "",
+            "datasourceUid": "-100",
+            "model": {
+                "conditions": [
+                    {
+                        "evaluator": {
+                            "params": [
+                                74
+                            ],
+                            "type": "lt"
+                        },
+                        "operator": {
+                            "type": "and"
+                        },
+                        "query": {
+                            "params": [
+                                "C"
+                            ]
+                        },
+                        "type": "query"
+                    }
+                ],
+                "datasource": {
+                    "type": "__expr__",
+                    "uid": "-100"
+                },
+                "expression": "C",
+                "refId": "D",
+                "type": "threshold"
+            }
+        }
+    ],
+    "noDataState": "KeepLast",
+    "execErrState": "KeepLast",
+    "for": "5m",
+    "frequency": "1m",
+    "annotations": {
+        "__dashboardUid__": "arcadeAvailability",
+        "__panelId__": "64",
+        "description": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1310/-Alert-PCS-Work-Item-Success-Rate-alert)\n\nThe PCS background work items started to fail frequently.\n\n@dotnet/prodconsvcs"
+    },
+    "labels": {
+        "NotificationId": "d71fe025a8954b6cad9866354ca041ee"
+    },
+    "__dashboardUid__": "arcadeAvailability",
+    "__panelId__": "64",
+    "folderUID": "arcade-services",
+    "ruleGroup": "PCS Alerts",
+    "intervalMs": 900000,
+    "isPaused": false,
+    "notification_settings": {
+        "receiver": ".NET Status Alert",
+        "group_wait": "5m",
+        "repeat_interval": "4h"
+    }
+}

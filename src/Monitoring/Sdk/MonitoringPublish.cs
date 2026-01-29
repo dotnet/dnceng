@@ -114,7 +114,12 @@ public class MonitoringPublish : BuildTask
             }
             catch (HttpRequestException e)
             {
-                Log.LogErrorFromException(e, showStackTrace: false, showDetail: false, file: "MonitoringPublish");
+                Log.LogErrorFromException(e, showStackTrace: true, showDetail: true, file: "MonitoringPublish");
+                return false;
+            }
+            catch (System.Exception e)
+            {
+                Log.LogErrorFromException(e, showStackTrace: true, showDetail: true, file: "MonitoringPublish");
                 return false;
             }
         }
