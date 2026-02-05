@@ -427,8 +427,10 @@ Recommended update steps for each account are:
 - Click on 'Reset Password' if the password is expired or will expire soon.
 - Copy the generated password to the clipboard before doing anything else. Paste it when requested
   below.
-- Run 'secret-manager --force-secret={parameters.AccountName}' to update the key vault with the
-  new password.
+- Run 'dotnet secret-manager synchronize --force-secret={parameters.AccountName} {vault.yaml}' to update the key vault with the
+  new password. 
+  Example: For dn-bot domain account, params will be dn-bot-account-redmond and helixkv.yaml respectively.
+
 
 ### Azure Active Directory Application
 Produces `<name>-app-id` and `<name>-app-secret`
