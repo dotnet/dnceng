@@ -1,0 +1,152 @@
+{
+    "uid": "work-items-waiting-time-test-queues",
+    "title": "Work Items Waiting Time Is Too High (Test Queues)",
+    "condition": "D",
+    "data": [
+        {
+            "refId": "A",
+            "queryType": "",
+            "datasourceUid": "OlcfOPi7z",
+            "relativeTimeRange": {
+                "from": 300,
+                "to": 0
+            },
+            "model": {
+                "database": "engineeringdata",
+                "datasource": {
+                    "type": "grafana-azure-data-explorer-datasource",
+                    "uid": "OlcfOPi7z"
+                },
+                "expression": {
+                    "groupBy": {
+                        "expressions": [],
+                        "type": "and"
+                    },
+                    "reduce": {
+                        "expressions": [],
+                        "type": "and"
+                    },
+                    "where": {
+                        "expressions": [],
+                        "type": "and"
+                    }
+                },
+                "query": "WorkItems \n| where  $__timeFilter(Queued)\n| project QueueName = tolower(QueueName), duration = datetime_diff('second', Started, Queued), Queued\n| where QueueName !contains \"osx\" and QueueName !contains \"perf\" and QueueName !contains \"arm\" and QueueName !contains \"arcade\" and QueueName !contains \"xaml\" and QueueName !contains \"appcompat\" and QueueName !contains \".tof\"\n| where QueueName !contains \"buildpool\"\n| summarize Percentile95 = percentile(duration, 95) / 60 by bin(Queued, 1d)\n| order by Queued asc ",
+                "querySource": "raw",
+                "rawMode": true,
+                "refId": "A",
+                "resultFormat": "table"
+            }
+        },
+        {
+            "refId": "B",
+            "queryType": "",
+            "datasourceUid": "OlcfOPi7z",
+            "relativeTimeRange": {
+                "from": 300,
+                "to": 0
+            },
+            "model": {
+                "database": "engineeringdata",
+                "datasource": {
+                    "type": "grafana-azure-data-explorer-datasource",
+                    "uid": "OlcfOPi7z"
+                },
+                "expression": {
+                    "groupBy": {
+                        "expressions": [],
+                        "type": "and"
+                    },
+                    "reduce": {
+                        "expressions": [],
+                        "type": "and"
+                    },
+                    "where": {
+                        "expressions": [],
+                        "type": "and"
+                    }
+                },
+                "query": "WorkItems \n| where  $__timeFilter(Queued)\n| project QueueName = tolower(QueueName), duration = datetime_diff('second', Started, Queued), Queued\n| where QueueName !contains \"osx\" and QueueName !contains \"perf\" and QueueName !contains \"arm\" and QueueName !contains \"arcade\" and QueueName !contains \"xaml\" and QueueName !contains \"appcompat\"\n| where QueueName !contains \"buildpool\"\n| summarize Percentile50 = percentile(duration, 50) / 60 by bin(Queued, 1d)\n| order by Queued asc ",
+                "querySource": "raw",
+                "rawMode": true,
+                "refId": "B",
+                "resultFormat": "table"
+            }
+        },
+        {
+            "refId": "C",
+            "queryType": "",
+            "datasourceUid": "-100",
+            "model": {
+                "datasource": {
+                    "type": "__expr__",
+                    "uid": "-100"
+                },
+                "expression": "A",
+                "reducer": "min",
+                "refId": "C",
+                "type": "reduce"
+            },
+            "relativeTimeRange": {
+                "from": 300,
+                "to": 0
+            }
+        },
+        {
+            "refId": "D",
+            "queryType": "",
+            "datasourceUid": "-100",
+            "model": {
+                "conditions": [
+                    {
+                        "evaluator": {
+                            "params": [
+                                35
+                            ],
+                            "type": "gt"
+                        },
+                        "operator": {
+                            "type": "and"
+                        },
+                        "query": {
+                            "params": [
+                                "C"
+                            ]
+                        },
+                        "type": "query"
+                    }
+                ],
+                "datasource": {
+                    "type": "__expr__",
+                    "uid": "-100"
+                },
+                "expression": "C",
+                "refId": "D",
+                "type": "threshold"
+            }
+        }
+    ],
+    "noDataState": "OK",
+    "execErrState": "Alerting",
+    "for": "5m",
+    "frequency": "5m",
+    "annotations": {
+        "__dashboardUid__": "home",
+        "__panelId__": "10",
+        "description": "95 percentile of work item waiting times is over 35 minutes. Test queues only."
+    },
+    "labels": {
+        "NotificationId": "work-items-waiting-time-test-queues"
+    },
+    "__dashboardUid__": "home",
+    "__panelId__": "10",
+    "folderUID": "arcade-services",
+    "ruleGroup": "Helix Queue Alerts",
+    "intervalMs": 300000,
+    "isPaused": false,
+    "notification_settings": {
+        "receiver": ".NET Status Alert",
+        "group_wait": "5m",
+        "repeat_interval": "4h"
+    }
+}

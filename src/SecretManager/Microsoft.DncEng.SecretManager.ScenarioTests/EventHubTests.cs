@@ -39,6 +39,7 @@ secrets:
   ";
 
         [Test]
+        [Ignore("Disabled - migrating to Managed Identity authentication, to be deleted after verification")]
         public async Task NewConnectionStringSecretTest()
         {
             string nameSuffix = Guid.NewGuid().ToString("N");
@@ -55,6 +56,7 @@ secrets:
         }
 
         [Test]
+        [Ignore("Disabled - migrating to Managed Identity authentication, to be deleted after verification")]
         public async Task RotateConnectionStringSecretTest()
         {
             string nameSuffix = Guid.NewGuid().ToString("N");

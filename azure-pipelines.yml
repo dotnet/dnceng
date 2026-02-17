@@ -7,6 +7,8 @@ variables:
   - name: _DotNetArtifactsCategory
     value: .NETCore
   - group: SDL_Settings
+  - name: ServiceConnectionName
+    value: 'Dotnet Engineering services'
 
 trigger:
   batch: true
@@ -195,6 +197,24 @@ extends:
                 contents: '*'
                 targetFolder: $(Build.ArtifactStagingDirectory)\eng
 
+            - task: AzureCLI@2
+              displayName: 'Validate Grafana Bicep Template'
+              inputs:
+                azureSubscription: '$(ServiceConnectionName)'
+                scriptType: 'ps'
+                scriptLocation: 'inlineScript'
+                inlineScript: |
+                  Write-Host "Validating Grafana Bicep template..."
+                  if (!(Test-Path "eng/deployment/azure-managed-grafana.bicep")) {
+                    throw "Bicep template not found: azure-managed-grafana.bicep"
+                  }
+
+                  az bicep build --file eng/deployment/azure-managed-grafana.bicep
+                  if ($LASTEXITCODE -ne 0) {
+                    throw "Bicep template validation failed"
+                  }
+                  Write-Host "SUCCESS: Bicep template validation successful"
+
     - template: /eng/common/templates-official/post-build/post-build.yml@self
       parameters:
         enableSymbolValidation: false
@@ -225,11 +245,14 @@ extends:
             PublishProfile: Int
             ServiceConnectionName: NetHelixStaging
             StatusVariableGroup: DotNetStatus Staging
-            GrafanaHost: https://dotnet-eng-grafana-staging.westus2.cloudapp.azure.com
-            GrafanaKeyVault: dotnet-grafana-staging
-            GrafanaVariableGroup: Dotnet-Grafana-Staging
             ServiceConnectionClientId: 57f299da-15de-4117-b8f6-7c10451926f0
             ServiceConnectionId: 7829de7e-fb4e-4118-8370-475d6bc61905
+            AMGServiceConnectionName: 'Dotnet Engineering services'
+            AMGServiceConnectionId: dd8c2cfc-b9c9-452c-a168-ccd4240ada55
+            AMGServiceConnectionClientId: fc1eb341-aea4-4a11-8f80-d14b8775b2ba
+            AMGDeploymentEnvironment: Staging
+            AMGGrafanaWorkspaceName: dnceng-grafana-staging
+            AMGGrafanaKeyVault: dnceng-amg-int-kv
           ${{ else }}:
             DeploymentEnvironment: Production
             DotNetStatusAppName: dotneteng-status
@@ -237,8 +260,11 @@ extends:
             PublishProfile: Prod
             ServiceConnectionName: NetHelix
             StatusVariableGroup: DotNetStatus Production
-            GrafanaHost: https://dotnet-eng-grafana.westus2.cloudapp.azure.com
-            GrafanaKeyVault: dotnet-grafana
-            GrafanaVariableGroup: Dotnet-Grafana-Production
             ServiceConnectionClientId: fc1eb341-aea4-4a11-8f80-d14b8775b2ba
             ServiceConnectionId: 4a511f6f-b538-48e6-a389-207e430634d1
+            AMGServiceConnectionName: 'Dotnet Engineering services'
+            AMGServiceConnectionId: dd8c2cfc-b9c9-452c-a168-ccd4240ada55
+            AMGServiceConnectionClientId: fc1eb341-aea4-4a11-8f80-d14b8775b2ba
+            AMGDeploymentEnvironment: Production
+            AMGGrafanaWorkspaceName: dnceng-grafana
+            AMGGrafanaKeyVault: dnceng-amg-prod-kv

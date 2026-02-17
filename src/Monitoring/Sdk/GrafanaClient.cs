@@ -130,26 +130,31 @@ public sealed class GrafanaClient : IDisposable
         }
     }
 
-    public Task<JObject> CreateFolderAsync(string uid, string title)
+    public async Task<JObject> CreateFolderAsync(string uid, string title)
     {
+        // First try to get the folder - if it exists, just return it
+        var getUri = new Uri(new Uri(_baseUrl), $"/api/folders/{Uri.EscapeDataString(uid)}");
+        using (HttpResponseMessage getResponse = await _client.GetAsync(getUri).ConfigureAwait(false))
+        {
+            if (getResponse.IsSuccessStatusCode)
+            {
+                using (Stream stream = await getResponse.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                using (var streamReader = new StreamReader(stream))
+                using (var jsonReader = new JsonTextReader(streamReader))
+                {
+                    return await JObject.LoadAsync(jsonReader).ConfigureAwait(false);
+                }
+            }
+        }
+
+        // Folder doesn't exist, create it
         var folder = new JObject
         {
             {"uid", uid},
             {"title", title},
         };
 
-        return CreateOrUpdateAsync(
-            folder,
-            folder.Value<string>("uid"),
-            u => $"/api/folders/{Uri.EscapeDataString(u)}",
-            "/api/folders",
-            _ => (HttpMethod.Put, $"/api/folders/{uid}"),
-            (d, x) =>
-            {
-                d.Remove("uid");
-                d["version"] = x.Value<int>("version");
-            }
-        );
+        return await SendObjectAsync(folder, new Uri(new Uri(_baseUrl), "/api/folders")).ConfigureAwait(false);
     }
         
     public Task CreateDatasourceAsync(JObject datasource)
@@ -183,6 +188,55 @@ public sealed class GrafanaClient : IDisposable
                 d["version"] = x.Value<int>("version");
             }
         );
+    }
+
+    public async Task CreateContactPointAsync(JObject contactPoint)
+    {
+        string name = contactPoint.Value<string>("name");
+        
+        // List all contact points to find if one with this name already exists
+        var listUri = new Uri(new Uri(_baseUrl), "/api/v1/provisioning/contact-points");
+        
+        using (HttpResponseMessage listResponse = await _client.GetAsync(listUri).ConfigureAwait(false))
+        {
+            await listResponse.EnsureSuccessWithContentAsync();
+            
+            JArray allContactPoints;
+            using (Stream stream = await listResponse.Content.ReadAsStreamAsync().ConfigureAwait(false))
+            using (var streamReader = new StreamReader(stream))
+            using (var jsonReader = new JsonTextReader(streamReader))
+            {
+                allContactPoints = await JArray.LoadAsync(jsonReader).ConfigureAwait(false);
+            }
+            
+            // Find existing contact point by name
+            JObject existing = null;
+            foreach (JToken item in allContactPoints)
+            {
+                if (item is JObject cp && cp.Value<string>("name") == name)
+                {
+                    existing = cp;
+                    break;
+                }
+            }
+            
+            if (existing != null)
+            {
+                // Update existing contact point using UID
+                string existingUid = existing.Value<string>("uid");
+                var updateUri = new Uri(new Uri(_baseUrl), $"/api/v1/provisioning/contact-points/{Uri.EscapeDataString(existingUid)}");
+                
+                // Preserve the existing uid
+                contactPoint["uid"] = existingUid;
+                
+                await SendObjectAsync(contactPoint, updateUri, HttpMethod.Put).ConfigureAwait(false);
+                return;
+            }
+        }
+        
+        // Create new contact point using POST only if not found
+        var createUri = new Uri(new Uri(_baseUrl), "/api/v1/provisioning/contact-points");
+        await SendObjectAsync(contactPoint, createUri, HttpMethod.Post).ConfigureAwait(false);
     }
 
     private async Task<JObject> CreateOrUpdateAsync<TExternalId>(
@@ -317,6 +371,88 @@ public sealed class GrafanaClient : IDisposable
                 return await JObject.LoadAsync(jsonReader).ConfigureAwait(false);
             }
         }
+    }
+
+    public async Task<JObject> GetContactPointAsync(string name)
+    {
+        var uri = new Uri(new Uri(_baseUrl), $"/api/v1/provisioning/contact-points/{Uri.EscapeDataString(name)}");
+
+        using (HttpResponseMessage response = await _client.GetAsync(uri).ConfigureAwait(false))
+        {
+            if (response.StatusCode == HttpStatusCode.NotFound)
+                return null;
+
+            await response.EnsureSuccessWithContentAsync();
+
+            using (Stream stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+            using (var streamReader = new StreamReader(stream))
+            using (var jsonReader = new JsonTextReader(streamReader))
+            {
+                return await JObject.LoadAsync(jsonReader).ConfigureAwait(false);
+            }
+        }
+    }
+
+    public async Task CreateAlertRuleAsync(JObject alertRule)
+    {
+        string uid = alertRule.Value<string>("uid");
+        
+        // Check if alert rule already exists
+        var getUri = new Uri(new Uri(_baseUrl), $"/api/v1/provisioning/alert-rules/{Uri.EscapeDataString(uid)}");
+        
+        using (HttpResponseMessage existCheck = await _client.GetAsync(getUri).ConfigureAwait(false))
+        {
+            if (existCheck.StatusCode == HttpStatusCode.NotFound)
+            {
+                // Create new alert rule
+                var createUri = new Uri(new Uri(_baseUrl), "/api/v1/provisioning/alert-rules");
+                await SendObjectAsync(alertRule, createUri, HttpMethod.Post).ConfigureAwait(false);
+            }
+            else
+            {
+                // Update existing alert rule
+                await existCheck.EnsureSuccessWithContentAsync();
+                
+                // Get existing version and provenance
+                using (Stream stream = await existCheck.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                using (var streamReader = new StreamReader(stream))
+                using (var jsonReader = new JsonTextReader(streamReader))
+                {
+                    JObject existing = await JObject.LoadAsync(jsonReader).ConfigureAwait(false);
+                    
+                    // Preserve id and updated timestamp
+                    if (existing.TryGetValue("id", out JToken idToken))
+                        alertRule["id"] = idToken;
+                    if (existing.TryGetValue("updated", out JToken updatedToken))
+                        alertRule["updated"] = updatedToken;
+                }
+                
+                var updateUri = new Uri(new Uri(_baseUrl), $"/api/v1/provisioning/alert-rules/{Uri.EscapeDataString(uid)}");
+                await SendObjectAsync(alertRule, updateUri, HttpMethod.Put).ConfigureAwait(false);
+            }
+        }
+    }
+
+    public async Task SetHomeDashboardAsync(string dashboardUid)
+    {
+        // Set organization preferences (home dashboard and timezone)
+        var preferences = new JObject
+        {
+            {"homeDashboardUID", dashboardUid},
+            {"timezone", "browser"}
+        };
+
+        var preferencesUri = new Uri(new Uri(_baseUrl), "/api/org/preferences");
+        await SendObjectAsync(preferences, preferencesUri, HttpMethod.Put).ConfigureAwait(false);
+
+        // Set organization name
+        var orgDetails = new JObject
+        {
+            {"name", ".NET Engineering Services"}
+        };
+
+        var orgUri = new Uri(new Uri(_baseUrl), "/api/org");
+        await SendObjectAsync(orgDetails, orgUri, HttpMethod.Put).ConfigureAwait(false);
     }
 
     public void Dispose()
