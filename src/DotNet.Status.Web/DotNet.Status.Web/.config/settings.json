@@ -287,6 +287,17 @@
     "RcaRequestedLabels": [ "RCA Requested" ],
     "RcaLabel": "RCA"
   },
+  "GrafanaAlert": {
+    "Organization": "dnceng",
+    "Project": "internal",
+    "AreaPath": ".NET Engineering Systems\\First Responder",
+    "WorkItemType": "Bug",
+    "NotificationTargets": [],
+    "AlertTags": [],
+    "EnvironmentTags": [],
+    "TitlePrefix": "",
+    "SupplementalBodyText": ""
+  },
   "AzureTableTokenStore": {
     "TableName": "tokens"
   },

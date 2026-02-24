@@ -45,6 +45,16 @@
   "GitHub": {
     "TitlePrefix": "LOCAL DEV - "
   },
+  "GrafanaAlert": {
+    "Organization": "dnceng",
+    "Project": "internal",
+    "AreaPath": ".NET Engineering Systems\\First Responder",
+    "WorkItemType": "Bug",
+    "NotificationTargets": [],
+    "AlertTags": [],
+    "EnvironmentTags": [],
+    "TitlePrefix": "LOCAL DEV - "
+  },
   "DataProtection": {
     "StorageAccountConnectionString": "",
     "KeyIdentifier": ""
