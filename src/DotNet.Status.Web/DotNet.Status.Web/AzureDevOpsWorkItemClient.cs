@@ -106,7 +106,7 @@ public sealed class AzureDevOpsWorkItemClient : IAzureDevOpsWorkItemClient
         string url = $"_apis/wit/workitems/{workItemId}?api-version={ApiVersion}";
 
         List<object> patchOps = fields
-            .Select(kvp => (object)new { op = "add", path = $"/fields/{kvp.Key}", value = kvp.Value })
+            .Select(kvp => (object)new { op = "replace", path = $"/fields/{kvp.Key}", value = kvp.Value })
             .ToList();
 
         string body = JsonConvert.SerializeObject(patchOps);

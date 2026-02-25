@@ -10,7 +10,6 @@ public class GrafanaAlertOptions
     public string Project { get; set; }
     public string AreaPath { get; set; }
     public string WorkItemType { get; set; } = "Bug";
-    public string[] NotificationTargets { get; set; }
     public string[] AlertTags { get; set; }
     public string[] EnvironmentTags { get; set; }
     public string TitlePrefix { get; set; }

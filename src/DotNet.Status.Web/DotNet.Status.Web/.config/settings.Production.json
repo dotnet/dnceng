@@ -17,7 +17,6 @@
     "Project": "internal",
     "AreaPath": ".NET Engineering Systems\\First Responder",
     "WorkItemType": "Bug",
-    "NotificationTargets": [ "dotnet/dnceng", "dotnet/prodconsvcs" ],
     "AlertTags": [ "Ops - First Responder", "Critical" ],
     "EnvironmentTags": [ "Production" ],
     "TitlePrefix": "Production - ",

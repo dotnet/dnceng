@@ -202,12 +202,6 @@ public class AlertHookController : ControllerBase
 
         sb.Append($"<p><a href=\"{WebUtility.HtmlEncode(notification.RuleUrl)}\">Go to rule</a></p>");
 
-        if (options.NotificationTargets?.Length > 0)
-        {
-            string mentions = string.Join(", ", options.NotificationTargets.Select(t => $"@{t}"));
-            sb.Append($"<p>{mentions}, please investigate</p>");
-        }
-
         if (!string.IsNullOrEmpty(options.SupplementalBodyText))
         {
             sb.Append($"<p>{WebUtility.HtmlEncode(options.SupplementalBodyText)}</p>");

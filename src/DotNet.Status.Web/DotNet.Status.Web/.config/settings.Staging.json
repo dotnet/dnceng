@@ -16,7 +16,6 @@
     "Project": "internal",
     "AreaPath": ".NET Engineering Systems\\First Responder",
     "WorkItemType": "Bug",
-    "NotificationTargets": [ "dotnet/dnceng", "dotnet/prodconsvcs" ],
     "AlertTags": [ "Ops - First Responder" ],
     "EnvironmentTags": [ "Staging" ],
     "TitlePrefix": "Staging - ",
