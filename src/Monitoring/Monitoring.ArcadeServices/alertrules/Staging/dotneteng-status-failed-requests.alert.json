@@ -1,0 +1,119 @@
+{
+  "uid": "dotneteng-status-failed-requests",
+  "title": "DotNetEng Status Failed Requests/Hour alert",
+  "condition": "C",
+  "data": [
+    {
+      "refId": "A",
+      "queryType": "Azure Log Analytics",
+      "datasourceUid": "F2XodEi7z",
+      "model": {
+        "azureLogAnalytics": {
+          "dashboardTime": true,
+          "query": "let r = requests | where $__timeFilter(timestamp);\nlet f = coalesce(toscalar(r | summarize min(timestamp)), ago(1d));\nlet t = coalesce(toscalar(r | summarize max(timestamp)), now());\nlet span=(t - f)/60;\nlet interval=case(span >= 1d, bin(span, 1d), span >= 1h, bin(span, 1h), 15m);\nlet intervalHours = interval / 1h;\nr\n| where success == false\n| make-series kind=nonempty valueCount=count() default=0 on timestamp in range(f, t, interval)\n| mv-expand timestamp to typeof(datetime), valueCount to typeof(double)\n| project timestamp, failuresCount=valueCount/intervalHours",
+          "resources": [
+            "/subscriptions/68672ab8-de0c-40f1-8d1b-ffb20bd62c0f/resourceGroups/monitoring/providers/microsoft.insights/components/DotNetEng-Status-Prod"
+          ],
+          "resultFormat": "time_series",
+          "workspace": "/subscriptions/68672ab8-de0c-40f1-8d1b-ffb20bd62c0f/resourcegroups/defaultresourcegroup-eus/providers/microsoft.operationalinsights/workspaces/defaultworkspace-68672ab8-de0c-40f1-8d1b-ffb20bd62c0f-eus"
+        },
+        "azureMonitor": {
+          "dimensionFilter": "*",
+          "dimensionFilters": [],
+          "timeGrain": "auto",
+          "top": "10"
+        },
+        "datasource": {
+          "type": "grafana-azure-monitor-datasource",
+          "uid": "F2XodEi7z"
+        },
+        "queryType": "Azure Log Analytics",
+        "refId": "A",
+        "subscription": "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+        "subscriptions": [
+          "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+          "cab65fc3-d077-467d-931f-3932eabf36d3"
+        ]
+      },
+      "relativeTimeRange": {
+        "from": 3600,
+        "to": 600
+      }
+    },
+    {
+      "refId": "B",
+      "queryType": "",
+      "datasourceUid": "-100",
+      "model": {
+        "datasource": {
+          "type": "__expr__",
+          "uid": "-100"
+        },
+        "expression": "A",
+        "reducer": "mean",
+        "refId": "B",
+        "type": "reduce"
+      },
+      "relativeTimeRange": {
+        "from": 3600,
+        "to": 600
+      }
+    },
+    {
+      "refId": "C",
+      "queryType": "",
+      "datasourceUid": "-100",
+      "model": {
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                20
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "B"
+              ]
+            },
+            "type": "query"
+          }
+        ],
+        "datasource": {
+          "type": "__expr__",
+          "uid": "-100"
+        },
+        "expression": "B",
+        "refId": "C",
+        "type": "threshold"
+      }
+    }
+  ],
+  "noDataState": "OK",
+  "execErrState": "KeepLast",
+  "for": "5m",
+  "frequency": "1m",
+  "annotations": {
+    "__dashboardUid__": "arcadeAvailability",
+    "__panelId__": "44",
+    "description": "The number of failed DotNetEng Status requests per hour is above 20. This may indicate a systemic problem that needs to be investigated.\\nTo intially investigate prod, run the following query in DotNetEng-Status-Prod, and to investigate staging, run the query in DotNetEng-Status-Staging:\\n\\n```\\nunion exceptions, traces\\n| project timestamp, operation_Name, customDimensions, message, problemId, details\\n| order by timestamp asc\\n```"
+  },
+  "labels": {
+    "NotificationId": "d2dd705a6c724ed68fcf6955561c06dd"
+  },
+  "__dashboardUid__": "arcadeAvailability",
+  "__panelId__": "44",
+  "folderUID": "arcade-services",
+  "ruleGroup": "DotNetEng Status Alerts",
+  "intervalMs": 900000,
+  "isPaused": false,
+  "notification_settings": {
+    "receiver": ".NET Status Alert",
+    "group_wait": "5m",
+    "repeat_interval": "4h"
+  }
+}

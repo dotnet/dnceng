@@ -1,0 +1,208 @@
+parameters:
+- name: AMGServiceConnectionName
+  type: string
+- name: AMGServiceConnectionClientId
+  type: string
+- name: AMGServiceConnectionId
+  type: string
+- name: AMGDeploymentEnvironment
+  type: string
+- name: AMGGrafanaWorkspaceName
+  type: string
+- name: AMGGrafanaKeyVault
+  type: string
+
+stages:
+- stage: DeployGrafana
+  displayName: 'Deploy Grafana Infrastructure and Dashboards'
+  pool:
+    name: NetCore1ESPool-Internal-NoMSI
+    demands: ImageOverride -equals 1es-windows-2019
+  dependsOn:
+  - predeploy
+  - approval
+  jobs:
+  - template: /eng/provision-grafana.yaml@self
+    parameters:
+      DeploymentEnvironment: ${{ parameters.AMGDeploymentEnvironment }}
+      ServiceConnectionName: ${{ parameters.AMGServiceConnectionName }}
+      GrafanaResourceGroup: 'monitoring-managed'
+      GrafanaWorkspaceName: ${{ parameters.AMGGrafanaWorkspaceName }}
+      GrafanaLocation: 'westus2'
+      GrafanaKeyVault: ${{ parameters.AMGGrafanaKeyVault }}
+  - job: SetupToken
+    dependsOn: ProvisionGrafana
+    displayName: 'Setup Grafana API Token'
+    variables:
+      GrafanaEndpoint: $[ dependencies.ProvisionGrafana.outputs['ExportGrafanaInfo.GrafanaEndpoint'] ]
+    pool:
+      name: NetCore1ESPool-Internal
+      demands: ImageOverride -equals 1es-windows-2022
+    steps:
+    - task: AzureCLI@2
+      displayName: 'Grant Pipeline Service Principal Grafana Admin Role'
+      inputs:
+        azureSubscription: ${{ parameters.AMGServiceConnectionName }}
+        scriptType: 'pscore'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          Write-Host "Granting pipeline service principal Grafana Admin role..."
+          
+          $workspaceName = "${{ parameters.AMGGrafanaWorkspaceName }}"
+          $rgName = "monitoring-managed"
+          
+          # Get the current service principal object ID
+          $spObjectId = az account show --query "user.name" --output tsv
+          Write-Host "Service Principal Object ID: $spObjectId"
+          
+          # Get the Grafana workspace resource ID
+          $grafanaId = az grafana show --name $workspaceName --resource-group $rgName --query "id" --output tsv
+          Write-Host "Grafana Workspace: $workspaceName"
+          Write-Host "Grafana ID: $grafanaId"
+          
+          # Check if role assignment already exists
+          $existingAssignment = az role assignment list `
+            --assignee $spObjectId `
+            --scope $grafanaId `
+            --role "Grafana Admin" `
+            --query "[0].id" `
+            --output tsv
+          
+          if ($existingAssignment) {
+            Write-Host "✓ Pipeline service principal already has Grafana Admin role"
+          } else {
+            Write-Host "Granting Grafana Admin role..."
+            az role assignment create `
+              --role "Grafana Admin" `
+              --assignee $spObjectId `
+              --scope $grafanaId `
+              --output none
+            
+            if ($LASTEXITCODE -eq 0) {
+              Write-Host "✓ Pipeline service principal granted Grafana Admin role"
+              Write-Host "⏱  Waiting 15 seconds for role assignment to propagate..."
+              Start-Sleep -Seconds 15
+            } else {
+              Write-Error "Failed to grant Grafana Admin role"
+              exit 1
+            }
+          }
+
+    - task: AzureCLI@2
+      displayName: 'Create or Validate Grafana API Token'
+      inputs:
+        azureSubscription: ${{ parameters.AMGServiceConnectionName }}
+        scriptType: 'pscore'
+        scriptLocation: 'scriptPath'
+        scriptPath: 'eng/setup-grafana-api-token.ps1'
+        arguments: >-
+          -Environment "${{ parameters.AMGDeploymentEnvironment }}"
+          -KeyVaultName "${{ parameters.AMGGrafanaKeyVault }}"
+
+  - job: PublishDashboards
+    displayName: 'Publish Dashboards to Azure Managed Grafana'
+    dependsOn: 
+    - ProvisionGrafana
+    - SetupToken
+    pool:
+      name: NetCore1ESPool-Internal
+      demands: ImageOverride -equals 1es-windows-2022
+    variables:
+      GrafanaEndpoint: $[ dependencies.ProvisionGrafana.outputs['ExportGrafanaInfo.GrafanaEndpoint'] ]
+      System.AccessToken: $(System.AccessToken)
+    steps:
+    - task: UseDotNet@2
+      displayName: 'Install Correct .NET Version'
+      inputs:
+        useGlobalJson: true
+    
+    - script: dotnet publish --configuration Release $(Build.SourcesDirectory)\src\Monitoring\Sdk\Microsoft.DotNet.Monitoring.Sdk.csproj -f net8.0
+      displayName: 'Build Monitoring SDK'
+    
+    - task: AzureCLI@2
+      displayName: 'Publish Grafana Dashboards'
+      inputs:
+        azureSubscription: ${{ parameters.AMGServiceConnectionName }}
+        scriptType: 'pscore'
+        scriptLocation: 'inlineScript'
+        addSpnToEnvironment: true
+        inlineScript: |
+          Write-Host "=========================================="
+          Write-Host "Publishing Dashboards to Azure Managed Grafana"
+          Write-Host "=========================================="
+          Write-Host "Grafana Endpoint: $(GrafanaEndpoint)"
+          Write-Host "Environment: ${{ parameters.AMGDeploymentEnvironment }}"
+          Write-Host ""
+          
+          # Get the API token from Key Vault with retry logic for RBAC propagation
+          $tokenSecretName = "grafana-admin-api-key"
+          Write-Host "Retrieving API token from Key Vault..."
+          
+          $apiToken = $null
+          $maxRetries = 5
+          $retryCount = 0
+          $waitSeconds = 60
+          
+          while (-not $apiToken -and $retryCount -lt $maxRetries) {
+            try {
+              $apiToken = az keyvault secret show --vault-name "${{ parameters.AMGGrafanaKeyVault }}" --name $tokenSecretName --query "value" --output tsv 2>&1
+              
+              if ($LASTEXITCODE -eq 0 -and $apiToken -and $apiToken.Trim()) {
+                Write-Host "✓ API token retrieved successfully from Key Vault"
+                break
+              } else {
+                $apiToken = $null
+                throw "Failed to retrieve token"
+              }
+            } catch {
+              $retryCount++
+              if ($retryCount -lt $maxRetries) {
+                Write-Host "⏱  Waiting for Key Vault access (attempt $retryCount/$maxRetries, waiting $waitSeconds seconds)..."
+                Start-Sleep -Seconds $waitSeconds
+              } else {
+                Write-Error "Unable to retrieve API token after $maxRetries attempts ($($maxRetries * $waitSeconds) seconds total)"
+                Write-Error "Secret name: $tokenSecretName"
+                Write-Error "Key Vault: ${{ parameters.AMGGrafanaKeyVault }}"
+                Write-Error ""
+                Write-Error "Possible causes:"
+                Write-Error "1. RBAC permissions haven't propagated yet (can take 5-10 minutes)"
+                Write-Error "2. The SetupToken job failed to create the token"
+                Write-Error "3. The pipeline service principal doesn't have Key Vault Secrets Officer role"
+                Write-Error ""
+                exit 1
+              }
+            }
+          }
+          
+          Write-Host ""
+          Write-Host "Publishing dashboards using MSBuild SDK..."
+          Write-Host ""
+          
+          # Publish using the same MSBuild SDK as self-hosted Grafana
+          dotnet build $(Build.SourcesDirectory)\src\Monitoring\Monitoring.ArcadeServices\Monitoring.ArcadeServices.proj `
+            --configuration Release `
+            -t:PublishGrafana `
+            -p:GrafanaAccessToken=$apiToken `
+            -p:GrafanaHost="$(GrafanaEndpoint)" `
+            -p:GrafanaKeyVaultName="${{ parameters.AMGGrafanaKeyVault }}" `
+            -p:GrafanaEnvironment="${{ parameters.AMGDeploymentEnvironment }}" `
+            -p:ParametersFile=parameters.json `
+            -p:ClientId="${{ parameters.AMGServiceConnectionClientId }}" `
+            -p:ServiceConnectionId="${{ parameters.AMGServiceConnectionId }}" `
+            -p:SystemAccessToken="$(System.AccessToken)" `
+            -v:normal
+          
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to publish dashboards to Grafana"
+            exit 1
+          }
+          
+          Write-Host ""
+          Write-Host "=========================================="
+          Write-Host "✓ SUCCESS! Dashboards Published"
+          Write-Host "=========================================="
+          Write-Host ""
+          Write-Host "View your dashboards at:"
+          Write-Host "$(GrafanaEndpoint)/dashboards"
+          Write-Host ""
+

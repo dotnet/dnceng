@@ -1,0 +1,255 @@
+#!/usr/bin/env pwsh
+
+param(
+    [Parameter(Mandatory=$true)]
+    [ValidateSet("Staging", "Production")]
+    [string]$Environment,
+    
+    [Parameter(Mandatory=$false)]
+    [string]$ApiToken,
+    
+    [Parameter(Mandatory=$true)]
+    [string]$KeyVaultName
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+# Determine workspace and Key Vault names
+$workspaceName = if ($Environment -eq "Production") { "dnceng-grafana" } else { "dnceng-grafana-staging" }
+$resourceGroup = "monitoring-managed"
+$keyVaultName = $KeyVaultName
+$tokenSecretName = "grafana-admin-api-key"
+
+Write-Host "=========================================="
+Write-Host "Setup Grafana API Token"
+Write-Host "=========================================="
+Write-Host "Environment:    $Environment"
+Write-Host "Workspace:      $workspaceName"
+Write-Host "Key Vault:      $keyVaultName"
+Write-Host "Secret Name:    $tokenSecretName"
+Write-Host ""
+
+# Get Grafana endpoint
+Write-Host "Getting Grafana workspace endpoint..."
+$grafanaInfo = az grafana show --name $workspaceName --resource-group $resourceGroup --query "{endpoint:properties.endpoint, status:properties.provisioningState}" -o json | ConvertFrom-Json
+
+if (-not $grafanaInfo -or $grafanaInfo.status -ne "Succeeded") {
+    Write-Error "Grafana workspace '$workspaceName' is not ready. Status: $($grafanaInfo.status)"
+    exit 1
+}
+
+$grafanaEndpoint = $grafanaInfo.endpoint
+Write-Host "✓ Grafana Endpoint: $grafanaEndpoint"
+Write-Host ""
+
+# Check if token already exists
+Write-Host "Checking if API token already exists in Key Vault..."
+$existingToken = az keyvault secret show --vault-name $keyVaultName --name $tokenSecretName --query "value" -o tsv 2>$null
+
+if ($existingToken) {
+    Write-Host "✓ Found existing token in Key Vault"
+    Write-Host ""
+    Write-Host "Validating token..."
+    
+    # Test if the token is still valid by calling Grafana API
+    $headers = @{
+        "Authorization" = "Bearer $existingToken"
+        "Content-Type" = "application/json"
+    }
+    
+    try {
+        # Test the token by getting org info (lightweight API call)
+        $testResponse = Invoke-RestMethod -Uri "$grafanaEndpoint/api/org" -Method Get -Headers $headers -ErrorAction Stop
+        Write-Host "✓ Token is valid and working!"
+        Write-Host "  Organization: $($testResponse.name)"
+        Write-Host ""
+        Write-Host "Using existing token. No need to create a new one."
+        Write-Host ""
+        Write-Host "=========================================="
+        Write-Host "✓ Setup Complete!"
+        Write-Host "=========================================="
+        Write-Host ""
+        Write-Host "The existing API token in Key Vault is valid."
+        Write-Host "  Key Vault: $keyVaultName"
+        Write-Host "  Secret:    $tokenSecretName"
+        Write-Host ""
+        Write-Host "The pipeline can publish dashboards to:"
+        Write-Host "  $grafanaEndpoint"
+        Write-Host ""
+        exit 0
+    } catch {
+        Write-Host "⚠ Existing token is invalid or expired"
+        Write-Host "  Error: $($_.Exception.Message)"
+        Write-Host ""
+        Write-Host "A new token will be created..."
+        Write-Host ""
+    }
+}
+
+# Get API token if not provided
+if (-not $ApiToken) {
+    Write-Host "=========================================="
+    Write-Host "Automated Service Account Creation"
+    Write-Host "=========================================="
+    Write-Host ""
+    
+    # Check if AMG extension is installed
+    Write-Host "Checking Azure CLI Grafana extension..."
+    $amgExtension = az extension list --query "[?name=='amg'].version" -o tsv
+    if (-not $amgExtension) {
+        Write-Host "Installing Azure Managed Grafana CLI extension..."
+        az extension add --name amg --only-show-errors
+        Write-Host "✓ Extension installed"
+    } else {
+        Write-Host "✓ Azure Managed Grafana extension already installed (version $amgExtension)"
+    }
+    Write-Host ""
+    
+    # Create service account using Azure CLI
+    Write-Host "Creating service account 'grafana-admin'..."
+    Write-Host "Workspace: $workspaceName"
+    Write-Host "Resource Group: $resourceGroup"
+    Write-Host ""
+    
+    $serviceAccountJson = az grafana service-account create `
+        --name $workspaceName `
+        --resource-group $resourceGroup `
+        --service-account "grafana-admin" `
+        --role "Admin" `
+        -o json 2>&1
+    
+    if ($LASTEXITCODE -ne 0) {
+        # Check if it already exists
+        if ($serviceAccountJson -like "*already exists*" -or $serviceAccountJson -like "*409*" -or $serviceAccountJson -like "*Conflict*") {
+            Write-Host "⚠ Service account 'grafana-admin' already exists, retrieving it..."
+            
+            $listJson = az grafana service-account list `
+                --name $workspaceName `
+                --resource-group $resourceGroup `
+                -o json 2>&1
+            
+            if ($LASTEXITCODE -ne 0) {
+                Write-Error "Failed to list service accounts:"
+                Write-Host $listJson
+                Write-Host ""
+                Write-Host "This may be a permissions issue. Ensure the pipeline has access to the Grafana workspace."
+                exit 1
+            }
+            
+            $serviceAccounts = $listJson | ConvertFrom-Json
+            $serviceAccount = $serviceAccounts | Where-Object { $_.name -eq "grafana-admin" } | Select-Object -First 1
+            
+            if (-not $serviceAccount) {
+                Write-Error "Failed to find existing service account 'grafana-admin'"
+                Write-Host "Available service accounts:"
+                $serviceAccounts | ForEach-Object { Write-Host "  - $($_.name) (ID: $($_.id))" }
+                exit 1
+            }
+            
+            $serviceAccountId = $serviceAccount.id
+            Write-Host "✓ Found existing service account with ID: $serviceAccountId"
+        } else {
+            Write-Error "Failed to create service account. Details:"
+            Write-Host ""
+            Write-Host "Error output:"
+            Write-Host $serviceAccountJson
+            Write-Host ""
+            Write-Host "Common causes:"
+            Write-Host "  1. Insufficient permissions - Pipeline needs Grafana Admin role"
+            Write-Host "  2. Grafana workspace not ready - Wait a few minutes and retry"
+            Write-Host "  3. Network connectivity issues"
+            Write-Host ""
+            Write-Host "To grant Grafana Admin role to the pipeline service principal:"
+            Write-Host "  az role assignment create \"
+            Write-Host "    --role 'Grafana Admin' \"
+            Write-Host "    --assignee <pipeline-sp-id> \"
+            Write-Host "    --scope /subscriptions/<sub-id>/resourceGroups/$resourceGroup/providers/Microsoft.Dashboard/grafana/$workspaceName"
+            exit 1
+        }
+    } else {
+        $serviceAccount = $serviceAccountJson | ConvertFrom-Json
+        $serviceAccountId = $serviceAccount.id
+        Write-Host "✓ Service account created with ID: $serviceAccountId"
+    }
+    
+    Write-Host ""
+    
+    # Create service account token (expires in 30 days = 2592000 seconds)
+    Write-Host "Creating service account token (expires in 30 days)..."
+    
+    $tokenName = "ci-cd-token-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
+    
+    $tokenJson = az grafana service-account token create `
+        --name $workspaceName `
+        --resource-group $resourceGroup `
+        --service-account $serviceAccountId `
+        --token $tokenName `
+        --time-to-live "30d" `
+        -o json
+    
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Failed to create service account token:"
+        Write-Host $tokenJson
+        exit 1
+    }
+    
+    $tokenResponse = $tokenJson | ConvertFrom-Json
+    $ApiToken = $tokenResponse.key
+    
+    Write-Host "✓ Service account token created"
+    Write-Host "  Token name: $tokenName"
+    Write-Host "  Token ID: $($tokenResponse.id)"
+    Write-Host "  Expires in: 30 days (2592000 seconds)"
+    Write-Host ""
+}
+
+# Validate token format (Grafana service account tokens start with "glsa_")
+if (-not $ApiToken.StartsWith("glsa_")) {
+    Write-Warning "Token doesn't start with 'glsa_' - this might not be a service account token"
+    $continue = Read-Host "Continue anyway? (y/N)"
+    if ($continue -ne "y" -and $continue -ne "Y") {
+        Write-Host "Aborted."
+        exit 1
+    }
+}
+
+# Store in Key Vault
+Write-Host ""
+Write-Host "Storing API token in Key Vault..."
+Write-Host "  Key Vault: $keyVaultName"
+
+try {
+    az keyvault secret set `
+        --vault-name $keyVaultName `
+        --name $tokenSecretName `
+        --value $ApiToken `
+        --output none
+    
+    Write-Host "✓ Token stored successfully in Key Vault"
+} catch {
+    Write-Error "Failed to store token in Key Vault: $_"
+    Write-Host ""
+    Write-Host "Make sure the pipeline service principal has the following permissions on the Key Vault:"
+    Write-Host "- Key Vault Secrets Officer (RBAC role)"
+    Write-Host ""
+    Write-Host "This should be automatically granted during the ProvisionApplicationGateway stage."
+    Write-Host "If running manually, you can grant yourself access with:"
+    Write-Host "az role assignment create --role 'Key Vault Secrets Officer' \"
+    Write-Host "  --assignee <your-user-principal-id> \"
+    Write-Host "  --scope /subscriptions/<subscription-id>/resourceGroups/$resourceGroup/providers/Microsoft.KeyVault/vaults/$keyVaultName"
+    exit 1
+}
+
+Write-Host ""
+Write-Host "=========================================="
+Write-Host "✓ Setup Complete!"
+Write-Host "=========================================="
+Write-Host ""
+Write-Host "The API token has been stored in:"
+Write-Host "  Key Vault: $keyVaultName"
+Write-Host "  Secret:    $tokenSecretName"
+Write-Host ""
+Write-Host "The pipeline can now publish dashboards to:"
+Write-Host "  $grafanaEndpoint"
+Write-Host ""
