@@ -18,9 +18,3 @@ secrets:
       hasPrivateKey: true
       hasWebhookSecret: true
       hasOAuthSecret: true
-
-  grafana-api-token:
-    type: grafana-api-key
-    parameters:
-      environment: dotnet-eng-grafana-staging.westus2.cloudapp.azure.com
-

@@ -375,13 +375,6 @@ parameters:
   description: description
 ```
 
-### Grafana Api Key
-```yaml
-type: grafana-api-key
-parameters:
-  environment: hostname of target grafana instance
-```
-
 ### Helix Access Token
 ```yaml
 type: helix-access-token

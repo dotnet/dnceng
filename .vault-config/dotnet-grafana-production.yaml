@@ -6,9 +6,3 @@ storageLocation:
 
 importSecretsFrom: shared/dotnet-grafana-secrets.yaml
 
-secrets:
-  # Grafana API token with Admin privileges
-  grafana-admin-api-key:
-    type: grafana-api-key
-    parameters:
-      environment: dotnet-eng-grafana.westus2.cloudapp.azure.com
