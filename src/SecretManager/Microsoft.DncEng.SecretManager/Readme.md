@@ -377,7 +377,7 @@ parameters:
 
 ### Grafana Api Key
 ```yaml
-type: grafana-api-key
+type: azure-managed-grafana-api-key
 parameters:
   environment: hostname of target grafana instance
 ```
