@@ -193,6 +193,26 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
 
         Log.LogMessage(MessageImportance.High, "Loaded {0} parameters from {1}", parameters.Count, _parameterFile);
 
+        // Ensure all folders referenced by alert rules exist before posting rules
+        var alertRuleFiles = Directory.GetFiles(AlertRuleDirectory, "*" + AlertRuleExtension, SearchOption.AllDirectories);
+        var seenFolderUids = new HashSet<string>(StringComparer.Ordinal);
+        foreach (string alertRulePath in alertRuleFiles)
+        {
+            JObject data;
+            using (var sr = new StreamReader(alertRulePath))
+            using (var jr = new JsonTextReader(sr))
+            {
+                data = await JObject.LoadAsync(jr).ConfigureAwait(false);
+            }
+            data = GrafanaSerialization.DeparameterizeDashboard(data, parameters, _environment);
+            string folderUID = data.Value<string>("folderUID");
+            if (!string.IsNullOrEmpty(folderUID) && seenFolderUids.Add(folderUID))
+            {
+                Log.LogMessage(MessageImportance.Normal, "Ensuring alert rule folder '{0}' exists...", folderUID);
+                await GrafanaClient.CreateFolderAsync(folderUID, folderUID).ConfigureAwait(false);
+            }
+        }
+
         foreach (string alertRulePath in Directory.GetFiles(AlertRuleDirectory,
                      "*" + AlertRuleExtension,
                      SearchOption.AllDirectories))
