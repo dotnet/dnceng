@@ -35,6 +35,7 @@ using Microsoft.DotNet.Internal.AzureDevOps;
 using Microsoft.DotNet.Internal.DependencyInjection;
 using Microsoft.DotNet.Kusto;
 using Octokit;
+using Azure.Core;
 using Azure.Identity;
 
 namespace DotNet.Status.Web;
@@ -90,6 +91,7 @@ public class Startup
     private void ConfigureConfiguration(IServiceCollection services)
     {
         services.Configure<TeamMentionForwardingOptions>(Configuration.GetSection("IssueMentionForwarding"));
+        services.Configure<GrafanaAlertOptions>(Configuration.GetSection("GrafanaAlert"));
         services.Configure<GitHubConnectionOptions>(Configuration.GetSection("GitHub"));
         services.Configure<GrafanaOptions>(Configuration.GetSection("Grafana"));
         services.Configure<AnnotationsOptions>(Configuration.GetSection("Annotations"));
@@ -300,6 +302,29 @@ public class Startup
             });
 
         services.AddScoped<ITeamMentionForwarder, TeamMentionForwarder>();
+
+        services.AddSingleton<IAzureDevOpsWorkItemClient>(sp =>
+        {
+            GrafanaAlertOptions opts = sp.GetRequiredService<IOptions<GrafanaAlertOptions>>().Value;
+            IHttpClientFactory httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+            ILogger<AzureDevOpsWorkItemClient> logger = sp.GetRequiredService<ILogger<AzureDevOpsWorkItemClient>>();
+
+            TokenCredential credential;
+            if (Env.IsDevelopment())
+            {
+                credential = new DefaultAzureCredential();
+            }
+            else if (!string.IsNullOrEmpty(opts.ManagedIdentityClientId))
+            {
+                credential = new ManagedIdentityCredential(opts.ManagedIdentityClientId);
+            }
+            else
+            {
+                credential = new ManagedIdentityCredential();
+            }
+
+            return new AzureDevOpsWorkItemClient(opts.Organization, credential, httpClientFactory, logger);
+        });
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

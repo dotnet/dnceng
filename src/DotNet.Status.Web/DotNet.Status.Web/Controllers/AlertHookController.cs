@@ -2,18 +2,18 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using DotNet.Status.Web.Models;
 using DotNet.Status.Web.Options;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.DotNet.GitHub.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Octokit;
 
 namespace DotNet.Status.Web.Controllers;
 
@@ -21,43 +21,37 @@ namespace DotNet.Status.Web.Controllers;
 [Route("api/alert")]
 public class AlertHookController : ControllerBase
 {
-    public const string NotificationIdLabel = "Grafana Alert";
-    public const string ActiveAlertLabel = "Active Alert";
-    public const string InactiveAlertLabel = "Inactive Alert";
-    public const string BodyLabelTextFormat = "Grafana-Automated-Alert-Id-{0}";
+    public const string NotificationIdTag = "Grafana Alert";
+    public const string ActiveAlertTag = "Active Alert";
+    public const string InactiveAlertTag = "Inactive Alert";
+    public const string BodyAutomationIdFormat = "Grafana-Automated-Alert-Id-{0}";
     public const string NotificationTagName = "NotificationId";
 
-    private static bool s_labelsCreated;
-    private static readonly SemaphoreSlim s_labelLock = new SemaphoreSlim(1);
-
-    private readonly IOptions<GitHubConnectionOptions> _githubOptions;
-    private readonly IOptions<GitHubClientOptions> _githubClientOptions;
-    private readonly ILogger _logger;
-    private readonly IGitHubTokenProvider _tokenProvider;
+    private readonly IOptions<GrafanaAlertOptions> _alertOptions;
+    private readonly ILogger<AlertHookController> _logger;
+    private readonly IAzureDevOpsWorkItemClient _workItemClient;
 
     public AlertHookController(
-        IGitHubTokenProvider tokenProvider,
-        IOptions<GitHubConnectionOptions> githubOptions,
-        IOptions<GitHubClientOptions> githubClientOptions,
+        IAzureDevOpsWorkItemClient workItemClient,
+        IOptions<GrafanaAlertOptions> alertOptions,
         ILogger<AlertHookController> logger)
     {
-        _tokenProvider = tokenProvider;
-        _githubOptions = githubOptions;
-        _githubClientOptions = githubClientOptions;
+        _workItemClient = workItemClient;
+        _alertOptions = alertOptions;
         _logger = logger;
     }
 
     [HttpPost]
-    public async Task<IActionResult> NotifyAsync(GrafanaNotification notification)
+    public async Task<IActionResult> NotifyAsync(GrafanaNotification notification, CancellationToken cancellationToken)
     {
         switch (notification.State)
         {
             case "ok":
-                await CloseExistingNotificationAsync(notification);
+                await CloseExistingNotificationAsync(notification, cancellationToken);
                 break;
             case "alerting":
             case "no_data":
-                await OpenNewNotificationAsync(notification);
+                await OpenNewNotificationAsync(notification, cancellationToken);
                 break;
             default:
                 return BadRequest();
@@ -66,263 +60,201 @@ public class AlertHookController : ControllerBase
         return NoContent();
     }
 
-    private async Task OpenNewNotificationAsync(GrafanaNotification notification)
+    private async Task OpenNewNotificationAsync(GrafanaNotification notification, CancellationToken cancellationToken)
     {
-        string org = _githubOptions.Value.Organization;
-        string repo = _githubOptions.Value.Repository;
+        GrafanaAlertOptions options = _alertOptions.Value;
         _logger.LogInformation(
-            "Alert state detected for {ruleUrl} in stage {ruleState}, porting to github repo {org}/{repo}",
+            "Alert state detected for {ruleUrl} in state {ruleState}, creating Azure DevOps work item in {org}/{project}",
             notification.RuleUrl,
             notification.State,
-            org,
-            repo);
+            options.Organization,
+            options.Project);
 
-        IGitHubClient client = await GetGitHubClientAsync(_githubOptions.Value.Organization, _githubOptions.Value.Repository);
-        Issue issue = await GetExistingIssueAsync(client, notification);
-        await EnsureLabelsAsync(client, org, repo);
-        if (issue == null)
+        int? existingId = await FindExistingWorkItemAsync(notification, cancellationToken);
+        if (existingId == null)
         {
-            _logger.LogInformation("No existing issue found, creating new active issue with {label}",
-                ActiveAlertLabel);
-            issue = await client.Issue.Create(org, repo, GenerateNewIssue(notification));
-            _logger.LogInformation("Github issue {org}/{repo}#{issueNumber} created", org, repo, issue.Number);
+            _logger.LogInformation("No existing work item found, creating new work item with tag {tag}", ActiveAlertTag);
+
+            Dictionary<string, object> fields = new Dictionary<string, object>
+            {
+                ["System.Title"] = BuildTitle(notification, options),
+                ["System.Description"] = GenerateWorkItemDescription(notification),
+                ["System.AreaPath"] = options.AreaPath,
+                ["System.Tags"] = BuildInitialTags(options),
+            };
+
+            int workItemId = await _workItemClient.CreateWorkItemAsync(options.Project, options.WorkItemType, fields, cancellationToken);
+            _logger.LogInformation("Azure DevOps work item {workItemId} created", workItemId);
         }
         else
         {
             _logger.LogInformation(
-                "Found existing issue {org}/{repo}#{issueNumber}, replacing {inactiveTag} with {activeTag}",
-                org,
-                repo,
-                issue.Number,
-                InactiveAlertLabel,
-                ActiveAlertLabel);
+                "Found existing work item {workItemId}, replacing tag {inactiveTag} with {activeTag}",
+                existingId.Value,
+                InactiveAlertTag,
+                ActiveAlertTag);
 
-            await GitHubModifications.TryRemoveAsync(() => client.Issue.Labels.RemoveFromIssue(org, repo, issue.Number, InactiveAlertLabel), _logger);
-            await GitHubModifications.TryCreateAsync(() =>
-                    client.Issue.Labels.AddToIssue(org, repo, issue.Number, new[] {ActiveAlertLabel}),
-                _logger);
+            Dictionary<string, string> currentFields = await _workItemClient.GetWorkItemFieldsAsync(existingId.Value, cancellationToken);
+            string currentTags = currentFields.GetValueOrDefault("System.Tags", string.Empty);
+            string updatedTags = AddTag(RemoveTag(currentTags, InactiveAlertTag), ActiveAlertTag);
 
-            _logger.LogInformation("Adding recurrence comment to  {org}/{repo}#{issueNumber}",
-                org,
-                repo,
-                issue.Number);
-            IssueComment comment = await client.Issue.Comment.Create(org,
-                repo,
-                issue.Number,
-                GenerateNewNotificationComment(notification));
-            _logger.LogInformation("Created comment {org}/{repo}#{issue}-issuecomment-{comment}",
-                org,
-                repo,
-                issue.Id,
-                comment.Id);
-        }
-    }
-
-    private string GenerateNewNotificationComment(GrafanaNotification notification)
-    {
-        var metricText = new StringBuilder();
-        foreach (GrafanaNotificationMatch match in notification.EvalMatches)
-        {
-            metricText.AppendLine($"  - *{match.Metric}* {match.Value}");
-        }
-            
-        string icon = GetIcon(notification);
-        string image = !string.IsNullOrEmpty(notification.ImageUrl) ? $"![Metric Graph]({notification.ImageUrl})" : string.Empty;
-
-        return $@":{icon}: Metric state changed to *{notification.State}*
-
-> {notification.Message?.Replace("\n", "\n> ")}
-
-{metricText}
-
-{image}
-
-[Go to rule]({notification.RuleUrl})".Replace("\r\n","\n");
-    }
-
-    private NewIssue GenerateNewIssue(GrafanaNotification notification)
-    {
-        var metricText = new StringBuilder();
-        foreach (GrafanaNotificationMatch match in notification.EvalMatches)
-        {
-            metricText.AppendLine($"  - *{match.Metric}* {match.Value}");
-        }
-
-        string icon = GetIcon(notification);
-        string image = !string.IsNullOrEmpty(notification.ImageUrl) ? $"![Metric Graph]({notification.ImageUrl})" : string.Empty;
-
-        string issueTitle = notification.Title;
-
-        GitHubConnectionOptions options = _githubOptions.Value;
-        string prefix = options.TitlePrefix;
-        if (prefix != null)
-        {
-            issueTitle = prefix + issueTitle;
-        }
-
-        var issue = new NewIssue(issueTitle)
-        {
-            Body = $@":{icon}: Metric state changed to *{notification.State}*
-
-> {notification.Message?.Replace("\n", "\n> ")}
-
-{metricText}
-
-{image}
-
-[Go to rule]({notification.RuleUrl})
-
-{string.Join(", ", options.NotificationTargets.Select(target => $"@{target}"))}, please investigate
-
-{options.SupplementalBodyText}
-
-<details>
-<summary>Automation information below, do not change</summary>
-
-{string.Format(BodyLabelTextFormat, GetUniqueIdentifier(notification))}
-
-</details>
-".Replace("\r\n","\n")
-        };
-
-        issue.Labels.Add(NotificationIdLabel);
-        issue.Labels.Add(ActiveAlertLabel);
-        foreach (string label in options.AlertLabels.OrEmpty())
-        {
-            issue.Labels.Add(label);
-        }
-
-        foreach (string label in options.EnvironmentLabels.OrEmpty())
-        {
-            issue.Labels.Add(label);
-        }
-
-        return issue;
-    }
-
-    private static string GetIcon(GrafanaNotification notification)
-    {
-        string icon;
-        switch (notification.State)
-        {
-            case "ok":
-                icon = "green_heart";
-                break;
-            case "alerting":
-                icon = "broken_heart";
-                break;
-            case "no_data":
-                icon = "heavy_multiplication_x";
-                break;
-            case "paused":
-                icon = "wavy_dash";
-                break;
-            default:
-                icon = "grey_question";
-                break;
-        }
-
-        return icon;
-    }
-
-    private async Task EnsureLabelsAsync(IGitHubClient client, string org, string repo)
-    {
-        // Assume someone didn't delete the labels, it's an expensive call to make every time
-        if (s_labelsCreated)
-        {
-            return;
-        }
-
-        await s_labelLock.WaitAsync();
-        try
-        {
-            if (s_labelsCreated)
+            await _workItemClient.UpdateWorkItemFieldsAsync(existingId.Value, new Dictionary<string, object>
             {
-                return;
-            }
+                ["System.Tags"] = updatedTags,
+            }, cancellationToken);
 
-            var desiredLabels = new[]
-            {
-                new NewLabel(NotificationIdLabel, "f957b6"),
-                new NewLabel(ActiveAlertLabel, "d73a4a"),
-                new NewLabel(InactiveAlertLabel, "e4e669"),
-            };
-
-            await GitHubModifications.CreateLabelsAsync(client, org, repo, _logger, desiredLabels);
-
-            s_labelsCreated = true;
-        }
-        finally
-        {
-            s_labelLock.Release();
+            _logger.LogInformation("Adding recurrence comment to work item {workItemId}", existingId.Value);
+            await _workItemClient.AddCommentAsync(options.Project, existingId.Value, GenerateCommentHtml(notification), cancellationToken);
+            _logger.LogInformation("Updated work item {workItemId} and added comment", existingId.Value);
         }
     }
 
-    private async Task CloseExistingNotificationAsync(GrafanaNotification notification)
+    private async Task CloseExistingNotificationAsync(GrafanaNotification notification, CancellationToken cancellationToken)
     {
-        string org = _githubOptions.Value.Organization;
-        string repo = _githubOptions.Value.Repository;
-        IGitHubClient client = await GetGitHubClientAsync(org, repo);
-        Issue issue = await GetExistingIssueAsync(client, notification);
-        if (issue == null)
+        GrafanaAlertOptions options = _alertOptions.Value;
+        int? existingId = await FindExistingWorkItemAsync(notification, cancellationToken);
+        if (existingId == null)
         {
-            _logger.LogInformation("No active issue found for alert '{ruleName}', ignoring", notification.RuleName);
+            _logger.LogInformation("No active work item found for alert '{ruleName}', ignoring", notification.RuleName);
             return;
         }
 
         _logger.LogInformation(
-            "Found existing issue {org}/{repo}#{issueNumber}, replacing {activeTag} with {inactiveTag}",
-            org,
-            repo,
-            issue.Number,
-            ActiveAlertLabel,
-            InactiveAlertLabel);
+            "Found existing work item {workItemId}, replacing tag {activeTag} with {inactiveTag}",
+            existingId.Value,
+            ActiveAlertTag,
+            InactiveAlertTag);
 
-        await GitHubModifications.TryRemoveAsync(() => client.Issue.Labels.RemoveFromIssue(org, repo, issue.Number, ActiveAlertLabel), _logger);
-        await GitHubModifications.TryCreateAsync(() =>
-                client.Issue.Labels.AddToIssue(org, repo, issue.Number, new[] {InactiveAlertLabel}),
-            _logger);
+        Dictionary<string, string> currentFields = await _workItemClient.GetWorkItemFieldsAsync(existingId.Value, cancellationToken);
+        string currentTags = currentFields.GetValueOrDefault("System.Tags", string.Empty);
+        string updatedTags = AddTag(RemoveTag(currentTags, ActiveAlertTag), InactiveAlertTag);
 
-        _logger.LogInformation("Adding recurrence comment to  {org}/{repo}#{issueNumber}",
-            org,
-            repo,
-            issue.Number);
-        IssueComment comment = await client.Issue.Comment.Create(org,
-            repo,
-            issue.Number,
-            GenerateNewNotificationComment(notification));
-        _logger.LogInformation("Created comment {org}/{repo}#{issue}-issuecomment-{comment}",
-            org,
-            repo,
-            issue.Id,
-            comment.Id);
+        await _workItemClient.UpdateWorkItemFieldsAsync(existingId.Value, new Dictionary<string, object>
+        {
+            ["System.Tags"] = updatedTags,
+        }, cancellationToken);
+
+        _logger.LogInformation("Adding recurrence comment to work item {workItemId}", existingId.Value);
+        await _workItemClient.AddCommentAsync(options.Project, existingId.Value, GenerateCommentHtml(notification), cancellationToken);
+        _logger.LogInformation("Updated work item {workItemId} and added comment", existingId.Value);
     }
 
-    private async Task<Issue> GetExistingIssueAsync(IGitHubClient client, GrafanaNotification notification)
+    private async Task<int?> FindExistingWorkItemAsync(GrafanaNotification notification, CancellationToken cancellationToken)
     {
-        string id = GetUniqueIdentifier(notification);
+        GrafanaAlertOptions options = _alertOptions.Value;
+        string automationId = string.Format(BodyAutomationIdFormat, GetUniqueIdentifier(notification));
+        string escapedId = automationId.Replace("'", "''");
+        string wiql = $"SELECT [System.Id] FROM WorkItems " +
+                      $"WHERE [System.TeamProject] = '{options.Project}' " +
+                      $"AND [System.Description] CONTAINS '{escapedId}' " +
+                      $"AND [System.State] <> 'Closed' " +
+                      $"ORDER BY [System.CreatedDate] DESC";
 
-        var searchedLabels = new List<string>
+        int[] ids = await _workItemClient.QueryWorkItemsByWiqlAsync(options.Project, wiql, cancellationToken);
+        return ids.Length > 0 ? ids[0] : null;
+    }
+
+    private static string BuildTitle(GrafanaNotification notification, GrafanaAlertOptions options)
+    {
+        string title = notification.Title;
+        if (!string.IsNullOrEmpty(options.TitlePrefix))
         {
-            NotificationIdLabel
-        };
+            title = options.TitlePrefix + title;
+        }
+        return title;
+    }
 
-        searchedLabels.AddRange(_githubOptions.Value.EnvironmentLabels.OrEmpty());
+    private static string BuildInitialTags(GrafanaAlertOptions options)
+    {
+        List<string> tags = new List<string> { NotificationIdTag, ActiveAlertTag };
+        tags.AddRange(options.EnvironmentTags.OrEmpty());
+        tags.AddRange(options.AlertTags.OrEmpty());
+        return string.Join("; ", tags.Distinct(StringComparer.OrdinalIgnoreCase));
+    }
 
-        string automationId = string.Format(BodyLabelTextFormat, id);
-        var request = new SearchIssuesRequest(automationId)
+    private string GenerateWorkItemDescription(GrafanaNotification notification)
+    {
+        GrafanaAlertOptions options = _alertOptions.Value;
+        StringBuilder sb = new StringBuilder();
+
+        string stateIcon = GetStateIcon(notification.State);
+        sb.Append($"<p>{stateIcon} Metric state changed to <strong>{WebUtility.HtmlEncode(notification.State)}</strong></p>");
+
+        if (!string.IsNullOrEmpty(notification.Message))
         {
-            Labels = searchedLabels,
-            Order = SortDirection.Descending,
-            SortField = IssueSearchSort.Created,
-            Type = IssueTypeQualifier.Issue,
-            In = new[] {IssueInQualifier.Body},
-            State = ItemState.Open,
+            sb.Append($"<blockquote>{WebUtility.HtmlEncode(notification.Message)}</blockquote>");
+        }
+
+        if (notification.EvalMatches?.Count > 0)
+        {
+            sb.Append("<ul>");
+            foreach (GrafanaNotificationMatch match in notification.EvalMatches)
+            {
+                sb.Append($"<li><em>{WebUtility.HtmlEncode(match.Metric)}</em> {match.Value}</li>");
+            }
+            sb.Append("</ul>");
+        }
+
+        if (!string.IsNullOrEmpty(notification.ImageUrl))
+        {
+            sb.Append($"<p><img src=\"{WebUtility.HtmlEncode(notification.ImageUrl)}\" alt=\"Metric Graph\"/></p>");
+        }
+
+        sb.Append($"<p><a href=\"{WebUtility.HtmlEncode(notification.RuleUrl)}\">Go to rule</a></p>");
+
+        if (!string.IsNullOrEmpty(options.SupplementalBodyText))
+        {
+            sb.Append($"<p>{WebUtility.HtmlEncode(options.SupplementalBodyText)}</p>");
+        }
+
+        string automationId = string.Format(BodyAutomationIdFormat, GetUniqueIdentifier(notification));
+        sb.Append($"<p><em>{automationId}</em></p>");
+
+        return sb.ToString();
+    }
+
+    private static string GenerateCommentHtml(GrafanaNotification notification)
+    {
+        StringBuilder sb = new StringBuilder();
+
+        string stateIcon = GetStateIcon(notification.State);
+        sb.Append($"<p>{stateIcon} Metric state changed to <strong>{WebUtility.HtmlEncode(notification.State)}</strong></p>");
+
+        if (!string.IsNullOrEmpty(notification.Message))
+        {
+            sb.Append($"<blockquote>{WebUtility.HtmlEncode(notification.Message)}</blockquote>");
+        }
+
+        if (notification.EvalMatches?.Count > 0)
+        {
+            sb.Append("<ul>");
+            foreach (GrafanaNotificationMatch match in notification.EvalMatches)
+            {
+                sb.Append($"<li><em>{WebUtility.HtmlEncode(match.Metric)}</em> {match.Value}</li>");
+            }
+            sb.Append("</ul>");
+        }
+
+        if (!string.IsNullOrEmpty(notification.ImageUrl))
+        {
+            sb.Append($"<p><img src=\"{WebUtility.HtmlEncode(notification.ImageUrl)}\" alt=\"Metric Graph\"/></p>");
+        }
+
+        sb.Append($"<p><a href=\"{WebUtility.HtmlEncode(notification.RuleUrl)}\">Go to rule</a></p>");
+
+        return sb.ToString();
+    }
+
+    private static string GetStateIcon(string state)
+    {
+        return state switch
+        {
+            "ok" => "💚",
+            "alerting" => "💔",
+            "no_data" => "✖",
+            "paused" => "〰",
+            _ => "❓",
         };
-
-        SearchIssuesResult issues = await client.Search.SearchIssues(request);
-
-        return issues.Items.FirstOrDefault();
     }
 
     private static string GetUniqueIdentifier(GrafanaNotification notification)
@@ -336,11 +268,32 @@ public class AlertHookController : ControllerBase
         return notification.RuleId.ToString();
     }
 
-    private async Task<IGitHubClient> GetGitHubClientAsync(string org, string repo)
+    private static string AddTag(string existingTags, string tagToAdd)
     {
-        return new GitHubClient(_githubClientOptions.Value.ProductHeader)
+        List<string> tags = ParseTagsList(existingTags);
+        if (!tags.Any(t => string.Equals(t, tagToAdd, StringComparison.OrdinalIgnoreCase)))
         {
-            Credentials = new Credentials(await _tokenProvider.GetTokenForRepository(org, repo))
-        };
+            tags.Add(tagToAdd);
+        }
+        return string.Join("; ", tags);
+    }
+
+    private static string RemoveTag(string existingTags, string tagToRemove)
+    {
+        List<string> tags = ParseTagsList(existingTags);
+        tags.RemoveAll(t => string.Equals(t, tagToRemove, StringComparison.OrdinalIgnoreCase));
+        return string.Join("; ", tags);
+    }
+
+    private static List<string> ParseTagsList(string tags)
+    {
+        if (string.IsNullOrWhiteSpace(tags))
+        {
+            return new List<string>();
+        }
+        return tags.Split(';')
+            .Select(t => t.Trim())
+            .Where(t => !string.IsNullOrEmpty(t))
+            .ToList();
     }
 }
