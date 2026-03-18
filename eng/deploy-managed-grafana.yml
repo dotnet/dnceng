@@ -179,7 +179,7 @@ stages:
           Write-Host ""
           
           # Publish using the same MSBuild SDK as self-hosted Grafana
-          dotnet build $(Build.SourcesDirectory)\src\Monitoring\Monitoring.ArcadeServices\Monitoring.ArcadeServices.proj `
+          dotnet build $(Build.SourcesDirectory)\src\Monitoring\Monitoring.DncEng\Monitoring.DncEng.proj `
             --configuration Release `
             -t:PublishGrafana `
             -p:GrafanaAccessToken=$apiToken `

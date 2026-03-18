@@ -20,7 +20,7 @@ secrets:
       hasOAuthSecret: true
 
   grafana-api-token:
-    type: grafana-api-key
+    type: azure-managed-grafana-api-key
     parameters:
       environment: dotnet-eng-grafana-staging.westus2.cloudapp.azure.com
 

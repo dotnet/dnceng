@@ -16,7 +16,7 @@ The main alerts related to the autoscaler are: <br>
 
 
 ### **Helix AutoScaler Service Stopped Running**
-[Helix AutoScaler Service Stopped Running Grafana](https://dotnet-eng-grafana.westus2.cloudapp.azure.com/d/arcadeAvailability/service-availability?orgId=1&refresh=30s&from=1606937931219&to=1606959531219&panelId=60&fullscreen) <br>
+[Helix AutoScaler Service Stopped Running Grafana](https://dotnet-eng-grafana.westus2.cloudapp.azure.com/d/serviceAvailability/service-availability?orgId=1&refresh=30s&from=1606937931219&to=1606959531219&panelId=60&fullscreen) <br>
 Example: https://github.com/dotnet/core-eng/issues/11478
 
 Step by step:
