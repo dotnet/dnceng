@@ -32,7 +32,7 @@ public class ErrorModel : PageModel
         {
             ExceptionMessage = "File error thrown";
         }
-        if (exceptionHandlerPathFeature?.Path == "/index")
+        if (exceptionHandlerPathFeature?.Path == "/")
         {
             ExceptionMessage += " from home page";
         }
