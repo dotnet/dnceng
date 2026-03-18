@@ -25,7 +25,6 @@
   "AzureDevOpsSettings": {
     "dnceng": {
       "Organization": "dnceng",
-      "AccessToken": "[vault(dn-bot-dnceng-build-r)]",
       "MaxParallelRequests": 4
     },
     "dnceng-public": {

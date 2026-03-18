@@ -3,6 +3,11 @@
     "Secrets": {
         "ManagedIdentityId": "e9d81917-4c98-44cc-8a6e-601311ac3c07"
     },
+    "AzureDevOpsSettings": {
+        "dnceng": {
+            "ManagedIdentityClientId": "c05abe9e-b183-4c19-a7c3-6512f976548f"
+        }
+    },
     "KustoTimelineTelemetry": {
         "KustoClusterUri": "https://engdata.westus2.kusto.windows.net",
         "KustoIngestionUri": "https://ingest-engdata.westus2.kusto.windows.net",
