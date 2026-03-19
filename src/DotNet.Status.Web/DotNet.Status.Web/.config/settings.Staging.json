@@ -11,6 +11,16 @@
     "EnvironmentLabels": [ "Staging" ],
     "TitlePrefix": "Staging - "
   },
+  "GrafanaAlert": {
+    "Organization": "dnceng",
+    "Project": "internal",
+    "AreaPath": ".NET Engineering Systems\\First Responder",
+    "WorkItemType": "Bug",
+    "AlertTags": [ "Ops - First Responder" ],
+    "EnvironmentTags": [ "Staging" ],
+    "TitlePrefix": "Staging - ",
+    "ManagedIdentityClientId": "e9d81917-4c98-44cc-8a6e-601311ac3c07"
+  },
   "DataProtection": {
     "KeyBlobUri": "https://dotnetengstatusstaging.blob.core.windows.net/site/keys.xml",
     "DataProtectionKeyUri": "https://dotneteng-status-staging.vault.azure.net/keys/dotnet-status-data-protection/"
