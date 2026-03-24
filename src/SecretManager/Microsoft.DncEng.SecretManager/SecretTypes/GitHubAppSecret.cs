@@ -91,7 +91,7 @@ public class GitHubAppSecret : SecretType<GitHubAppSecret.Parameters>
 
         if (parameters.HasWebhookSecret)
         {
-            bool changeWebhookSecret = isNew || await _console.ConfirmAsync("Do you want to change the webhook secret? Select 'no' if this is a prod secret (yes/no): ");
+            bool changeWebhookSecret = isNew || await _console.ConfirmAsync("Do you want to change the webhook secret? (yes/no): ");
             if (changeWebhookSecret)
             {
                 webhookSecret = await _console.PromptAndValidateAsync("Webhook Secret",
