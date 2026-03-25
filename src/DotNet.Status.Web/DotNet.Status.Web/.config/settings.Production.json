@@ -7,9 +7,17 @@
   "GitHub": {
     "Organization": "dotnet",
     "Repository": "dnceng",
-    "NotificationTargets": [ "dotnet/dnceng", "dotnet/prodconsvcs" ],
-    "AlertLabels": [ "Ops - First Responder", "Critical" ],
-    "EnvironmentLabels": [ "Production" ],
+    "NotificationTargets": [
+      "dotnet/dnceng",
+      "dotnet/prodconsvcs"
+    ],
+    "AlertLabels": [
+      "Ops - First Responder",
+      "Critical"
+    ],
+    "EnvironmentLabels": [
+      "Production"
+    ],
     "TitlePrefix": "Production - "
   },
   "DataProtection": {
@@ -29,5 +37,10 @@
     "KustoIngestionUri": "https://ingest-engsrvprod.westus.kusto.windows.net",
     "ManagedIdentityId": "d2580e46-e758-4778-a864-18f909438b45",
     "UseAzCliAuthentication": false
+  },
+  "AzureDevOps": {
+    "dnceng": {
+      "ManagedIdentityClientId": "18a50a03-5832-4fc4-9a77-08efb53631c9"
+    }
   }
 }

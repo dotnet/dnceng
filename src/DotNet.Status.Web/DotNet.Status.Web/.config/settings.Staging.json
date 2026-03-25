@@ -6,9 +6,16 @@
   "GitHub": {
     "Organization": "dotnet",
     "Repository": "dnceng",
-    "NotificationTargets": [ "dotnet/dnceng", "dotnet/prodconsvcs" ],
-    "AlertLabels": [ "Ops - First Responder" ],
-    "EnvironmentLabels": [ "Staging" ],
+    "NotificationTargets": [
+      "dotnet/dnceng",
+      "dotnet/prodconsvcs"
+    ],
+    "AlertLabels": [
+      "Ops - First Responder"
+    ],
+    "EnvironmentLabels": [
+      "Staging"
+    ],
     "TitlePrefix": "Staging - "
   },
   "DataProtection": {
@@ -16,7 +23,9 @@
     "DataProtectionKeyUri": "https://dotneteng-status-staging.vault.azure.net/keys/dotnet-status-data-protection/"
   },
   "MilestoneManagement": {
-    "ReposEnabledFor": [ "maestro-auth-test/webhook-test" ]
+    "ReposEnabledFor": [
+      "maestro-auth-test/webhook-test"
+    ]
   },
   "AzureTableTokenStore": {
     "TableUri": "https://dotnetengstatusstaging.table.core.windows.net"
@@ -30,5 +39,10 @@
     "KustoIngestionUri": "https://ingest-engdata.westus2.kusto.windows.net",
     "ManagedIdentityId": "e9d81917-4c98-44cc-8a6e-601311ac3c07",
     "UseAzCliAuthentication": false
+  },
+  "AzureDevOps": {
+    "dnceng": {
+      "ManagedIdentityClientId": "c6a4f831-a059-48bf-873d-4c9766ff6c26"
+    }
   }
 }
