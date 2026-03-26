@@ -25,7 +25,6 @@
     },
     "dnceng": {
       "Organization": "dnceng",
-      "AccessToken": "[vault(dn-bot-dnceng-workitems-rw)]",
       "MaxParallelRequests": 10
     }
   },

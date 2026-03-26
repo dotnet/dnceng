@@ -62,11 +62,11 @@ public class AzureDevOpsClientAuthTests
     }
 
     /// <summary>
-    /// When ManagedIdentityClientId is configured (without AccessToken), requests
+    /// When UseManagedIdentity is true with a client ID (user-assigned MI), requests
     /// should use Bearer authentication with a token obtained from the TokenCredential.
     /// </summary>
     [Test]
-    public async Task Client_WithManagedIdentity_UsesBearerAuth()
+    public async Task Client_WithUserAssignedManagedIdentity_UsesBearerAuth()
     {
         // Arrange
         const string fakeToken = "fake-entra-bearer-token";
@@ -85,6 +85,7 @@ public class AzureDevOpsClientAuthTests
         var options = new AzureDevOpsClientOptions
         {
             Organization = "test-org",
+            UseManagedIdentity = true,
             ManagedIdentityClientId = "00000000-0000-0000-0000-000000000001",
             MaxParallelRequests = 1,
         };
@@ -102,7 +103,47 @@ public class AzureDevOpsClientAuthTests
     }
 
     /// <summary>
-    /// When ManagedIdentityClientId is configured, the client should request a token
+    /// When UseManagedIdentity is true without a client ID (system-assigned MI), requests
+    /// should use Bearer authentication with a token obtained from the TokenCredential.
+    /// </summary>
+    [Test]
+    public async Task Client_WithSystemAssignedManagedIdentity_UsesBearerAuth()
+    {
+        // Arrange
+        const string fakeToken = "fake-system-assigned-token";
+
+        var handler = new CapturingHandler(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(
+                JsonConvert.SerializeObject(new { count = 0, value = Array.Empty<object>() }),
+                Encoding.UTF8,
+                "application/json")
+        });
+        var factory = new DelegatingHandlerHttpClientFactory(handler);
+
+        var mockCredential = new FakeTokenCredential(fakeToken);
+
+        var options = new AzureDevOpsClientOptions
+        {
+            Organization = "test-org",
+            UseManagedIdentity = true,
+            MaxParallelRequests = 1,
+        };
+
+        var client = new AzureDevOpsClient(options, _logger, factory, tokenCredential: mockCredential);
+
+        // Act
+        await client.ListBuilds("test-project", CancellationToken.None);
+
+        // Assert
+        Assert.That(handler.LastRequest, Is.Not.Null, "Expected at least one request to be captured");
+        Assert.That(handler.LastRequest!.Headers.Authorization, Is.Not.Null);
+        Assert.That(handler.LastRequest.Headers.Authorization!.Scheme, Is.EqualTo("Bearer"));
+        Assert.That(handler.LastRequest.Headers.Authorization.Parameter, Is.EqualTo(fakeToken));
+    }
+
+    /// <summary>
+    /// When UseManagedIdentity is configured, the client should request a token
     /// for the Azure DevOps resource scope.
     /// </summary>
     [Test]
@@ -123,7 +164,7 @@ public class AzureDevOpsClientAuthTests
         var options = new AzureDevOpsClientOptions
         {
             Organization = "test-org",
-            ManagedIdentityClientId = "00000000-0000-0000-0000-000000000001",
+            UseManagedIdentity = true,
             MaxParallelRequests = 1,
         };
 
@@ -138,7 +179,7 @@ public class AzureDevOpsClientAuthTests
     }
 
     /// <summary>
-    /// When AccessToken takes precedence over ManagedIdentityClientId if both are set.
+    /// AccessToken takes precedence over UseManagedIdentity if both are set.
     /// </summary>
     [Test]
     public async Task Client_WithBothPatAndManagedIdentity_PrefersPatAuth()
@@ -162,6 +203,7 @@ public class AzureDevOpsClientAuthTests
         {
             Organization = "test-org",
             AccessToken = pat,
+            UseManagedIdentity = true,
             ManagedIdentityClientId = "00000000-0000-0000-0000-000000000001",
             MaxParallelRequests = 1,
         };
@@ -179,7 +221,7 @@ public class AzureDevOpsClientAuthTests
     }
 
     /// <summary>
-    /// When neither AccessToken nor ManagedIdentityClientId is set, no auth header
+    /// When neither AccessToken nor UseManagedIdentity is set, no auth header
     /// should be present on requests.
     /// </summary>
     [Test]
@@ -231,7 +273,7 @@ public class AzureDevOpsClientAuthTests
         var options = new AzureDevOpsClientOptions
         {
             Organization = "test-org",
-            ManagedIdentityClientId = "00000000-0000-0000-0000-000000000001",
+            UseManagedIdentity = true,
             MaxParallelRequests = 1,
         };
 
