@@ -33,7 +33,7 @@
   },
   "AzureDevOps": {
     "dnceng": {
-      "ManagedIdentityClientId": "e9d81917-4c98-44cc-8a6e-601311ac3c07"
+      "UseManagedIdentity": true
     }
   }
 }
