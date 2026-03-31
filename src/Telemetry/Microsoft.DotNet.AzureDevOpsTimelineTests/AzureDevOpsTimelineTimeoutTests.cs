@@ -40,10 +40,10 @@ public partial class AzureDevOpsTimelineTimeoutTests
             });
         }
 
-        public static Func<IServiceProvider, AzureDevOpsTimelineProcessor> Controller(IServiceCollection collection)
+        public static Func<IServiceProvider, AzureDevOpsTimeline> Controller(IServiceCollection collection)
         {
-            collection.AddScoped<AzureDevOpsTimelineProcessor>();
-            return s => s.GetRequiredService<AzureDevOpsTimelineProcessor>();
+            collection.AddScoped<AzureDevOpsTimeline>();
+            return s => s.GetRequiredService<AzureDevOpsTimeline>();
         }
 
         [ConfigureAllParameters]

@@ -64,7 +64,6 @@ internal static class Program
                         services.AddSingleton<ITimelineTelemetryRepository, KustoTimelineTelemetryRepository>();
                         services.AddSingleton<IBuildLogScraper, BuildLogScraper>();
                         services.AddSingleton<ExponentialRetry>();
-                        services.AddScoped<AzureDevOpsTimelineProcessor>();
                     });                    
             });
     }
