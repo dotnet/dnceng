@@ -20,7 +20,6 @@
   "AzureDevOps": {
     "build-monitor/dnceng": {
       "Organization": "dnceng",
-      "AccessToken": "[vault(dn-bot-dnceng-build-r-code-r-project-r-profile-r)]",
       "MaxParallelRequests": 10
     },
     "dnceng": {
