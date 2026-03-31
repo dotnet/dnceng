@@ -6,6 +6,9 @@
     "AzureDevOpsSettings": {
         "dnceng": {
             "ManagedIdentityClientId": "13eb78dc-2e79-4ae1-afbf-f95c5b1d2a4c"
+        },
+        "dnceng-public": {
+            "ManagedIdentityClientId": "13eb78dc-2e79-4ae1-afbf-f95c5b1d2a4c"
         }
     },
     "KustoTimelineTelemetry": {
