@@ -13,6 +13,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Azure.Core;
+using Azure.Identity;
 using Microsoft.DotNet.Services.Utility;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -24,14 +26,33 @@ namespace Microsoft.DotNet.Internal.AzureDevOps;
 
 public sealed class AzureDevOpsClient : IAzureDevOpsClient
 {
+    /// <summary>
+    /// The Azure DevOps resource ID used when requesting tokens from Entra ID.
+    /// </summary>
+    public static readonly string AzureDevOpsResourceId = "499b84ac-1321-427f-aa17-267ca6975798/.default";
+
     private readonly ILogger<AzureDevOpsClient> _logger;
     private readonly HttpClient _httpClient;
     private readonly SemaphoreSlim _parallelism;
+    private readonly TokenCredential? _tokenCredential;
 
     public AzureDevOpsClient(
         AzureDevOpsClientOptions options,
         ILogger<AzureDevOpsClient> logger,
         IHttpClientFactory httpClientFactory)
+        : this(options, logger, httpClientFactory, tokenCredential: null)
+    {
+    }
+
+    /// <summary>
+    /// Constructor that allows injecting a <see cref="TokenCredential"/> for testing
+    /// or custom authentication scenarios.
+    /// </summary>
+    public AzureDevOpsClient(
+        AzureDevOpsClientOptions options,
+        ILogger<AzureDevOpsClient> logger,
+        IHttpClientFactory httpClientFactory,
+        TokenCredential? tokenCredential)
     {
         _logger = logger;
         _logger.LogInformation("Constructing AzureDevOpsClient for org {organization}", options.Organization);
@@ -39,13 +60,44 @@ public sealed class AzureDevOpsClient : IAzureDevOpsClient
         _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         _httpClient.BaseAddress = new Uri($"https://dev.azure.com/{options.Organization}/");
         _parallelism = new SemaphoreSlim(options.MaxParallelRequests, options.MaxParallelRequests);
+
         if (!string.IsNullOrEmpty(options.AccessToken))
         {
+            _logger.LogInformation("Using PAT-based authentication for org {organization}", options.Organization);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
                 "Basic",
                 Convert.ToBase64String(Encoding.UTF8.GetBytes($":{options.AccessToken}"))
             );
         }
+        else if (!string.IsNullOrEmpty(options.ManagedIdentityClientId))
+        {
+            _logger.LogInformation(
+                "Using Managed Identity authentication (ClientId: {clientId}) for org {organization}",
+                options.ManagedIdentityClientId,
+                options.Organization);
+            _tokenCredential = tokenCredential
+                ?? new ManagedIdentityCredential(options.ManagedIdentityClientId);
+        }
+        else
+        {
+            _logger.LogWarning("No authentication configured for org {organization}. Requests may fail.", options.Organization);
+        }
+    }
+
+    /// <summary>
+    /// If a <see cref="TokenCredential"/> is configured, acquires a fresh bearer token
+    /// and sets it on the <see cref="HttpClient"/> default request headers.
+    /// </summary>
+    private async Task EnsureBearerTokenAsync(CancellationToken cancellationToken)
+    {
+        if (_tokenCredential == null)
+        {
+            return;
+        }
+
+        var tokenRequestContext = new TokenRequestContext(new[] { AzureDevOpsResourceId });
+        AccessToken token = await _tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken);
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
     }
 
     /// <summary>
@@ -172,6 +224,7 @@ public sealed class AzureDevOpsClient : IAzureDevOpsClient
         IReadOnlyList<Regex> regexes,
         CancellationToken cancellationToken)
     {
+        await EnsureBearerTokenAsync(cancellationToken);
         using var request = new HttpRequestMessage(HttpMethod.Get, logUri);
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/plain"));
 
@@ -288,6 +341,7 @@ public sealed class AzureDevOpsClient : IAzureDevOpsClient
         await _parallelism.WaitAsync(cancellationToken);
         try
         {
+            await EnsureBearerTokenAsync(cancellationToken);
             int retry = 5;
             while (true)
             {
@@ -326,6 +380,7 @@ public sealed class AzureDevOpsClient : IAzureDevOpsClient
         await _parallelism.WaitAsync(cancellationToken);
         try
         {
+            await EnsureBearerTokenAsync(cancellationToken);
             int retry = 5;
             while (true)
             {

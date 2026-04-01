@@ -226,3 +226,26 @@ stages:
       env:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       displayName: Secret Manager Scenario Tests
+
+  - job: telemetryValidation
+    displayName: Telemetry MI auth validation
+    timeoutInMinutes: 15
+    steps:
+    - download: current
+      artifact: AzureDevOpsClient.PostDeploymentTests
+
+    - task: UseDotNet@2
+      displayName: Install .NET 8
+      inputs:
+        version: 8.x
+
+    - task: AzureCLI@2
+      inputs:
+        azureSubscription: 'secret-manager-scenario-tests'
+        scriptType: 'ps'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          dotnet test $(Pipeline.Workspace)/AzureDevOpsClient.PostDeploymentTests/AzureDevOpsClient.PostDeploymentTests.dll --filter "TestCategory=PostDeployment" --logger "trx;LogFilePrefix=TelemetryMIAuth"
+      env:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      displayName: Telemetry Managed Identity Auth Tests
