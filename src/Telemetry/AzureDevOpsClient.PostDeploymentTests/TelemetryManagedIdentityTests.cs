@@ -70,7 +70,7 @@ public class TelemetryManagedIdentityTests
         var options = new AzureDevOpsClientOptions
         {
             Organization = "dnceng",
-            ManagedIdentityClientId = "placeholder-activates-bearer-path",
+            UseManagedIdentity = true,
             MaxParallelRequests = 1,
         };
 
@@ -99,7 +99,7 @@ public class TelemetryManagedIdentityTests
         var options = new AzureDevOpsClientOptions
         {
             Organization = "dnceng",
-            ManagedIdentityClientId = "placeholder-activates-bearer-path",
+            UseManagedIdentity = true,
             MaxParallelRequests = 1,
         };
 
