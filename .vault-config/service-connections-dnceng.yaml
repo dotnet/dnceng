@@ -51,19 +51,6 @@ secrets:
           organizations: devdiv
           scopes: packaging
 
-  DevDiv Org - Repo Access:
-    type: azure-devops-service-endpoint
-    parameters:
-      authorization:
-        type: azure-devops-access-token
-        parameters:
-          domainAccountName: dn-bot
-          domainAccountSecret:
-            location: helixkv
-            name: dn-bot-account-redmond
-          organizations: devdiv
-          scopes: build_execute code_write
-
   azure-public/vssdk:
     type: azure-devops-service-endpoint
     parameters:
