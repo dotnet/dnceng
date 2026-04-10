@@ -120,12 +120,7 @@ public class AlertHookController : ControllerBase
 
     private string GenerateNewNotificationComment(GrafanaNotification notification)
     {
-        var metricText = new StringBuilder();
-        foreach (GrafanaNotificationMatch match in notification.EvalMatches)
-        {
-            metricText.AppendLine($"  - *{match.Metric}* {match.Value}");
-        }
-            
+        string metricText = BuildMetricText(notification);
         string icon = GetIcon(notification);
         string image = !string.IsNullOrEmpty(notification.ImageUrl) ? $"![Metric Graph]({notification.ImageUrl})" : string.Empty;
 
@@ -142,12 +137,7 @@ public class AlertHookController : ControllerBase
 
     private NewIssue GenerateNewIssue(GrafanaNotification notification)
     {
-        var metricText = new StringBuilder();
-        foreach (GrafanaNotificationMatch match in notification.EvalMatches)
-        {
-            metricText.AppendLine($"  - *{match.Metric}* {match.Value}");
-        }
-
+        string metricText = BuildMetricText(notification);
         string icon = GetIcon(notification);
         string image = !string.IsNullOrEmpty(notification.ImageUrl) ? $"![Metric Graph]({notification.ImageUrl})" : string.Empty;
 
@@ -159,6 +149,11 @@ public class AlertHookController : ControllerBase
         {
             issueTitle = prefix + issueTitle;
         }
+
+        string notificationMentions = string.Join(", ", options.NotificationTargets.OrEmpty().Select(target => $"@{target}"));
+        string investigationLine = string.IsNullOrEmpty(notificationMentions)
+            ? "Please investigate"
+            : $"{notificationMentions}, please investigate";
 
         var issue = new NewIssue(issueTitle)
         {
@@ -172,7 +167,7 @@ public class AlertHookController : ControllerBase
 
 [Go to rule]({notification.RuleUrl})
 
-{string.Join(", ", options.NotificationTargets.Select(target => $"@{target}"))}, please investigate
+{investigationLine}
 
 {options.SupplementalBodyText}
 
@@ -198,6 +193,18 @@ public class AlertHookController : ControllerBase
         }
 
         return issue;
+    }
+
+    private static string BuildMetricText(GrafanaNotification notification)
+    {
+        StringBuilder metricText = new StringBuilder();
+        IEnumerable<GrafanaNotificationMatch> matches = notification.EvalMatches ?? Enumerable.Empty<GrafanaNotificationMatch>();
+        foreach (GrafanaNotificationMatch match in matches)
+        {
+            metricText.AppendLine($"  - *{match.Metric}* {match.Value}");
+        }
+
+        return metricText.ToString();
     }
 
     private static string GetIcon(GrafanaNotification notification)
