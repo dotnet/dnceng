@@ -135,6 +135,8 @@ stages:
 
   - job: deployStatus
     displayName: Deploy dotnet-status web app
+    templateContext:
+      type: releaseJob
     pool:
       name: NetCore1ESPool-Internal-NoMSI
       demands: ImageOverride -equals 1es-windows-2022
