@@ -136,6 +136,7 @@ stages:
   - job: deployStatus
     displayName: Deploy dotnet-status web app
     templateContext:
+      type: releaseJob
       isProduction: true
     pool:
       name: NetCore1ESPool-Internal-NoMSI
