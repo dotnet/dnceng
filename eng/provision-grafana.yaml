@@ -27,6 +27,12 @@ parameters:
 jobs:
 - job: PrepareGrafanaBicep
   displayName: 'Prepare Grafana Bicep Template'
+  templateContext:
+    outputs:
+      - output: pipelineArtifact
+        displayName: 'Publish Bicep Template Artifact'
+        targetPath: 'eng/deployment/azure-managed-grafana.bicep'
+        artifactName: 'GrafanaBicep'
   pool:
     name: NetCore1ESPool-Internal
     demands: ImageOverride -equals 1es-windows-2022
@@ -51,12 +57,6 @@ jobs:
           throw "Bicep template validation failed"
         }
         Write-Host "SUCCESS: Bicep template validation successful"
-
-  - task: PublishPipelineArtifact@1
-    displayName: 'Publish Bicep Template Artifact'
-    inputs:
-      targetPath: 'eng/deployment/azure-managed-grafana.bicep'
-      artifactName: 'GrafanaBicep'
 
 - job: ProvisionGrafana
   displayName: 'Provision Azure Managed Grafana'
