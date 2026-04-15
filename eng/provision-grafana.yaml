@@ -25,12 +25,11 @@ parameters:
   type: string
 
 jobs:
-- job: ProvisionGrafana
-  displayName: 'Provision Azure Managed Grafana'
+- job: PrepareGrafanaBicep
+  displayName: 'Prepare Grafana Bicep Template'
   pool:
     name: NetCore1ESPool-Internal
     demands: ImageOverride -equals 1es-windows-2022
-  
   steps:
   - checkout: self
     displayName: 'Checkout Repository'
@@ -52,6 +51,29 @@ jobs:
           throw "Bicep template validation failed"
         }
         Write-Host "SUCCESS: Bicep template validation successful"
+
+  - task: PublishPipelineArtifact@1
+    displayName: 'Publish Bicep Template Artifact'
+    inputs:
+      targetPath: 'eng/deployment/azure-managed-grafana.bicep'
+      artifactName: 'GrafanaBicep'
+
+- job: ProvisionGrafana
+  displayName: 'Provision Azure Managed Grafana'
+  dependsOn: PrepareGrafanaBicep
+  templateContext:
+    type: releaseJob
+    isProduction: true
+  pool:
+    name: NetCore1ESPool-Internal
+    demands: ImageOverride -equals 1es-windows-2022
+  
+  steps:
+  - task: 1ES.DownloadPipelineArtifact@1
+    displayName: 'Download Bicep Template'
+    inputs:
+      artifactName: 'GrafanaBicep'
+      targetPath: $(Pipeline.Workspace)/GrafanaBicep
 
   - task: AzureCLI@2
     displayName: 'Ensure Resource Group Exists'
@@ -90,7 +112,7 @@ jobs:
       resourceGroupName: '${{ parameters.GrafanaResourceGroup }}'
       location: '${{ parameters.GrafanaLocation }}'
       templateLocation: 'Linked artifact'
-      csmFile: 'eng/deployment/azure-managed-grafana.bicep'
+      csmFile: '$(Pipeline.Workspace)/GrafanaBicep/azure-managed-grafana.bicep'
       overrideParameters: '-location "${{ parameters.GrafanaLocation }}" -grafanaWorkspaceName "${{ parameters.GrafanaWorkspaceName }}" -skuName "${{ parameters.GrafanaSkuName }}" -environment "${{ parameters.DeploymentEnvironment }}" -keyVaultName "${{ parameters.GrafanaKeyVault }}"'
       deploymentMode: 'Incremental'
       deploymentName: 'grafana-${{ parameters.DeploymentEnvironment }}-$(Build.BuildNumber)'
