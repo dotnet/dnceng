@@ -70,7 +70,7 @@ public class TelemetryManagedIdentityTests
         var options = new AzureDevOpsClientOptions
         {
             Organization = "dnceng",
-            ManagedIdentityClientId = "placeholder-activates-bearer-path",
+            UseManagedIdentity = true,
             MaxParallelRequests = 1,
         };
 
@@ -90,6 +90,35 @@ public class TelemetryManagedIdentityTests
     }
 
     /// <summary>
+    /// Validates that the Managed Identity can acquire a bearer token for
+    /// Azure DevOps and successfully list builds from dnceng-public/public.
+    /// </summary>
+    [Test]
+    public async Task ManagedIdentity_CanListBuilds_FromDncengPublic()
+    {
+        var options = new AzureDevOpsClientOptions
+        {
+            Organization = "dnceng-public",
+            UseManagedIdentity = true,
+            MaxParallelRequests = 1,
+        };
+
+        var client = new AzureDevOpsClient(options, _logger, new SimpleHttpClientFactory(), _credential);
+
+        var builds = await client.ListBuilds("public", CancellationToken.None, limit: 3);
+
+        Assert.That(builds, Is.Not.Null);
+        Assert.That(builds.Length, Is.GreaterThan(0),
+            "Expected at least one build from dnceng-public/public using bearer token auth");
+
+        TestContext.Out.WriteLine($"Retrieved {builds.Length} build(s) from dnceng-public via Managed Identity:");
+        foreach (var build in builds)
+        {
+            TestContext.Out.WriteLine($"  Build #{build.Id} — {build.Definition?.Name} — {build.Status}");
+        }
+    }
+
+    /// <summary>
     /// Validates that the Managed Identity can read build timeline data,
     /// which is the core operation the telemetry service performs.
     /// </summary>
@@ -99,7 +128,7 @@ public class TelemetryManagedIdentityTests
         var options = new AzureDevOpsClientOptions
         {
             Organization = "dnceng",
-            ManagedIdentityClientId = "placeholder-activates-bearer-path",
+            UseManagedIdentity = true,
             MaxParallelRequests = 1,
         };
 

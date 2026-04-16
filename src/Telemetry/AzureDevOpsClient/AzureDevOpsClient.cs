@@ -69,14 +69,25 @@ public sealed class AzureDevOpsClient : IAzureDevOpsClient
                 Convert.ToBase64String(Encoding.UTF8.GetBytes($":{options.AccessToken}"))
             );
         }
-        else if (!string.IsNullOrEmpty(options.ManagedIdentityClientId))
+        else if (options.UseManagedIdentity)
         {
-            _logger.LogInformation(
-                "Using Managed Identity authentication (ClientId: {clientId}) for org {organization}",
-                options.ManagedIdentityClientId,
-                options.Organization);
-            _tokenCredential = tokenCredential
-                ?? new ManagedIdentityCredential(options.ManagedIdentityClientId);
+            if (!string.IsNullOrEmpty(options.ManagedIdentityClientId))
+            {
+                _logger.LogInformation(
+                    "Using user-assigned Managed Identity (ClientId: {clientId}) for org {organization}",
+                    options.ManagedIdentityClientId,
+                    options.Organization);
+                _tokenCredential = tokenCredential
+                    ?? new ManagedIdentityCredential(options.ManagedIdentityClientId);
+            }
+            else
+            {
+                _logger.LogInformation(
+                    "Using system-assigned Managed Identity for org {organization}",
+                    options.Organization);
+                _tokenCredential = tokenCredential
+                    ?? new ManagedIdentityCredential();
+            }
         }
         else
         {

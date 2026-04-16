@@ -10,5 +10,3 @@ references:
     parameters:
       subscription: a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1
       name: helixkv
-
-importSecretsFrom: shared/telemetry-secrets.yaml

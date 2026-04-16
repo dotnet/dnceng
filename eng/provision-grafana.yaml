@@ -27,6 +27,8 @@ parameters:
 jobs:
 - job: ProvisionGrafana
   displayName: 'Provision Azure Managed Grafana'
+  templateContext:
+    isProduction: true
   pool:
     name: NetCore1ESPool-Internal
     demands: ImageOverride -equals 1es-windows-2022
