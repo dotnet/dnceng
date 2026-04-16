@@ -31,7 +31,7 @@ jobs:
     outputs:
       - output: pipelineArtifact
         displayName: 'Publish Bicep Template Artifact'
-        targetPath: 'eng/deployment/azure-managed-grafana.bicep'
+        targetPath: $(Build.ArtifactStagingDirectory)/GrafanaBicep
         artifactName: 'GrafanaBicep'
   pool:
     name: NetCore1ESPool-Internal
@@ -57,6 +57,13 @@ jobs:
           throw "Bicep template validation failed"
         }
         Write-Host "SUCCESS: Bicep template validation successful"
+
+  - task: CopyFiles@2
+    displayName: 'Stage Bicep Template'
+    inputs:
+      SourceFolder: 'eng/deployment'
+      Contents: 'azure-managed-grafana.bicep'
+      TargetFolder: $(Build.ArtifactStagingDirectory)/GrafanaBicep
 
 - job: ProvisionGrafana
   displayName: 'Provision Azure Managed Grafana'
