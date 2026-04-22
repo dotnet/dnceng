@@ -490,7 +490,7 @@
           "visible": true
         }
       ],
-      "title": "Work Items Waiting Time (Test Queues).",
+      "title": "Work Items Waiting Time (Test Queues)",
       "type": "timeseries"
     },
     {
