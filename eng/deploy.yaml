@@ -136,13 +136,16 @@ stages:
   - job: deployStatus
     displayName: Deploy dotnet-status web app
     templateContext:
+      type: releaseJob
       isProduction: true
     pool:
       name: NetCore1ESPool-Internal-NoMSI
       demands: ImageOverride -equals 1es-windows-2022
     steps:
-    - download: current
-      artifact: DotNetStatus
+    - task: 1ES.DownloadPipelineArtifact@1
+      inputs:
+        artifactName: DotNetStatus
+        targetPath: $(Pipeline.Workspace)/DotNetStatus
     - task: AzureRmWebAppDeployment@4
       inputs:
         ConnectionType: AzureRM
