@@ -135,12 +135,17 @@ stages:
 
   - job: deployStatus
     displayName: Deploy dotnet-status web app
+    templateContext:
+      type: releaseJob
+      isProduction: true
     pool:
       name: NetCore1ESPool-Internal-NoMSI
       demands: ImageOverride -equals 1es-windows-2022
     steps:
-    - download: current
-      artifact: DotNetStatus
+    - task: 1ES.DownloadPipelineArtifact@1
+      inputs:
+        artifactName: DotNetStatus
+        targetPath: $(Pipeline.Workspace)/DotNetStatus
     - task: AzureRmWebAppDeployment@4
       inputs:
         ConnectionType: AzureRM
@@ -226,3 +231,26 @@ stages:
       env:
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       displayName: Secret Manager Scenario Tests
+
+  - job: telemetryValidation
+    displayName: Telemetry MI auth validation
+    timeoutInMinutes: 15
+    steps:
+    - download: current
+      artifact: AzureDevOpsClient.PostDeploymentTests
+
+    - task: UseDotNet@2
+      displayName: Install .NET 8
+      inputs:
+        version: 8.x
+
+    - task: AzureCLI@2
+      inputs:
+        azureSubscription: 'secret-manager-scenario-tests'
+        scriptType: 'ps'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          dotnet test $(Pipeline.Workspace)/AzureDevOpsClient.PostDeploymentTests/AzureDevOpsClient.PostDeploymentTests.dll --filter "TestCategory=PostDeployment" --logger "trx;LogFilePrefix=TelemetryMIAuth"
+      env:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      displayName: Telemetry Managed Identity Auth Tests

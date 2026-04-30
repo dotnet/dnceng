@@ -30,5 +30,14 @@
     "KustoIngestionUri": "https://ingest-engdata.westus2.kusto.windows.net",
     "ManagedIdentityId": "e9d81917-4c98-44cc-8a6e-601311ac3c07",
     "UseAzCliAuthentication": false
+  },
+  "AzureDevOps": {
+    "build-monitor/dnceng": {
+      "UseManagedIdentity": true,
+      "ManagedIdentityClientId": "8cd89985-08e4-4baa-86f1-76ee58b6b393"
+    },
+    "dnceng": {
+      "UseManagedIdentity": true
+    }
   }
 }
