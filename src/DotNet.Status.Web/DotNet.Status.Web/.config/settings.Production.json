@@ -32,6 +32,7 @@
   },
   "AzureDevOps": {
     "build-monitor/dnceng": {
+      "UseManagedIdentity": true,
       "ManagedIdentityClientId": "b73bcdd4-aba9-40a7-af0c-f95b8eb5ab62"
     },
     "dnceng": {
