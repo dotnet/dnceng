@@ -130,6 +130,8 @@ public class AzureDevOpsAccessToken : SecretType<AzureDevOpsAccessToken.Paramete
         if (expiresOn - newToken.ValidTo > TimeSpan.FromDays(1))
         {
             Console.LogWarning($"Issued token expires on {newToken.ValidTo}, which is more than 1 day from the requested duration of {expiresOn}. This is unexpected and may disrupt secret management.");
+            expiresOn = newToken.ValidTo;
+            rotatesOn = expiresOn - TimeSpan.FromDays(2);
         }
 
         return new SecretData(newToken.Token, expiresOn, rotatesOn);
