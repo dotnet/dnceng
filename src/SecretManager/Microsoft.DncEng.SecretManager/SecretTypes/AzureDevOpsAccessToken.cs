@@ -118,14 +118,18 @@ public class AzureDevOpsAccessToken : SecretType<AzureDevOpsAccessToken.Paramete
         Console.WriteLine($"Creating new pat in orgs '{string.Join(" ", orgIds)}' with scopes '{string.Join(" ", scopes)}'");
         var rotatesOn = now.AddDays(1);
         var expiresOn = now.AddDays(3);
-        var newToken = await tokenClient.CreateSessionTokenAsync(new SessionToken
-        {
-            DisplayName = $"{context.SecretName} {now:u}",
-            Scope = string.Join(" ", scopes),
-            ValidFrom = now.UtcDateTime,
-            ValidTo = expiresOn.UtcDateTime,
-            TargetAccounts = orgIds,
-        }, cancellationToken: cancellationToken);
+        var newToken = await tokenClient.CreateSessionTokenAsync(
+            new SessionToken
+            {
+                DisplayName = $"{context.SecretName} {now:u}",
+                Scope = string.Join(" ", scopes),
+                ValidFrom = now.UtcDateTime,
+                ValidTo = expiresOn.UtcDateTime,
+                TargetAccounts = orgIds,
+            },
+            // For nuget feed PATs, they are the only ones allowed that can be a regular PAT. Others will just be a session token (shorter lifetime)
+            tokenType: scopes.Length == 1 && scopes.First() == "vso.packaging" ? SessionTokenType.Compact : null,
+            cancellationToken: cancellationToken);
 
         if (expiresOn - newToken.ValidTo > TimeSpan.FromDays(1))
         {
