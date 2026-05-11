@@ -44,7 +44,9 @@ public class AzureDevOpsAccessToken : SecretType<AzureDevOpsAccessToken.Paramete
 
     private static async Task<VssConnection> ConnectToAzDo(string userName, string password, CancellationToken cancellationToken)
     {
+#pragma warning disable CS0618 // Type or member is obsolete
         UsernamePasswordCredential credential = new(userName, password, msftTenantId, ClientId);
+#pragma warning restore CS0618 // Type or member is obsolete
         TokenRequestContext requestContext = new([VstsResourceId + "/.default"]);
         AzureCore.AccessToken result = await credential.GetTokenAsync(requestContext, cancellationToken);
 
