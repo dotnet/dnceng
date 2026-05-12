@@ -130,7 +130,7 @@ public class AzureDevOpsAccessToken : SecretType<AzureDevOpsAccessToken.Paramete
                 TargetAccounts = orgIds,
             },
             // For nuget feed PATs, they are the only ones allowed that can be a regular PAT. Others will just be a session token (shorter lifetime)
-            tokenType: scopes.Length == 1 && scopes.First() == "vso.packaging" ? SessionTokenType.Compact : null,
+            tokenType: SessionTokenType.Compact,
             cancellationToken: cancellationToken);
 
         if (expiresOn - newToken.ValidTo > TimeSpan.FromDays(1))
