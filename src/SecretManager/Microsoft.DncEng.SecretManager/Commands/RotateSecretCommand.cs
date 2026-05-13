@@ -27,7 +27,6 @@ public class RotateSecretCommand : Command
 
     private string _manifestFile;
     private readonly List<string> _secretNames = [];
-    private bool _yes;
 
     public RotateSecretCommand(
         StorageLocationTypeRegistry storageLocationTypeRegistry,
@@ -62,7 +61,6 @@ public class RotateSecretCommand : Command
                 }
             },
             {"s|secret=", "The name of a secret to rotate (as listed in the manifest). Can be specified multiple times to rotate several secrets.", _secretNames.Add},
-            {"y|yes", "Skip the confirmation prompt.", y => _yes = !string.IsNullOrEmpty(y)},
         });
     }
 
@@ -77,16 +75,6 @@ public class RotateSecretCommand : Command
         {
             Console.OutputEncoding = System.Text.Encoding.UTF8;
             _console.WriteLine($"🔁 Rotating secret(s) '{string.Join("', '", _secretNames)}' from {_manifestFile}");
-
-            if (!_yes)
-            {
-                bool confirmed = await _console.ConfirmAsync(
-                    $"This will rotate secret(s) '{string.Join("', '", _secretNames)}' ahead of schedule. Continue? (yes/no): ");
-                if (!confirmed)
-                {
-                    return;
-                }
-            }
 
             SecretManifest manifest = SecretManifest.Read(_manifestFile);
 
