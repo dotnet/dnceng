@@ -44,7 +44,9 @@ public class AzureDevOpsAccessToken : SecretType<AzureDevOpsAccessToken.Paramete
 
     private static async Task<VssConnection> ConnectToAzDo(string userName, string password, CancellationToken cancellationToken)
     {
+#pragma warning disable CS0618 // Type or member is obsolete
         UsernamePasswordCredential credential = new(userName, password, msftTenantId, ClientId);
+#pragma warning restore CS0618 // Type or member is obsolete
         TokenRequestContext requestContext = new([VstsResourceId + "/.default"]);
         AzureCore.AccessToken result = await credential.GetTokenAsync(requestContext, cancellationToken);
 
@@ -118,18 +120,24 @@ public class AzureDevOpsAccessToken : SecretType<AzureDevOpsAccessToken.Paramete
         Console.WriteLine($"Creating new pat in orgs '{string.Join(" ", orgIds)}' with scopes '{string.Join(" ", scopes)}'");
         var rotatesOn = now.AddDays(1);
         var expiresOn = now.AddDays(3);
-        var newToken = await tokenClient.CreateSessionTokenAsync(new SessionToken
-        {
-            DisplayName = $"{context.SecretName} {now:u}",
-            Scope = string.Join(" ", scopes),
-            ValidFrom = now.UtcDateTime,
-            ValidTo = expiresOn.UtcDateTime,
-            TargetAccounts = orgIds,
-        }, cancellationToken: cancellationToken);
+        var newToken = await tokenClient.CreateSessionTokenAsync(
+            new SessionToken
+            {
+                DisplayName = $"{context.SecretName} {now:u}",
+                Scope = string.Join(" ", scopes),
+                ValidFrom = now.UtcDateTime,
+                ValidTo = expiresOn.UtcDateTime,
+                TargetAccounts = orgIds,
+            },
+            // For nuget feed PATs, they are the only ones allowed that can be a regular PAT. Others will just be a session token (shorter lifetime)
+            tokenType: scopes.Length == 1 && scopes.First() == "vso.packaging" ? SessionTokenType.Compact : null,
+            cancellationToken: cancellationToken);
 
         if (expiresOn - newToken.ValidTo > TimeSpan.FromDays(1))
         {
             Console.LogWarning($"Issued token expires on {newToken.ValidTo}, which is more than 1 day from the requested duration of {expiresOn}. This is unexpected and may disrupt secret management.");
+            expiresOn = newToken.ValidTo;
+            rotatesOn = expiresOn - TimeSpan.FromDays(2);
         }
 
         return new SecretData(newToken.Token, expiresOn, rotatesOn);
