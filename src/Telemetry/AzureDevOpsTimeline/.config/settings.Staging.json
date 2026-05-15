@@ -5,9 +5,11 @@
     },
     "AzureDevOpsSettings": {
         "dnceng": {
+            "UseManagedIdentity": true,
             "ManagedIdentityClientId": "c05abe9e-b183-4c19-a7c3-6512f976548f"
         },
         "dnceng-public": {
+            "UseManagedIdentity": true,
             "ManagedIdentityClientId": "c05abe9e-b183-4c19-a7c3-6512f976548f"
         }
     },
