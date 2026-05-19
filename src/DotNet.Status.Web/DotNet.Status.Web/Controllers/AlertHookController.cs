@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -365,39 +366,40 @@ public class AlertHookController : ControllerBase
 
     private bool IsAuthorized()
     {
-        string webhookSecret = _grafanaOptions.Value?.WebhookSecret;
-        if (string.IsNullOrEmpty(webhookSecret))
+        var secret = _grafanaOptions.Value?.WebhookSecret;
+        if (string.IsNullOrEmpty(secret))
         {
             _logger.LogError("Grafana WebhookSecret is not configured; rejecting request");
             return false;
         }
 
-        string authHeader = Request.Headers["Authorization"];
-        if (string.IsNullOrEmpty(authHeader))
-        {
+        if (!Request.Headers.TryGetValue("Authorization", out var authHeader))
             return false;
-        }
 
-        if (!authHeader.StartsWith("Basic ", StringComparison.OrdinalIgnoreCase))
-        {
+        if (!authHeader.ToString().StartsWith("Basic ", StringComparison.OrdinalIgnoreCase))
             return false;
-        }
 
         try
         {
-            string encoded = authHeader.Substring("Basic ".Length).Trim();
-            string decoded = Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
-            // Basic Auth format is "username:password" — we only validate the password
-            int colonIndex = decoded.IndexOf(':');
-            if (colonIndex < 0)
-            {
-                return false;
-            }
+            var encoded = authHeader.ToString().Substring("Basic ".Length).Trim();
+            var bytes = Convert.FromBase64String(encoded);
 
-            string password = decoded.Substring(colonIndex + 1);
-            return string.Equals(password, webhookSecret, StringComparison.Ordinal);
+            try
+            {
+                int colon = Array.IndexOf(bytes, (byte)':');
+                if (colon < 0) return false;
+
+                var provided = bytes.AsSpan(colon + 1);
+                var expected = Encoding.UTF8.GetBytes(secret);
+
+                return CryptographicOperations.FixedTimeEquals(provided, expected);
+            }
+            finally
+            {
+                Array.Clear(bytes, 0, bytes.Length);
+            }
         }
-        catch (FormatException)
+        catch
         {
             return false;
         }
