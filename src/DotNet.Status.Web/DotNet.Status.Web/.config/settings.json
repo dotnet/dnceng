@@ -291,7 +291,8 @@
   "Grafana": {
     "BaseUrl": "https://dotnet-eng-grafana-staging.westus2.cloudapp.azure.com",
     "ApiToken": "[vault(grafana-api-token)]",
-    "TableName": "deployments"
+    "TableName": "deployments",
+    "WebhookSecret": "[vault(grafana-webhook-secret)]"
   },
   "WebHooks": {
     "github": {

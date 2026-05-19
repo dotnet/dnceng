@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using DotNet.Status.Web.Models;
 using DotNet.Status.Web.Options;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.DotNet.GitHub.Authentication;
 using Microsoft.Extensions.Logging;
@@ -19,6 +21,7 @@ namespace DotNet.Status.Web.Controllers;
 
 [ApiController]
 [Route("api/alert")]
+[AllowAnonymous]
 public class AlertHookController : ControllerBase
 {
     public const string NotificationIdLabel = "Grafana Alert";
@@ -32,6 +35,7 @@ public class AlertHookController : ControllerBase
 
     private readonly IOptions<GitHubConnectionOptions> _githubOptions;
     private readonly IOptions<GitHubClientOptions> _githubClientOptions;
+    private readonly IOptions<GrafanaOptions> _grafanaOptions;
     private readonly ILogger _logger;
     private readonly IGitHubTokenProvider _tokenProvider;
 
@@ -39,17 +43,25 @@ public class AlertHookController : ControllerBase
         IGitHubTokenProvider tokenProvider,
         IOptions<GitHubConnectionOptions> githubOptions,
         IOptions<GitHubClientOptions> githubClientOptions,
+        IOptions<GrafanaOptions> grafanaOptions,
         ILogger<AlertHookController> logger)
     {
         _tokenProvider = tokenProvider;
         _githubOptions = githubOptions;
         _githubClientOptions = githubClientOptions;
+        _grafanaOptions = grafanaOptions;
         _logger = logger;
     }
 
     [HttpPost]
     public async Task<IActionResult> NotifyAsync(GrafanaNotification notification)
     {
+        if (!IsAuthorized())
+        {
+            _logger.LogWarning("Unauthorized alert webhook request received");
+            return Unauthorized();
+        }
+
         switch (notification.State)
         {
             case "ok":
@@ -349,5 +361,45 @@ public class AlertHookController : ControllerBase
         {
             Credentials = new Credentials(await _tokenProvider.GetTokenForRepository(org, repo))
         };
+    }
+
+    private bool IsAuthorized()
+    {
+        string webhookSecret = _grafanaOptions.Value?.WebhookSecret;
+        if (string.IsNullOrEmpty(webhookSecret))
+        {
+            _logger.LogError("Grafana WebhookSecret is not configured; rejecting request");
+            return false;
+        }
+
+        string authHeader = Request.Headers["Authorization"];
+        if (string.IsNullOrEmpty(authHeader))
+        {
+            return false;
+        }
+
+        if (!authHeader.StartsWith("Basic ", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        try
+        {
+            string encoded = authHeader.Substring("Basic ".Length).Trim();
+            string decoded = Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
+            // Basic Auth format is "username:password" — we only validate the password
+            int colonIndex = decoded.IndexOf(':');
+            if (colonIndex < 0)
+            {
+                return false;
+            }
+
+            string password = decoded.Substring(colonIndex + 1);
+            return string.Equals(password, webhookSecret, StringComparison.Ordinal);
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
     }
 }
