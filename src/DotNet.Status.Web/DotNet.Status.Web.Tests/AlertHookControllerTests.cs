@@ -77,10 +77,16 @@ public class AlertHookControllerTests
             ProductHeader = new ProductHeaderValue("DotNetStatusWebTests"),
         });
 
+        IOptions<GrafanaOptions> grafanaOptions = Microsoft.Extensions.Options.Options.Create(new GrafanaOptions
+        {
+            WebhookSecret = "test-secret",
+        });
+
         return new AlertHookController(
             tokenProvider.Object,
             githubOptions,
             clientOptions,
+            grafanaOptions,
             NullLogger<AlertHookController>.Instance);
     }
 
