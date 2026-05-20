@@ -26,8 +26,7 @@ public class RotateSecretCommand : Command
     private readonly IConsole _console;
 
     private string _manifestFile;
-    private string _secretName;
-    private bool _yes;
+    private readonly List<string> _secretNames = [];
 
     public RotateSecretCommand(
         StorageLocationTypeRegistry storageLocationTypeRegistry,
@@ -61,14 +60,13 @@ public class RotateSecretCommand : Command
                     }
                 }
             },
-            {"s|secret=", "The name of the secret to rotate (as listed in the manifest).", s => _secretName = s},
-            {"y|yes", "Skip the confirmation prompt.", y => _yes = !string.IsNullOrEmpty(y)},
+            {"s|secret=", "The name of a secret to rotate (as listed in the manifest). Can be specified multiple times to rotate several secrets.", _secretNames.Add},
         });
     }
 
     public override bool AreRequiredOptionsSet()
     {
-        return !string.IsNullOrEmpty(_manifestFile) && !string.IsNullOrEmpty(_secretName);
+        return !string.IsNullOrEmpty(_manifestFile) && _secretNames.Count > 0;
     }
 
     public override async Task RunAsync(CancellationToken cancellationToken)
@@ -76,24 +74,17 @@ public class RotateSecretCommand : Command
         try
         {
             Console.OutputEncoding = System.Text.Encoding.UTF8;
-            _console.WriteLine($"🔁 Rotating secret '{_secretName}' from {_manifestFile}");
-
-            if (!_yes)
-            {
-                bool confirmed = await _console.ConfirmAsync(
-                    $"This will rotate secret '{_secretName}' ahead of schedule, possibly causing service disruption. Continue? (yes/no): ");
-                if (!confirmed)
-                {
-                    return;
-                }
-            }
+            _console.WriteLine($"🔁 Rotating secret(s) '{string.Join("', '", _secretNames)}' from {_manifestFile}");
 
             SecretManifest manifest = SecretManifest.Read(_manifestFile);
 
-            if (!manifest.Secrets.TryGetValue(_secretName, out SecretManifest.Secret secret))
+            foreach (string secretName in _secretNames)
             {
-                _console.LogError($"Secret '{_secretName}' was not found in manifest {_manifestFile}.");
-                throw new FailWithExitCodeException(1);
+                if (!manifest.Secrets.ContainsKey(secretName))
+                {
+                    _console.LogError($"Secret '{secretName}' was not found in manifest {_manifestFile}.");
+                    throw new FailWithExitCodeException(1);
+                }
             }
 
             using StorageLocationType.Bound storage = _storageLocationTypeRegistry
@@ -111,47 +102,12 @@ public class RotateSecretCommand : Command
                 references.Add(name, bound);
             }
 
-            SecretType.Bound secretType = _secretTypeRegistry.Get(secret.Type).BindParameters(secret.Parameters);
-
             Dictionary<string, SecretProperties> existingSecrets = (await storage.ListSecretsAsync())
                 .ToDictionary(p => p.Name);
 
-            List<string> names = secretType.GetCompositeSecretSuffixes()
-                .Select(suffix => _secretName + suffix)
-                .ToList();
-
-            SecretProperties primary = null;
-            foreach (string n in names)
+            foreach (string secretName in _secretNames)
             {
-                if (existingSecrets.TryGetValue(n, out var e) && primary == null)
-                {
-                    primary = e;
-                }
-            }
-
-            IImmutableDictionary<string, string> currentTags = primary?.Tags
-                ?? ImmutableDictionary.Create<string, string>();
-
-            _console.WriteLine($"Generating new value(s) for secret {_secretName}...");
-            var context = new RotationContext(_secretName, currentTags, storage, references);
-            List<SecretData> newValues = await secretType.RotateValues(context, cancellationToken);
-            IImmutableDictionary<string, string> newTags = context.GetValues();
-            _console.WriteLine("Done.");
-
-            _console.WriteLine($"Storing new value(s) in storage for secret {_secretName}...");
-            foreach (var (n, value) in names.Zip(newValues))
-            {
-                await storage.SetSecretValueAsync(n, new SecretValue(value.Value, newTags, value.NextRotationOn, value.ExpiresOn));
-            }
-            _console.WriteLine("Done.");
-
-            if (newTags.TryGetValue(AzureKeyVault.NextRotationOnTag, out string nextRotationOn))
-            {
-                _console.WriteLine($"✅ Rotated secret '{_secretName}' - next rotation on {nextRotationOn}.");
-            }
-            else
-            {
-                _console.WriteLine($"✅ Rotated secret '{_secretName}'.");
+                await RotateSecretAsync(secretName, manifest.Secrets[secretName], storage, references, existingSecrets, cancellationToken);
             }
         }
         catch (FailWithExitCodeException)
@@ -167,6 +123,55 @@ public class RotateSecretCommand : Command
         {
             _console.LogError($"Unhandled Exception: {ex}");
             throw new FailWithExitCodeException(-1);
+        }
+    }
+
+    private async Task RotateSecretAsync(
+        string secretName,
+        SecretManifest.Secret secret,
+        StorageLocationType.Bound storage,
+        Dictionary<string, StorageLocationType.Bound> references,
+        Dictionary<string, SecretProperties> existingSecrets,
+        CancellationToken cancellationToken)
+    {
+        SecretType.Bound secretType = _secretTypeRegistry.Get(secret.Type).BindParameters(secret.Parameters);
+
+        List<string> names = secretType.GetCompositeSecretSuffixes()
+            .Select(suffix => secretName + suffix)
+            .ToList();
+
+        SecretProperties primary = null;
+        foreach (string n in names)
+        {
+            if (existingSecrets.TryGetValue(n, out var e) && primary == null)
+            {
+                primary = e;
+            }
+        }
+
+        IImmutableDictionary<string, string> currentTags = primary?.Tags
+            ?? ImmutableDictionary.Create<string, string>();
+
+        _console.WriteLine($"Generating new value(s) for secret {secretName}...");
+        var context = new RotationContext(secretName, currentTags, storage, references);
+        List<SecretData> newValues = await secretType.RotateValues(context, cancellationToken);
+        IImmutableDictionary<string, string> newTags = context.GetValues();
+        _console.WriteLine("Done.");
+
+        _console.WriteLine($"Storing new value(s) in storage for secret {secretName}...");
+        foreach (var (n, value) in names.Zip(newValues))
+        {
+            await storage.SetSecretValueAsync(n, new SecretValue(value.Value, newTags, value.NextRotationOn, value.ExpiresOn));
+        }
+        _console.WriteLine("Done.");
+
+        if (newTags.TryGetValue(AzureKeyVault.NextRotationOnTag, out string nextRotationOn))
+        {
+            _console.WriteLine($"✅ Rotated secret '{secretName}' - next rotation on {nextRotationOn}.");
+        }
+        else
+        {
+            _console.WriteLine($"✅ Rotated secret '{secretName}'.");
         }
     }
 }

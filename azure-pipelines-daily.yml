@@ -1,7 +1,7 @@
 trigger: none
 
 schedules:
-- cron: 0 12 * * *
+- cron: 0 * * * *
   displayName: Nightly build
   branches:
     include:
