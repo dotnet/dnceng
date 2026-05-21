@@ -138,4 +138,24 @@ public class MockAzureClient : IAzureDevOpsClient
     {
         throw new NotImplementedException();
     }
+
+    public Task<WorkItem?> CreateWorkItemAsync(string project, string type, Dictionary<string, string> fields, string areaPath, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<WorkItem?> UpdateWorkItemAsync(string project, int workItemId, Dictionary<string, string> fields, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task AddWorkItemCommentAsync(string project, int workItemId, string comment, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<WorkItem[]> QueryWorkItemsAsync(string project, string wiql, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
 }

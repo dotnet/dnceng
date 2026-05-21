@@ -9,6 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="DotNet.Status.Web.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include=".config\*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

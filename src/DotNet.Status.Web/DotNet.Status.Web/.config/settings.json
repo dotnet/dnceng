@@ -285,6 +285,14 @@
     "RcaRequestedLabels": [ "RCA Requested" ],
     "RcaLabel": "RCA"
   },
+  "AzureDevOpsAlert": {
+    "Organization": "dnceng",
+    "Project": "internal",
+    "AreaPath": "internal\\.NET Engineering Services\\First Responders",
+    "WorkItemType": "DNCENG Task",
+    "TitlePrefix": "",
+    "SupplementalBodyText": ""
+  },
   "AzureTableTokenStore": {
     "TableName": "tokens"
   },

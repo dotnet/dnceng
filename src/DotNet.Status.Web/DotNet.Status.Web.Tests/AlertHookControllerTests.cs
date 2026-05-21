@@ -1,15 +1,16 @@
 using System;
-using System.Reflection;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using AwesomeAssertions;
 using DotNet.Status.Web.Controllers;
 using DotNet.Status.Web.Models;
 using DotNet.Status.Web.Options;
-using Microsoft.DotNet.GitHub.Authentication;
+using Microsoft.DotNet.Internal.AzureDevOps;
+using Microsoft.DotNet.Internal.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
-using Octokit;
 
 namespace DotNet.Status.Web.Tests;
 
@@ -17,9 +18,9 @@ namespace DotNet.Status.Web.Tests;
 public class AlertHookControllerTests
 {
     [Test]
-    public void GenerateNewIssue_WithMissingEvalMatchesAndNotificationTargets_DoesNotThrow()
+    public void GenerateDescription_WithMissingEvalMatches_DoesNotThrow()
     {
-        AlertHookController controller = CreateController(null);
+        AlertHookController controller = CreateController();
         GrafanaNotification notification = new GrafanaNotification
         {
             Title = "Alert title",
@@ -29,19 +30,19 @@ public class AlertHookControllerTests
             EvalMatches = null,
         };
 
-        Action action = () => InvokeGenerateNewIssue(controller, notification);
+        Action action = () => controller.GenerateDescription(notification);
 
         action.Should().NotThrow();
 
-        NewIssue issue = InvokeGenerateNewIssue(controller, notification);
-        issue.Body.Should().Contain("Please investigate");
-        issue.Body.Should().NotContain(", please investigate");
+        string description = controller.GenerateDescription(notification);
+        description.Should().Contain("Supplemental text");
+        description.Should().Contain("Grafana-Automated-Alert-Id-");
     }
 
     [Test]
-    public void GenerateNewNotificationComment_WithMissingEvalMatches_DoesNotThrow()
+    public void GenerateComment_WithMissingEvalMatches_DoesNotThrow()
     {
-        AlertHookController controller = CreateController(Array.Empty<string>());
+        AlertHookController controller = CreateController();
         GrafanaNotification notification = new GrafanaNotification
         {
             Title = "Alert title",
@@ -51,30 +52,64 @@ public class AlertHookControllerTests
             EvalMatches = null,
         };
 
-        Action action = () => InvokeGenerateNewNotificationComment(controller, notification);
+        Action action = () => controller.GenerateComment(notification);
 
         action.Should().NotThrow();
 
-        string comment = InvokeGenerateNewNotificationComment(controller, notification);
-        comment.Should().Contain("Metric state changed to *alerting*");
+        string comment = controller.GenerateComment(notification);
+        comment.Should().Contain("Metric state changed to");
+        comment.Should().Contain("alerting");
     }
 
-    private static AlertHookController CreateController(string[] notificationTargets)
+    [Test]
+    public void GenerateTitle_WithPrefix_PrependsPrefixToTitle()
     {
-        Mock<IGitHubTokenProvider> tokenProvider = new(MockBehavior.Strict);
-        IOptions<GitHubConnectionOptions> githubOptions = Microsoft.Extensions.Options.Options.Create(new GitHubConnectionOptions
+        AlertHookController controller = CreateController();
+        GrafanaNotification notification = new GrafanaNotification
         {
-            Organization = "dotnet",
-            Repository = "dnceng",
-            NotificationTargets = notificationTargets,
-            AlertLabels = Array.Empty<string>(),
-            EnvironmentLabels = Array.Empty<string>(),
+            Title = "CPU High",
+            State = "alerting",
+        };
+
+        string title = controller.GenerateTitle(notification);
+
+        title.Should().Be("[test] CPU High");
+    }
+
+    [Test]
+    public void GenerateDescription_WithEvalMatches_IncludesMetrics()
+    {
+        AlertHookController controller = CreateController();
+        GrafanaNotification notification = new GrafanaNotification
+        {
+            Title = "Alert title",
+            State = "alerting",
+            Message = "High CPU",
+            RuleUrl = "https://example/rule",
+            EvalMatches = new List<GrafanaNotificationMatch>
+            {
+                new GrafanaNotificationMatch { Metric = "cpu_usage", Value = 95.5 },
+            }.ToImmutableList(),
+        };
+
+        string description = controller.GenerateDescription(notification);
+
+        description.Should().Contain("cpu_usage");
+        description.Should().Contain("95.5");
+    }
+
+    private static AlertHookController CreateController()
+    {
+        Mock<IAzureDevOpsClient> azureDevOpsClient = new(MockBehavior.Strict);
+        Mock<IClientFactory<IAzureDevOpsClient>> clientFactory = new(MockBehavior.Strict);
+        IOptions<AzureDevOpsAlertOptions> alertOptions = Microsoft.Extensions.Options.Options.Create(new AzureDevOpsAlertOptions
+        {
+            Organization = "dnceng",
+            Project = "internal",
+            AreaPath = @"internal\.NET Engineering Services\First Responders",
+            WorkItemType = "DNCENG Task",
             TitlePrefix = "[test] ",
             SupplementalBodyText = "Supplemental text",
-        });
-        IOptions<GitHubClientOptions> clientOptions = Microsoft.Extensions.Options.Options.Create(new GitHubClientOptions
-        {
-            ProductHeader = new ProductHeaderValue("DotNetStatusWebTests"),
         });
 
         IOptions<GrafanaOptions> grafanaOptions = Microsoft.Extensions.Options.Options.Create(new GrafanaOptions
@@ -83,26 +118,10 @@ public class AlertHookControllerTests
         });
 
         return new AlertHookController(
-            tokenProvider.Object,
-            githubOptions,
-            clientOptions,
+            clientFactory.Object,
+            alertOptions,
             grafanaOptions,
             NullLogger<AlertHookController>.Instance);
     }
-
-    private static NewIssue InvokeGenerateNewIssue(AlertHookController controller, GrafanaNotification notification)
-    {
-        MethodInfo method = typeof(AlertHookController).GetMethod("GenerateNewIssue", BindingFlags.Instance | BindingFlags.NonPublic);
-        method.Should().NotBeNull();
-
-        return (NewIssue)method.Invoke(controller, new object[] { notification });
-    }
-
-    private static string InvokeGenerateNewNotificationComment(AlertHookController controller, GrafanaNotification notification)
-    {
-        MethodInfo method = typeof(AlertHookController).GetMethod("GenerateNewNotificationComment", BindingFlags.Instance | BindingFlags.NonPublic);
-        method.Should().NotBeNull();
-
-        return (string)method.Invoke(controller, new object[] { notification });
-    }
 }
+
