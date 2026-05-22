@@ -5,12 +5,12 @@
 The following are the pipelines and jobs currently running validation, and an example of the kinds of validation that runs during the course of the pipeline. To determine which pipeline your tests should run, compare to what is currently available and use your judgement about where your test would best fit in.
 
 - **PRs** : <br />
-  - [Build -> Validate](https://dnceng.visualstudio.com/internal/_build?definitionId=620&_a=summary)
+  - [Build -> Validate](https://dev.azure.com/dnceng/internal/_build?definitionId=620&_a=summary)
   - *Unit and Functional Tests*: Any test that follows the [validation pattern](../Validation/ValidationProcess.md#unit-testing) for unit tests and is not categorized as "PostDeployment", "PreDeployment", or "Nightly", will run during this stage.
   - *Code Coverage*: Developers, please use Visual Studio coverage checks to verify you're covering what you think.
   Reviewers, please use your insights and intuition when reviewing changes that could impact code coverage.
 - **CI / Staging**: <br />
-  - [Build -> Validate](https://dnceng.visualstudio.com/internal/_build?definitionId=620&_a=summary) -> [Pre-Deploy -> Deploy -> Post-Deploy](https://dnceng.visualstudio.com/internal/_build?definitionId=696&_a=summary)
+  - [Build -> Validate](https://dev.azure.com/dnceng/internal/_build?definitionId=620&_a=summary) -> [Pre-Deploy -> Deploy -> Post-Deploy](https://dev.azure.com/dnceng/internal/_build?definitionId=696&_a=summary)
   - *Pre-Deployment Validation*: Powershell scripts. Types of [pre-deployment validation](https://github.com/dotnet/core-eng/blob/main/Documentation/Validation/ValidationProcess.md#pre-deployment)
     - Validate HMS Deployment
     - Validate Service Fabric Applications
@@ -18,7 +18,7 @@ The following are the pipelines and jobs currently running validation, and an ex
   - *Post-Deployment Validation*: In **Helix.Test.Staging.PostDeployment** test project. Types of [post-deployment validation](https://github.com/dotnet/core-eng/blob/main/Documentation/Validation/ValidationProcess.md#post-deployment)
     - Helix API Tests
 - **Production**:<br />
-  - [Build -> Validate](https://dnceng.visualstudio.com/internal/_build?definitionId=620&_a=summary) -> [Pre-Deploy -> Deploy](https://dnceng.visualstudio.com/internal/_build?definitionId=697&_a=summary)
+  - [Build -> Validate](https://dev.azure.com/dnceng/internal/_build?definitionId=620&_a=summary) -> [Pre-Deploy -> Deploy](https://dev.azure.com/dnceng/internal/_build?definitionId=697&_a=summary)
   - No Post-Deployment Validation as they would be queued behind customer jobs.
 - **[Nightly](https://dev.azure.com/dnceng/internal/_build?definitionId=622&_a=summary)**:
   - SDL/Bin Skim

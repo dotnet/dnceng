@@ -3,7 +3,7 @@
 ## Pipeline and Jobs
 
 **PRs** : <br />
-    [Build -> Build Images -> Approval -> Pre-Deployment -> Deploy Queues & Deploy AutoScale Service -> Validate & Post-Deployment](https://dnceng.visualstudio.com/internal/_build?definitionId=596&_a=summary)
+    [Build -> Build Images -> Approval -> Pre-Deployment -> Deploy Queues & Deploy AutoScale Service -> Validate & Post-Deployment](https://dev.azure.com/dnceng/internal/_build?definitionId=596&_a=summary)
 
 - Runs unit tests in the `Helix.Machines` solution (e.g. testing scripts)
 - Artifact validation on selected images in two phases: once just after artifacts has been installed in ImageFactory, once as a part of test job for a test queue
@@ -12,7 +12,7 @@
   - Supported OnPrem Queues: found in file `validation\onprem.pr.queues.txt`
 
 **CI** : <br />
-    [Build -> Build Images -> Approval -> Pre-Deployment -> Deploy Queues & Deploy AutoScale Service -> Validate & Post-Deployment & Cleanup](https://dnceng.visualstudio.com/internal/_build?definitionId=596&_a=summary)
+    [Build -> Build Images -> Approval -> Pre-Deployment -> Deploy Queues & Deploy AutoScale Service -> Validate & Post-Deployment & Cleanup](https://dev.azure.com/dnceng/internal/_build?definitionId=596&_a=summary)
 
 - Everything that runs in PRs but for all queues
 - Create images, deploy images and artifacts, update test OnPrem machines with Helix Client, and send jobs to all the queues.

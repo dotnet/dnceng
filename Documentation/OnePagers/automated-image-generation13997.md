@@ -17,20 +17,20 @@ When this is completed we will be able to:
 * automatically regenerate images on change of configuration files
 * monitor completion of process instead of relying on notifications from DDFUN
 
-Part of this epic is to take the ownership of [custom image definitions](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=%2FMonthly%2FHelixBaseImages) that currently reside with DDFUN to get complete control over the definitions and to be able to run our automation against them seamlessly. This will be part of new documentation so maintenance of these definitions can be done also by vendors.
+Part of this epic is to take the ownership of [custom image definitions](https://dev.azure.com/devdiv/XlabImageFactory/_git/ImageConfigurations?path=%2FMonthly%2FHelixBaseImages) that currently reside with DDFUN to get complete control over the definitions and to be able to run our automation against them seamlessly. This will be part of new documentation so maintenance of these definitions can be done also by vendors.
 
 ### Implementation Details
 
 Let's start with a scenario where we need to update Visual Studio 2019 Preview version per our [schedule](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/107/VS2019-Upgrade-Schedule) which has to be done almost every week.
 
-Currently this change requires update of same values in six [image definitions](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=/Monthly/HelixBaseImages/VS2019Preview). Specifically:
+Currently this change requires update of same values in six [image definitions](https://dev.azure.com/devdiv/XlabImageFactory/_git/ImageConfigurations?path=/Monthly/HelixBaseImages/VS2019Preview). Specifically:
 * update artifact windows-vs-willowreleased, set parameter VSBootstrapperURL to a new value.
 * update version in parameter CustomImageName under Destination.
 
 To simplify this, we will introduce templating, so variables are defined at exactly one place and are not duplicated across multiple files, similarly to what we have in OSOB.
 
 #### Example:
-Instead of hardcoding the same version and the same URL at [six places](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=/Monthly/HelixBaseImages/VS2019Preview), we introduce template variable {VS_2019_PREVIEW_URL} which declares an URL to Visual Studio artifact and the template variable {VS_2019_PREVIEW_VERSION} which declares version of Visual Studio.
+Instead of hardcoding the same version and the same URL at [six places](https://dev.azure.com/devdiv/XlabImageFactory/_git/ImageConfigurations?path=/Monthly/HelixBaseImages/VS2019Preview), we introduce template variable {VS_2019_PREVIEW_URL} which declares an URL to Visual Studio artifact and the template variable {VS_2019_PREVIEW_VERSION} which declares version of Visual Studio.
 
 All templated variables will be stored in one file.
 
@@ -45,12 +45,12 @@ All templated variables will be stored in one file.
 
 5. Once Helix custom images are generated, FR has to create an OSOB PR with updated image names. Existing OSOB post validation performs version test of Visual Studio.
 
-Documentation of the Image Factory API can be found [here](https://devdiv.visualstudio.com/XlabImageFactory/_wiki/wikis/XlabImageFactory.wiki/6330/AccessingImageFactory).
+Documentation of the Image Factory API can be found [here](https://dev.azure.com/devdiv/XlabImageFactory/_wiki/wikis/XlabImageFactory.wiki/6330/AccessingImageFactory).
 
 
 ## Take ownership of Helix custom image definitions
 
-Making custom image definitions templated requires modifications. This is why we need to move all [definitions](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=%2FMonthly%2FHelixBaseImages) under our repository. It was confirmed by DDFUN (Casey) that these definitions aren't shared with any other team. Beside changing URL and version the structure is left unchanged, so there isn't any additional maintenance cost related to owning these definitions.
+Making custom image definitions templated requires modifications. This is why we need to move all [definitions](https://dev.azure.com/devdiv/XlabImageFactory/_git/ImageConfigurations?path=%2FMonthly%2FHelixBaseImages) under our repository. It was confirmed by DDFUN (Casey) that these definitions aren't shared with any other team. Beside changing URL and version the structure is left unchanged, so there isn't any additional maintenance cost related to owning these definitions.
 
 Currently the definitions with DDFUN use YAML only to be converted to JSON payloads. As part of the move I would suggest to start using JSON file format as it's expected input of the Image Factory. The only benefit of YAML are comments, but in our case these comments are copy pasted across all definitions and don't add any additional value.
 

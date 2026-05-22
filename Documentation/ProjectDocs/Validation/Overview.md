@@ -22,7 +22,7 @@ We need to make sure changes done in the Arcade SDK as well as in the [core pack
 
 To validate against the Arcade Validation for Promotion pipeline (that includes the ability to build Arcade with the bellwether repos), follow these steps (which are similar to the steps outlined here for [How to Validate a Private Build](https://github.com/dotnet/arcade/blob/master/Documentation/Policy/TestingMSBuildGuidance.md#how-to-validate-a-private-build)):
 
-1. Run a build of your Arcade branch on the [arcade-official-ci](https://dnceng.visualstudio.com/internal/_build?definitionId=6) Azure DevOps Pipeline
+1. Run a build of your Arcade branch on the [arcade-official-ci](https://dev.azure.com/dnceng/internal/_build?definitionId=6) Azure DevOps Pipeline
 2. [Promote your build](../Darc.md#add-build-to-channel) to the "General Testing" Maestro channel. 
 3. Create a branch of [arcade-validation](https://github.com/dotnet/arcade-validation)
 4. Using darc, run `update-dependencies` ([update-dependencies documentation](../Darc.md#updating-dependencies-in-your-local-repository)) on your Arcade Validation branch to use the build of Arcade you just created in the previous steps. 
@@ -40,7 +40,7 @@ This repository contains the scenarios where we validate the last produced versi
 #### Validation Process
 
 1. On every Arcade build dependencies will be updated and auto-merged when all the checks pass
-2. Arcade validation [official build](https://dnceng.visualstudio.com/internal/_build?definitionId=282) 
+2. Arcade validation [official build](https://dev.azure.com/dnceng/internal/_build?definitionId=282) 
 is triggered. This will validate the version which was just “pushed” by Arcade
 
 #### Validation Scenarios
