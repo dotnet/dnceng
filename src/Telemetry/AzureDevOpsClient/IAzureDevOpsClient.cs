@@ -24,6 +24,10 @@ public interface IAzureDevOpsClient
     public Task<Timeline?> GetTimelineAsync(string project, int buildId, string timelineId, CancellationToken cancellationToken);
     public Task<BuildChangeDetail?> GetChangeDetails(string changeUrl, CancellationToken cancellationToken = default);
     public Task<WorkItem?> CreateRcaWorkItem(string project, string title, CancellationToken cancellationToken = default);
+    public Task<WorkItem?> CreateWorkItemAsync(string project, string type, Dictionary<string, string> fields, string areaPath, CancellationToken cancellationToken = default);
+    public Task<WorkItem?> UpdateWorkItemAsync(string project, int workItemId, Dictionary<string, string> fields, CancellationToken cancellationToken = default);
+    public Task AddWorkItemCommentAsync(string project, int workItemId, string comment, CancellationToken cancellationToken = default);
+    public Task<WorkItem[]> QueryWorkItemsAsync(string project, string wiql, CancellationToken cancellationToken = default);
     public Task<string?> MatchLogLineSequence(string logUri, IReadOnlyList<Regex> regexes, CancellationToken cancellationToken = default);
     public Task<string?> GetProjectNameAsync(string id);
 }

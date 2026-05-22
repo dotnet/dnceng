@@ -226,6 +226,92 @@ public sealed class AzureDevOpsClient : IAzureDevOpsClient
         return JsonConvert.DeserializeObject<WorkItem>(json);
     }
 
+    public async Task<WorkItem?> CreateWorkItemAsync(string project, string type, Dictionary<string, string> fields, string areaPath, CancellationToken cancellationToken = default)
+    {
+        StringBuilder builder = GetProjectApiRootBuilder(project);
+        builder.Append($"wit/workitems/${type}?api-version=7.0");
+
+        var patchDocuments = new List<JsonPatchDocument>();
+        foreach (var field in fields)
+        {
+            patchDocuments.Add(new JsonPatchDocument
+            {
+                From = null,
+                Op = "add",
+                Path = $"/fields/{field.Key}",
+                Value = field.Value
+            });
+        }
+
+        patchDocuments.Add(new JsonPatchDocument
+        {
+            From = null,
+            Op = "add",
+            Path = "/fields/System.AreaPath",
+            Value = areaPath
+        });
+
+        string body = JsonConvert.SerializeObject(patchDocuments);
+        string json = (await PostJsonResult(builder.ToString(), body, cancellationToken)).Body;
+        return JsonConvert.DeserializeObject<WorkItem>(json);
+    }
+
+    public async Task<WorkItem?> UpdateWorkItemAsync(string project, int workItemId, Dictionary<string, string> fields, CancellationToken cancellationToken = default)
+    {
+        StringBuilder builder = GetProjectApiRootBuilder(project);
+        builder.Append($"wit/workitems/{workItemId}?api-version=7.0");
+
+        var patchDocuments = new List<JsonPatchDocument>();
+        foreach (var field in fields)
+        {
+            patchDocuments.Add(new JsonPatchDocument
+            {
+                From = null,
+                Op = "replace",
+                Path = $"/fields/{field.Key}",
+                Value = field.Value
+            });
+        }
+
+        string body = JsonConvert.SerializeObject(patchDocuments);
+        string json = (await PatchJsonResult(builder.ToString(), body, cancellationToken)).Body;
+        return JsonConvert.DeserializeObject<WorkItem>(json);
+    }
+
+    public async Task AddWorkItemCommentAsync(string project, int workItemId, string comment, CancellationToken cancellationToken = default)
+    {
+        StringBuilder builder = GetProjectApiRootBuilder(project);
+        builder.Append($"wit/workitems/{workItemId}/comments?api-version=7.0-preview.4");
+
+        string body = JsonConvert.SerializeObject(new { text = comment });
+        await PostJsonResult(builder.ToString(), body, cancellationToken, contentType: "application/json");
+    }
+
+    public async Task<WorkItem[]> QueryWorkItemsAsync(string project, string wiql, CancellationToken cancellationToken = default)
+    {
+        // Step 1: Run WIQL query to get work item IDs
+        StringBuilder builder = GetProjectApiRootBuilder(project);
+        builder.Append("wit/wiql?api-version=7.0");
+
+        string queryBody = JsonConvert.SerializeObject(new { query = wiql });
+        string queryJson = (await PostJsonResult(builder.ToString(), queryBody, cancellationToken, contentType: "application/json")).Body;
+        var queryResult = JsonConvert.DeserializeObject<WiqlQueryResult>(queryJson);
+
+        if (queryResult?.WorkItems == null || queryResult.WorkItems.Length == 0)
+        {
+            return Array.Empty<WorkItem>();
+        }
+
+        // Step 2: Fetch full work items
+        string ids = string.Join(",", queryResult.WorkItems.Select(wi => wi.Id));
+        StringBuilder getBuilder = GetProjectApiRootBuilder(project);
+        getBuilder.Append($"wit/workitems?ids={ids}&api-version=7.0");
+
+        string itemsJson = (await GetJsonResult(getBuilder.ToString(), cancellationToken)).Body;
+        var itemsResult = JsonConvert.DeserializeObject<WorkItemQueryResponse>(itemsJson);
+        return itemsResult?.Value ?? Array.Empty<WorkItem>();
+    }
+
     /// <summary>
     /// The method reads the logs as a stream, line by line and tries to match the regexes in order, one regex per line. 
     /// If the consecutive regexes match the lines, the last match is returned.
@@ -409,6 +495,85 @@ public sealed class AzureDevOpsClient : IAzureDevOpsClient
                         var result = new JsonResult(responseBody, continuationToken);
 
                         return result;
+                    }
+                }
+                catch (OperationCanceledException e) when (e.CancellationToken == cancellationToken)
+                {
+                    throw;
+                }
+                catch (Exception) when (retry-- > 0)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+                }
+            }
+        }
+        finally
+        {
+            _parallelism.Release();
+        }
+    }
+
+    private async Task<JsonResult> PostJsonResult(string uri, string body, CancellationToken cancellationToken, string contentType)
+    {
+        await _parallelism.WaitAsync(cancellationToken);
+        try
+        {
+            await EnsureBearerTokenAsync(cancellationToken);
+            int retry = 5;
+            while (true)
+            {
+                try
+                {
+                    var content = new StringContent(body, Encoding.UTF8, contentType);
+
+                    using (HttpResponseMessage response = await _httpClient.PostAsync(uri, content, cancellationToken))
+                    {
+                        response.EnsureSuccessStatusCode();
+                        string responseBody = await response.Content.ReadAsStringAsync();
+                        response.Headers.TryGetValues("x-ms-continuationtoken",
+                            out IEnumerable<string>? continuationTokenHeaders);
+                        string? continuationToken = continuationTokenHeaders?.FirstOrDefault();
+                        return new JsonResult(responseBody, continuationToken);
+                    }
+                }
+                catch (OperationCanceledException e) when (e.CancellationToken == cancellationToken)
+                {
+                    throw;
+                }
+                catch (Exception) when (retry-- > 0)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+                }
+            }
+        }
+        finally
+        {
+            _parallelism.Release();
+        }
+    }
+
+    private async Task<JsonResult> PatchJsonResult(string uri, string body, CancellationToken cancellationToken)
+    {
+        await _parallelism.WaitAsync(cancellationToken);
+        try
+        {
+            await EnsureBearerTokenAsync(cancellationToken);
+            int retry = 5;
+            while (true)
+            {
+                try
+                {
+                    var content = new StringContent(body, Encoding.UTF8, "application/json-patch+json");
+                    var request = new HttpRequestMessage(new HttpMethod("PATCH"), uri) { Content = content };
+
+                    using (HttpResponseMessage response = await _httpClient.SendAsync(request, cancellationToken))
+                    {
+                        response.EnsureSuccessStatusCode();
+                        string responseBody = await response.Content.ReadAsStringAsync();
+                        response.Headers.TryGetValues("x-ms-continuationtoken",
+                            out IEnumerable<string>? continuationTokenHeaders);
+                        string? continuationToken = continuationTokenHeaders?.FirstOrDefault();
+                        return new JsonResult(responseBody, continuationToken);
                     }
                 }
                 catch (OperationCanceledException e) when (e.CancellationToken == cancellationToken)
