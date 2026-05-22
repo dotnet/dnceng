@@ -2,12 +2,12 @@
 
 ## Project Summary
 For a variety of reasons, the localization workflow is changing and we need to [migrate to the new loc system](https://github.com/dotnet/arcade/issues/6842).
-This system is essentially an Azure DevOps task([OneLocBuild](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task))
+This system is essentially an Azure DevOps task([OneLocBuild](https://dev.azure.com/ceapex/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task))
 that we run in each repo's build pipeline to gather up our English resource files, send them off to the localization system, and receive
 localized resource files back. Because this is common infrastructure that will need to be implemented across all of our customer repos,
 it makes sense to implement it in Arcade.
 
-More information on migration can be found [here](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/1481/Migrating-out-of-SimpleLoc?anchor=ado-pipeline-creation-for-projects-hosted-in-github).
+More information on migration can be found [here](https://dev.azure.com/ceapex/CEINTL/_wiki/wikis/CEINTL.wiki/1481/Migrating-out-of-SimpleLoc?anchor=ado-pipeline-creation-for-projects-hosted-in-github).
 
 A major component of the new localization system is an index file called `LocProject.json`. In the linked documentation above, this file is
 checked into the repository, which would require every single repo to maintain a list of all of their resource files that need to be localized

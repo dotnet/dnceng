@@ -38,10 +38,10 @@ SDT extension currently support 4 tools that are applicable to .NET Core. A shor
 
 |Build Definition|TSA Report|
 |:---------------|:---------|
-| [CoreFx](https://devdiv.visualstudio.com/DevDiv/_build/index?context=allDefinitions&path=%5CDotNet%5CSecurity&definitionId=6552&_a=completed) | [CoreFx-master](http://aztsa/api/Result/CodeBase/DotNet-CoreFx-Trusted_master/Summary) |
-| [CoreCLR](https://devdiv.visualstudio.com/DevDiv/_build/index?context=allDefinitions&path=%5CDotNet%5CSecurity&definitionId=6598&_a=completed) | [CoreCLR-master](http://aztsa/api/Result/CodeBase/DotNet-CoreCLR-Trusted_master/Summary) |
-| [Core-Setup](https://devdiv.visualstudio.com/DevDiv/_build/index?context=allDefinitions&path=%5CDotNet%5CSecurity&definitionId=6658&_a=completed) | [Core-Setup-master](http://aztsa/api/Result/CodeBase/DotNet-Core-Setup-Trusted_master/Summary) |
-| [CLI](https://devdiv.visualstudio.com/DevDiv/_build/index?context=allDefinitions&path=%5CDotNet%5CSecurity&definitionId=6698&_a=completed) | [CLI-master](http://aztsa/api/Result/CodeBase/DotNet-CLI-Trusted_master/Summary) |
+| [CoreFx](https://dev.azure.com/devdiv/DevDiv/_build/index?context=allDefinitions&path=%5CDotNet%5CSecurity&definitionId=6552&_a=completed) | [CoreFx-master](http://aztsa/api/Result/CodeBase/DotNet-CoreFx-Trusted_master/Summary) |
+| [CoreCLR](https://dev.azure.com/devdiv/DevDiv/_build/index?context=allDefinitions&path=%5CDotNet%5CSecurity&definitionId=6598&_a=completed) | [CoreCLR-master](http://aztsa/api/Result/CodeBase/DotNet-CoreCLR-Trusted_master/Summary) |
+| [Core-Setup](https://dev.azure.com/devdiv/DevDiv/_build/index?context=allDefinitions&path=%5CDotNet%5CSecurity&definitionId=6658&_a=completed) | [Core-Setup-master](http://aztsa/api/Result/CodeBase/DotNet-Core-Setup-Trusted_master/Summary) |
+| [CLI](https://dev.azure.com/devdiv/DevDiv/_build/index?context=allDefinitions&path=%5CDotNet%5CSecurity&definitionId=6698&_a=completed) | [CLI-master](http://aztsa/api/Result/CodeBase/DotNet-CLI-Trusted_master/Summary) |
 
 In the current setup, a security build is triggered manually. Official Id and corresponding Azure container name  needs to be provided at the time of queuing the build. In near future, Maestro will be extend to determine the Official Id and container name, and trigger a security build automatically.
 
@@ -58,7 +58,7 @@ Kickoff of a security build is as simple as queuing a VSTS build definition. Whi
 
 For example, a recent build Id of CoreCLR `2.0.0` branch is `20170621-01`. Packages produced from this build were published to Azure container named `coreclr-preview3-20170621-01` . To launch a security build that will scan the assemblies and source code from that official build, perform the following steps:
 
- 1. Navigate to CoreCLR security build [definition](https://devdiv.visualstudio.com/DevDiv/_build/index?context=allDefinitions&path=%5CDotNet%5CSecurity&definitionId=6598&_a=completed)
+ 1. Navigate to CoreCLR security build [definition](https://dev.azure.com/devdiv/DevDiv/_build/index?context=allDefinitions&path=%5CDotNet%5CSecurity&definitionId=6598&_a=completed)
  2. Click "Queue new build"
  3. Enter the variable values:
       - *PB_BuildNumber* = `20170621-01`
@@ -118,7 +118,7 @@ In case of CoreCLR, container name is `Label`. Shown below is a portion of `Pipe
 
 In Core-Setup, the default container name (*PB_CloudDropContainer*) is `dotnet`. An additional variable named `PB_BlobName` is required for security build of Core-Setup.  To locate this value, open `PipeBuild.exe` task log, search for the build leg named `Core-Setup-Publish`, and click the URL against this to navigate to the build leg. Example fragment from the log is shown below.
 
- >Core-Setup-Publish - https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_build?_a=summary&buildId=820812...
+ >Core-Setup-Publish - https://dev.azure.com/devdiv/DefaultCollection/DevDiv/_build?_a=summary&buildId=820812...
 
 In the build leg, locate text similar to the fragment shown below.
 

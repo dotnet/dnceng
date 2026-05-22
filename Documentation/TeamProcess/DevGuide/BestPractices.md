@@ -5,7 +5,7 @@ The intent of this document is to help the team learn and grow by sharing best p
 ## Keeping Our Repos Healthy and Ready for Roll Out
 - Anyone who checks in a change still needs to monitor the next main run, in any repo.  
     -	PR validation is not the same as deployment to the staging environment and there will always be problems missed by PR validation unless we deploy an entire environment for every PR, which is not currently possible. 
-    -	The goal is to have a vendor monitoring our important pipelines - [Helix Machine Lifecycle Daily Process](https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/952/Helix-Machine-Lifecycle-Processes?anchor=daily%3A) - but everyone on the team should still make sure we are able roll out at any time.
+    -	The goal is to have a vendor monitoring our important pipelines - [Helix Machine Lifecycle Daily Process](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/952/Helix-Machine-Lifecycle-Processes?anchor=daily%3A) - but everyone on the team should still make sure we are able roll out at any time.
     -	It’s a good principle to ask people to look at the next main run, it’s an even better one to not allow oneself to be broken for days at a time unnecessarily.
 - Verify deployment and close issues you placed in the "waiting for rollout" column on our Project Board
    - This is especially true for anything associated with grafana alerts. We may miss new alerts as they are concatinated to an existing issue.

@@ -2,11 +2,11 @@
 
 Dnceng.visualstudio.com does not have support for signed builds.  
 
-Code should still be mirrored to dnceng.visualstudio.com/internal as outlined in the [Azure DevOps Guidance](https://github.com/dotnet/arcade/blob/main/Documentation/AzureDevOps/VSTSGuidance.md#projects).
+Code should still be mirrored to dev.azure.com/dnceng/internal as outlined in the [Azure DevOps Guidance](https://github.com/dotnet/arcade/blob/main/Documentation/AzureDevOps/VSTSGuidance.md#projects).
 
 ## Task based build definitions
 
-If your build definition is task based, then the build definition for signing should be created in devdiv.visualstudio.com with an "External Git" source which references the dnceng.visualstudio.com/internal git repository
+If your build definition is task based, then the build definition for signing should be created in devdiv.visualstudio.com with an "External Git" source which references the dev.azure.com/dnceng/internal git repository
 
 1. Select a source: External Git
 2. Change the Connection to "New Service Endpoint"
