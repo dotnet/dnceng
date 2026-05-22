@@ -8,7 +8,7 @@ namespace Microsoft.DncEng.SecretManager.SecretTypes;
 [Name("github-access-token")]
 public class GitHubAccessToken : GitHubAccountInteractiveSecretType<GitHubAccessToken.Parameters>
 {
-    private const int _nextRotationOnDeltaDays = 60;
+    private const int _nextRotationOnDeltaDays = 30;
     private const int _expirationInDays = 90;
 
     public class Parameters
