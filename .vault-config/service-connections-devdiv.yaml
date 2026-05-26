@@ -64,19 +64,6 @@ secrets:
           organizations: dnceng
           scopes: packaging_write
 
-  dnceng-dotnet8:
-    type: azure-devops-service-endpoint
-    parameters:
-      authorization:
-        type: azure-devops-access-token
-        parameters:
-          domainAccountName: dn-bot
-          domainAccountSecret:
-            location: helixkv
-            name: dn-bot-account-redmond
-          organizations: dnceng
-          scopes: packaging_write
-
   dnceng-dotnet8-workloads:
     type: azure-devops-service-endpoint
     parameters:
