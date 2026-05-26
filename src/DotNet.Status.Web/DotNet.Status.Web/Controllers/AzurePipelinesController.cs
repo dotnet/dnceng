@@ -202,29 +202,170 @@ public class AzurePipelinesController : ControllerBase
             _logger.LogInformation("Fetching changes messages...");
             string changesMessage = await BuildChangesMessage(client, build);
 
-            BuildMonitorOptions.IssuesOptions repo = _options.Value.Issues.SingleOrDefault(i => string.Equals(monitor.IssuesId, i.Id, StringComparison.OrdinalIgnoreCase));
+            // Check for AzDO work item target first
+            BuildMonitorOptions.AzDoIssuesOptions azDoTarget = _options.Value.AzDoIssues?
+                .SingleOrDefault(i => string.Equals(monitor.IssuesId, i.Id, StringComparison.OrdinalIgnoreCase));
+
+            if (azDoTarget != null)
+            {
+                await CreateOrUpdateAzDoWorkItemAsync(client, build, monitor, azDoTarget, branchName, prettyTags, timelineMessage, changesMessage);
+                continue;
+            }
+
+            // Fall back to GitHub issues
+            BuildMonitorOptions.IssuesOptions repo = _options.Value.Issues?.SingleOrDefault(i => string.Equals(monitor.IssuesId, i.Id, StringComparison.OrdinalIgnoreCase));
 
             if (repo != null)
             {
-                IGitHubClient github = await _gitHubApplicationClientFactory.CreateGitHubClientAsync(repo.Owner, repo.Name);
+                await CreateOrUpdateGitHubIssueAsync(build, monitor, repo, branchName, prettyTags, timelineMessage, changesMessage);
+            }
+            else
+            {
+                _logger.LogWarning("Could not find a matching issues target for {issuesId}", monitor.IssuesId);
+            }
+        }
+    }
+
+    private async Task CreateOrUpdateAzDoWorkItemAsync(
+        IAzureDevOpsClient client,
+        Build build,
+        BuildMonitorOptions.AzurePipelinesOptions.BuildDescription monitor,
+        BuildMonitorOptions.AzDoIssuesOptions azDoTarget,
+        string branchName,
+        string prettyTags,
+        string timelineMessage,
+        string changesMessage)
+    {
+        DateTimeOffset? finishTime = DateTimeOffset.TryParse(build.FinishTime, out var parsedFinishTime) ? parsedFinishTime : (DateTimeOffset?)null;
+        DateTimeOffset? startTime = DateTimeOffset.TryParse(build.StartTime, out var parsedStartTime) ? parsedStartTime : (DateTimeOffset?)null;
+
+        string timeString = finishTime?.ToString("R") ?? "";
+        string durationString = (finishTime.HasValue && startTime.HasValue)
+            ? ((int)(finishTime.Value - startTime.Value).TotalMinutes) + " minutes"
+            : "";
+
+        string titlePrefix = $"Build failed: {build.Definition.Name}/{branchName} {prettyTags}".TrimEnd();
+
+        string description = $@"<p>Build <a href=""{build.Links.Web.Href}"">#{build.BuildNumber}</a> {build.Result}</p>
+<h2>{build.Project.Name} / {build.Definition.Name} {build.Result}</h2>
+<h3>Summary</h3>
+<ul>
+<li><strong>Finished</strong> - {timeString}</li>
+<li><strong>Duration</strong> - {durationString}</li>
+<li><strong>Requested for</strong> - {build.RequestedFor.DisplayName}</li>
+<li><strong>Reason</strong> - {build.Reason}</li>
+</ul>
+<h3>Details</h3>
+<pre>{timelineMessage}</pre>
+<h3>Changes</h3>
+<pre>{changesMessage}</pre>";
+
+        string tagString = BuildAzDoTagString(azDoTarget.Tags, monitor.Labels);
+
+        if (azDoTarget.UpdateExisting)
+        {
+            string wiql = $@"SELECT [System.Id] FROM WorkItems 
+                WHERE [System.TeamProject] = '{azDoTarget.Project}' 
+                AND [System.AreaPath] UNDER '{azDoTarget.AreaPath}' 
+                AND [System.Title] CONTAINS '{titlePrefix.Replace("'", "''")}'
+                AND [System.State] <> 'Done'
+                ORDER BY [System.CreatedDate] DESC";
+
+            WorkItem[] existing = await client.QueryWorkItemsAsync(azDoTarget.Project, wiql, CancellationToken.None);
+
+            if (existing != null && existing.Length > 0)
+            {
+                int workItemId = existing[0].Id;
+                _logger.LogInformation("Found existing AzDO work item {workItemId}, adding comment", workItemId);
+
+                string comment = $@"<p>Build <a href=""{build.Links.Web.Href}"">#{build.BuildNumber}</a> {build.Result} at {timeString}</p>
+<h3>Details</h3>
+<pre>{timelineMessage}</pre>
+<h3>Changes</h3>
+<pre>{changesMessage}</pre>";
+
+                await client.AddWorkItemCommentAsync(azDoTarget.Project, workItemId, comment, CancellationToken.None);
+                _logger.LogInformation("Added comment to AzDO work item {workItemId} for build failure", workItemId);
+                return;
+            }
+
+            _logger.LogInformation("No existing AzDO work item found for '{titlePrefix}', creating new one", titlePrefix);
+        }
+
+        var fields = new Dictionary<string, string>
+        {
+            ["System.Title"] = $"{titlePrefix} #{build.BuildNumber}",
+            ["System.Description"] = description,
+            ["System.State"] = "Backlog",
+        };
+
+        if (!string.IsNullOrEmpty(tagString))
+        {
+            fields["System.Tags"] = tagString;
+        }
+
+        if (!string.IsNullOrEmpty(monitor.Assignee))
+        {
+            fields["System.AssignedTo"] = monitor.Assignee;
+        }
+
+        WorkItem workItem = await client.CreateWorkItemAsync(
+            azDoTarget.Project,
+            azDoTarget.WorkItemType,
+            fields,
+            azDoTarget.AreaPath,
+            CancellationToken.None);
+
+        _logger.LogInformation("Created AzDO work item {project}/{workItemId} for build failure",
+            azDoTarget.Project, workItem?.Id);
+    }
+
+    private static string BuildAzDoTagString(string[] targetTags, string[] monitorLabels)
+    {
+        var allTags = new List<string>();
+        allTags.Add("Build Failed");
+
+        if (targetTags != null)
+        {
+            allTags.AddRange(targetTags);
+        }
+
+        if (monitorLabels != null)
+        {
+            allTags.AddRange(monitorLabels);
+        }
+
+        return string.Join("; ", allTags.Distinct(StringComparer.OrdinalIgnoreCase));
+    }
+
+    private async Task CreateOrUpdateGitHubIssueAsync(
+        Build build,
+        BuildMonitorOptions.AzurePipelinesOptions.BuildDescription monitor,
+        BuildMonitorOptions.IssuesOptions repo,
+        string branchName,
+        string prettyTags,
+        string timelineMessage,
+        string changesMessage)
+    {
+        IGitHubClient github = await _gitHubApplicationClientFactory.CreateGitHubClientAsync(repo.Owner, repo.Name);
                     
-                DateTimeOffset? finishTime = DateTimeOffset.TryParse(build.FinishTime, out var parsedFinishTime) ?parsedFinishTime: (DateTimeOffset?) null;
-                DateTimeOffset? startTime = DateTimeOffset.TryParse(build.StartTime, out var parsedStartTime) ? parsedStartTime:(DateTimeOffset?) null;
+        DateTimeOffset? finishTime = DateTimeOffset.TryParse(build.FinishTime, out var parsedFinishTime) ?parsedFinishTime: (DateTimeOffset?) null;
+        DateTimeOffset? startTime = DateTimeOffset.TryParse(build.StartTime, out var parsedStartTime) ? parsedStartTime:(DateTimeOffset?) null;
 
-                string timeString = "";
-                string durationString = "";
-                if (finishTime.HasValue)
-                {
-                    timeString = finishTime.Value.ToString("R");
-                    if (startTime.HasValue)
-                    {
-                        durationString = ((int) (finishTime.Value - startTime.Value).TotalMinutes) + " minutes";
-                    }
-                }
+        string timeString = "";
+        string durationString = "";
+        if (finishTime.HasValue)
+        {
+            timeString = finishTime.Value.ToString("R");
+            if (startTime.HasValue)
+            {
+                durationString = ((int) (finishTime.Value - startTime.Value).TotalMinutes) + " minutes";
+            }
+        }
 
-                string icon = build.Result == "failed" ? ":x:" : ":warning:";
+        string icon = build.Result == "failed" ? ":x:" : ":warning:";
 
-                string body = @$"Build [#{build.BuildNumber}]({build.Links.Web.Href}) {build.Result}
+        string body = @$"Build [#{build.BuildNumber}]({build.Links.Web.Href}) {build.Result}
 
 ## {icon} : {build.Project.Name} / {build.Definition.Name} {build.Result}
 
@@ -242,92 +383,73 @@ public class AzurePipelinesController : ControllerBase
 
 {changesMessage}
 ";
-                string issueTitlePrefix = $"Build failed: {build.Definition.Name}/{branchName} {prettyTags}";
+        string issueTitlePrefix = $"Build failed: {build.Definition.Name}/{branchName} {prettyTags}";
 
-                if (repo.UpdateExisting)
-                {
-                    // There is no way to get the username of our bot directly from the GithubApp with the C# api.
-                    // Issue opened in Octokit: https://github.com/octokit/octokit.net/issues/2335
-                    // We do, however, have access to the HtmlUrl, which ends with the name of the bot.
-                    // Additionally, when the bot opens issues, the username used ends with [bot], which isn't strictly
-                    // part of the name anywhere else. So, to get the correct creator name, get the HtmlUrl, grab
-                    // the bot's name from it, and append [bot] to that string.
-                    var githubAppClient = _gitHubApplicationClientFactory.CreateGitHubAppClient();
-                    string creator = (await githubAppClient.GitHubApps.GetCurrent()).HtmlUrl.Split("/").Last();
+        if (repo.UpdateExisting)
+        {
+            var githubAppClient = _gitHubApplicationClientFactory.CreateGitHubAppClient();
+            string creator = (await githubAppClient.GitHubApps.GetCurrent()).HtmlUrl.Split("/").Last();
 
-                    RepositoryIssueRequest issueRequest = new RepositoryIssueRequest {
-                        Creator = $"{creator}[bot]",
-                        State = ItemStateFilter.Open,
-                        SortProperty = IssueSort.Created,
-                        SortDirection = SortDirection.Descending
-                    };
+            RepositoryIssueRequest issueRequest = new RepositoryIssueRequest {
+                Creator = $"{creator}[bot]",
+                State = ItemStateFilter.Open,
+                SortProperty = IssueSort.Created,
+                SortDirection = SortDirection.Descending
+            };
 
-                    foreach (string label in repo.Labels.OrEmpty())
-                    {
-                        issueRequest.Labels.Add(label);
-                    }
+            foreach (string label in repo.Labels.OrEmpty())
+            {
+                issueRequest.Labels.Add(label);
+            }
 
-                    foreach (string label in monitor.Labels.OrEmpty())
-                    {
-                        issueRequest.Labels.Add(label);
-                    }
+            foreach (string label in monitor.Labels.OrEmpty())
+            {
+                issueRequest.Labels.Add(label);
+            }
 
-                    List<Issue> matchingIssues = (await github.Issue.GetAllForRepository(repo.Owner, repo.Name, issueRequest)).ToList();
-                    Issue matchingIssue = matchingIssues.FirstOrDefault(i => i.Title.StartsWith(issueTitlePrefix));
+            List<Issue> matchingIssues = (await github.Issue.GetAllForRepository(repo.Owner, repo.Name, issueRequest)).ToList();
+            Issue matchingIssue = matchingIssues.FirstOrDefault(i => i.Title.StartsWith(issueTitlePrefix));
 
-                    if (matchingIssue != null)
-                    {
-                        _logger.LogInformation("Found matching issue {issueNumber} in {owner}/{repo}. Will attempt to add a new comment.", matchingIssue.Number, repo.Owner, repo.Name);
-                        // Add a new comment to the issue with the body
-                        IssueComment newComment = await github.Issue.Comment.Create(repo.Owner, repo.Name, matchingIssue.Number, body);
-                        _logger.LogInformation("Logged comment in {owner}/{repo}#{issueNumber} for build failure", repo.Owner, repo.Name, matchingIssue.Number);
+            if (matchingIssue != null)
+            {
+                _logger.LogInformation("Found matching issue {issueNumber} in {owner}/{repo}. Will attempt to add a new comment.", matchingIssue.Number, repo.Owner, repo.Name);
+                IssueComment newComment = await github.Issue.Comment.Create(repo.Owner, repo.Name, matchingIssue.Number, body);
+                _logger.LogInformation("Logged comment in {owner}/{repo}#{issueNumber} for build failure", repo.Owner, repo.Name, matchingIssue.Number);
 
-                        return;
-                    }
-                    else
-                    {
-                        _logger.LogInformation("Matching issues for {issueTitlePrefix} not found. Creating a new issue.", issueTitlePrefix);
-                    }
-                }
-
-                // Create new issue if repo.UpdateExisting is false or there were no matching issues
-                var newIssue =
-                    new NewIssue($"{issueTitlePrefix} #{build.BuildNumber}")
-                    {
-                        Body = body,
-                    };
-
-                if (!string.IsNullOrEmpty(monitor.Assignee))
-                {
-                    newIssue.Assignees.Add(monitor.Assignee);
-                }
-                    
-                foreach (string label in repo.Labels.OrEmpty())
-                {
-                    newIssue.Labels.Add(label);
-                }
-
-                foreach (string label in monitor.Labels.OrEmpty())
-                {
-                    newIssue.Labels.Add(label);
-                }
-
-                /*
-                 * We are sometimes seeing an OctoKit.ApiValidationException in the dotneteng-status app insights logs when creating issues.
-                 * This is potentially related to https://github.com/octokit/octokit.net/issues/612.
-                 * Adding logging here to help us track down the issue.
-                 */
-                _logger.LogInformation("Creating issue {owner}/{repo} with title '{issueTitle}' in the {milestone} milestone.", repo.Owner, repo.Name, newIssue.Title, newIssue.Milestone);
-
-                Issue issue = await github.Issue.Create(repo.Owner, repo.Name, newIssue);
-
-                _logger.LogInformation("Logged issue {owner}/{repo}#{issueNumber} for build failure", repo.Owner, repo.Name, issue.Number);
+                return;
             }
             else
             {
-                _logger.LogWarning("Could not find a matching repo for {issuesId}", monitor.IssuesId);
+                _logger.LogInformation("Matching issues for {issueTitlePrefix} not found. Creating a new issue.", issueTitlePrefix);
             }
         }
+
+        var newIssue =
+            new NewIssue($"{issueTitlePrefix} #{build.BuildNumber}")
+            {
+                Body = body,
+            };
+
+        if (!string.IsNullOrEmpty(monitor.Assignee))
+        {
+            newIssue.Assignees.Add(monitor.Assignee);
+        }
+                    
+        foreach (string label in repo.Labels.OrEmpty())
+        {
+            newIssue.Labels.Add(label);
+        }
+
+        foreach (string label in monitor.Labels.OrEmpty())
+        {
+            newIssue.Labels.Add(label);
+        }
+
+        _logger.LogInformation("Creating issue {owner}/{repo} with title '{issueTitle}' in the {milestone} milestone.", repo.Owner, repo.Name, newIssue.Title, newIssue.Milestone);
+
+        Issue issue = await github.Issue.Create(repo.Owner, repo.Name, newIssue);
+
+        _logger.LogInformation("Logged issue {owner}/{repo}#{issueNumber} for build failure", repo.Owner, repo.Name, issue.Number);
     }
 
     private async Task<string> BuildChangesMessage(IAzureDevOpsClient client, Build build)
