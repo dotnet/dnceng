@@ -3,7 +3,7 @@ Several of the .NET Core repositories utilize Docker images within their officia
 
 The following is a summary of the prescribed process currently being used for adding/updating the Docker images.
 
-1. Add a new or update the existing [DockerFiles](https://devdiv.visualstudio.com/DevDiv/_git/DotNetCore?path=%2Fdockerfiles&version=GBmaster&_a=contents) as necessary.
+1. Add a new or update the existing [DockerFiles](https://dev.azure.com/devdiv/DevDiv/_git/DotNetCore?path=%2Fdockerfiles&version=GBmaster&_a=contents) as necessary.
 2. Build the new/modified Dockerfiles locally.  Tag the image using the following naming schema `<DistroName&Version>_prereqs_v<ImageVersion>` (e.g. `ubuntu1610_prereqs_v3`)
 3. Verify the new/modified image works as expected.
 4. Get someone with the appropriate access to push the new/modified image to [Docker Hub](https://hub.docker.com/r/chcosta/dotnetcore/).
@@ -67,7 +67,7 @@ In order to solve the issues with the base images changing overtime due to servi
 The solution for capturing the Docker toolset required by our builds and the mechanisms used to automatically acquire them are being covered by the work Matt Mitchell (Versionable Environments) and Ravi Eda ([Cmake versioning](https://github.com/dotnet/arcade/blob/main/Documentation/ProjectDocs/cmake-scenarios.md)) are defining.  It is sufficient for the scope of this document to say that whatever pattern comes out of this work should be applied to the Docker toolset.
 
 ## Move Dockerfiles to Open ##
-Work has been going on recently to check-in the build definitions into the product repositories (e.g. [corefx](https://github.com/dotnet/corefx/tree/master/buildpipeline)).  These build definitions reference our Docker images.  Because of this, it would be beneficial to move the Dockerfiles from the [private repository](https://devdiv.visualstudio.com/DevDiv/_git/DotNetCore?path=%2Fdockerfiles&version=GBmaster&_a=contents) into the open.  There are no trade secrets and they could be useful for others to see.  A natural place to put these shared Dockerfiles would be within the [buildtools repo](https://github.com/dotnet/buildtools).
+Work has been going on recently to check-in the build definitions into the product repositories (e.g. [corefx](https://github.com/dotnet/corefx/tree/master/buildpipeline)).  These build definitions reference our Docker images.  Because of this, it would be beneficial to move the Dockerfiles from the [private repository](https://dev.azure.com/devdiv/DevDiv/_git/DotNetCore?path=%2Fdockerfiles&version=GBmaster&_a=contents) into the open.  There are no trade secrets and they could be useful for others to see.  A natural place to put these shared Dockerfiles would be within the [buildtools repo](https://github.com/dotnet/buildtools).
 
 
 

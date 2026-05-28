@@ -8,7 +8,7 @@ See the [onboarding documentation](https://github.com/dotnet/arcade/blob/main/Do
 
 ### Internal VSTS service endpoint
 
-The VSTS service endpoint used for communication with GitHub (handles syncing source, setting up web hooks, etc...) is named `DotNet-Bot GitHub Internal Connection`.  The PAT scopes used for the service endpoint are slightly different than what is used for the Public project.  It should be available for GitHub connections in the [internal project](https://dnceng.visualstudio.com/internal).
+The VSTS service endpoint used for communication with GitHub (handles syncing source, setting up web hooks, etc...) is named `DotNet-Bot GitHub Internal Connection`.  The PAT scopes used for the service endpoint are slightly different than what is used for the Public project.  It should be available for GitHub connections in the [internal project](https://dev.azure.com/dnceng/internal).
 
 Service endpoint name: DotNet-Bot GitHub Internal Connection
 

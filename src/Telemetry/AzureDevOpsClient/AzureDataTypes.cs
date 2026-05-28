@@ -371,3 +371,19 @@ public sealed class WorkItemRelation
     public string Rel { get; set; }
     public string Url { get; set; }
 }
+
+public sealed class WiqlQueryResult
+{
+    public WiqlWorkItemReference[] WorkItems { get; set; }
+}
+
+public sealed class WiqlWorkItemReference
+{
+    public int Id { get; set; }
+    public string Url { get; set; }
+}
+
+public sealed class WorkItemQueryResponse
+{
+    public WorkItem[] Value { get; set; }
+}

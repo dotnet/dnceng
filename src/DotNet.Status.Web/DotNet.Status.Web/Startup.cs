@@ -92,6 +92,7 @@ public class Startup
         services.Configure<TeamMentionForwardingOptions>(Configuration.GetSection("IssueMentionForwarding"));
         services.Configure<GitHubConnectionOptions>(Configuration.GetSection("GitHub"));
         services.Configure<GrafanaOptions>(Configuration.GetSection("Grafana"));
+        services.Configure<AzureDevOpsAlertOptions>(Configuration.GetSection("AzureDevOpsAlert"));
         services.Configure<AnnotationsOptions>(Configuration.GetSection("Annotations"));
         services.Configure<GitHubTokenProviderOptions>(Configuration.GetSection("GitHubAppAuth"));
         services.Configure<AzureDevOpsClientOptions>("dnceng", Configuration.GetSection("AzureDevOps:dnceng"));

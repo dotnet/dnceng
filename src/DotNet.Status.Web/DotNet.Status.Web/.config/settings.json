@@ -285,13 +285,22 @@
     "RcaRequestedLabels": [ "RCA Requested" ],
     "RcaLabel": "RCA"
   },
+  "AzureDevOpsAlert": {
+    "Organization": "dnceng",
+    "Project": "internal",
+    "AreaPath": "internal\\.NET Engineering Services\\First Responders",
+    "WorkItemType": "DNCENG Task",
+    "TitlePrefix": "",
+    "SupplementalBodyText": ""
+  },
   "AzureTableTokenStore": {
     "TableName": "tokens"
   },
   "Grafana": {
     "BaseUrl": "https://dotnet-eng-grafana-staging.westus2.cloudapp.azure.com",
     "ApiToken": "[vault(grafana-api-token)]",
-    "TableName": "deployments"
+    "TableName": "deployments",
+    "WebhookSecret": "[vault(grafana-webhook-secret)]"
   },
   "WebHooks": {
     "github": {

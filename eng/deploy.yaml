@@ -159,6 +159,7 @@ stages:
         enableCustomDeployment: true
         DeploymentType: zipDeploy
         RemoveAdditionalFilesFlag: true
+        TakeAppOfflineFlag: false
 
 - template: /eng/deploy-managed-grafana.yml@self
   parameters:

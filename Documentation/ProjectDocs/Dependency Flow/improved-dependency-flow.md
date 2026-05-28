@@ -94,9 +94,9 @@ enabled, the Maestro++ service will:
   1. If the build is successful, attempt a fast-forward only merge into the
      target branch. If successful:
       * Trigger the [Dnceng Build Promotion
-        Pipeline](https://dnceng.visualstudio.com/internal/_build/results?buildId=550056&view=results)
+        Pipeline](https://dev.azure.com/dnceng/internal/_build/results?buildId=550056&view=results)
         or the [DevDiv Build Promotion
-        Pipeline](https://devdiv.visualstudio.com/DevDiv/_build?definitionId=12603&_a=summary)
+        Pipeline](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=12603&_a=summary)
         depending on which org hosts the official build pipeline for the repo to
         publish the build assets to the feeds and blob storage, and add the
         build to the target channel for the subscription. This will cause

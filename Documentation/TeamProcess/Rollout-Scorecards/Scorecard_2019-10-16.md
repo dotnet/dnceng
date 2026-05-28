@@ -16,7 +16,7 @@
 
 ## Arcade Services
 
-| Metric | [20191016.2-1](https://dnceng.visualstudio.com/internal/_apps/hub/ms.vss-releaseManagement-web.cd-release-progress?_a=release-pipeline-progress&releaseId=21564) | [20191016.3-1](https://dnceng.visualstudio.com/internal/_apps/hub/ms.vss-releaseManagement-web.cd-release-progress?_a=release-pipeline-progress&releaseId=21602) |
+| Metric | [20191016.2-1](https://dev.azure.com/dnceng/internal/_apps/hub/ms.vss-releaseManagement-web.cd-release-progress?_a=release-pipeline-progress&releaseId=21564) | [20191016.3-1](https://dev.azure.com/dnceng/internal/_apps/hub/ms.vss-releaseManagement-web.cd-release-progress?_a=release-pipeline-progress&releaseId=21602) |
 |:--------------------------------:|:------------:|:-------------:|
 | Time to Rollout | 01:00:00 | 00:40:00 |
 | Critical/blocking issues created | 1 | 0 |

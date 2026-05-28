@@ -24,6 +24,12 @@ secrets:
     type: azure-managed-grafana-api-key
     parameters:
       environment: dotnet-eng-grafana.westus2.cloudapp.azure.com
+
+  # Shared secret for Grafana webhook contact point Basic Auth
+  grafana-webhook-secret:
+    type: text
+    parameters:
+      description: The Basic Auth password configured in Grafana contact points for alert webhook delivery
   
   build-monitor-hook-dotnet-eng-status-token:
     type: text

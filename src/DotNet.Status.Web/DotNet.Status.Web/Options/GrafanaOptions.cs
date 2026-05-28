@@ -10,4 +10,5 @@ public class GrafanaOptions
     public string ApiToken { get; set; }
     public string TableUri { get; set; }
     public string TableName { get; set; }
+    public string WebhookSecret { get; set; }
 }

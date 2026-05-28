@@ -17,13 +17,13 @@ Definitions.json
       "DefinitionId": 893,
       "Name": "CoreFx-Windows-Trusted",
       "ProjectName": "DevDiv",
-      "BaseUrl": "https://devdiv.visualstudio.com/DefaultCollection"
+      "BaseUrl": "https://dev.azure.com/devdiv/DefaultCollection"
     },
     {
       "DefinitionId": 1054,
       "Name": "CoreFx-Linux-Native-Trusted",
       "ProjectName": "DevDiv",
-      "BaseUrl": "https://devdiv.visualstudio.com/DefaultCollection"
+      "BaseUrl": "https://dev.azure.com/devdiv/DefaultCollection"
     }
   ]
 ```
