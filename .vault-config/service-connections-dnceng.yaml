@@ -51,19 +51,6 @@ secrets:
           organizations: azure-public
           scopes: packaging_write
 
-  azure-public/vs-impl:
-    type: azure-devops-service-endpoint
-    parameters:
-      authorization:
-        type: azure-devops-access-token
-        parameters:
-          domainAccountName: dn-bot
-          domainAccountSecret:
-            location: helixkv
-            name: dn-bot-account-redmond
-          organizations: azure-public
-          scopes: packaging_write
-
   dotnet-security-partners-dotnet-dotnet feed:
     type: azure-devops-service-endpoint
     parameters:
