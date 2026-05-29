@@ -219,12 +219,6 @@
         "Labels": [ "Build Failed" ]
       },
       {
-        "Id": "dotnet-dnceng-first-responder",
-        "Owner": "dotnet",
-        "Name": "dnceng",
-        "Labels": [ "Build Failed", "Ops - First Responder" ]
-      },
-      {
         "Id": "dotnet-dnceng-ops",
         "Owner": "dotnet",
         "Name": "dnceng",
@@ -270,6 +264,16 @@
         "Owner": "dotnet",
         "Name": "arcade-services",
         "Labels": [ "Build Failed", "Ops - First Responder" ],
+        "UpdateExisting": true
+      }
+    ],
+    "AzDoIssues": [
+      {
+        "Id": "dotnet-dnceng-first-responder",
+        "Project": "internal",
+        "AreaPath": "internal\\.NET Engineering Services\\First Responders",
+        "WorkItemType": "DNCENG Task",
+        "Tags": [ "Ops - First Responder" ],
         "UpdateExisting": true
       }
     ]

@@ -76,9 +76,7 @@ extends:
                   targetPath: $(Build.SourcesDirectory)\artifacts\bin\AzureDevOpsClient.PostDeploymentTests\$(_BuildConfig)\net8.0
                   artifactName: AzureDevOpsClient.PostDeploymentTests
             variables:
-            # DotNet-Symbol-Server-Pats provides: microsoft-symbol-server-pat, symweb-symbol-server-pat
             # Publish-Build-Assets provides: MaestroAccessToken, BotAccount-dotnet-maestro-bot-PAT
-            - group: DotNet-Symbol-Server-Pats
             - group: Publish-Build-Assets
             - _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
             - _BuildConfig: Release
@@ -92,8 +90,6 @@ extends:
                 /p:DotNetPublishToBlobFeed=$(_DotNetPublishToBlobFeed)
                 /p:DotNetPublishUsingPipelines=$(_PublishUsingPipelines)
                 /p:DotNetArtifactsCategory=$(_DotNetArtifactsCategory)
-                /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
-                /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
                 /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
           
             steps:

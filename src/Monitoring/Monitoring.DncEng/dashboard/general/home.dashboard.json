@@ -48,7 +48,7 @@
       },
       "id": 6,
       "options": {
-        "folderId": "[parameter(dnceng-folderid)]",
+        "folderUID": "dnceng",
         "maxItems": 10,
         "query": "",
         "showHeadings": false,
@@ -358,7 +358,7 @@
               "mode": "none"
             },
             "thresholdsStyle": {
-              "mode": "line+area"
+              "mode": "line"
             }
           },
           "mappings": [],

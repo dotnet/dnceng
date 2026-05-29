@@ -8,6 +8,7 @@ public class BuildMonitorOptions
 {
     public AzurePipelinesOptions Monitor { get; set; }
     public IssuesOptions[] Issues { get; set; }
+    public AzDoIssuesOptions[] AzDoIssues { get; set; }
 
     public class AzurePipelinesOptions
     {
@@ -32,6 +33,16 @@ public class BuildMonitorOptions
         public string Owner { get; set; }
         public string Name { get; set; }
         public string[] Labels { get; set; }
+        public bool UpdateExisting { get; set; }
+    }
+
+    public class AzDoIssuesOptions
+    {
+        public string Id { get; set; }
+        public string Project { get; set; }
+        public string AreaPath { get; set; }
+        public string WorkItemType { get; set; } = "DNCENG Task";
+        public string[] Tags { get; set; }
         public bool UpdateExisting { get; set; }
     }
 }
