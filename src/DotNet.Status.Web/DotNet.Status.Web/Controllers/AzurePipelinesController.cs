@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using DotNet.Status.Web.Options;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.DotNet.GitHub.Authentication;
 using Microsoft.DotNet.Internal.AzureDevOps;
@@ -51,6 +52,7 @@ public class AzurePipelinesController : ControllerBase
 
     [HttpPost]
     [Route("build-complete")]
+    [AllowAnonymous]
     [ProducesResponseType((int) HttpStatusCode.NoContent)]
     public async Task<IActionResult> BuildComplete(AzureDevOpsEvent<AzureDevOpsMinimalBuildResource> buildEvent)
     {
