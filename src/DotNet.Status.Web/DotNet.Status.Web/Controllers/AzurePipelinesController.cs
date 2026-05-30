@@ -6,12 +6,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using DotNet.Status.Web.Options;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.DotNet.GitHub.Authentication;
 using Microsoft.DotNet.Internal.AzureDevOps;
@@ -53,16 +51,9 @@ public class AzurePipelinesController : ControllerBase
 
     [HttpPost]
     [Route("build-complete")]
-    [AllowAnonymous]
     [ProducesResponseType((int) HttpStatusCode.NoContent)]
     public async Task<IActionResult> BuildComplete(AzureDevOpsEvent<AzureDevOpsMinimalBuildResource> buildEvent)
     {
-        if (!IsWebhookAuthorized())
-        {
-            _logger.LogWarning("Unauthorized build-complete webhook request received");
-            return Unauthorized();
-        }
-
         _logger.LogInformation("Build complete notification for build '{buildId}', URL: {buildUrl}",
             buildEvent.Resource.Id,
             buildEvent.Resource.Url);
@@ -603,46 +594,5 @@ public class AzurePipelinesController : ControllerBase
     {
         public long Id { get; set; }
         public string Url { get; set; }
-    }
-
-    private bool IsWebhookAuthorized()
-    {
-        var secret = _options.Value.WebhookSecret;
-        if (string.IsNullOrEmpty(secret))
-        {
-            _logger.LogError("BuildMonitor WebhookSecret is not configured; rejecting request");
-            return false;
-        }
-
-        if (!Request.Headers.TryGetValue("Authorization", out var authHeader))
-            return false;
-
-        if (!authHeader.ToString().StartsWith("Basic ", StringComparison.OrdinalIgnoreCase))
-            return false;
-
-        try
-        {
-            var encoded = authHeader.ToString().Substring("Basic ".Length).Trim();
-            var bytes = Convert.FromBase64String(encoded);
-
-            try
-            {
-                int colon = Array.IndexOf(bytes, (byte)':');
-                if (colon < 0) return false;
-
-                var provided = bytes.AsSpan(colon + 1);
-                var expected = Encoding.UTF8.GetBytes(secret);
-
-                return CryptographicOperations.FixedTimeEquals(provided, expected);
-            }
-            finally
-            {
-                Array.Clear(bytes, 0, bytes.Length);
-            }
-        }
-        catch
-        {
-            return false;
-        }
     }
 }

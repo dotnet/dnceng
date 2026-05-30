@@ -9,7 +9,6 @@ public class BuildMonitorOptions
     public AzurePipelinesOptions Monitor { get; set; }
     public IssuesOptions[] Issues { get; set; }
     public AzDoIssuesOptions[] AzDoIssues { get; set; }
-    public string WebhookSecret { get; set; }
 
     public class AzurePipelinesOptions
     {

@@ -230,6 +230,10 @@ public class Startup
                     {
                         return "nothing";
                     }
+                    if (context.Request.Path.StartsWithSegments("/api/azp"))
+                    {
+                        return WebhookBasicAuthHandler.SchemeName;
+                    }
                     if (context.Request.Path.StartsWithSegments("/api"))
                     {
                         return "github-token";
@@ -240,6 +244,10 @@ public class Startup
             .AddGitHubOAuth(Configuration.GetSection("GitHubAuthentication"), GitHubScheme)
             .AddScheme<NothingOptions, NothingHandler>("nothing", o => { })
             .AddScheme<UserTokenOptions, GitHubUserTokenHandler>("github-token", o => { })
+            .AddScheme<WebhookBasicAuthOptions, WebhookBasicAuthHandler>(WebhookBasicAuthHandler.SchemeName, o =>
+            {
+                o.SharedSecret = Configuration.GetSection("BuildMonitor")["WebhookSecret"];
+            })
             .AddCookie(IdentityConstants.ApplicationScheme,
                 o =>
                 {
