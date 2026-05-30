@@ -276,7 +276,8 @@
         "Tags": [ "Ops - First Responder" ],
         "UpdateExisting": true
       }
-    ]
+    ],
+    "WebhookSecret": "[vault(build-monitor-webhook-secret)]"
   },
   "GitHub": {
     "Organization": "maestro-auth-test",
