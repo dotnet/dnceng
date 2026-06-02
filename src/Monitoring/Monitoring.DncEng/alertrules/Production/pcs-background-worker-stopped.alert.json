@@ -131,7 +131,7 @@
   "__panelId__": "57",
   "folderUID": "dnceng",
   "ruleGroup": "PCS Alerts",
-  "intervalMs": 900000,
+  "intervalMs": 1000,
   "isPaused": false,
   "notification_settings": {
     "receiver": ".NET Status Alert",
