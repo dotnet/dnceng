@@ -115,7 +115,7 @@
       }
     }
   ],
-  "noDataState": "OK",
+  "noDataState": "Alerting",
   "execErrState": "Alerting",
   "for": "5m",
   "frequency": "1m",
@@ -131,7 +131,7 @@
   "__panelId__": "57",
   "folderUID": "dnceng",
   "ruleGroup": "PCS Alerts",
-  "intervalMs": 1000,
+  "intervalMs": 900000,
   "isPaused": false,
   "notification_settings": {
     "receiver": ".NET Status Alert",
