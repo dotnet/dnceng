@@ -17,7 +17,7 @@ stages:
   displayName: 'Deploy Grafana Infrastructure and Dashboards'
   pool:
     name: NetCore1ESPool-Internal-NoMSI
-    demands: ImageOverride -equals 1es-windows-2019
+    demands: ImageOverride -equals 1es-windows-2022
   dependsOn:
   - predeploy
   - approval
