@@ -1,0 +1,149 @@
+{
+  "uid": "build-monitor-service-hook-deliveries",
+  "title": "Build Monitor Service Hook Deliveries alert",
+  "condition": "B",
+  "data": [
+    {
+      "refId": "Success",
+      "queryType": "Azure Log Analytics",
+      "datasourceUid": "F2XodEi7z",
+      "relativeTimeRange": {
+        "from": 2100,
+        "to": 0
+      },
+      "model": {
+        "azureLogAnalytics": {
+          "dashboardTime": false,
+          "query": "requests\n| where $__timeFilter(timestamp)\n| where name == 'POST AzurePipelines/BuildComplete'\n| where success == true\n| summarize ['Succeeded'] = count() by bin(timestamp, 15m)\n| order by timestamp asc",
+          "resources": [
+            "[parameter(dotneteng-status-appinsights-resourcepath)]"
+          ],
+          "resultFormat": "time_series",
+          "workspace": "[parameter(default-workspace-resourcepath)]"
+        },
+        "azureMonitor": {
+          "dimensionFilters": [],
+          "timeGrain": "auto"
+        },
+        "datasource": {
+          "type": "grafana-azure-monitor-datasource",
+          "uid": "F2XodEi7z"
+        },
+        "intervalMs": 1000,
+        "maxDataPoints": 43200,
+        "queryType": "Azure Log Analytics",
+        "refId": "Success",
+        "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
+      }
+    },
+    {
+      "refId": "Fail",
+      "queryType": "Azure Log Analytics",
+      "datasourceUid": "F2XodEi7z",
+      "relativeTimeRange": {
+        "from": 2100,
+        "to": 0
+      },
+      "model": {
+        "azureLogAnalytics": {
+          "dashboardTime": false,
+          "query": "requests\n| where $__timeFilter(timestamp)\n| where name == 'POST AzurePipelines/BuildComplete'\n| where success == false\n| summarize ['Failed'] = count() by bin(timestamp, 15m)\n| order by timestamp asc",
+          "resources": [
+            "[parameter(dotneteng-status-appinsights-resourcepath)]"
+          ],
+          "resultFormat": "time_series",
+          "workspace": "[parameter(default-workspace-resourcepath)]"
+        },
+        "azureMonitor": {
+          "dimensionFilters": [],
+          "timeGrain": "auto"
+        },
+        "datasource": {
+          "type": "grafana-azure-monitor-datasource",
+          "uid": "F2XodEi7z"
+        },
+        "intervalMs": 1000,
+        "maxDataPoints": 43200,
+        "queryType": "Azure Log Analytics",
+        "refId": "Fail",
+        "subscription": "[parameter(dotnet-eng-appinsights-subscriptionid)]"
+      }
+    },
+    {
+      "refId": "A",
+      "queryType": "",
+      "datasourceUid": "-100",
+      "relativeTimeRange": {
+        "from": 2100,
+        "to": 0
+      },
+      "model": {
+        "datasource": {
+          "type": "__expr__",
+          "uid": "-100"
+        },
+        "expression": "Fail",
+        "intervalMs": 1000,
+        "maxDataPoints": 43200,
+        "reducer": "last",
+        "refId": "A",
+        "type": "reduce"
+      }
+    },
+    {
+      "refId": "B",
+      "queryType": "",
+      "datasourceUid": "-100",
+      "relativeTimeRange": {
+        "from": 0,
+        "to": 0
+      },
+      "model": {
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [10],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": ["C"]
+            },
+            "type": "query"
+          }
+        ],
+        "datasource": {
+          "type": "__expr__",
+          "uid": "-100"
+        },
+        "expression": "A",
+        "intervalMs": 1000,
+        "maxDataPoints": 43200,
+        "refId": "B",
+        "type": "threshold"
+      }
+    }
+  ],
+  "noDataState": "OK",
+  "execErrState": "KeepLast",
+  "for": "1h",
+  "annotations": {
+    "__dashboardUid__": "historical",
+    "__panelId__": "78",
+    "description": "The Azure DevOps service hook driving the Build Monitor service has a high failure rate (>10 failed requests to /api/azp/build-complete in 35 minutes).\n\nThis alert queries actual HTTP request telemetry from the DotNetEng-Status App Insights instance.\n\nSee [Build Monitor Service Hook Deliveries alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/929/) in the FR Wiki for information.\n\nThe service hook can be found in [Service hooks internal](https://dev.azure.com/dnceng/internal/_settings/serviceHooks)."
+  },
+  "labels": {
+    "NotificationId": "eb1533772b6a4f50a0d6c099f392ace5"
+  },
+  "__dashboardUid__": "historical",
+  "__panelId__": "78",
+  "folderUID": "helix",
+  "ruleGroup": "Historical Alerts",
+  "intervalMs": 900000,
+  "isPaused": false,
+  "notification_settings": {
+    "receiver": ".NET Status Alert"
+  }
+}
