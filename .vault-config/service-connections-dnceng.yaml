@@ -25,28 +25,3 @@ secrets:
           organizations: devdiv
           scopes: packaging_write
 
-  DevDiv - VS package feed:
-    type: azure-devops-service-endpoint
-    parameters:
-      authorization:
-        type: azure-devops-access-token
-        parameters:
-          domainAccountName: dn-bot
-          domainAccountSecret:
-            location: helixkv
-            name: dn-bot-account-redmond
-          organizations: devdiv
-          scopes: packaging_write
-
-  dotnet-sb-validation feed:
-    type: azure-devops-service-endpoint
-    parameters:
-      authorization:
-        type: azure-devops-access-token
-        parameters:
-          domainAccountName: dn-bot
-          domainAccountSecret:
-            location: helixkv
-            name: dn-bot-account-redmond
-          organizations: dnceng
-          scopes: packaging_write
