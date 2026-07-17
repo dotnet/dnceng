@@ -33,7 +33,7 @@ public class GitHubAccessTokenTests
     [TestCase("30.5", false, 0, Description = "Not a whole number")]
     public void TryParseExpirationInDays_ShouldValidateBounds(string value, bool expectedResult, int expectedParsed)
     {
-        var result = _token.TestTryParseExpirationInDays(value, out var parsed);
+        bool result = _token.TestTryParseExpirationInDays(value, out int parsed);
 
         result.Should().Be(expectedResult);
         if (expectedResult)
@@ -49,9 +49,9 @@ public class GitHubAccessTokenTests
     [TestCase(7, 4, Description = "Minimum allowed duration")]
     public void ComputeNextRotationOn_ShouldRotateWhenAThirdRemains(int durationDays, int expectedDeltaDays)
     {
-        var now = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        DateTimeOffset now = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
-        var nextRotationOn = _token.TestComputeNextRotationOn(now, durationDays);
+        DateTimeOffset nextRotationOn = _token.TestComputeNextRotationOn(now, durationDays);
 
         nextRotationOn.Should().Be(now.AddDays(expectedDeltaDays));
     }
@@ -59,11 +59,11 @@ public class GitHubAccessTokenTests
     [Test]
     public void ComputeNextRotationOn_ShouldFallBeforeExpiration()
     {
-        var now = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        DateTimeOffset now = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
         const int durationDays = 30;
 
-        var expiresOn = now.AddDays(durationDays);
-        var nextRotationOn = _token.TestComputeNextRotationOn(now, durationDays);
+        DateTimeOffset expiresOn = now.AddDays(durationDays);
+        DateTimeOffset nextRotationOn = _token.TestComputeNextRotationOn(now, durationDays);
 
         nextRotationOn.Should().BeAfter(now);
         nextRotationOn.Should().BeBefore(expiresOn);
