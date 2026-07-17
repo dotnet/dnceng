@@ -7,6 +7,7 @@ using System;
 using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -58,41 +59,51 @@ public class DeploymentController : ControllerBase
             Tags = new[] {"deploy", $"deploy-{service}", service},
             Time = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
         };
-            
-        NewGrafanaAnnotationResponse annotation;
-        using (var client = new HttpClient(new HttpClientHandler() { CheckCertificateRevocationList = true }))
+
+        // Recording a deployment annotation is best-effort telemetry and must never fail the
+        // calling deployment pipeline. Any failure talking to Grafana or table storage is logged
+        // and swallowed so the notification endpoint returns success instead of a 500.
+        try
         {
-            annotation = await _retry.RetryAsync(async () =>
-                {
-                    GrafanaOptions grafanaOptions = _grafanaOptions.CurrentValue;
-                    _logger.LogInformation("Creating annotation to {url}", grafanaOptions.BaseUrl);
-                    using (var request = new HttpRequestMessage(HttpMethod.Post,
-                               $"{grafanaOptions.BaseUrl}/api/annotations"))
+            NewGrafanaAnnotationResponse annotation;
+            using (var client = new HttpClient(new HttpClientHandler() { CheckCertificateRevocationList = true }))
+            {
+                annotation = await _retry.RetryAsync(async () =>
                     {
-                        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                        request.Headers.Authorization =
-                            new AuthenticationHeaderValue("Bearer", grafanaOptions.ApiToken);
-                        request.Content = CreateObjectContent(content);
-
-                        using (HttpResponseMessage response = await client.SendAsync(request, CancellationToken.None))
+                        GrafanaOptions grafanaOptions = _grafanaOptions.CurrentValue;
+                        _logger.LogInformation("Creating annotation to {url}", grafanaOptions.BaseUrl);
+                        using (var request = new HttpRequestMessage(HttpMethod.Post,
+                                   $"{grafanaOptions.BaseUrl}/api/annotations"))
                         {
-                            _logger.LogTrace("Response from grafana {responseCode} {reason}", response.StatusCode, response.ReasonPhrase);
-                            response.EnsureSuccessStatusCode();
-                            return await ReadObjectContent<NewGrafanaAnnotationResponse>(response.Content);
-                        }
-                    }
-                },
-                e => _logger.LogWarning(e, "Failed to send new annotation"),
-                e => true
-            );
-        }
-        _logger.LogInformation("Created annotation {annotationId}, inserting into table", annotation.Id);
+                            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                            request.Headers.Authorization =
+                                new AuthenticationHeaderValue("Bearer", grafanaOptions.ApiToken);
+                            request.Content = CreateObjectContent(content);
 
-        TableClient table = await GetCloudTable();
-        await table.UpsertEntityAsync(new DotNet.Status.Web.Models.AnnotationEntity(service, id, annotation.Id)
+                            using (HttpResponseMessage response = await client.SendAsync(request, CancellationToken.None))
+                            {
+                                _logger.LogTrace("Response from grafana {responseCode} {reason}", response.StatusCode, response.ReasonPhrase);
+                                response.EnsureSuccessStatusCode();
+                                return await ReadObjectContent<NewGrafanaAnnotationResponse>(response.Content);
+                            }
+                        }
+                    },
+                    e => _logger.LogWarning(e, "Failed to send new annotation"),
+                    IsTransientFailure
+                );
+            }
+            _logger.LogInformation("Created annotation {annotationId}, inserting into table", annotation.Id);
+
+            TableClient table = await GetCloudTable();
+            await table.UpsertEntityAsync(new DotNet.Status.Web.Models.AnnotationEntity(service, id, annotation.Id)
+            {
+                ETag = new Azure.ETag("*")
+            });
+        }
+        catch (Exception ex)
         {
-            ETag = new Azure.ETag("*")
-        });
+            _logger.LogError(ex, "Failed to record start of deployment of '{service}' with id '{id}'; continuing without blocking the deployment", service, id);
+        }
         return NoContent();
     }
 
@@ -100,54 +111,77 @@ public class DeploymentController : ControllerBase
     public async Task<IActionResult> MarkEnd([Required] string service, [Required] string id)
     {
         _logger.LogInformation("Recording end of deployment of '{service}' with id '{id}'", service, id);
-        TableClient table = await GetCloudTable();
-        _logger.LogInformation("Looking for existing deployment");
-        var getResult = await table.GetEntityIfExistsAsync<StatusWebAnnotationEntity>(service, id);
-        _logger.LogTrace("Table response code {responseCode}", getResult.GetRawResponse().Status);
-        if (!getResult.HasValue)
+        // As with MarkStart, recording the end of a deployment is best-effort telemetry and must
+        // never fail the calling deployment pipeline. Any failure is logged and swallowed.
+        try
         {
-            return NotFound();
-        }
+            TableClient table = await GetCloudTable();
+            _logger.LogInformation("Looking for existing deployment");
+            var getResult = await table.GetEntityIfExistsAsync<StatusWebAnnotationEntity>(service, id);
+            _logger.LogTrace("Table response code {responseCode}", getResult.GetRawResponse().Status);
+            if (!getResult.HasValue)
+            {
+                _logger.LogWarning("No deployment start record found for '{service}' with id '{id}'; nothing to mark as ended", service, id);
+                return NoContent();
+            }
 
-        var annotation = getResult.Value;
+            var annotation = getResult.Value;
 
-        _logger.LogTrace("Updating end time of deployment...");
-        annotation.Ended = DateTimeOffset.UtcNow;
-       
-        var updateResult = await table.UpdateEntityAsync(annotation, annotation.ETag, TableUpdateMode.Replace);
-        _logger.LogInformation("Update response code {responseCode}", updateResult.Status);
-            
-        var content = new NewGrafanaAnnotationRequest
-        {
-            TimeEnd = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-        };
+            _logger.LogTrace("Updating end time of deployment...");
+            annotation.Ended = DateTimeOffset.UtcNow;
 
-        using (var client = new HttpClient(new HttpClientHandler() { CheckCertificateRevocationList = true }))
-        {
-            await _retry.RetryAsync(async () =>
-                {
-                    GrafanaOptions grafanaOptions = _grafanaOptions.CurrentValue;
-                    _logger.LogInformation("Updating annotation {annotationId} to {url}", annotation.GrafanaAnnotationId, grafanaOptions.BaseUrl);
-                    using (var request = new HttpRequestMessage(HttpMethod.Patch,
-                               $"{grafanaOptions.BaseUrl}/api/annotations/{annotation.GrafanaAnnotationId}"))
+            var updateResult = await table.UpdateEntityAsync(annotation, annotation.ETag, TableUpdateMode.Replace);
+            _logger.LogInformation("Update response code {responseCode}", updateResult.Status);
+
+            var content = new NewGrafanaAnnotationRequest
+            {
+                TimeEnd = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+            };
+
+            using (var client = new HttpClient(new HttpClientHandler() { CheckCertificateRevocationList = true }))
+            {
+                await _retry.RetryAsync(async () =>
                     {
-                        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                        request.Headers.Authorization =
-                            new AuthenticationHeaderValue("Bearer", grafanaOptions.ApiToken);
-                        request.Content = CreateObjectContent(content);
-                        using (HttpResponseMessage response = await client.SendAsync(request, CancellationToken.None))
+                        GrafanaOptions grafanaOptions = _grafanaOptions.CurrentValue;
+                        _logger.LogInformation("Updating annotation {annotationId} to {url}", annotation.GrafanaAnnotationId, grafanaOptions.BaseUrl);
+                        using (var request = new HttpRequestMessage(HttpMethod.Patch,
+                                   $"{grafanaOptions.BaseUrl}/api/annotations/{annotation.GrafanaAnnotationId}"))
                         {
-                            _logger.LogTrace("Response from grafana {responseCode} {reason}", response.StatusCode, response.ReasonPhrase);
-                            response.EnsureSuccessStatusCode();
+                            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                            request.Headers.Authorization =
+                                new AuthenticationHeaderValue("Bearer", grafanaOptions.ApiToken);
+                            request.Content = CreateObjectContent(content);
+                            using (HttpResponseMessage response = await client.SendAsync(request, CancellationToken.None))
+                            {
+                                _logger.LogTrace("Response from grafana {responseCode} {reason}", response.StatusCode, response.ReasonPhrase);
+                                response.EnsureSuccessStatusCode();
+                            }
                         }
-                    }
-                },
-                e => _logger.LogWarning(e, "Failed to send new annotation"),
-                e => true
-            );
+                    },
+                    e => _logger.LogWarning(e, "Failed to send new annotation"),
+                    IsTransientFailure
+                );
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to record end of deployment of '{service}' with id '{id}'; continuing without blocking the deployment", service, id);
         }
 
         return NoContent();
+    }
+
+    private static bool IsTransientFailure(Exception e)
+    {
+        // Only retry transient failures (network errors, timeouts, or 5xx responses from Grafana).
+        // Non-transient failures such as 4xx responses should fail fast rather than being retried
+        // repeatedly and then rethrown, which previously surfaced as a 500 to the deployment pipeline.
+        if (e is HttpRequestException httpException)
+        {
+            return httpException.StatusCode is null or >= HttpStatusCode.InternalServerError;
+        }
+
+        return e is TaskCanceledException or OperationCanceledException;
     }
 
     private async Task<TableClient> GetCloudTable()
