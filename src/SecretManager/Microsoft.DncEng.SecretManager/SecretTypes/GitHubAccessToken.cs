@@ -9,8 +9,8 @@ namespace Microsoft.DncEng.SecretManager.SecretTypes;
 public class GitHubAccessToken : GitHubAccountInteractiveSecretType<GitHubAccessToken.Parameters>
 {
     // GitHub allows personal access tokens to be created with an expiration
-    // between 1 and 366 days (or no expiration, which we do not support here).
-    private const int _minExpirationInDays = 1;
+    // between 1 and 366 days, but we require a minimum of 7 days.
+    private const int _minExpirationInDays = 7;
     private const int _maxExpirationInDays = 366;
 
     public class Parameters

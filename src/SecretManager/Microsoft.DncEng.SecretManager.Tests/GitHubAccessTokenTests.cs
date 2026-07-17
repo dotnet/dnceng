@@ -19,10 +19,12 @@ public class GitHubAccessTokenTests
     }
 
     [Test]
-    [TestCase("1", true, 1, Description = "Minimum allowed duration")]
+    [TestCase("7", true, 7, Description = "Minimum allowed duration")]
     [TestCase("90", true, 90, Description = "Typical duration")]
     [TestCase("366", true, 366, Description = "Maximum allowed duration")]
-    [TestCase("0", false, 0, Description = "Below minimum")]
+    [TestCase("6", false, 6, Description = "Just below minimum")]
+    [TestCase("1", false, 1, Description = "Below minimum")]
+    [TestCase("0", false, 0, Description = "Zero")]
     [TestCase("367", false, 367, Description = "Above maximum")]
     [TestCase("-5", false, -5, Description = "Negative")]
     [TestCase("abc", false, 0, Description = "Not a number")]
@@ -42,8 +44,8 @@ public class GitHubAccessTokenTests
     [Test]
     [TestCase(90, 60, Description = "1/3 of 90 days remains -> rotate after 60 days")]
     [TestCase(30, 20, Description = "1/3 of 30 days remains -> rotate after 20 days")]
-    [TestCase(3, 2, Description = "Small duration")]
-    [TestCase(1, 0, Description = "Minimum duration rotates immediately")]
+    [TestCase(9, 6, Description = "Small duration")]
+    [TestCase(7, 4, Description = "Minimum allowed duration")]
     public void ComputeNextRotationOn_ShouldRotateWhenAThirdRemains(int durationDays, int expectedDeltaDays)
     {
         var now = new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
