@@ -341,6 +341,10 @@ parameters:
 ```
 
 ### GitHub access token
+During rotation you will be prompted to enter the token's expiration duration in
+days (1-366). The entered duration is shown in the on-screen instructions for
+creating the token on github.com and also sets the secret's expiration; the
+secret is scheduled to rotate once about one third of that duration remains.
 ```yaml
 type: github-access-token
 parameters:
