@@ -263,15 +263,6 @@ parameters:
   permissions: permissions needed for the sas e.g. 'racwd'
 ```
 
-#### Container Sas Token
-```yaml
-type: azure-storage-container-sas-token
-parameters:
-  connectionString: SecretReference to the connection string for the account
-  container: storage container name
-  permissions: permissions needed for the sas e.g. 'racwd'
-```
-
 #### Blob Sas Uri
 ```yaml
 type: azure-storage-blob-sas-uri
@@ -318,26 +309,6 @@ parameters:
   resourceGroup: Azure resource group
   namespace: Service Bus namespace
   permissions: required permissions
-```
-
-### Sql Connection String
-```yaml
-type: sql-connection-string
-parameters:
-  adminConnection: secret reference to the sql admin connection
-  dataSource: server url
-  database: database name
-  permissions: 'admin', 'r', 'w', or 'rw'
-```
-
-### Kusto Connection String
-```yaml
-type: kusto-connection-string
-parameters:
-  dataSource: the DataSource in the connection string
-  initialCatalog: the InitialCatalog in the connection string
-  additionalParameters: and extra
-  adApplication: SecretReference to the ad-application used for authentication
 ```
 
 ### GitHub access token
@@ -389,13 +360,6 @@ parameters:
   environment: hostname of target helix instance
 ```
 
-### Maestro Access Token
-```yaml
-type: maestro-access-token
-parameters:
-  environment: hostname of target maestro++ instance
-```
-
 ### Text
 This type should be used sparingly, and only for things that aren't actually secret.
 ```yaml
@@ -432,12 +396,6 @@ Recommended update steps for each account are:
   Example: For dn-bot domain account, params will be dn-bot-account-redmond and helixkv.yaml respectively.
 
 
-### Azure Active Directory Application
-Produces `<name>-app-id` and `<name>-app-secret`
-```yaml
-type: ad-application
-```
-
 ### Azure DevOps Access Token
 ```yaml
 type: azure-devops-access-token
@@ -446,14 +404,6 @@ parameters:
   scopes: space separated list of scopes in the format accepted by pat-generator
   domainAccountName: name of domain account
   domainAccountSecret: secret reference to a domain-account
-```
-
-### Base64 Encode
-This type base64 encodes the referenced secret.
-```yaml
-type: base64-encoder
-parameters:
-  secret: SecretReference to another secret
 ```
 
 ### Service Connection
