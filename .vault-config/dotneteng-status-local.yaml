@@ -19,11 +19,6 @@ secrets:
       hasWebhookSecret: true
       hasOAuthSecret: true
 
-  grafana-api-token:
-    type: azure-managed-grafana-api-key
-    parameters:
-      environment: dotnet-eng-grafana-staging.westus2.cloudapp.azure.com
-
   # Shared secret for Grafana webhook contact point Basic Auth
   grafana-webhook-secret:
     type: text
