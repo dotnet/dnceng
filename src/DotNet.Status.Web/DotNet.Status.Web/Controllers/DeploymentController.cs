@@ -22,15 +22,15 @@ namespace DotNet.Status.Web.Controllers;
 public class DeploymentController : ControllerBase
 {
     private readonly IHostEnvironment _env;
-    private readonly IOptionsMonitor<GrafanaOptions> _grafanaOptions;
+    private readonly IOptionsMonitor<DeploymentTableOptions> _deploymentTableOptions;
     private readonly ILogger<DeploymentController> _logger;
 
     public DeploymentController(
-        IOptionsMonitor<GrafanaOptions> grafanaOptions,
+        IOptionsMonitor<DeploymentTableOptions> deploymentTableOptions,
         ILogger<DeploymentController> logger,
         IHostEnvironment env)
     {
-        _grafanaOptions = grafanaOptions;
+        _deploymentTableOptions = deploymentTableOptions;
         _logger = logger;
         _env = env;
     }
@@ -99,7 +99,7 @@ public class DeploymentController : ControllerBase
     private async Task<TableClient> GetCloudTable()
     {
         TableClient table;
-        GrafanaOptions options = _grafanaOptions.CurrentValue;
+        DeploymentTableOptions options = _deploymentTableOptions.CurrentValue;
         if (_env.IsDevelopment())
         {
             table = new TableClient("UseDevelopmentStorage=true", options.TableName);
