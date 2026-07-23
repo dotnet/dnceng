@@ -122,7 +122,7 @@ public class AnnotationsControllerTests
                 services.AddControllers()
                     .AddApplicationPart(typeof(AnnotationsController).Assembly);
 
-                services.Configure<GrafanaOptions>(options =>
+                services.Configure<DeploymentTableOptions>(options =>
                 {
                     options.TableUri = "https://127.0.0.1:10002/devstoreaccount1/deployments";
                 });

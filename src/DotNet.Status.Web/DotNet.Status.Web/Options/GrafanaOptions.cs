@@ -6,9 +6,5 @@ namespace DotNet.Status.Web.Options;
 
 public class GrafanaOptions
 {
-    public string BaseUrl { get; set; }
-    public string ApiToken { get; set; }
-    public string TableUri { get; set; }
-    public string TableName { get; set; }
     public string WebhookSecret { get; set; }
 }
