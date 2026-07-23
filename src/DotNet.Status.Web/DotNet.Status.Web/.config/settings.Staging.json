@@ -25,7 +25,7 @@
   "AzureTableTokenStore": {
     "TableUri": "https://dotnetengstatusstaging.table.core.windows.net"
   },
-  "Grafana": {
+  "Deployments": {
     "TableUri": "https://dotnetengstatusstaging.table.core.windows.net"
   },
   "Kusto": {
