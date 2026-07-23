@@ -8,8 +8,10 @@ namespace Microsoft.DncEng.SecretManager.SecretTypes;
 [Name("github-access-token")]
 public class GitHubAccessToken : GitHubAccountInteractiveSecretType<GitHubAccessToken.Parameters>
 {
-    private const int _nextRotationOnDeltaDays = 30;
-    private const int _expirationInDays = 90;
+    // GitHub allows a higher maximum, but we deliberately restrict access token
+    // lifetimes to between 7 and 30 days.
+    private const int _minExpirationInDays = 7;
+    private const int _maxExpirationInDays = 30;
 
     public class Parameters
     {
@@ -29,14 +31,39 @@ public class GitHubAccessToken : GitHubAccountInteractiveSecretType<GitHubAccess
             throw new HumanInterventionRequiredException($"User intervention required for creation or rotation of a GitHub access token.");
         }
 
+        int expirationInDays = await Console.PromptAndValidateAsync<int>(
+            "expiration in days",
+            $"Expiration must be a whole number of days between {_minExpirationInDays} and {_maxExpirationInDays}.",
+            TryParseExpirationInDays);
+
+        DateTimeOffset now = Clock.UtcNow;
+        DateTimeOffset expiresOn = now.AddDays(expirationInDays);
+        DateTimeOffset nextRotationOn = ComputeNextRotationOn(now, expirationInDays);
+
         const string helpUrl = "https://github.com/settings/tokens";
-        Console.WriteLine($"When creating the new token, set the expiration to {_expirationInDays}d in the future ({Clock.UtcNow.AddDays(_expirationInDays).ToString("yyyy-MM-dd")}).");
+        Console.WriteLine($"When creating the new token, set the expiration to {expirationInDays}d in the future ({expiresOn:yyyy-MM-dd}).");
         await ShowGitHubLoginInformation(context, parameters.GitHubBotAccountSecret, helpUrl, parameters.GitHubBotAccountName);
 
-        var pat = await Console.PromptAndValidateAsync("PAT",
+        string pat = await Console.PromptAndValidateAsync("PAT",
             "PAT must have at least 40 characters.",
             value => value != null && value.Length >= 40);
 
-        return new SecretData(pat, DateTimeOffset.MaxValue, Clock.UtcNow.AddDays(_nextRotationOnDeltaDays));
+        Console.WriteLine($"Next rotation was set to {nextRotationOn:yyyy-MM-dd}.");
+
+        return new SecretData(pat, expiresOn, nextRotationOn);
+    }
+
+    // Rotate once roughly two thirds of the way through the token's lifetime,
+    // i.e. when about one third of the entered duration remains before expiration.
+    protected static DateTimeOffset ComputeNextRotationOn(DateTimeOffset now, int expirationInDays)
+    {
+        return now.AddDays(expirationInDays * 2 / 3);
+    }
+
+    protected static bool TryParseExpirationInDays(string value, out int parsedValue)
+    {
+        return int.TryParse(value, out parsedValue)
+            && parsedValue >= _minExpirationInDays
+            && parsedValue <= _maxExpirationInDays;
     }
 }
