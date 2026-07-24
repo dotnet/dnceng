@@ -4,25 +4,15 @@
 
 using Azure;
 using System;
-using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
-using System.IO;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Azure.Data.Tables;
 using DotNet.Status.Web.Options;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.DotNet.Services.Utility;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using StatusWebAnnotationEntity = DotNet.Status.Web.Models.AnnotationEntity;
-using Microsoft.WindowsAzure.Storage.Table;
 using Azure.Identity;
 
 namespace DotNet.Status.Web.Controllers;
@@ -32,18 +22,15 @@ namespace DotNet.Status.Web.Controllers;
 public class DeploymentController : ControllerBase
 {
     private readonly IHostEnvironment _env;
-    private readonly ExponentialRetry _retry;
-    private readonly IOptionsMonitor<GrafanaOptions> _grafanaOptions;
+    private readonly IOptionsMonitor<DeploymentTableOptions> _deploymentTableOptions;
     private readonly ILogger<DeploymentController> _logger;
 
     public DeploymentController(
-        ExponentialRetry retry,
-        IOptionsMonitor<GrafanaOptions> grafanaOptions,
+        IOptionsMonitor<DeploymentTableOptions> deploymentTableOptions,
         ILogger<DeploymentController> logger,
         IHostEnvironment env)
     {
-        _retry = retry;
-        _grafanaOptions = grafanaOptions;
+        _deploymentTableOptions = deploymentTableOptions;
         _logger = logger;
         _env = env;
     }
@@ -52,47 +39,24 @@ public class DeploymentController : ControllerBase
     public async Task<IActionResult> MarkStart([Required] string service, [Required] string id)
     {
         _logger.LogInformation("Recording start of deployment of '{service}' with id '{id}'", service, id);
-        NewGrafanaAnnotationRequest content = new NewGrafanaAnnotationRequest
-        {
-            Text = $"Deployment of {service}",
-            Tags = new[] {"deploy", $"deploy-{service}", service},
-            Time = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-        };
-            
-        NewGrafanaAnnotationResponse annotation;
-        using (var client = new HttpClient(new HttpClientHandler() { CheckCertificateRevocationList = true }))
-        {
-            annotation = await _retry.RetryAsync(async () =>
-                {
-                    GrafanaOptions grafanaOptions = _grafanaOptions.CurrentValue;
-                    _logger.LogInformation("Creating annotation to {url}", grafanaOptions.BaseUrl);
-                    using (var request = new HttpRequestMessage(HttpMethod.Post,
-                               $"{grafanaOptions.BaseUrl}/api/annotations"))
-                    {
-                        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                        request.Headers.Authorization =
-                            new AuthenticationHeaderValue("Bearer", grafanaOptions.ApiToken);
-                        request.Content = CreateObjectContent(content);
 
-                        using (HttpResponseMessage response = await client.SendAsync(request, CancellationToken.None))
-                        {
-                            _logger.LogTrace("Response from grafana {responseCode} {reason}", response.StatusCode, response.ReasonPhrase);
-                            response.EnsureSuccessStatusCode();
-                            return await ReadObjectContent<NewGrafanaAnnotationResponse>(response.Content);
-                        }
-                    }
-                },
-                e => _logger.LogWarning(e, "Failed to send new annotation"),
-                e => true
-            );
+        // Recording a deployment annotation is best-effort telemetry and must never fail the calling
+        // deployment pipeline. The annotation is written to Azure Table storage, which Grafana reads
+        // directly; any failure is logged and swallowed so the endpoint returns success instead of a 500.
+        try
+        {
+            TableClient table = await GetCloudTable();
+            await table.UpsertEntityAsync(new StatusWebAnnotationEntity(service, id)
+            {
+                Started = DateTimeOffset.UtcNow,
+                ETag = new Azure.ETag("*")
+            });
         }
-        _logger.LogInformation("Created annotation {annotationId}, inserting into table", annotation.Id);
-
-        TableClient table = await GetCloudTable();
-        await table.UpsertEntityAsync(new DotNet.Status.Web.Models.AnnotationEntity(service, id, annotation.Id)
+        catch (Exception ex)
         {
-            ETag = new Azure.ETag("*")
-        });
+            _logger.LogError(ex, "Failed to record start of deployment of '{service}' with id '{id}'", service, id);
+        }
+
         return NoContent();
     }
 
@@ -100,51 +64,33 @@ public class DeploymentController : ControllerBase
     public async Task<IActionResult> MarkEnd([Required] string service, [Required] string id)
     {
         _logger.LogInformation("Recording end of deployment of '{service}' with id '{id}'", service, id);
-        TableClient table = await GetCloudTable();
-        _logger.LogInformation("Looking for existing deployment");
-        var getResult = await table.GetEntityIfExistsAsync<StatusWebAnnotationEntity>(service, id);
-        _logger.LogTrace("Table response code {responseCode}", getResult.GetRawResponse().Status);
-        if (!getResult.HasValue)
+
+        // As with MarkStart, recording the end of a deployment is best-effort telemetry written to
+        // Azure Table storage and must never fail the calling deployment pipeline. Any failure is
+        // logged and swallowed.
+        try
         {
-            return NotFound();
+            TableClient table = await GetCloudTable();
+            _logger.LogInformation("Looking for existing deployment");
+            var getResult = await table.GetEntityIfExistsAsync<StatusWebAnnotationEntity>(service, id);
+            _logger.LogTrace("Table response code {responseCode}", getResult.GetRawResponse().Status);
+            if (!getResult.HasValue)
+            {
+                _logger.LogWarning("No deployment start record found for '{service}' with id '{id}'; nothing to mark as ended", service, id);
+                return NoContent();
+            }
+
+            var annotation = getResult.Value;
+
+            _logger.LogTrace("Updating end time of deployment...");
+            annotation.Ended = DateTimeOffset.UtcNow;
+
+            var updateResult = await table.UpdateEntityAsync(annotation, annotation.ETag, TableUpdateMode.Replace);
+            _logger.LogInformation("Update response code {responseCode}", updateResult.Status);
         }
-
-        var annotation = getResult.Value;
-
-        _logger.LogTrace("Updating end time of deployment...");
-        annotation.Ended = DateTimeOffset.UtcNow;
-       
-        var updateResult = await table.UpdateEntityAsync(annotation, annotation.ETag, TableUpdateMode.Replace);
-        _logger.LogInformation("Update response code {responseCode}", updateResult.Status);
-            
-        var content = new NewGrafanaAnnotationRequest
+        catch (Exception ex)
         {
-            TimeEnd = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-        };
-
-        using (var client = new HttpClient(new HttpClientHandler() { CheckCertificateRevocationList = true }))
-        {
-            await _retry.RetryAsync(async () =>
-                {
-                    GrafanaOptions grafanaOptions = _grafanaOptions.CurrentValue;
-                    _logger.LogInformation("Updating annotation {annotationId} to {url}", annotation.GrafanaAnnotationId, grafanaOptions.BaseUrl);
-                    using (var request = new HttpRequestMessage(HttpMethod.Patch,
-                               $"{grafanaOptions.BaseUrl}/api/annotations/{annotation.GrafanaAnnotationId}"))
-                    {
-                        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                        request.Headers.Authorization =
-                            new AuthenticationHeaderValue("Bearer", grafanaOptions.ApiToken);
-                        request.Content = CreateObjectContent(content);
-                        using (HttpResponseMessage response = await client.SendAsync(request, CancellationToken.None))
-                        {
-                            _logger.LogTrace("Response from grafana {responseCode} {reason}", response.StatusCode, response.ReasonPhrase);
-                            response.EnsureSuccessStatusCode();
-                        }
-                    }
-                },
-                e => _logger.LogWarning(e, "Failed to send new annotation"),
-                e => true
-            );
+            _logger.LogError(ex, "Failed to record end of deployment of '{service}' with id '{id}'", service, id);
         }
 
         return NoContent();
@@ -153,7 +99,7 @@ public class DeploymentController : ControllerBase
     private async Task<TableClient> GetCloudTable()
     {
         TableClient table;
-        GrafanaOptions options = _grafanaOptions.CurrentValue;
+        DeploymentTableOptions options = _deploymentTableOptions.CurrentValue;
         if (_env.IsDevelopment())
         {
             table = new TableClient("UseDevelopmentStorage=true", options.TableName);
@@ -165,48 +111,4 @@ public class DeploymentController : ControllerBase
         }
         return table;
     }
-
-    private static StringContent CreateObjectContent(object content)
-    {
-        StringWriter writer = new StringWriter();
-        s_grafanaSerializer.Serialize(writer, content);
-        return new StringContent(writer.ToString(), Encoding.UTF8, "application/json");
-    }
-
-    private static async Task<T> ReadObjectContent<T>(HttpContent content)
-    {
-        using (var streamReader = new StreamReader(await content.ReadAsStreamAsync()))
-        using (var jsonReader = new JsonTextReader(streamReader))
-        {
-            return s_grafanaSerializer.Deserialize<T>(jsonReader);
-        }
-    }
-
-    private static readonly JsonSerializer s_grafanaSerializer = new JsonSerializer
-    {
-        ContractResolver = new CamelCasePropertyNamesContractResolver(),
-        Formatting = Formatting.None,
-    };
-}
-
-public class DeploymentStartRequest
-{
-    [Required]
-    public string Service { get; set; }
-}
-
-public class NewGrafanaAnnotationRequest
-{
-    public int? DashboardId { get; set; }
-    public int? PanelId { get; set; }
-    public long? Time { get; set; }
-    public long? TimeEnd { get; set; }
-    public string[] Tags { get; set; }
-    public string Text { get; set; }
-}
-
-public class NewGrafanaAnnotationResponse
-{
-    public string Message { get; set; }
-    public int Id { get; set; }
 }

@@ -49,7 +49,7 @@
     "StorageAccountConnectionString": "",
     "KeyIdentifier": ""
   },
-  "Grafana": {
+  "Deployments": {
     "TableUri": ""
   },
   "Kusto": {

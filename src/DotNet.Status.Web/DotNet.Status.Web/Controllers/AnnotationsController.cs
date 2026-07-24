@@ -28,12 +28,12 @@ public class AnnotationsController : ControllerBase
 {
     private const int _maximumServerCount = 10; // Safety limit on query complexity
     private readonly ILogger<AnnotationsController> _logger;
-    private readonly IOptionsMonitor<GrafanaOptions> _options;
+    private readonly IOptionsMonitor<DeploymentTableOptions> _options;
     private readonly IHostEnvironment _env;
 
     public AnnotationsController(
         ILogger<AnnotationsController> logger,
-        IOptionsMonitor<GrafanaOptions> options,
+        IOptionsMonitor<DeploymentTableOptions> options,
         IHostEnvironment env)
     {
         _logger = logger;
