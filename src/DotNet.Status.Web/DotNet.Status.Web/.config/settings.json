@@ -40,12 +40,6 @@
       "Builds": [
         {
           "Project": "internal",
-          "DefinitionPath": "\\dotnet\\arcade-validation\\dotnet-arcade-validation-official",
-          "Branches": [ "main" ],
-          "IssuesId": "dotnet-dnceng-build-failed"
-        },
-        {
-          "Project": "internal",
           "DefinitionPath": "\\dotnet\\arcade-services\\arcade-services-internal-ci",
           "Branches": [ "main" ],
           "IssuesId": "dotnet-arcade-services"
@@ -212,12 +206,6 @@
       ]
     },
     "Issues": [
-      {
-        "Id": "dotnet-dnceng-build-failed",
-        "Owner": "dotnet",
-        "Name": "dnceng",
-        "Labels": [ "Build Failed" ]
-      },
       {
         "Id": "dotnet-dnceng-ops",
         "Owner": "dotnet",
