@@ -16,6 +16,7 @@ public class GitHubAccessToken : GitHubAccountInteractiveSecretType<GitHubAccess
         public string Name { get; set; }
         public SecretReference GitHubBotAccountSecret { get; set; }
         public string GitHubBotAccountName { get; set; }
+        public string Description { get; set; }
     }
 
     public GitHubAccessToken(ISystemClock clock, IConsole console) : base(clock, console)
@@ -31,6 +32,10 @@ public class GitHubAccessToken : GitHubAccountInteractiveSecretType<GitHubAccess
 
         const string helpUrl = "https://github.com/settings/tokens";
         Console.WriteLine($"When creating the new token, set the expiration to {_expirationInDays}d in the future ({Clock.UtcNow.AddDays(_expirationInDays).ToString("yyyy-MM-dd")}).");
+        if (!string.IsNullOrEmpty(parameters.Description))
+        {
+            Console.WriteLine($"Description: {parameters.Description}");
+        }
         await ShowGitHubLoginInformation(context, parameters.GitHubBotAccountSecret, helpUrl, parameters.GitHubBotAccountName);
 
         var pat = await Console.PromptAndValidateAsync("PAT",
