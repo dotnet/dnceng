@@ -10,6 +10,8 @@ public class GitHubAccessToken : GitHubAccountInteractiveSecretType<GitHubAccess
 {
     private const int _nextRotationOnDeltaDays = 30;
     private const int _expirationInDays = 90;
+    private const string _classicTokenPrefix = "ghp_";
+    private const string _fineGrainedTokenPrefix = "github_pat_";
 
     public class Parameters
     {
@@ -38,10 +40,23 @@ public class GitHubAccessToken : GitHubAccountInteractiveSecretType<GitHubAccess
         }
         await ShowGitHubLoginInformation(context, parameters.GitHubBotAccountSecret, helpUrl, parameters.GitHubBotAccountName);
 
-        var pat = await Console.PromptAndValidateAsync("PAT",
-            "PAT must have at least 40 characters.",
-            value => value != null && value.Length >= 40);
+        string pat = await Console.PromptAndValidateAsync("PAT",
+            $"PAT must have at least 40 characters and start with either '{_classicTokenPrefix}' or '{_fineGrainedTokenPrefix}'.",
+            ValidatePat);
 
         return new SecretData(pat, DateTimeOffset.MaxValue, Clock.UtcNow.AddDays(_nextRotationOnDeltaDays));
+    }
+
+    private static bool ValidatePat(string value)
+    {
+        if (string.IsNullOrEmpty(value) || value.Length < 40)
+        {
+            return false;
+        }
+
+        // ghp_ prefix indicates a classic personal access token.
+        // github_pat_ prefix indicates a fine-grained personal access token.
+        return value.StartsWith(_classicTokenPrefix, StringComparison.Ordinal)
+            || value.StartsWith(_fineGrainedTokenPrefix, StringComparison.Ordinal);
     }
 }
