@@ -14,9 +14,9 @@
   "isDefault": false,
   "jsonData": {
     "azureAuthType": "msi",
-    "clientId": "a2541735-8225-40af-9c8a-2ae233203739",
+    "clientId": "ad02852f-49fa-4818-895f-8ac5a851274c",
     "cloudName": "azuremonitor",
-    "logAnalyticsClientId": "a2541735-8225-40af-9c8a-2ae233203739",
+    "logAnalyticsClientId": "ad02852f-49fa-4818-895f-8ac5a851274c",
     "logAnalyticsTenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47",
     "subscriptionId": "cab65fc3-d077-467d-931f-3932eabf36d3",
     "tenantId": "72f988bf-86f1-41af-91ab-2d7cd011db47"

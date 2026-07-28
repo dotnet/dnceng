@@ -23,8 +23,7 @@
   "AzureTableTokenStore": {
     "TableUri": "https://dotnetengstatusprod.table.core.windows.net"
   },
-  "Grafana": {
-    "BaseUrl": "https://dotnet-eng-grafana.westus2.cloudapp.azure.com",
+  "Deployments": {
     "TableUri": "https://dotnetengstatusprod.table.core.windows.net"
   },
   "Kusto": {

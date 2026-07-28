@@ -284,6 +284,7 @@
           "visible": true
         }
       ],
+      "description": "Time series graph of Build Pool work item waiting times. Two series are plotted in minutes per day: Percentile95 (95th percentile) and Percentile50 (median). A red threshold line marks 30 minutes, above which waiting times are considered too high. An accessible, screen-reader navigable data table with the same values is provided in the \"Work Items Waiting Time (Build Pools) - Accessible Data Table\" panel below (MAS 1.3.1 - Info and Relationships).",
       "title": "Work Items Waiting Time (Build Pools)",
       "type": "timeseries"
     },
@@ -490,6 +491,7 @@
           "visible": true
         }
       ],
+      "description": "Time series graph of Test Queue work item waiting times. Two series are plotted in minutes per day: Percentile95 (95th percentile) and Percentile50 (median). A red threshold line marks 35 minutes, above which waiting times are considered too high. An accessible, screen-reader navigable data table with the same values is provided in the \"Work Items Waiting Time (Test Queues) - Accessible Data Table\" panel below (MAS 1.3.1 - Info and Relationships).",
       "title": "Work Items Waiting Time (Test Queues)",
       "type": "timeseries"
     },
@@ -628,6 +630,172 @@
       ],
       "title": "Number of Crashes in Helix",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-data-explorer-datasource",
+        "uid": "OlcfOPi7z"
+      },
+      "description": "Accessible data table equivalent of the \"Work Items Waiting Time (Build Pools)\" time series graph. Presents the same data as a screen-reader navigable table (MAS 1.3.1 - Info and Relationships): the 95th percentile (Percentile95) and median 50th percentile (Percentile50) of Build Pool work item waiting times, in minutes, per day. Values above the 30 minute threshold are considered too high.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
+          },
+          "decimals": 1,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#767676",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 30
+              }
+            ]
+          },
+          "unit": "m"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 7,
+        "x": 0,
+        "y": 26
+      },
+      "id": 12,
+      "options": {
+        "footer": {
+          "enablePagination": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "database": "engineeringdata",
+          "datasource": {
+            "type": "grafana-azure-data-explorer-datasource",
+            "uid": "OlcfOPi7z"
+          },
+          "query": "WorkItems \n| where  $__timeFilter(Queued)\n| project QueueName = tolower(QueueName), duration = datetime_diff('second', Started, Queued), Queued\n| where QueueName !contains \"osx\" and QueueName !contains \"perf\" and QueueName !contains \"arm\" and QueueName !contains \"arcade\" and QueueName !contains \"xaml\" and QueueName !contains \"appcompat\"\n| where QueueName contains \"buildpool\"\n| summarize Percentile95 = percentile(duration, 95) / 60 by bin(Queued, 1d)\n| order by Queued asc ",
+          "querySource": "raw",
+          "rawMode": true,
+          "refId": "A",
+          "resultFormat": "table"
+        },
+        {
+          "database": "engineeringdata",
+          "datasource": {
+            "type": "grafana-azure-data-explorer-datasource",
+            "uid": "OlcfOPi7z"
+          },
+          "hide": false,
+          "query": "WorkItems \n| where  $__timeFilter(Queued)\n| project QueueName = tolower(QueueName), duration = datetime_diff('second', Started, Queued), Queued\n| where QueueName !contains \"osx\" and QueueName !contains \"perf\" and QueueName !contains \"arm\" and QueueName !contains \"arcade\" and QueueName !contains \"xaml\" and QueueName !contains \"appcompat\"\n| where QueueName contains \"buildpool\"\n| summarize Percentile50 = percentile(duration, 50) / 60 by bin(Queued, 1d)\n| order by Queued asc ",
+          "querySource": "raw",
+          "rawMode": true,
+          "refId": "B",
+          "resultFormat": "table"
+        }
+      ],
+      "title": "Work Items Waiting Time (Build Pools) - Accessible Data Table",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-azure-data-explorer-datasource",
+        "uid": "OlcfOPi7z"
+      },
+      "description": "Accessible data table equivalent of the \"Work Items Waiting Time (Test Queues)\" time series graph. Presents the same data as a screen-reader navigable table (MAS 1.3.1 - Info and Relationships): the 95th percentile (Percentile95) and median 50th percentile (Percentile50) of Test Queue work item waiting times, in minutes, per day. Values above the 35 minute threshold are considered too high.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
+          },
+          "decimals": 1,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#767676",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 35
+              }
+            ]
+          },
+          "unit": "m"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 7,
+        "x": 7,
+        "y": 26
+      },
+      "id": 13,
+      "options": {
+        "footer": {
+          "enablePagination": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "database": "engineeringdata",
+          "datasource": {
+            "type": "grafana-azure-data-explorer-datasource",
+            "uid": "OlcfOPi7z"
+          },
+          "query": "WorkItems \n| where  $__timeFilter(Queued)\n| project QueueName = tolower(QueueName), duration = datetime_diff('second', Started, Queued), Queued\n| where QueueName !contains \"osx\" and QueueName !contains \"perf\" and QueueName !contains \"arm\" and QueueName !contains \"arcade\" and QueueName !contains \"xaml\" and QueueName !contains \"appcompat\" and QueueName !contains \".tof\"\n| where QueueName !contains \"buildpool\"\n| summarize Percentile95 = percentile(duration, 95) / 60 by bin(Queued, 1d)\n| order by Queued asc ",
+          "querySource": "raw",
+          "rawMode": true,
+          "refId": "A",
+          "resultFormat": "table"
+        },
+        {
+          "database": "engineeringdata",
+          "datasource": {
+            "type": "grafana-azure-data-explorer-datasource",
+            "uid": "OlcfOPi7z"
+          },
+          "hide": false,
+          "query": "WorkItems \n| where  $__timeFilter(Queued)\n| project QueueName = tolower(QueueName), duration = datetime_diff('second', Started, Queued), Queued\n| where QueueName !contains \"osx\" and QueueName !contains \"perf\" and QueueName !contains \"arm\" and QueueName !contains \"arcade\" and QueueName !contains \"xaml\" and QueueName !contains \"appcompat\"\n| where QueueName !contains \"buildpool\"\n| summarize Percentile50 = percentile(duration, 50) / 60 by bin(Queued, 1d)\n| order by Queued asc ",
+          "querySource": "raw",
+          "rawMode": true,
+          "refId": "B",
+          "resultFormat": "table"
+        }
+      ],
+      "title": "Work Items Waiting Time (Test Queues) - Accessible Data Table",
+      "type": "table"
     }
   ],
   "schemaVersion": 34,
