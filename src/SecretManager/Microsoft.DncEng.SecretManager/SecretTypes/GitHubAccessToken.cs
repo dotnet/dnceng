@@ -8,6 +8,8 @@ namespace Microsoft.DncEng.SecretManager.SecretTypes;
 [Name("github-access-token")]
 public class GitHubAccessToken : GitHubAccountInteractiveSecretType<GitHubAccessToken.Parameters>
 {
+    private const string _classicTokenPrefix = "ghp_";
+    private const string _fineGrainedTokenPrefix = "github_pat_";
     // GitHub allows a higher maximum, but we deliberately restrict access token
     // lifetimes to between 7 and 30 days.
     private const int _minExpirationInDays = 7;
@@ -18,6 +20,7 @@ public class GitHubAccessToken : GitHubAccountInteractiveSecretType<GitHubAccess
         public string Name { get; set; }
         public SecretReference GitHubBotAccountSecret { get; set; }
         public string GitHubBotAccountName { get; set; }
+        public string Description { get; set; }
     }
 
     public GitHubAccessToken(ISystemClock clock, IConsole console) : base(clock, console)
@@ -41,12 +44,16 @@ public class GitHubAccessToken : GitHubAccountInteractiveSecretType<GitHubAccess
         DateTimeOffset nextRotationOn = ComputeNextRotationOn(now, expirationInDays);
 
         const string helpUrl = "https://github.com/settings/tokens";
-        Console.WriteLine($"When creating the new token, set the expiration to {expirationInDays}d in the future ({expiresOn:yyyy-MM-dd}).");
+
+        if (!string.IsNullOrEmpty(parameters.Description))
+        {
+            Console.WriteLine($"Description: {parameters.Description}");
+        }
         await ShowGitHubLoginInformation(context, parameters.GitHubBotAccountSecret, helpUrl, parameters.GitHubBotAccountName);
 
         string pat = await Console.PromptAndValidateAsync("PAT",
-            "PAT must have at least 40 characters.",
-            value => value != null && value.Length >= 40);
+            $"PAT must have at least 40 characters and start with either '{_classicTokenPrefix}' or '{_fineGrainedTokenPrefix}'.",
+            ValidatePat);
 
         Console.WriteLine($"Next rotation was set to {nextRotationOn:yyyy-MM-dd}.");
 
@@ -65,5 +72,18 @@ public class GitHubAccessToken : GitHubAccountInteractiveSecretType<GitHubAccess
         return int.TryParse(value, out parsedValue)
             && parsedValue >= _minExpirationInDays
             && parsedValue <= _maxExpirationInDays;
+    }
+
+    private static bool ValidatePat(string value)
+    {
+        if (string.IsNullOrEmpty(value) || value.Length < 40)
+        {
+            return false;
+        }
+
+        // ghp_ prefix indicates a classic personal access token.
+        // github_pat_ prefix indicates a fine-grained personal access token.
+        return value.StartsWith(_classicTokenPrefix, StringComparison.Ordinal)
+            || value.StartsWith(_fineGrainedTokenPrefix, StringComparison.Ordinal);
     }
 }

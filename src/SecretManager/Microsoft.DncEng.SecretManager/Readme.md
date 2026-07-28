@@ -321,6 +321,7 @@ type: github-access-token
 parameters:
   gitHubBotAccountSecret: secret reference to the GitHub account this token is for
   gitHubBotAccountName: username of the GitHub account
+  description: optional description to display to the user during rotation
 ```
 
 ### GitHub Application Secret
