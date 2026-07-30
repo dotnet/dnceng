@@ -31,7 +31,7 @@ Part of the reason downtime relied on manual input was that the definition itsel
 The [Rollout Scorecard's readme](./README.md) notes that downtime includes both "availability and reliability."
 
 The telemetry epic folks are expecting roll out alerting for our availability metrics for Helix and Maestro
-(which should cover arcade-services measurements); these metrics are already measured [here](https://dotnet-eng-grafana.westus2.cloudapp.azure.com/d/quNLOchZz/service-availability?orgId=2&refresh=30s).
+(which should cover arcade-services measurements); these metrics are already measured [here](https://dnceng-grafana-eraubnb4dkatgnfn.wus2.grafana.azure.com/d/quNLOchZz/service-availability?orgId=2&refresh=30s).
 The next step should be to add alerting on metrics for reliability. Adding this alerting is outside the scope of this project, but some proposals for how it could be done are included below.
 
 <details>
