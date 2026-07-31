@@ -1,0 +1,113 @@
+{
+  "uid": "timeline-builds-ingestion-stalled",
+  "title": "TimelineBuilds Data Ingestion Stalled",
+  "condition": "C",
+  "data": [
+    {
+      "refId": "A",
+      "queryType": "",
+      "datasourceUid": "OlcfOPi7z",
+      "relativeTimeRange": {
+        "from": 21600,
+        "to": 0
+      },
+      "model": {
+        "database": "engineeringdata",
+        "datasource": {
+          "type": "grafana-azure-data-explorer-datasource",
+          "uid": "OlcfOPi7z"
+        },
+        "expression": {
+          "groupBy": {
+            "expressions": [],
+            "type": "and"
+          },
+          "reduce": {
+            "expressions": [],
+            "type": "and"
+          },
+          "where": {
+            "expressions": [],
+            "type": "and"
+          }
+        },
+        "query": "TimelineBuilds\n| where ingestion_time() > ago(6h)\n| summarize LastIngest = max(ingestion_time())\n| extend AgeMinutes = todouble(datetime_diff('minute', now(), LastIngest))\n| project AgeMinutes",
+        "querySource": "raw",
+        "rawMode": true,
+        "refId": "A",
+        "resultFormat": "table"
+      }
+    },
+    {
+      "refId": "B",
+      "queryType": "",
+      "datasourceUid": "-100",
+      "relativeTimeRange": {
+        "from": 21600,
+        "to": 0
+      },
+      "model": {
+        "datasource": {
+          "type": "__expr__",
+          "uid": "-100"
+        },
+        "expression": "A",
+        "reducer": "last",
+        "refId": "B",
+        "type": "reduce"
+      }
+    },
+    {
+      "refId": "C",
+      "queryType": "",
+      "datasourceUid": "-100",
+      "model": {
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                120
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "B"
+              ]
+            },
+            "type": "query"
+          }
+        ],
+        "datasource": {
+          "type": "__expr__",
+          "uid": "-100"
+        },
+        "expression": "B",
+        "refId": "C",
+        "type": "threshold"
+      }
+    }
+  ],
+  "noDataState": "Alerting",
+  "execErrState": "KeepLast",
+  "for": "10m",
+  "frequency": "5m",
+  "annotations": {
+    "description": "TimelineBuilds (AzureDevOpsTimeline) data ingestion has stalled: no new rows have been ingested into the engineeringdata TimelineBuilds table in over 2 hours. Normal cadence is roughly one batch per hour (observed max gap ~70 min). This usually means the Microsoft.DotNet.AzureDevOpsTimeline background service in the Helix cluster is failing to write data (e.g. auth/config/managed-identity or PAT issue). On 2026-04-01 this same pipeline stalled and went unnoticed for weeks due to the absence of this alert. See AzDO WI 10698."
+  },
+  "labels": {
+    "NotificationId": "timeline-builds-ingestion-stalled"
+  },
+  "folderUID": "dnceng",
+  "ruleGroup": "Data Ingestion Alerts",
+  "intervalMs": 300000,
+  "isPaused": false,
+  "notification_settings": {
+    "receiver": "Teams Alert",
+    "group_wait": "5m",
+    "repeat_interval": "4h"
+  }
+}
