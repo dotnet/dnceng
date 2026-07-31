@@ -13,16 +13,10 @@
   </PropertyGroup>
 
   <UsingTask TaskName="MonitoringPublish" AssemblyFile="$(MicrosoftDotNetMonitoringSdkTasksAssembly)"/>
-  <UsingTask TaskName="MonitoringImport" AssemblyFile="$(MicrosoftDotNetMonitoringSdkTasksAssembly)"/>
 
   <PropertyGroup>
     <DashboardDirectory>dashboard</DashboardDirectory>
     <DataSourceDirectory>datasource</DataSourceDirectory>
     <NotificationDirectory>notifications</NotificationDirectory>
   </PropertyGroup>
-
-  <ItemGroup>
-    <GrafanaEnvironments Include="Staging"/>
-    <GrafanaEnvironments Include="Production"/>
-  </ItemGroup>
 </Project>
