@@ -17,7 +17,7 @@ public sealed class GrafanaClient : IDisposable
 {
     private readonly HttpClient _client;
 
-    // e.g. https://dotnet-eng-grafana.westus2.cloudapp.azure.com/
+    // Azure Managed Grafana workspace endpoint.
     private readonly string _baseUrl;
 
     public GrafanaClient(string baseUrl, string apiToken)

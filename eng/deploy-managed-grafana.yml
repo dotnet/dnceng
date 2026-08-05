@@ -178,7 +178,7 @@ stages:
           Write-Host "Publishing dashboards using MSBuild SDK..."
           Write-Host ""
           
-          # Publish using the same MSBuild SDK as self-hosted Grafana
+          # Publish dashboards to Azure Managed Grafana using the Monitoring SDK.
           dotnet build $(Build.SourcesDirectory)\src\Monitoring\Monitoring.DncEng\Monitoring.DncEng.proj `
             --configuration Release `
             -t:PublishGrafana `
@@ -205,4 +205,3 @@ stages:
           Write-Host "View your dashboards at:"
           Write-Host "$(GrafanaEndpoint)/dashboards"
           Write-Host ""
-

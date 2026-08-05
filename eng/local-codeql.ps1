@@ -30,14 +30,6 @@ Initialize-Gdn `
      -BuildCommand "..\build.cmd -restore -configuration Release" `
      -Force
 
-New-GdnSemmleConfig -GuardianCliLocation $GdnCliPath `
-    -LoggerLevel $loggerLevel `
-    -Language 'python' `
-    -WorkingDirectory $pwd `
-    -SourceCodeDirectory $pwd\src\Monitoring\grafana-init `
-    -OutputPath $pwd\.gdn\r\semmle-python-configure.gdnconfig `
-    -Suite $sdlSuite
-
 .\eng\set-version-parameters.ps1
 
 [xml]$manifest = Get-Content src\Maestro\MaestroApplication\ApplicationPackageRoot\ApplicationManifest.xml
@@ -54,7 +46,3 @@ $manifest.Save("src\Telemetry\TelemetryApplication\ApplicationPackageRoot\Applic
  Invoke-GdnSemmle -GuardianCliLocation $GdnCliPath `
      -WorkingDirectory $pwd `
      -ConfigurationPath $(Join-Path $pwd ".gdn\r\semmle-csharp-configure.gdnconfig")
-
-Invoke-GdnSemmle -GuardianCliLocation $GdnCliPath `
-    -WorkingDirectory $pwd `
-    -ConfigurationPath $(Join-Path $pwd ".gdn\r\semmle-python-configure.gdnconfig")
