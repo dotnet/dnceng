@@ -251,6 +251,8 @@ public class AzurePipelinesControllerAzDoTests
                         Project = "internal",
                         DefinitionPath = "\\test\\test-pipeline",
                         Branches = new[] { "main" },
+                        Assignee = "test-user",
+                        Notify = "@dotnet/prodconsvcs",
                         IssuesId = "github-target"
                     }
                 }
@@ -277,7 +279,9 @@ public class AzurePipelinesControllerAzDoTests
         var mockComments = new Mock<Octokit.IIssueCommentsClient>();
         mockGithubClient.SetupGet(m => m.Issue).Returns(mockIssues.Object);
         mockIssues.SetupGet(m => m.Comment).Returns(mockComments.Object);
+        Octokit.NewIssue createdIssue = null;
         mockIssues.Setup(m => m.Create(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Octokit.NewIssue>()))
+            .Callback<string, string, Octokit.NewIssue>((_, _, issue) => createdIssue = issue)
             .Returns(Task.FromResult(new Octokit.Issue()));
 
         var mockFactory = new Mock<IGitHubApplicationClientFactory>();
@@ -304,6 +308,8 @@ public class AzurePipelinesControllerAzDoTests
 
         // Should create GitHub issue
         mockIssues.Verify(m => m.Create("dotnet", "dnceng", It.IsAny<Octokit.NewIssue>()), Times.Once);
+        Assert.That(createdIssue.Assignees, Does.Contain("test-user"));
+        Assert.That(createdIssue.Body, Does.Contain("cc @dotnet/prodconsvcs"));
     }
 
     [Test]

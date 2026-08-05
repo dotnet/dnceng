@@ -383,6 +383,12 @@ public class AzurePipelinesController : ControllerBase
 
 {changesMessage}
 ";
+
+        if (!string.IsNullOrWhiteSpace(monitor.Notify))
+        {
+            body += $"\ncc {monitor.Notify.Trim()}\n";
+        }
+
         string issueTitlePrefix = $"Build failed: {build.Definition.Name}/{branchName} {prettyTags}";
 
         if (repo.UpdateExisting)

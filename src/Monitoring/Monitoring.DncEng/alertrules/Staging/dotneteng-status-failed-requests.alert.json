@@ -10,7 +10,7 @@
       "model": {
         "azureLogAnalytics": {
           "dashboardTime": true,
-          "query": "let r = requests | where $__timeFilter(timestamp);\nlet f = coalesce(toscalar(r | summarize min(timestamp)), ago(1d));\nlet t = coalesce(toscalar(r | summarize max(timestamp)), now());\nlet span=(t - f)/60;\nlet interval=case(span >= 1d, bin(span, 1d), span >= 1h, bin(span, 1h), 15m);\nlet intervalHours = interval / 1h;\nr\n| where success == false\n| make-series kind=nonempty valueCount=count() default=0 on timestamp in range(f, t, interval)\n| mv-expand timestamp to typeof(datetime), valueCount to typeof(double)\n| project timestamp, failuresCount=valueCount/intervalHours",
+          "query": "let r = requests | where $__timeFilter(timestamp);\nlet f = coalesce(toscalar(r | summarize min(timestamp)), ago(1d));\nlet t = coalesce(toscalar(r | summarize max(timestamp)), now());\nlet span=(t - f)/60;\nlet interval=case(span >= 1d, bin(span, 1d), span >= 1h, bin(span, 1h), 15m);\nlet intervalHours = interval / 1h;\nr\n| where toint(resultCode) >= 500\n| make-series kind=nonempty valueCount=count() default=0 on timestamp in range(f, t, interval)\n| mv-expand timestamp to typeof(datetime), valueCount to typeof(double)\n| project timestamp, failuresCount=valueCount/intervalHours",
           "resources": [
             "/subscriptions/68672ab8-de0c-40f1-8d1b-ffb20bd62c0f/resourceGroups/monitoring/providers/microsoft.insights/components/DotNetEng-Status-Prod"
           ],
