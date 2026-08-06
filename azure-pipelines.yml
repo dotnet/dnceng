@@ -76,8 +76,6 @@ extends:
                   targetPath: $(Build.SourcesDirectory)\artifacts\bin\AzureDevOpsClient.PostDeploymentTests\$(_BuildConfig)\net8.0
                   artifactName: AzureDevOpsClient.PostDeploymentTests
             variables:
-            # Publish-Build-Assets provides: MaestroAccessToken, BotAccount-dotnet-maestro-bot-PAT
-            - group: Publish-Build-Assets
             - _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
             - _BuildConfig: Release
             - _PublishType: blob
