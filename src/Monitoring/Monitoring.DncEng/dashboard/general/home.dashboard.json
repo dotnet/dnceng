@@ -82,42 +82,6 @@
       "type": "dashlist"
     },
     {
-      "alert": {
-        "alertRuleTags": {},
-        "conditions": [
-          {
-            "evaluator": {
-              "params": [
-                30
-              ],
-              "type": "gt"
-            },
-            "operator": {
-              "type": "and"
-            },
-            "query": {
-              "params": [
-                "A",
-                "5m",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "min"
-            },
-            "type": "query"
-          }
-        ],
-        "executionErrorState": "alerting",
-        "for": "5m",
-        "frequency": "5m",
-        "handler": 1,
-        "message": "95 percentile of work item waiting times is over 30 minutes. BuildPool queues only.",
-        "name": "Work Items Waiting Time Is Too High (Build Pools) alert",
-        "noDataState": "ok",
-        "notifications": []
-      },
       "datasource": {
         "type": "grafana-azure-data-explorer-datasource",
         "uid": "OlcfOPi7z"
@@ -125,36 +89,14 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           },
           "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "line+area"
-            }
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
           },
+          "decimals": 1,
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -212,14 +154,15 @@
       },
       "id": 4,
       "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
+        "footer": {
+          "enablePagination": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
         },
-        "tooltip": {
-          "mode": "single"
-        }
+        "showHeader": true
       },
       "targets": [
         {
@@ -246,7 +189,7 @@
           "querySource": "raw",
           "rawMode": true,
           "refId": "A",
-          "resultFormat": "time_series"
+          "resultFormat": "table"
         },
         {
           "database": "engineeringdata",
@@ -273,7 +216,7 @@
           "querySource": "raw",
           "rawMode": true,
           "refId": "B",
-          "resultFormat": "time_series"
+          "resultFormat": "table"
         }
       ],
       "thresholds": [
@@ -284,47 +227,11 @@
           "visible": true
         }
       ],
-      "description": "Time series graph of Build Pool work item waiting times. Two series are plotted in minutes per day: Percentile95 (95th percentile) and Percentile50 (median). A red threshold line marks 30 minutes, above which waiting times are considered too high. An accessible, screen-reader navigable data table with the same values is provided in the \"Work Items Waiting Time (Build Pools) - Accessible Data Table\" panel below (MAS 1.3.1 - Info and Relationships).",
+      "description": "Screen-reader navigable table of Build Pool work item waiting times in minutes per day. It presents the 95th percentile (Percentile95) and median (Percentile50). Values above the 30 minute threshold are considered too high.",
       "title": "Work Items Waiting Time (Build Pools)",
-      "type": "timeseries"
+      "type": "table"
     },
     {
-      "alert": {
-        "alertRuleTags": {},
-        "conditions": [
-          {
-            "evaluator": {
-              "params": [
-                35
-              ],
-              "type": "gt"
-            },
-            "operator": {
-              "type": "and"
-            },
-            "query": {
-              "params": [
-                "A",
-                "5m",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "min"
-            },
-            "type": "query"
-          }
-        ],
-        "executionErrorState": "alerting",
-        "for": "5m",
-        "frequency": "5m",
-        "handler": 1,
-        "message": "95 percentile of work item waiting times is over 35 minutes. Test queues only.",
-        "name": "Work Items Waiting Time Is Too High (Test Queues)",
-        "noDataState": "ok",
-        "notifications": []
-      },
       "datasource": {
         "type": "grafana-azure-data-explorer-datasource",
         "uid": "OlcfOPi7z"
@@ -332,36 +239,14 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           },
           "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "line"
-            }
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
           },
+          "decimals": 1,
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -419,14 +304,15 @@
       },
       "id": 10,
       "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
+        "footer": {
+          "enablePagination": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
         },
-        "tooltip": {
-          "mode": "single"
-        }
+        "showHeader": true
       },
       "targets": [
         {
@@ -453,7 +339,7 @@
           "querySource": "raw",
           "rawMode": true,
           "refId": "A",
-          "resultFormat": "time_series"
+          "resultFormat": "table"
         },
         {
           "database": "engineeringdata",
@@ -480,7 +366,7 @@
           "querySource": "raw",
           "rawMode": true,
           "refId": "B",
-          "resultFormat": "time_series"
+          "resultFormat": "table"
         }
       ],
       "thresholds": [
@@ -491,9 +377,9 @@
           "visible": true
         }
       ],
-      "description": "Time series graph of Test Queue work item waiting times. Two series are plotted in minutes per day: Percentile95 (95th percentile) and Percentile50 (median). A red threshold line marks 35 minutes, above which waiting times are considered too high. An accessible, screen-reader navigable data table with the same values is provided in the \"Work Items Waiting Time (Test Queues) - Accessible Data Table\" panel below (MAS 1.3.1 - Info and Relationships).",
+      "description": "Screen-reader navigable table of Test Queue work item waiting times in minutes per day. It presents the 95th percentile (Percentile95) and median (Percentile50). Values above the 35 minute threshold are considered too high.",
       "title": "Work Items Waiting Time (Test Queues)",
-      "type": "timeseries"
+      "type": "table"
     },
     {
       "gridPos": {
