@@ -227,7 +227,7 @@
           "visible": true
         }
       ],
-      "description": "Screen-reader navigable table of Build Pool work item waiting times in minutes per day. It presents the 95th percentile (Percentile95) and median (Percentile50). Values above the 30 minute threshold are considered too high.",
+      "description": "Screen-reader navigable table of Build Pool work item waiting times in minutes per day. The Queued column preserves the date for each observation, alongside the 95th percentile (Percentile95) and median (Percentile50). Values above the 30 minute threshold are considered too high. A visual time-series trend of the same data is provided in the \"Work Items Waiting Time (Build Pools) - Visual Trend\" panel below.",
       "title": "Work Items Waiting Time (Build Pools)",
       "type": "table"
     },
@@ -377,7 +377,7 @@
           "visible": true
         }
       ],
-      "description": "Screen-reader navigable table of Test Queue work item waiting times in minutes per day. It presents the 95th percentile (Percentile95) and median (Percentile50). Values above the 35 minute threshold are considered too high.",
+      "description": "Screen-reader navigable table of Test Queue work item waiting times in minutes per day. The Queued column preserves the date for each observation, alongside the 95th percentile (Percentile95) and median (Percentile50). Values above the 35 minute threshold are considered too high. A visual time-series trend of the same data is provided in the \"Work Items Waiting Time (Test Queues) - Visual Trend\" panel below.",
       "title": "Work Items Waiting Time (Test Queues)",
       "type": "table"
     },
@@ -522,18 +522,40 @@
         "type": "grafana-azure-data-explorer-datasource",
         "uid": "OlcfOPi7z"
       },
-      "description": "Accessible data table equivalent of the \"Work Items Waiting Time (Build Pools)\" time series graph. Presents the same data as a screen-reader navigable table (MAS 1.3.1 - Info and Relationships): the 95th percentile (Percentile95) and median 50th percentile (Percentile50) of Build Pool work item waiting times, in minutes, per day. Values above the 30 minute threshold are considered too high.",
+      "description": "Visual time-series trend of Build Pool work item waiting times. Two series are plotted in minutes per day: Percentile95 (95th percentile) and Percentile50 (median). A red threshold marks 30 minutes. The screen-reader navigable table with the same dated values is provided in the \"Work Items Waiting Time (Build Pools)\" panel above.",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "palette-classic"
           },
           "custom": {
-            "align": "auto",
-            "displayMode": "auto",
-            "inspect": false
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "line+area"
+            }
           },
-          "decimals": 1,
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -550,7 +572,38 @@
           },
           "unit": "m"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Percentile95"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#0066CC",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Percentile50"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#D84315",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 9,
@@ -560,15 +613,14 @@
       },
       "id": 12,
       "options": {
-        "footer": {
-          "enablePagination": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
         },
-        "showHeader": true
+        "tooltip": {
+          "mode": "single"
+        }
       },
       "targets": [
         {
@@ -581,7 +633,7 @@
           "querySource": "raw",
           "rawMode": true,
           "refId": "A",
-          "resultFormat": "table"
+          "resultFormat": "time_series"
         },
         {
           "database": "engineeringdata",
@@ -594,29 +646,51 @@
           "querySource": "raw",
           "rawMode": true,
           "refId": "B",
-          "resultFormat": "table"
+          "resultFormat": "time_series"
         }
       ],
-      "title": "Work Items Waiting Time (Build Pools) - Accessible Data Table",
-      "type": "table"
+      "title": "Work Items Waiting Time (Build Pools) - Visual Trend",
+      "type": "timeseries"
     },
     {
       "datasource": {
         "type": "grafana-azure-data-explorer-datasource",
         "uid": "OlcfOPi7z"
       },
-      "description": "Accessible data table equivalent of the \"Work Items Waiting Time (Test Queues)\" time series graph. Presents the same data as a screen-reader navigable table (MAS 1.3.1 - Info and Relationships): the 95th percentile (Percentile95) and median 50th percentile (Percentile50) of Test Queue work item waiting times, in minutes, per day. Values above the 35 minute threshold are considered too high.",
+      "description": "Visual time-series trend of Test Queue work item waiting times. Two series are plotted in minutes per day: Percentile95 (95th percentile) and Percentile50 (median). A red threshold marks 35 minutes. The screen-reader navigable table with the same dated values is provided in the \"Work Items Waiting Time (Test Queues)\" panel above.",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "palette-classic"
           },
           "custom": {
-            "align": "auto",
-            "displayMode": "auto",
-            "inspect": false
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
           },
-          "decimals": 1,
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -633,7 +707,38 @@
           },
           "unit": "m"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Percentile95"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#0066CC",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Percentile50"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "#D84315",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 9,
@@ -643,15 +748,14 @@
       },
       "id": 13,
       "options": {
-        "footer": {
-          "enablePagination": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
         },
-        "showHeader": true
+        "tooltip": {
+          "mode": "single"
+        }
       },
       "targets": [
         {
@@ -664,7 +768,7 @@
           "querySource": "raw",
           "rawMode": true,
           "refId": "A",
-          "resultFormat": "table"
+          "resultFormat": "time_series"
         },
         {
           "database": "engineeringdata",
@@ -677,11 +781,11 @@
           "querySource": "raw",
           "rawMode": true,
           "refId": "B",
-          "resultFormat": "table"
+          "resultFormat": "time_series"
         }
       ],
-      "title": "Work Items Waiting Time (Test Queues) - Accessible Data Table",
-      "type": "table"
+      "title": "Work Items Waiting Time (Test Queues) - Visual Trend",
+      "type": "timeseries"
     }
   ],
   "schemaVersion": 34,
