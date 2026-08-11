@@ -21,6 +21,7 @@ public class BuildMonitorOptions
             public string DefinitionPath { get; set; }
             public string[] Branches { get; set; }
             public string Assignee { get; set; }
+            public string Notify { get; set; }
             public string[] Labels { get; set; }
             public string[] Tags { get; set; }
             public string IssuesId { get; set; }
