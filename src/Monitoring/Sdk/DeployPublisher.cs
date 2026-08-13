@@ -432,12 +432,15 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
 
         if (string.IsNullOrWhiteSpace(dashboardUid))
         {
-            Log.LogMessage(MessageImportance.Normal, "Home dashboard UID is empty, skipping home dashboard configuration");
-            return;
+            dashboardUid = string.Empty;
+            Log.LogMessage(MessageImportance.Normal, "Clearing the configured home dashboard");
+        }
+        else
+        {
+            Log.LogMessage(MessageImportance.Normal, "Setting home dashboard to: {0}", dashboardUid);
         }
 
-        Log.LogMessage(MessageImportance.Normal, "Setting home dashboard to: {0}", dashboardUid);
         await GrafanaClient.SetHomeDashboardAsync(dashboardUid).ConfigureAwait(false);
-        Log.LogMessage(MessageImportance.Normal, "Successfully set home dashboard");
+        Log.LogMessage(MessageImportance.Normal, "Successfully updated the home dashboard preference");
     }
 }
