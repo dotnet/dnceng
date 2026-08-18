@@ -131,15 +131,11 @@
     "for": "5m",
     "frequency": "5m",
     "annotations": {
-        "__dashboardUid__": "home",
-        "__panelId__": "4",
         "description": "95 percentile of work item waiting times is over 30 minutes. BuildPool queues only."
     },
     "labels": {
         "NotificationId": "work-items-waiting-time-build-pools"
     },
-    "__dashboardUid__": "home",
-    "__panelId__": "4",
     "folderUID": "dnceng",
     "ruleGroup": "Helix Queue Alerts",
     "intervalMs": 300000,
