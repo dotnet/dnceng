@@ -9,6 +9,8 @@ parameters:
   type: string
 - name: DotNetStatusAppName
   type: string
+- name: DotNetStatusKeyVault
+  type: string
 - name: DeploymentEnvironment
   type: string
 - name: DotNetStatusEndpoint
@@ -166,6 +168,9 @@ stages:
     AMGServiceConnectionName: ${{ parameters.AMGServiceConnectionName }}
     AMGServiceConnectionId: ${{ parameters.AMGServiceConnectionId }}
     AMGServiceConnectionClientId: ${{ parameters.AMGServiceConnectionClientId }}
+    StatusServiceConnectionId: ${{ parameters.ServiceConnectionId }}
+    StatusServiceConnectionClientId: ${{ parameters.ServiceConnectionClientId }}
+    StatusKeyVaultName: ${{ parameters.DotNetStatusKeyVault }}
     AMGDeploymentEnvironment: ${{ parameters.AMGDeploymentEnvironment }}
     AMGGrafanaWorkspaceName: ${{ parameters.AMGGrafanaWorkspaceName }}
     AMGGrafanaKeyVault: ${{ parameters.AMGGrafanaKeyVault }}

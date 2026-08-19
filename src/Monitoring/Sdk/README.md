@@ -34,3 +34,9 @@ dotnet build MyMonitoring.proj `
 
 The deployment pipeline also supplies its Azure service-connection identity so the SDK can
 resolve Key Vault references.
+
+Use `[vault(secret-name)]` to resolve a secret from `GrafanaKeyVaultName`. To resolve a
+secret from another vault, use `[vault(vault-name/secret-name)]` and configure that vault's
+Azure Pipelines credential with `ExternalKeyVaultName`, `ExternalKeyVaultClientId`, and
+`ExternalKeyVaultServiceConnectionId`. Named vaults without an explicitly configured
+credential are rejected.

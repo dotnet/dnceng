@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -36,6 +37,9 @@ public class MonitoringPublish : BuildTask
     public string ClientId { get; set; }
     public string ServiceConnectionId { get; set; }
     public string SystemAccessToken { get; set; }
+    public string ExternalKeyVaultName { get; set; }
+    public string ExternalKeyVaultClientId { get; set; }
+    public string ExternalKeyVaultServiceConnectionId { get; set; }
 
     //  For client secret authentication
     public string KeyVaultServicePrincipalId { get; set; }
@@ -60,6 +64,7 @@ public class MonitoringPublish : BuildTask
     {
         string msftTenantId = "72f988bf-86f1-41af-91ab-2d7cd011db47";
         TokenCredential tokenCredential;
+        Dictionary<string, TokenCredential> namedVaultCredentials = new();
 
         if (ClientId == null && ServiceConnectionId == null && SystemAccessToken == null && KeyVaultServicePrincipalId == null && KeyVaultServicePrincipalSecret == null)
         {
@@ -95,6 +100,30 @@ public class MonitoringPublish : BuildTask
             }
         }
 
+        bool hasExternalKeyVaultConfiguration =
+            !string.IsNullOrEmpty(ExternalKeyVaultName) ||
+            !string.IsNullOrEmpty(ExternalKeyVaultClientId) ||
+            !string.IsNullOrEmpty(ExternalKeyVaultServiceConnectionId);
+        if (hasExternalKeyVaultConfiguration)
+        {
+            if (string.IsNullOrEmpty(ExternalKeyVaultName) ||
+                string.IsNullOrEmpty(ExternalKeyVaultClientId) ||
+                string.IsNullOrEmpty(ExternalKeyVaultServiceConnectionId) ||
+                string.IsNullOrEmpty(SystemAccessToken))
+            {
+                Log.LogError(
+                    "Invalid external Key Vault login combination. Set ExternalKeyVaultName, " +
+                    "ExternalKeyVaultClientId, ExternalKeyVaultServiceConnectionId and SystemAccessToken.");
+                return false;
+            }
+
+            namedVaultCredentials[ExternalKeyVaultName] = new AzurePipelinesCredential(
+                msftTenantId,
+                ExternalKeyVaultClientId,
+                ExternalKeyVaultServiceConnectionId,
+                SystemAccessToken);
+        }
+
         using (var client = new GrafanaClient(Host, AccessToken))
         using (var deploy = new DeployPublisher(
                    grafanaClient: client,
@@ -106,7 +135,8 @@ public class MonitoringPublish : BuildTask
                    notificationDirectory: NotificationDirectory,
                    environment: Environment,
                    parametersFile: ParametersFile,
-                   log: Log))
+                   log: Log,
+                   namedVaultCredentials: namedVaultCredentials))
         {
             try
             {

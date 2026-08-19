@@ -16,5 +16,8 @@
     <PackageReference Include="System.Net.Http" />
     <PackageReference Include="System.Text.Json" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.DotNet.Monitoring.Sdk.Tests" />
+  </ItemGroup>
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 </Project>

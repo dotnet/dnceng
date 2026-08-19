@@ -6,6 +6,6 @@
     "url": "https://dotneteng-status.azurewebsites.net/api/alert",
     "httpMethod": "POST",
     "username": "ignored",
-    "password": "[vault(dotnet-build-bot-dotnet-eng-status-token)]"
+    "password": "[vault(dotneteng-status-prod/grafana-webhook-secret)]"
   }
 }

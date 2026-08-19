@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -21,14 +22,17 @@ namespace Microsoft.DotNet.Monitoring.Sdk;
 
 public sealed class DeployPublisher : DeployToolBase, IDisposable
 {
+    private static readonly Regex VaultReferencePattern = new(
+        @"\A\[(?i:vault)\((?:(?<vault>[A-Za-z0-9-]+)/)?(?<secret>[A-Za-z0-9-]+)\)\]\z",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
     private readonly string _keyVaultName;
     private readonly TokenCredential _tokenCredential;
-
-    private readonly Lazy<SecretClient> _keyVault;
+    private readonly IReadOnlyDictionary<string, TokenCredential> _namedVaultCredentials;
+    private readonly ConcurrentDictionary<string, SecretClient> _keyVaultClients =
+        new(StringComparer.OrdinalIgnoreCase);
     private readonly string _environment;
     private readonly string _parameterFile;
-
-    private SecretClient KeyVault => _keyVault.Value;
 
     public DeployPublisher(
         GrafanaClient grafanaClient,
@@ -40,13 +44,15 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
         string notificationDirectory,
         string environment,
         string parametersFile,
-        TaskLoggingHelper log) : base(
+        TaskLoggingHelper log,
+        IReadOnlyDictionary<string, TokenCredential> namedVaultCredentials = null) : base(
         grafanaClient, sourceTagValue, dashboardDirectory, datasourceDirectory, notificationDirectory, log)
     {
         _keyVaultName = keyVaultName;
         _tokenCredential = tokenCredential;
+        _namedVaultCredentials = namedVaultCredentials ??
+            new Dictionary<string, TokenCredential>(StringComparer.OrdinalIgnoreCase);
         _environment = environment;
-        _keyVault = new Lazy<SecretClient>(GetKeyVaultClient);
         _parameterFile = parametersFile;
     }
         
@@ -346,63 +352,93 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
 
     public async Task<JToken> ReplaceVaultAsync(JToken data)
     {
+        return await ReplaceVaultAsync(data, _keyVaultName, GetSecretAsync).ConfigureAwait(false);
+    }
+
+    internal static async Task<JToken> ReplaceVaultAsync(
+        JToken data,
+        string defaultVaultName,
+        Func<string, string, Task<string>> getSecretAsync)
+    {
         switch (data)
         {
             case JObject jObject:
                 foreach (var (key, value) in jObject)
                 {
-                    jObject[key] = await ReplaceVaultAsync(value);
+                    jObject[key] = await ReplaceVaultAsync(value, defaultVaultName, getSecretAsync).ConfigureAwait(false);
                 }
                 return jObject;
 
             case JArray jArray:
                 for (int i = 0; i < jArray.Count; i++)
                 {
-                    jArray[i] = await ReplaceVaultAsync(jArray[i]);
+                    jArray[i] = await ReplaceVaultAsync(jArray[i], defaultVaultName, getSecretAsync).ConfigureAwait(false);
                 }
                 return jArray;
 
             case JValue jValue:
             {
                 if (jValue.Type != JTokenType.String ||
-                    !TryGetSecretName((string)jValue.Value, out string secretName))
+                    !TryGetSecretReference(
+                        (string)jValue.Value,
+                        defaultVaultName,
+                        out string vaultName,
+                        out string secretName))
                 {
                     return jValue;
                 }
 
-                return await GetSecretAsync(secretName).ConfigureAwait(false);
+                return await getSecretAsync(vaultName, secretName).ConfigureAwait(false);
             }
             default:
                 return data;
         }
     }
 
-    private static bool TryGetSecretName(string data, out string secret)
+    internal static bool TryGetSecretReference(
+        string data,
+        string defaultVaultName,
+        out string vaultName,
+        out string secretName)
     {
-        var r = new Regex(@"\[[vV]ault\((.*)\)\]");
-        Match match = r.Match(data);
+        Match match = VaultReferencePattern.Match(data ?? string.Empty);
 
         if (!match.Success)
         {
-            secret = null;
+            vaultName = null;
+            secretName = null;
             return false;
         }
 
-        secret = match.Groups[1].Value;
+        vaultName = match.Groups["vault"].Success
+            ? match.Groups["vault"].Value
+            : defaultVaultName;
+        secretName = match.Groups["secret"].Value;
         return true;
     }
 
-    private async Task<string> GetSecretAsync(string name)
+    private async Task<string> GetSecretAsync(string vaultName, string secretName)
     {
-        KeyVaultSecret result = await KeyVault.GetSecretAsync(name).ConfigureAwait(false);
+        SecretClient keyVault = _keyVaultClients.GetOrAdd(vaultName, GetKeyVaultClient);
+        KeyVaultSecret result = await keyVault.GetSecretAsync(secretName).ConfigureAwait(false);
         return result.Value;
     }
 
-
-    private SecretClient GetKeyVaultClient()
+    private SecretClient GetKeyVaultClient(string vaultName)
     {
-        Uri vaultUri = new($"https://{_keyVaultName}.vault.azure.net/");
-        return new SecretClient(vaultUri, _tokenCredential);
+        Uri vaultUri = new($"https://{vaultName}.vault.azure.net/");
+        TokenCredential credential;
+        if (string.Equals(vaultName, _keyVaultName, StringComparison.OrdinalIgnoreCase))
+        {
+            credential = _tokenCredential;
+        }
+        else if (!_namedVaultCredentials.TryGetValue(vaultName, out credential))
+        {
+            throw new InvalidOperationException(
+                $"No credential is configured for external Key Vault '{vaultName}'.");
+        }
+
+        return new SecretClient(vaultUri, credential);
     }
 
     private async Task SetHomeDashboardAsync()

@@ -237,6 +237,7 @@ extends:
           ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/production') }}:
             DeploymentEnvironment: Staging
             DotNetStatusAppName: dotneteng-status-staging
+            DotNetStatusKeyVault: dotneteng-status-staging
             DotNetStatusEndpoint: .NET Engineering Deployment Notification - Staging
             PublishProfile: Int
             ServiceConnectionName: NetHelixStaging
@@ -252,6 +253,7 @@ extends:
           ${{ else }}:
             DeploymentEnvironment: Production
             DotNetStatusAppName: dotneteng-status
+            DotNetStatusKeyVault: dotneteng-status-prod
             DotNetStatusEndpoint: .NET Engineering Deployment Notification - Production
             PublishProfile: Prod
             ServiceConnectionName: NetHelix

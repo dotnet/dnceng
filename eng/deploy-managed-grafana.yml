@@ -5,6 +5,12 @@ parameters:
   type: string
 - name: AMGServiceConnectionId
   type: string
+- name: StatusServiceConnectionClientId
+  type: string
+- name: StatusServiceConnectionId
+  type: string
+- name: StatusKeyVaultName
+  type: string
 - name: AMGDeploymentEnvironment
   type: string
 - name: AMGGrafanaWorkspaceName
@@ -189,6 +195,9 @@ stages:
             -p:ParametersFile=parameters.json `
             -p:ClientId="${{ parameters.AMGServiceConnectionClientId }}" `
             -p:ServiceConnectionId="${{ parameters.AMGServiceConnectionId }}" `
+            -p:ExternalKeyVaultName="${{ parameters.StatusKeyVaultName }}" `
+            -p:ExternalKeyVaultClientId="${{ parameters.StatusServiceConnectionClientId }}" `
+            -p:ExternalKeyVaultServiceConnectionId="${{ parameters.StatusServiceConnectionId }}" `
             -p:SystemAccessToken="$(System.AccessToken)" `
             -v:normal
           
