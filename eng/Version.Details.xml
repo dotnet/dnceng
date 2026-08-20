@@ -71,10 +71,6 @@
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>3175ec7d73772469351b03df062098104aba1c0d</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="8.0.0-beta.26418.3">
-      <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>3175ec7d73772469351b03df062098104aba1c0d</Sha>
-    </Dependency>
     <Dependency Name="Microsoft.DotNet.Git.IssueManager" Version="8.0.0-beta.26418.3">
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>3175ec7d73772469351b03df062098104aba1c0d</Sha>
