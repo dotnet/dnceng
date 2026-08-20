@@ -177,6 +177,9 @@ resource grafanaWorkspace 'Microsoft.Dashboard/grafana@2023-09-01' = {
     grafanaIntegrations: {
       azureMonitorWorkspaceIntegrations: []
     }
+    grafanaPlugins: {
+      'yesoreyeram-infinity-datasource': {}
+    }
   }
 }
 
