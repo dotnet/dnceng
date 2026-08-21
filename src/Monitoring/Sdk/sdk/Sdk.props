@@ -3,8 +3,8 @@
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
 
   <PropertyGroup>
-    <MicrosoftDotNetMonitoringSdkTasksAssembly>$(MSBuildThisFileDirectory)net10.0/Microsoft.DotNet.Monitoring.Sdk.dll</MicrosoftDotNetMonitoringSdkTasksAssembly>
-    <MicrosoftDotNetMonitoringSdkTasksAssembly Condition="!Exists('$(MicrosoftDotNetMonitoringSdkTasksAssembly)')">$(MSBuildThisFileDirectory)/../tools/net10.0/Microsoft.DotNet.Monitoring.Sdk.dll</MicrosoftDotNetMonitoringSdkTasksAssembly>
+    <MicrosoftDotNetMonitoringSdkTasksAssembly>$(MSBuildThisFileDirectory)$(NetCurrent)/Microsoft.DotNet.Monitoring.Sdk.dll</MicrosoftDotNetMonitoringSdkTasksAssembly>
+    <MicrosoftDotNetMonitoringSdkTasksAssembly Condition="!Exists('$(MicrosoftDotNetMonitoringSdkTasksAssembly)')">$(MSBuildThisFileDirectory)/../tools/$(NetCurrent)/Microsoft.DotNet.Monitoring.Sdk.dll</MicrosoftDotNetMonitoringSdkTasksAssembly>
     <GrafanaDashboardTag Condition="'$(GrafanaDashboardTag)' == ''">$(MSBuildProjectName)</GrafanaDashboardTag>
   </PropertyGroup>
 
