@@ -69,11 +69,11 @@ extends:
                   artifactName: ReleaseUtilities
                 - output: pipelineArtifact
                   displayName: 'Publish Secret Manager Scenario Tests'
-                  targetPath: $(Build.SourcesDirectory)\artifacts\bin\Microsoft.DncEng.SecretManager.ScenarioTests\$(_BuildConfig)\net8.0
+                  targetPath: $(Build.SourcesDirectory)\artifacts\bin\Microsoft.DncEng.SecretManager.ScenarioTests\$(_BuildConfig)\net10.0
                   artifactName: Microsoft.DncEng.SecretManager.ScenarioTests
                 - output: pipelineArtifact
                   displayName: 'Publish AzureDevOpsClient Post-Deployment Tests'
-                  targetPath: $(Build.SourcesDirectory)\artifacts\bin\AzureDevOpsClient.PostDeploymentTests\$(_BuildConfig)\net8.0
+                  targetPath: $(Build.SourcesDirectory)\artifacts\bin\AzureDevOpsClient.PostDeploymentTests\$(_BuildConfig)\net10.0
                   artifactName: AzureDevOpsClient.PostDeploymentTests
             variables:
             - _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
@@ -98,11 +98,6 @@ extends:
               displayName: Install Correct .NET Version
               inputs:
                 useGlobalJson: true
-
-            - task: UseDotNet@2
-              displayName: Install .NET 6
-              inputs:
-                version: 6.x
 
             - task: NuGetToolInstaller@0
               inputs:
@@ -170,7 +165,7 @@ extends:
                 exit 0
               displayName: Copy Telemetry Project Artifacts
               
-            - script: $(Build.SourcesDirectory)\.dotnet\dotnet publish -o $(Build.ArtifactStagingDirectory)\DotNet.Status.Web\publish -f net8.0
+            - script: $(Build.SourcesDirectory)\.dotnet\dotnet publish -o $(Build.ArtifactStagingDirectory)\DotNet.Status.Web\publish
                 -c $(_BuildConfig)
                 /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
                 /p:VersionPrefix=$(VersionPrefix)
