@@ -18,5 +18,7 @@
     <DashboardDirectory>dashboard</DashboardDirectory>
     <DataSourceDirectory>datasource</DataSourceDirectory>
     <NotificationDirectory>notifications</NotificationDirectory>
+    <RetirementDirectory>retirements</RetirementDirectory>
+    <GrafanaAllowDeletes Condition="'$(GrafanaAllowDeletes)' == ''">false</GrafanaAllowDeletes>
   </PropertyGroup>
 </Project>

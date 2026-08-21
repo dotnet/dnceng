@@ -13,8 +13,35 @@ Projects can override these locations:
   <DashboardDirectory>Path/To/DashboardFolder</DashboardDirectory>
   <DataSourceDirectory>Path/To/DataSourceFolder</DataSourceDirectory>
   <NotificationDirectory>Path/To/NotificationFolder</NotificationDirectory>
+  <RetirementDirectory>Path/To/RetirementFolder</RetirementDirectory>
 </PropertyGroup>
 ```
+
+## Retire managed resources
+
+Removing an alert-rule or contact-point definition does not remove the deployed Grafana
+resource. To retire exact resources, add an environment-specific
+`retirements/<Environment>.retirement.json` file:
+
+```json
+{
+  "alertRules": [
+    "obsolete-alert-rule-uid"
+  ],
+  "contactPoints": [
+    "Obsolete contact point name"
+  ]
+}
+```
+
+Retirement plans are report-only by default. After reviewing the deployment output and
+confirming replacement coverage, notification-policy cleanup, stakeholder approval, and
+rollback readiness, opt in to deletion with `-p:GrafanaAllowDeletes=true`.
+
+Alert rules are deleted before contact points. Deletion is exact and idempotent, verifies
+that each resource is absent, and refuses to delete a contact point while the Grafana
+notification-policy tree still references it. Keep retirement entries until every
+environment has applied and verified the deletion.
 
 ## Publish dashboards
 

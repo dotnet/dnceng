@@ -27,6 +27,8 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
     private readonly Lazy<SecretClient> _keyVault;
     private readonly string _environment;
     private readonly string _parameterFile;
+    private readonly string _retirementDirectory;
+    private readonly bool _allowDeletes;
 
     private SecretClient KeyVault => _keyVault.Value;
 
@@ -38,6 +40,8 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
         string dashboardDirectory,
         string datasourceDirectory,
         string notificationDirectory,
+        string retirementDirectory,
+        bool allowDeletes,
         string environment,
         string parametersFile,
         TaskLoggingHelper log) : base(
@@ -46,6 +50,8 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
         _keyVaultName = keyVaultName;
         _tokenCredential = tokenCredential;
         _environment = environment;
+        _retirementDirectory = retirementDirectory;
+        _allowDeletes = allowDeletes;
         _keyVault = new Lazy<SecretClient>(GetKeyVaultClient);
         _parameterFile = parametersFile;
     }
@@ -84,7 +90,73 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
 
         await PostDashboardsAsync().ConfigureAwait(false);
 
+        await RetireResourcesAsync().ConfigureAwait(false);
+
         await SetHomeDashboardAsync().ConfigureAwait(false);
+    }
+
+    private async Task RetireResourcesAsync()
+    {
+        string retirementPath = Path.Combine(_retirementDirectory, _environment + ".retirement.json");
+        if (!File.Exists(retirementPath))
+        {
+            return;
+        }
+
+        JObject retirementPlan;
+        using (var streamReader = new StreamReader(retirementPath))
+        using (var jsonReader = new JsonTextReader(streamReader))
+        {
+            retirementPlan = await JObject.LoadAsync(jsonReader).ConfigureAwait(false);
+        }
+
+        string[] alertRuleUids = retirementPlan.Value<JArray>("alertRules")?
+            .Values<string>()
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray() ?? Array.Empty<string>();
+        string[] contactPointNames = retirementPlan.Value<JArray>("contactPoints")?
+            .Values<string>()
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray() ?? Array.Empty<string>();
+
+        if (!_allowDeletes)
+        {
+            Log.LogWarning(
+                "Grafana retirement plan {0} is in report-only mode. Would delete {1} alert rule(s) and {2} contact point(s).",
+                retirementPath,
+                alertRuleUids.Length,
+                contactPointNames.Length);
+            return;
+        }
+
+        foreach (string uid in alertRuleUids)
+        {
+            bool deleted = await GrafanaClient.DeleteAlertRuleAsync(uid).ConfigureAwait(false);
+            Log.LogMessage(
+                MessageImportance.High,
+                deleted ? "Deleted retired alert rule {0}." : "Retired alert rule {0} was already absent.",
+                uid);
+        }
+
+        foreach (string name in contactPointNames)
+        {
+            if (await GrafanaClient.NotificationPolicyReferencesContactPointAsync(name).ConfigureAwait(false))
+            {
+                throw new InvalidOperationException(
+                    $"Grafana notification policy still references contact point '{name}'. Remove the route before deleting the contact point.");
+            }
+
+            int deleted = await GrafanaClient.DeleteContactPointsByNameAsync(name).ConfigureAwait(false);
+            Log.LogMessage(
+                MessageImportance.High,
+                deleted == 0
+                    ? "Retired contact point {0} was already absent."
+                    : "Deleted {1} integration(s) for retired contact point {0}.",
+                name,
+                deleted);
+        }
     }
 
     private async Task PostDatasourcesAsync()
