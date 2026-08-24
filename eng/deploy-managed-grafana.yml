@@ -116,7 +116,7 @@ stages:
       inputs:
         useGlobalJson: true
     
-    - script: dotnet publish --configuration Release $(Build.SourcesDirectory)\src\Monitoring\Sdk\Microsoft.DotNet.Monitoring.Sdk.csproj -f net8.0
+    - script: dotnet publish --configuration Release $(Build.SourcesDirectory)\src\Monitoring\Sdk\Microsoft.DotNet.Monitoring.Sdk.csproj
       displayName: 'Build Monitoring SDK'
     
     - task: AzureCLI@2
