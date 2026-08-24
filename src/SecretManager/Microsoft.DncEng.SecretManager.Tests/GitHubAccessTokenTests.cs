@@ -1,4 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Threading;
+using System.Threading.Tasks;
 using AwesomeAssertions;
 using Microsoft.DncEng.CommandLineLib;
 using Microsoft.DncEng.SecretManager.SecretTypes;
@@ -67,6 +71,73 @@ public class GitHubAccessTokenTests
 
         nextRotationOn.Should().BeAfter(now);
         nextRotationOn.Should().BeBefore(expiresOn);
+    }
+
+    [Test]
+    public async Task RotateValue_ShouldPromptForExpirationAfterLoginInformationAndBeforePat()
+    {
+        DateTimeOffset now = new DateTimeOffset(2026, 8, 24, 0, 0, 0, TimeSpan.Zero);
+        var interactions = new List<string>();
+        var console = new Mock<IConsole>();
+        console.SetupGet(c => c.IsInteractive).Returns(true);
+        console.Setup(c => c.ShouldWrite(It.IsAny<VerbosityLevel>())).Returns(true);
+        console.Setup(c => c.Write(It.IsAny<VerbosityLevel>(), It.IsAny<string>(), It.IsAny<ConsoleColor?>()))
+            .Callback((VerbosityLevel _, string message, ConsoleColor? _) =>
+            {
+                if (message.StartsWith("Please login to", StringComparison.Ordinal))
+                {
+                    interactions.Add("Login information");
+                }
+            });
+        console.Setup(c => c.ConfirmAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Callback((string _, string _) => interactions.Add("One-time password"))
+            .ReturnsAsync(false);
+        console.Setup(c => c.PromptAsync(It.IsAny<string>()))
+            .Returns((string message) =>
+            {
+                interactions.Add(message);
+                return Task.FromResult(message == "Enter expiration in days: "
+                    ? "14"
+                    : $"ghp_{new string('a', 36)}");
+            });
+
+        var clock = new Mock<ISystemClock>();
+        clock.SetupGet(c => c.UtcNow).Returns(now);
+
+        var storage = new Mock<StorageLocationType>();
+        storage.Setup(s => s.GetSecretValueAsync(It.IsAny<IDictionary<string, object>>(), "bot-password"))
+            .ReturnsAsync(CreateSecretValue("password"));
+        storage.Setup(s => s.GetSecretValueAsync(It.IsAny<IDictionary<string, object>>(), "bot-otp"))
+            .ReturnsAsync(CreateSecretValue("JBSWY3DPEHPK3PXP"));
+
+        var context = new RotationContext(
+            "token",
+            ImmutableDictionary<string, string>.Empty,
+            storage.Object.BindParameters(new Dictionary<string, object>()),
+            ImmutableDictionary<string, StorageLocationType.Bound>.Empty);
+        var parameters = new GitHubAccessToken.Parameters
+        {
+            GitHubBotAccountName = "bot-account",
+            GitHubBotAccountSecret = new SecretReference("bot"),
+        };
+        var token = new GitHubAccessToken(clock.Object, console.Object);
+
+        await token.RotateValues(parameters, context, CancellationToken.None);
+
+        interactions.Should().ContainInOrder(
+            "Login information",
+            "One-time password",
+            "Enter expiration in days: ",
+            "Enter PAT: ");
+    }
+
+    private static SecretValue CreateSecretValue(string value)
+    {
+        return new SecretValue(
+            value,
+            ImmutableDictionary<string, string>.Empty,
+            DateTimeOffset.MaxValue,
+            DateTimeOffset.MaxValue);
     }
 
     // Test helper class exposing the protected static members for testing.
