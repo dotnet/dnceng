@@ -34,6 +34,14 @@ public class GitHubAccessToken : GitHubAccountInteractiveSecretType<GitHubAccess
             throw new HumanInterventionRequiredException($"User intervention required for creation or rotation of a GitHub access token.");
         }
 
+        const string helpUrl = "https://github.com/settings/tokens";
+
+        if (!string.IsNullOrEmpty(parameters.Description))
+        {
+            Console.WriteLine($"Description: {parameters.Description}");
+        }
+        await ShowGitHubLoginInformation(context, parameters.GitHubBotAccountSecret, helpUrl, parameters.GitHubBotAccountName);
+
         int expirationInDays = await Console.PromptAndValidateAsync<int>(
             "expiration in days",
             $"Expiration must be a whole number of days between {_minExpirationInDays} and {_maxExpirationInDays}.",
@@ -42,14 +50,6 @@ public class GitHubAccessToken : GitHubAccountInteractiveSecretType<GitHubAccess
         DateTimeOffset now = Clock.UtcNow;
         DateTimeOffset expiresOn = now.AddDays(expirationInDays);
         DateTimeOffset nextRotationOn = ComputeNextRotationOn(now, expirationInDays);
-
-        const string helpUrl = "https://github.com/settings/tokens";
-
-        if (!string.IsNullOrEmpty(parameters.Description))
-        {
-            Console.WriteLine($"Description: {parameters.Description}");
-        }
-        await ShowGitHubLoginInformation(context, parameters.GitHubBotAccountSecret, helpUrl, parameters.GitHubBotAccountName);
 
         string pat = await Console.PromptAndValidateAsync("PAT",
             $"PAT must have at least 40 characters and start with either '{_classicTokenPrefix}' or '{_fineGrainedTokenPrefix}'.",
