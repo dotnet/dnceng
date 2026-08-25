@@ -177,8 +177,8 @@
   {
     "Name": "home-dashboard-uid",
     "Values": {
-      "Staging": "home",
-      "Production": "home"
+      "Staging": "",
+      "Production": ""
     }
   },
   {
