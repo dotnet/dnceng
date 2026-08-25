@@ -82,9 +82,13 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
 
         await PostAlertRulesAsync().ConfigureAwait(false);
 
-        await PostDashboardsAsync().ConfigureAwait(false);
+        HashSet<string> knownDashboardUids = await PostDashboardsAsync().ConfigureAwait(false);
 
         await SetHomeDashboardAsync().ConfigureAwait(false);
+
+        await ClearExtraneousDashboardsAsync(knownDashboardUids).ConfigureAwait(false);
+
+        await DeleteRetiredDashboardsAsync().ConfigureAwait(false);
     }
 
     private async Task PostDatasourcesAsync()
@@ -240,7 +244,7 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
         }
     }
 
-    private async Task PostDashboardsAsync()
+    private async Task<HashSet<string>> PostDashboardsAsync()
     {
         JArray folderArray = await GrafanaClient.ListFoldersAsync().ConfigureAwait(false);
         List<FolderData> folders = folderArray.Select(f => new FolderData(f.Value<string>("uid"), f.Value<string>("title")))
@@ -283,32 +287,7 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
                 data = await JObject.LoadAsync(jr).ConfigureAwait(false);
             }
 
-            JArray tagArray = null;
-            if (data.TryGetValue("tags", out JToken tagToken))
-            {
-                tagArray = tagToken as JArray;
-            }
-
-            if (tagArray == null)
-            {
-                tagArray = new JArray();
-            }
-
-            var newTags = new JArray();
-            foreach (JToken tag in tagArray)
-            {
-                if (tag.Value<string>().StartsWith(BaseUidTagPrefix) ||
-                    tag.Value<string>().StartsWith(SourceTagPrefix))
-                {
-                    continue;
-                }
-
-                newTags.Add(tag);
-            }
-
-            tagArray.Add(GetUidTag(uid));
-            tagArray.Add(SourceTag);
-            data["tags"] = newTags;
+            GrafanaSerialization.SetDashboardManagementTags(data, uid, SourceTag);
             data["uid"] = uid;
 
             data = GrafanaSerialization.DeparameterizeDashboard(data, parameters, _environment);
@@ -318,13 +297,16 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
             await GrafanaClient.CreateDashboardAsync(data, folderId).ConfigureAwait(false);
         }
 
-        await ClearExtraneousDashboardsAsync(knownUids);
+        return knownUids;
     }
 
     private async Task ClearExtraneousDashboardsAsync(HashSet<string> knownUids)
     {
         JArray allTagged = await GrafanaClient.SearchDashboardsByTagAsync(SourceTag).ConfigureAwait(false);
-        HashSet<string> toRemove =  new HashSet<string>(allTagged.Where(IsManagedDashboard).Select(d => d.Value<string>("uid")));
+        HashSet<string> toRemove = new HashSet<string>(
+            allTagged
+                .Where(d => GrafanaSerialization.IsManagedDashboard(d, SourceTag))
+                .Select(d => d.Value<string>("uid")));
 
         // We shouldn't remove the ones we just deployed
         toRemove.ExceptWith(knownUids);
@@ -336,12 +318,40 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
         }
     }
 
-    private static bool IsManagedDashboard(JToken d)
+    private async Task DeleteRetiredDashboardsAsync()
     {
-        string uid = d.Value<string>("uid");
-        // If the uid tag (which we set whenever we publish) doesn't match, that means someone copied it
-        // so it's not managed by us. If it does match, that means it is managed and we deployed it
-        return uid == d.Value<JObject>()?.Value<string>(GetUidTag(uid));
+        List<Parameter> parameters;
+        using (var sr = new StreamReader(_parameterFile))
+        using (var jr = new JsonTextReader(sr))
+        {
+            parameters = new JsonSerializer().Deserialize<List<Parameter>>(jr);
+        }
+
+        Parameter retiredDashboardParameter = parameters?
+            .FirstOrDefault(parameter => parameter.Name == "retired-dashboard-uids");
+        if (retiredDashboardParameter == null ||
+            !retiredDashboardParameter.Values.TryGetValue(_environment, out string retiredDashboardValue))
+        {
+            return;
+        }
+
+        var knownUids = new HashSet<string>(
+            GetAllDashboardPaths()
+                .Select(Path.GetFileName)
+                .Select(GetUidFromDashboardFile),
+            StringComparer.Ordinal);
+
+        foreach (string uid in GrafanaSerialization.ParseDashboardUidList(retiredDashboardValue))
+        {
+            if (knownUids.Contains(uid))
+            {
+                throw new InvalidOperationException(
+                    $"Dashboard '{uid}' cannot be both deployed and explicitly retired.");
+            }
+
+            Log.LogMessage(MessageImportance.Normal, "Ensuring explicitly retired dashboard {0} is absent...", uid);
+            await GrafanaClient.DeleteDashboardAsync(uid).ConfigureAwait(false);
+        }
     }
 
     public async Task<JToken> ReplaceVaultAsync(JToken data)

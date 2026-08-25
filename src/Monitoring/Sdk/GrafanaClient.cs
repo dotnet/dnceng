@@ -352,6 +352,11 @@ public sealed class GrafanaClient : IDisposable
 
         using (HttpResponseMessage response = await _client.DeleteAsync(uri).ConfigureAwait(false))
         {
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return;
+            }
+
             await response.EnsureSuccessWithContentAsync();
         }
     }
