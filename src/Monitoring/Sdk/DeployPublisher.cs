@@ -198,6 +198,14 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
                 retirementPath,
                 alertRuleUids.Length,
                 contactPointNames.Length);
+            foreach (string uid in alertRuleUids)
+            {
+                Log.LogMessage(MessageImportance.High, "Would delete retired alert rule {0}.", uid);
+            }
+            foreach (string name in contactPointNames)
+            {
+                Log.LogMessage(MessageImportance.High, "Would delete retired contact point {0}.", name);
+            }
             return;
         }
 

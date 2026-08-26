@@ -60,6 +60,8 @@ resource. To retire exact resources, add an environment-specific
 Retirement plans are report-only by default. After reviewing the deployment output and
 confirming replacement coverage, notification-policy cleanup, stakeholder approval, and
 rollback readiness, opt in to deletion with `-p:GrafanaAllowDeletes=true`.
+Report-only output lists every alert-rule UID and contact-point name so the exact proposed
+deletions can be attached to the rollout approval.
 
 Alert rules are deleted before contact points. Deletion is exact and idempotent, verifies
 that each resource is absent, and refuses to delete a contact point while the Grafana

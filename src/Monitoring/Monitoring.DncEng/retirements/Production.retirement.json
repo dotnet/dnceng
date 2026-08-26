@@ -1,5 +1,24 @@
 {
   "alertRules": [
-    "source-dot-net-availability"
+    "cores-consumption",
+    "dotneteng-status-failed-requests",
+    "helix-api-availability",
+    "helix-api-average-response-time",
+    "pcs-background-worker-stopped",
+    "pcs-container-job-execution-failures",
+    "pcs-disk-space-issues",
+    "pcs-exceptions-high",
+    "pcs-git-push-success-rate",
+    "pcs-work-item-success-rate",
+    "quota-eastus",
+    "quota-westus",
+    "quota-westus2",
+    "source-dot-net-availability",
+    "work-items-waiting-time-build-pools",
+    "work-items-waiting-time-test-queues"
+  ],
+  "contactPoints": [
+    ".NET Status Alert",
+    ".NET Status Alert (no image, 12h reminder)"
   ]
 }
