@@ -168,48 +168,6 @@
       "type": "table"
     },
     {
-      "alert": {
-        "alertRuleTags": {
-          "NotificationId": "d71fe025a8954b6cad9866354ca041ee"
-        },
-        "conditions": [
-          {
-            "evaluator": {
-              "params": [
-                74
-              ],
-              "type": "lt"
-            },
-            "operator": {
-              "type": "and"
-            },
-            "query": {
-              "params": [
-                "B",
-                "5m",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "avg"
-            },
-            "type": "query"
-          }
-        ],
-        "executionErrorState": "keep_state",
-        "for": "5m",
-        "frequency": "1m",
-        "handler": 1,
-        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1310/-Alert-PCS-Work-Item-Success-Rate-alert)\n\nThe PCS background work items started to fail frequently.\n\n@dotnet/prodconsvcs",
-        "name": "PCS Work Item Success Rate alert",
-        "noDataState": "keep_state",
-        "notifications": [
-          {
-            "uid": "statusHook"
-          }
-        ]
-      },
       "datasource": {
         "type": "grafana-azure-monitor-datasource",
         "uid": "F2XodEi7z"
@@ -449,48 +407,6 @@
       "type": "timeseries"
     },
     {
-      "alert": {
-        "alertRuleTags": {
-          "NotificationId": "08f669cc1c3d325ee488666464"
-        },
-        "conditions": [
-          {
-            "evaluator": {
-              "params": [
-                15
-              ],
-              "type": "gt"
-            },
-            "operator": {
-              "type": "and"
-            },
-            "query": {
-              "params": [
-                "A",
-                "5m",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "avg"
-            },
-            "type": "query"
-          }
-        ],
-        "executionErrorState": "keep_state",
-        "for": "5m",
-        "frequency": "1m",
-        "handler": 1,
-        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1311/-Alert-PCS-Exceptions-High)\n\nThe PCS background work items started to fail frequently.\n\n@dotnet/prodconsvcs",
-        "name": "PCS Exceptions High",
-        "noDataState": "ok",
-        "notifications": [
-          {
-            "uid": "statusHook"
-          }
-        ]
-      },
       "datasource": {
         "type": "grafana-azure-monitor-datasource",
         "uid": "F2XodEi7z"
@@ -609,48 +525,6 @@
       "type": "timeseries"
     },
     {
-      "alert": {
-        "alertRuleTags": {
-          "NotificationId": "23909d48866646408f669cc1c3d325ee"
-        },
-        "conditions": [
-          {
-            "evaluator": {
-              "params": [
-                20
-              ],
-              "type": "lt"
-            },
-            "operator": {
-              "type": "and"
-            },
-            "query": {
-              "params": [
-                "B",
-                "5m",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "avg"
-            },
-            "type": "query"
-          }
-        ],
-        "executionErrorState": "alerting",
-        "for": "5m",
-        "frequency": "1m",
-        "handler": 1,
-        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1308/-Alert-PCS-Background-Worker-Stopped)\n\nPCS appears to have stopped processing new WorkItems.\n\n@dotnet/prodconsvcs",
-        "name": "PCS Background Worker Stopped",
-        "noDataState": "alerting",
-        "notifications": [
-          {
-            "uid": "statusHook"
-          }
-        ]
-      },
       "datasource": {
         "type": "grafana-azure-monitor-datasource",
         "uid": "F2XodEi7z"
@@ -1958,48 +1832,6 @@
       "type": "timeseries"
     },
     {
-      "alert": {
-        "alertRuleTags": {
-          "NotificationId": "aa1fe025a8954b6cad9866354ca041ee"
-        },
-        "conditions": [
-          {
-            "evaluator": {
-              "params": [
-                0
-              ],
-              "type": "gt"
-            },
-            "operator": {
-              "type": "and"
-            },
-            "query": {
-              "params": [
-                "A",
-                "5m",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "count"
-            },
-            "type": "query"
-          }
-        ],
-        "executionErrorState": "keep_state",
-        "for": "5m",
-        "frequency": "5m",
-        "handler": 1,
-        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1346/-Alert-PCS-Disk-Space-Issues)\n\nThe PCS service is running out of disk space.\n\n@dotnet/prodconsvcs",
-        "name": "PCS Disk Space Issues alert",
-        "noDataState": "ok",
-        "notifications": [
-          {
-            "uid": "statusHook"
-          }
-        ]
-      },
       "datasource": {
         "type": "grafana-azure-monitor-datasource",
         "uid": "F2XodEi7z"
@@ -2107,48 +1939,6 @@
       "type": "timeseries"
     },
     {
-      "alert": {
-        "alertRuleTags": {
-          "NotificationId": "6ggqnvwrunnru1zfl4g42dn9qjzanb8a"
-        },
-        "conditions": [
-          {
-            "evaluator": {
-              "params": [
-                80
-              ],
-              "type": "lt"
-            },
-            "operator": {
-              "type": "and"
-            },
-            "query": {
-              "params": [
-                "A",
-                "5m",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "avg"
-            },
-            "type": "query"
-          }
-        ],
-        "executionErrorState": "keep_state",
-        "for": "5m",
-        "frequency": "1m",
-        "handler": 1,
-        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1318/-Alert-PCS-high-git-push-failure-rate)\n\nPCS has a high `git push` failure rate, please investigate\n\n@dotnet/prodconsvcs",
-        "name": "Git Push success rate alert",
-        "noDataState": "keep_state",
-        "notifications": [
-          {
-            "uid": "statusHook"
-          }
-        ]
-      },
       "datasource": {
         "type": "grafana-azure-monitor-datasource",
         "uid": "F2XodEi7z"
@@ -2353,48 +2143,6 @@
       "type": "timeseries"
     },
     {
-      "alert": {
-        "alertRuleTags": {
-          "NotificationId": "0a5c68b0daf846ef83a66c6c70fd24ad"
-        },
-        "conditions": [
-          {
-            "evaluator": {
-              "params": [
-                0
-              ],
-              "type": "gt"
-            },
-            "operator": {
-              "type": "and"
-            },
-            "query": {
-              "params": [
-                "A",
-                "5m",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "max"
-            },
-            "type": "query"
-          }
-        ],
-        "executionErrorState": "keep_state",
-        "for": "5m",
-        "frequency": "1m",
-        "handler": 1,
-        "message": "[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1350/-Alert-PCS-container-job-execution-failing)\n\nPlease note that this alert will fire every 12 hours as the list of failed jobs can change",
-        "name": "Container job execution failures alert",
-        "noDataState": "ok",
-        "notifications": [
-          {
-            "uid": "statusHook.imageless.12h_reminder"
-          }
-        ]
-      },
       "datasource": {
         "type": "grafana-azure-monitor-datasource",
         "uid": "F2XodEi7z"
@@ -2581,48 +2329,6 @@
           "type": "alertlist"
         },
         {
-          "alert": {
-            "alertRuleTags": {
-              "NotificationId": "6179576701874a7abc440a574cf636d0"
-            },
-            "conditions": [
-              {
-                "evaluator": {
-                  "params": [
-                    99
-                  ],
-                  "type": "lt"
-                },
-                "operator": {
-                  "type": "and"
-                },
-                "query": {
-                  "params": [
-                    "A",
-                    "30m",
-                    "now"
-                  ]
-                },
-                "reducer": {
-                  "params": [],
-                  "type": "avg"
-                },
-                "type": "query"
-              }
-            ],
-            "executionErrorState": "keep_state",
-            "for": "5m",
-            "frequency": "1m",
-            "handler": 1,
-            "message": "Helix API availability alert!",
-            "name": "Helix API availability",
-            "noDataState": "keep_state",
-            "notifications": [
-              {
-                "uid": "statusHook"
-              }
-            ]
-          },
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
             "uid": "F2XodEi7z"
@@ -2799,48 +2505,6 @@
           "type": "timeseries"
         },
         {
-          "alert": {
-            "alertRuleTags": {
-              "NotificationId": "24cae10d9eca44079e7cf3d47f148497"
-            },
-            "conditions": [
-              {
-                "evaluator": {
-                  "params": [
-                    5000
-                  ],
-                  "type": "gt"
-                },
-                "operator": {
-                  "type": "and"
-                },
-                "query": {
-                  "params": [
-                    "A",
-                    "5m",
-                    "now"
-                  ]
-                },
-                "reducer": {
-                  "params": [],
-                  "type": "avg"
-                },
-                "type": "query"
-              }
-            ],
-            "executionErrorState": "keep_state",
-            "for": "5m",
-            "frequency": "1m",
-            "handler": 1,
-            "message": "Helix API Average Response Time is high!",
-            "name": "Helix API Average Response Time",
-            "noDataState": "keep_state",
-            "notifications": [
-              {
-                "uid": "statusHook"
-              }
-            ]
-          },
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
             "uid": "F2XodEi7z"
@@ -2986,47 +2650,6 @@
           "type": "timeseries"
         },
         {
-          "alert": {
-            "alertRuleTags": {
-              "NotificationId": "6213d3c5ce9a46278343bf075798e46f"
-            },
-            "conditions": [
-              {
-                "evaluator": {
-                  "params": [
-                    1
-                  ],
-                  "type": "lt"
-                },
-                "operator": {
-                  "type": "and"
-                },
-                "query": {
-                  "params": [
-                    "A",
-                    "30m",
-                    "now"
-                  ]
-                },
-                "reducer": {
-                  "params": [],
-                  "type": "avg"
-                },
-                "type": "query"
-              }
-            ],
-            "executionErrorState": "keep_state",
-            "for": "5m",
-            "frequency": "1m",
-            "handler": 1,
-            "name": "Helix AutoScaler Service Stopped Running",
-            "noDataState": "alerting",
-            "notifications": [
-              {
-                "uid": "statusHook"
-              }
-            ]
-          },
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
             "uid": "F2XodEi7z"
@@ -3312,50 +2935,6 @@
       "id": 52,
       "panels": [
         {
-          "alert": {
-            "alertRuleTags": {
-              "NotificationId": "d2dd705a6c724ed68fcf6955561c06dd"
-            },
-            "conditions": [
-              {
-                "evaluator": {
-                  "params": [
-                    20
-                  ],
-                  "type": "gt"
-                },
-                "operator": {
-                  "type": "and"
-                },
-                "query": {
-                  "params": [
-                    "A"
-                  ],
-                  "relativeTimeRange": {
-                    "from": 3600,
-                    "to": 600
-                  }
-                },
-                "reducer": {
-                  "params": [],
-                  "type": "avg"
-                },
-                "type": "query"
-              }
-            ],
-            "executionErrorState": "keep_state",
-            "for": "5m",
-            "frequency": "1m",
-            "handler": 1,
-            "message": "The number of failed DotNetEng Status requests per hour is above 20. This may indicate a systemic problem that needs to be investigated.\nTo intially investigate prod, run the following query in DotNetEng-Status-Prod, and to investigate staging, run the query in DotNetEng-Status-Staging:\n\n```\nunion exceptions, traces\n| project timestamp, operation_Name, customDimensions, message, problemId, details\n| order by timestamp asc\n```",
-            "name": "DotNetEng Status Failed Requests/Hour alert",
-            "noDataState": "ok",
-            "notifications": [
-              {
-                "uid": "statusHook"
-              }
-            ]
-          },
           "datasource": {
             "type": "grafana-azure-monitor-datasource",
             "uid": "F2XodEi7z"
