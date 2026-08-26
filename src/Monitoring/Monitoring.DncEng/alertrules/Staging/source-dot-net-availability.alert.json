@@ -38,9 +38,9 @@
           "resources": [
             {
               "metricNamespace": "microsoft.insights/components",
-              "resourceGroup": "dotnet-eng-cluster",
-              "resourceName": "dotnet-eng",
-              "subscription": "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f"
+              "resourceGroup": "dotnet-eng-int-cluster",
+              "resourceName": "dotnet-eng-int",
+              "subscription": "cab65fc3-d077-467d-931f-3932eabf36d3"
             }
           ],
           "timeGrain": "auto",
@@ -52,7 +52,7 @@
         },
         "queryType": "Azure Monitor",
         "refId": "A",
-        "subscription": "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+        "subscription": "cab65fc3-d077-467d-931f-3932eabf36d3",
         "subscriptions": [
           "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
           "cab65fc3-d077-467d-931f-3932eabf36d3"
@@ -69,7 +69,7 @@
           "uid": "-100"
         },
         "expression": "A",
-        "reducer": "mean",
+        "reducer": "min",
         "refId": "B",
         "type": "reduce"
       },
@@ -87,7 +87,7 @@
           {
             "evaluator": {
               "params": [
-                60
+                61
               ],
               "type": "lt"
             },
@@ -114,7 +114,7 @@
   ],
   "noDataState": "KeepLast",
   "execErrState": "KeepLast",
-  "for": "15m",
+  "for": "0s",
   "frequency": "1m",
   "annotations": {
     "__dashboardUid__": "serviceAvailability",
@@ -128,11 +128,11 @@
   "__panelId__": "16",
   "folderUID": "dnceng",
   "ruleGroup": "Source Browser Alerts",
-  "intervalSeconds": 900000,
+  "intervalSeconds": 60000,
   "isPaused": false,
   "notification_settings": {
     "receiver": ".NET Status Alert",
-    "group_wait": "5m",
+    "group_wait": "0s",
     "repeat_interval": "4h"
   }
 }
