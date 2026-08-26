@@ -69,7 +69,7 @@
           "uid": "-100"
         },
         "expression": "A",
-        "reducer": "mean",
+        "reducer": "min",
         "refId": "B",
         "type": "reduce"
       },
@@ -87,7 +87,7 @@
           {
             "evaluator": {
               "params": [
-                60
+                61
               ],
               "type": "lt"
             },
@@ -114,7 +114,7 @@
   ],
   "noDataState": "KeepLast",
   "execErrState": "KeepLast",
-  "for": "15m",
+  "for": "0s",
   "frequency": "1m",
   "annotations": {
     "__dashboardUid__": "serviceAvailability",
@@ -128,11 +128,11 @@
   "__panelId__": "16",
   "folderUID": "dnceng",
   "ruleGroup": "Source Browser Alerts",
-  "intervalSeconds": 900000,
+  "intervalSeconds": 60000,
   "isPaused": false,
   "notification_settings": {
     "receiver": ".NET Status Alert",
-    "group_wait": "5m",
+    "group_wait": "0s",
     "repeat_interval": "4h"
   }
 }
