@@ -17,6 +17,24 @@ Projects can override these locations:
 </PropertyGroup>
 ```
 
+## Control alert rule evaluation cadence
+
+Grafana evaluates every rule in a rule group at the group's interval. To manage that
+interval, set `evaluationIntervalSeconds` on every managed rule in the group:
+
+```json
+{
+  "folderUID": "dnceng",
+  "ruleGroup": "Data Migration Alerts",
+  "evaluationIntervalSeconds": 300
+}
+```
+
+The SDK removes this deployment-only field from the individual rule payload, then updates
+the complete Grafana rule group after all rules are published. Rules in the same group must
+specify the same positive interval. Omitting the field leaves the existing Grafana group
+interval unchanged.
+
 ## Retire managed resources
 
 Removing an alert-rule or contact-point definition does not remove the deployed Grafana

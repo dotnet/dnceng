@@ -338,6 +338,8 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
         // Ensure all folders referenced by alert rules exist before posting rules
         var alertRuleFiles = Directory.GetFiles(AlertRuleDirectory, "*" + AlertRuleExtension, SearchOption.AllDirectories);
         var seenFolderUids = new HashSet<string>(StringComparer.Ordinal);
+        var ruleGroupIntervals = new Dictionary<(string FolderUid, string RuleGroup), int>();
+        var ruleGroupsWithoutExplicitIntervals = new HashSet<(string FolderUid, string RuleGroup)>();
         foreach (string alertRulePath in alertRuleFiles)
         {
             JObject data;
@@ -352,6 +354,49 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
             {
                 Log.LogMessage(MessageImportance.Normal, "Ensuring alert rule folder '{0}' exists...", folderUID);
                 await GrafanaClient.CreateFolderAsync(folderUID, folderUID).ConfigureAwait(false);
+            }
+
+            string ruleGroup = data.Value<string>("ruleGroup");
+            if (!string.IsNullOrEmpty(folderUID) && !string.IsNullOrEmpty(ruleGroup))
+            {
+                var key = (folderUID, ruleGroup);
+                if (data.TryGetValue("evaluationIntervalSeconds", out JToken intervalToken))
+                {
+                    int intervalSeconds = intervalToken.Type == JTokenType.Integer
+                        ? intervalToken.Value<int>()
+                        : 0;
+                    if (intervalSeconds <= 0)
+                    {
+                        throw new InvalidOperationException(
+                            $"Alert rule {alertRulePath} must specify a positive evaluationIntervalSeconds.");
+                    }
+
+                    if (ruleGroupsWithoutExplicitIntervals.Contains(key))
+                    {
+                        throw new InvalidOperationException(
+                            $"Every managed rule in alert rule group '{folderUID}/{ruleGroup}' must specify evaluationIntervalSeconds.");
+                    }
+
+                    if (ruleGroupIntervals.TryGetValue(key, out int existingInterval) &&
+                        existingInterval != intervalSeconds)
+                    {
+                        throw new InvalidOperationException(
+                            $"Alert rule group '{folderUID}/{ruleGroup}' has conflicting evaluation intervals: " +
+                            $"{existingInterval} and {intervalSeconds} seconds.");
+                    }
+
+                    ruleGroupIntervals[key] = intervalSeconds;
+                }
+                else
+                {
+                    if (ruleGroupIntervals.ContainsKey(key))
+                    {
+                        throw new InvalidOperationException(
+                            $"Every managed rule in alert rule group '{folderUID}/{ruleGroup}' must specify evaluationIntervalSeconds.");
+                    }
+
+                    ruleGroupsWithoutExplicitIntervals.Add(key);
+                }
             }
         }
 
@@ -372,6 +417,7 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
 
             // Replace [parameter(...)] placeholders with environment-specific values
             data = GrafanaSerialization.DeparameterizeDashboard(data, parameters, _environment);
+            data.Remove("evaluationIntervalSeconds");
 
             // Log the final JSON for debugging
             Log.LogMessage(MessageImportance.High, "Alert JSON after parameter replacement: {0}", data.ToString(Formatting.Indented));
@@ -379,6 +425,20 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
             await ReplaceVaultAsync(data);
 
             await GrafanaClient.CreateAlertRuleAsync(data).ConfigureAwait(false);
+        }
+
+        foreach (KeyValuePair<(string FolderUid, string RuleGroup), int> interval in ruleGroupIntervals)
+        {
+            Log.LogMessage(
+                MessageImportance.Normal,
+                "Setting alert rule group {0}/{1} evaluation interval to {2} seconds...",
+                interval.Key.FolderUid,
+                interval.Key.RuleGroup,
+                interval.Value);
+            await GrafanaClient.SetAlertRuleGroupIntervalAsync(
+                interval.Key.FolderUid,
+                interval.Key.RuleGroup,
+                interval.Value).ConfigureAwait(false);
         }
     }
 

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -550,6 +551,86 @@ public sealed class GrafanaClient : IDisposable
                 
                 var updateUri = new Uri(new Uri(_baseUrl), $"/api/v1/provisioning/alert-rules/{Uri.EscapeDataString(uid)}");
                 await SendObjectAsync(alertRule, updateUri, HttpMethod.Put).ConfigureAwait(false);
+            }
+        }
+    }
+
+    public async Task SetAlertRuleGroupIntervalAsync(string folderUid, string ruleGroup, int intervalSeconds)
+    {
+        if (intervalSeconds <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(intervalSeconds));
+        }
+
+        var uri = new Uri(
+            new Uri(_baseUrl),
+            $"/api/v1/provisioning/folder/{Uri.EscapeDataString(folderUid)}/rule-groups/{Uri.EscapeDataString(ruleGroup)}");
+        JObject group = await GetObjectAsync(uri).ConfigureAwait(false);
+        if (group.Value<int>("interval") == intervalSeconds)
+        {
+            return;
+        }
+
+        string[] ruleUids = GetRuleGroupUids(group, folderUid, ruleGroup);
+        group["interval"] = intervalSeconds;
+        using (var content = new StringContent(group.ToString(Formatting.None)))
+        {
+            content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            using (var request = new HttpRequestMessage(HttpMethod.Put, uri) { Content = content })
+            {
+                request.Headers.Add("X-Disable-Provenance", "true");
+                using (HttpResponseMessage response = await _client.SendAsync(request).ConfigureAwait(false))
+                {
+                    await response.EnsureSuccessWithContentAsync();
+                }
+            }
+        }
+
+        JObject updated = await GetObjectAsync(uri).ConfigureAwait(false);
+        if (updated.Value<int>("interval") != intervalSeconds)
+        {
+            throw new InvalidOperationException(
+                $"Grafana alert rule group '{folderUid}/{ruleGroup}' did not retain the {intervalSeconds}-second interval.");
+        }
+
+        string[] updatedRuleUids = GetRuleGroupUids(updated, folderUid, ruleGroup);
+        if (!new HashSet<string>(ruleUids, StringComparer.Ordinal).SetEquals(updatedRuleUids))
+        {
+            throw new InvalidOperationException(
+                $"Grafana alert rule group '{folderUid}/{ruleGroup}' changed its rule set while updating the interval.");
+        }
+    }
+
+    private static string[] GetRuleGroupUids(JObject group, string folderUid, string ruleGroup)
+    {
+        JArray rules = group.Value<JArray>("rules")
+            ?? throw new InvalidOperationException(
+                $"Grafana alert rule group '{folderUid}/{ruleGroup}' did not return a rules array.");
+        string[] uids = rules
+            .OfType<JObject>()
+            .Select(rule => rule.Value<string>("uid"))
+            .Where(uid => !string.IsNullOrEmpty(uid))
+            .ToArray();
+        if (uids.Length != rules.Count || uids.Distinct(StringComparer.Ordinal).Count() != uids.Length)
+        {
+            throw new InvalidOperationException(
+                $"Grafana alert rule group '{folderUid}/{ruleGroup}' returned missing or duplicate rule UIDs.");
+        }
+
+        return uids;
+    }
+
+    private async Task<JObject> GetObjectAsync(Uri uri)
+    {
+        using (HttpResponseMessage response = await _client.GetAsync(uri).ConfigureAwait(false))
+        {
+            await response.EnsureSuccessWithContentAsync();
+
+            using (Stream stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+            using (var streamReader = new StreamReader(stream))
+            using (var jsonReader = new JsonTextReader(streamReader))
+            {
+                return await JObject.LoadAsync(jsonReader).ConfigureAwait(false);
             }
         }
     }
