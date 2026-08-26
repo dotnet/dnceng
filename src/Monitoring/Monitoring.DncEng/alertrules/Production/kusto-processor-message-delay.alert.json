@@ -1,0 +1,117 @@
+{
+  "uid": "kusto-processor-message-delay",
+  "title": "Kusto Processor Message Delay",
+  "condition": "C",
+  "data": [
+    {
+      "refId": "A",
+      "queryType": "Azure Monitor",
+      "datasourceUid": "F2XodEi7z",
+      "relativeTimeRange": {
+        "from": 300,
+        "to": 0
+      },
+      "model": {
+        "azureMonitor": {
+          "aggregation": "Average",
+          "customNamespace": "Azure.ApplicationInsights",
+          "dimensionFilters": [],
+          "metricDefinition": "Microsoft.Insights/components",
+          "metricName": "MessageDelay",
+          "metricNamespace": "Microsoft.Insights/components",
+          "resources": [
+            {
+              "metricNamespace": "Microsoft.Insights/components",
+              "resourceGroup": "HelixMonitoring",
+              "resourceName": "KustoProcessor-Prod",
+              "subscription": "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f"
+            }
+          ],
+          "timeGrain": "PT5M"
+        },
+        "datasource": {
+          "type": "grafana-azure-monitor-datasource",
+          "uid": "F2XodEi7z"
+        },
+        "queryType": "Azure Monitor",
+        "refId": "A",
+        "subscription": "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f",
+        "subscriptions": [
+          "68672ab8-de0c-40f1-8d1b-ffb20bd62c0f"
+        ]
+      }
+    },
+    {
+      "refId": "B",
+      "queryType": "",
+      "datasourceUid": "-100",
+      "relativeTimeRange": {
+        "from": 300,
+        "to": 0
+      },
+      "model": {
+        "datasource": {
+          "type": "__expr__",
+          "uid": "-100"
+        },
+        "expression": "A",
+        "reducer": "last",
+        "refId": "B",
+        "type": "reduce"
+      }
+    },
+    {
+      "refId": "C",
+      "queryType": "",
+      "datasourceUid": "-100",
+      "model": {
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                6000
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "B"
+              ]
+            },
+            "type": "query"
+          }
+        ],
+        "datasource": {
+          "type": "__expr__",
+          "uid": "-100"
+        },
+        "expression": "B",
+        "refId": "C",
+        "type": "threshold"
+      }
+    }
+  ],
+  "noDataState": "OK",
+  "execErrState": "KeepLast",
+  "for": "0s",
+  "frequency": "5m",
+  "annotations": {
+    "description": "The average KustoProcessor-Prod MessageDelay exceeded 6000 during the last five minutes. The rule remains paused to preserve the disabled state of the native production alert until parity is proven. Migration and parity evidence are tracked by AB#12370."
+  },
+  "labels": {
+    "NotificationId": "kusto-processor-message-delay"
+  },
+  "folderUID": "dnceng",
+  "ruleGroup": "Data Migration Alerts",
+  "evaluationIntervalSeconds": 300,
+  "intervalMs": 300000,
+  "isPaused": true,
+  "notification_settings": {
+    "receiver": "amg-icm-ddfun-customer-requests",
+    "group_wait": "0s",
+    "repeat_interval": "4h"
+  }
+}
