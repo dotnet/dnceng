@@ -186,6 +186,7 @@ stages:
             -p:GrafanaHost="$(GrafanaEndpoint)" `
             -p:GrafanaKeyVaultName="${{ parameters.AMGGrafanaKeyVault }}" `
             -p:GrafanaEnvironment="${{ parameters.AMGDeploymentEnvironment }}" `
+            -p:GrafanaAllowDeletes=true `
             -p:ParametersFile=parameters.json `
             -p:ClientId="${{ parameters.AMGServiceConnectionClientId }}" `
             -p:ServiceConnectionId="${{ parameters.AMGServiceConnectionId }}" `
