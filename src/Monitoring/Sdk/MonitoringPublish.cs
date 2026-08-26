@@ -28,6 +28,11 @@ public class MonitoringPublish : BuildTask
 
     [Required]
     public string NotificationDirectory { get; set; }
+
+    [Required]
+    public string RetirementDirectory { get; set; }
+
+    public bool AllowDeletes { get; set; }
         
     [Required]
     public string KeyVaultName { get; set; }
@@ -104,6 +109,8 @@ public class MonitoringPublish : BuildTask
                    dashboardDirectory: DashboardDirectory,
                    datasourceDirectory: DataSourceDirectory,
                    notificationDirectory: NotificationDirectory,
+                   retirementDirectory: RetirementDirectory,
+                   allowDeletes: AllowDeletes,
                    environment: Environment,
                    parametersFile: ParametersFile,
                    log: Log))
