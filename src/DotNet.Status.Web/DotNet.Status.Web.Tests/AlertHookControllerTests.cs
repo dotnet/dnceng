@@ -27,6 +27,7 @@ public class AlertHookControllerTests
             State = "alerting",
             Message = "Something went wrong",
             RuleUrl = "https://example/rule",
+            RuleId = 1,
             EvalMatches = null,
         };
 
@@ -86,6 +87,7 @@ public class AlertHookControllerTests
             State = "alerting",
             Message = "High CPU",
             RuleUrl = "https://example/rule",
+            RuleId = 1,
             EvalMatches = new List<GrafanaNotificationMatch>
             {
                 new GrafanaNotificationMatch { Metric = "cpu_usage", Value = 95.5 },
@@ -96,6 +98,129 @@ public class AlertHookControllerTests
 
         description.Should().Contain("cpu_usage");
         description.Should().Contain("95.5");
+    }
+
+    [Test]
+    public void GetUniqueIdentifier_WithLegacyTags_UsesNotificationId()
+    {
+        GrafanaNotification notification = new GrafanaNotification
+        {
+            RuleId = 1,
+            Tags = ImmutableDictionary<string, string>.Empty
+                .Add(AlertHookController.NotificationTagName, "legacy-notification"),
+        };
+
+        string identifier = AlertHookController.GetUniqueIdentifier(notification);
+
+        identifier.Should().Be("legacy-notification");
+    }
+
+    [Test]
+    public void GetUniqueIdentifier_WithUnifiedAlertLabels_UsesNotificationId()
+    {
+        GrafanaNotification notification = new GrafanaNotification
+        {
+            CommonLabels = ImmutableDictionary<string, string>.Empty
+                .Add(AlertHookController.NotificationTagName, "unified-notification"),
+        };
+
+        string identifier = AlertHookController.GetUniqueIdentifier(notification);
+
+        identifier.Should().Be("unified-notification");
+    }
+
+    [Test]
+    public void GetUniqueIdentifier_WithoutNotificationId_UsesRuleUid()
+    {
+        GrafanaNotification notification = new GrafanaNotification
+        {
+            CommonLabels = ImmutableDictionary<string, string>.Empty
+                .Add(AlertHookController.RuleUidLabelName, "rule-uid"),
+        };
+
+        string identifier = AlertHookController.GetUniqueIdentifier(notification);
+
+        identifier.Should().Be("rule-uid");
+    }
+
+    [Test]
+    public void GetUniqueIdentifier_WithAlertLabels_UsesNotificationId()
+    {
+        GrafanaNotification notification = new GrafanaNotification
+        {
+            Alerts = new List<GrafanaAlert>
+            {
+                new GrafanaAlert
+                {
+                    Labels = ImmutableDictionary<string, string>.Empty
+                        .Add(AlertHookController.NotificationTagName, "nested-notification"),
+                },
+            }.ToImmutableList(),
+        };
+
+        string identifier = AlertHookController.GetUniqueIdentifier(notification);
+
+        identifier.Should().Be("nested-notification");
+    }
+
+    [Test]
+    public void GetUniqueIdentifier_WithZeroRuleIdAndNoLabels_Throws()
+    {
+        GrafanaNotification notification = new GrafanaNotification();
+
+        Action action = () => AlertHookController.GetUniqueIdentifier(notification);
+
+        action.Should().Throw<InvalidOperationException>()
+            .WithMessage("*must provide*");
+    }
+
+    [Test]
+    public void GetUniqueIdentifier_WithConflictingNotificationIds_Throws()
+    {
+        GrafanaNotification notification = new GrafanaNotification
+        {
+            CommonLabels = ImmutableDictionary<string, string>.Empty
+                .Add(AlertHookController.NotificationTagName, "first-notification"),
+            Alerts = new List<GrafanaAlert>
+            {
+                new GrafanaAlert
+                {
+                    Labels = ImmutableDictionary<string, string>.Empty
+                        .Add(AlertHookController.NotificationTagName, "second-notification"),
+                },
+            }.ToImmutableList(),
+        };
+
+        Action action = () => AlertHookController.GetUniqueIdentifier(notification);
+
+        action.Should().Throw<InvalidOperationException>()
+            .WithMessage("*conflicting 'NotificationId' values*");
+    }
+
+    [Test]
+    public void GetUniqueIdentifier_WithMixedAlertIdentifiers_Throws()
+    {
+        GrafanaNotification notification = new GrafanaNotification
+        {
+            Alerts = new List<GrafanaAlert>
+            {
+                new GrafanaAlert
+                {
+                    Labels = ImmutableDictionary<string, string>.Empty
+                        .Add(AlertHookController.NotificationTagName, "notification-id"),
+                },
+                new GrafanaAlert
+                {
+                    Labels = ImmutableDictionary<string, string>.Empty
+                        .Add(AlertHookController.RuleUidLabelName, "rule-uid"),
+                },
+            }.ToImmutableList(),
+        };
+
+        Action action = () => AlertHookController.GetUniqueIdentifier(notification);
+
+        action.Should().Throw<InvalidOperationException>()
+            .WithMessage("*conflicting stable identifiers*");
     }
 
     private static AlertHookController CreateController()
@@ -124,4 +249,3 @@ public class AlertHookControllerTests
             NullLogger<AlertHookController>.Instance);
     }
 }
-
