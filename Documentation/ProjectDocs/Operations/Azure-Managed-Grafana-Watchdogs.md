@@ -176,14 +176,29 @@ template does not modify Grafana dashboards or Grafana-managed alert rules.
 ## Current blocker
 
 Azure Monitor supports a native IcM Incident Action through the preview
-`incidentReceivers` Action Group contract. No accessible Action Group currently uses that receiver,
-and the required connection ID, connection name, and routing rule are specific to the destination IcM
-service.
+`incidentReceivers` Action Group contract. The DDFun IcM service currently has this Azure Monitor
+connector:
+
+| Setting | IcM value |
+|---|---|
+| Service | `DDFun Services Management` (`28131`) |
+| Connection name | `DDFunServicesManagement-AzureMonitor` |
+| Connection ID | `2f105876-e9e7-4395-ab04-b52a081e076f` |
+| Status | Disabled |
+| Enabled clouds | None |
+| Routing ID | `DDFUNCustomerRequests` |
+| Routing target | `DDFun Services Management / DDFun Customer Requests` |
+| Default severity | 3 |
+
+These values were verified in the IcM service administration portal on August 28, 2026. The routing
+rule exists, but the connection cannot be used while it is disabled and enabled in no clouds.
 
 The existing Grafana contact point at
 `http://token-agent:5000/IcmConnector?icMRoutingId=DDFUNCustomerRequests` is internal to Grafana's
-alerting environment and is not an Azure Monitor Incident Action connection. Its routing ID must not
-be assumed valid on a different connector.
+alerting environment and is not the Azure Monitor connection above.
 
-Obtain and verify the native Incident Action values through the DDFun IcM service administrator.
-Record the approved values and staging evidence in AB#12394 before deploying this template.
+Ask a current DDFun IcM Service Admin to approve and enable
+`DDFunServicesManagement-AzureMonitor` for the Public cloud. The IcM portal currently lists Austin
+Mager, Avi Pimentel, Casey Hulbert, Jason Howard, Mikolaj Konczak, and Alex Svyatenkiy as Service
+Admins. After enablement, validate the Incident Action in staging and record the evidence in
+AB#12394 before deploying this template to production.
