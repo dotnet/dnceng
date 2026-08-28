@@ -33,7 +33,7 @@ Workspace-based Application Insights and Log Analytics
   +-- Scheduled query alert: missing watchdog heartbeat
   |
   v
-Externally supplied IcM-capable Action Group
+Azure Monitor Action Group with native IcM Incident Action
 ```
 
 Each cycle probes these existing workspaces in the `monitoring-managed` resource group:
@@ -77,17 +77,22 @@ successful cycle whose monitoring records were not accepted by the telemetry cha
 ## Deployment gate
 
 The Bicep template is intentionally not referenced from any deployment pipeline. Do not deploy it
-until an approved IcM-capable Azure Monitor Action Group exists.
+until the DDFun IcM service administrator supplies and approves the Incident Action connection and
+routing values tracked by
+[AB#12394](https://dev.azure.com/dnceng/internal/_workitems/edit/12394).
 
 The template requires:
 
-- `icmActionGroupResourceId`: approved Action Group resource ID with IcM routing.
+- `icmConnectionId`: GUID of the Azure Monitor Incident Action connection configured in IcM.
+- `icmConnectionName`: name of that connection.
+- `icmRoutingId`: routing ID with a verified matching rule on that connection.
 - `functionPackageUri`: SAS-protected URI for the published Function zip.
 
 Deploy the template to the `monitoring-managed` resource group in subscription
 `a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1` because it references the three Grafana workspaces there.
 It creates dedicated Log Analytics and Application Insights resources, a Linux Consumption Function
-with a system-assigned identity, Grafana Viewer assignments, and two scheduled query alerts.
+with a system-assigned identity, Grafana Viewer assignments, an Azure Monitor Action Group with a
+native IcM Incident Action, and two scheduled query alerts.
 
 ```powershell
 dotnet publish src\GrafanaWatchdog\Microsoft.DncEng.GrafanaWatchdog -c Release -o publish
@@ -96,7 +101,9 @@ Compress-Archive -Path publish\* -DestinationPath grafana-watchdog.zip
 az deployment group create `
   --resource-group monitoring-managed `
   --template-file eng\deployment\grafana-watchdog.bicep `
-  --parameters icmActionGroupResourceId="<Action Group resource ID>" `
+  --parameters icmConnectionId="<IcM connection GUID>" `
+               icmConnectionName="<IcM connection name>" `
+               icmRoutingId="<verified routing ID>" `
                functionPackageUri="<SAS URI for grafana-watchdog.zip>"
 ```
 
@@ -128,8 +135,9 @@ AppEvents
 | where HeartbeatCount == 0
 ```
 
-Both rules evaluate every five minutes, auto-mitigate, and route only to
-`icmActionGroupResourceId`.
+Both rules evaluate every five minutes, auto-mitigate, and route only to the Action Group created by
+the template. Its native Incident Action maps Common Alert Schema fields into the IcM title,
+description, severity, correlation ID, impact start time, monitor ID, and runbook URL.
 
 ## Controlled negative test
 
@@ -162,15 +170,20 @@ rule without a coordinated maintenance window.
 
 Remove the three Grafana Viewer assignments for the Function identity, then delete only the resources
 created by `grafana-watchdog.bicep`: the Function app, Consumption plan, storage account, Application
-Insights component, Log Analytics workspace, and both scheduled query rules. The template does not
-modify Grafana dashboards or Grafana-managed alert rules.
+Insights component, Log Analytics workspace, Action Group, and both scheduled query rules. The
+template does not modify Grafana dashboards or Grafana-managed alert rules.
 
 ## Current blocker
 
-The AB#12372 investigation did not identify an approved Azure Monitor Action Group that routes to IcM.
+Azure Monitor supports a native IcM Incident Action through the preview
+`incidentReceivers` Action Group contract. No accessible Action Group currently uses that receiver,
+and the required connection ID, connection name, and routing rule are specific to the destination IcM
+service.
+
 The existing Grafana contact point at
 `http://token-agent:5000/IcmConnector?icMRoutingId=DDFUNCustomerRequests` is internal to Grafana's
-alerting environment and is not an Azure Monitor Action Group endpoint.
+alerting environment and is not an Azure Monitor Incident Action connection. Its routing ID must not
+be assumed valid on a different connector.
 
-Provisioning and approving the Action Group is outside this code change. Record its approved resource
-ID in AB#12372 before deploying this template.
+Obtain and verify the native Incident Action values through the DDFun IcM service administrator.
+Record the approved values and staging evidence in AB#12394 before deploying this template.

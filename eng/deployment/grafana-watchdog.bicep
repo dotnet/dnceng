@@ -2,7 +2,7 @@
 //
 // This template is intentionally NOT referenced from azure-pipelines.yml, deploy-managed-grafana.yml,
 // or any other deployment template in this repo. It must be deployed manually (or from a dedicated
-// pipeline added later) once an IcM-capable Action Group exists. See:
+// pipeline added later) once the IcM connection and routing values are approved. See:
 //   Documentation/ProjectDocs/Operations/Azure-Managed-Grafana-Watchdogs.md
 //
 // Deploy this template AT THE SAME RESOURCE GROUP as the existing Grafana workspaces
@@ -10,22 +10,29 @@
 // looks the workspaces up as `existing` resources to read their auto-generated endpoints and to grant
 // the watchdog's managed identity Grafana Viewer access on each of them.
 //
-// Example deployment (do not run until icmActionGroupResourceId and functionPackageUri are known):
+// Example deployment (do not run until the IcM connection parameters and functionPackageUri are known):
 //   az deployment group create \
 //     --resource-group monitoring-managed \
 //     --template-file eng/deployment/grafana-watchdog.bicep \
-//     --parameters icmActionGroupResourceId=<IcM action group resource ID> \
+//     --parameters icmConnectionId=<IcM connection GUID> \
+//                  icmConnectionName=<IcM connection name> \
+//                  icmRoutingId=<IcM routing ID> \
 //                  functionPackageUri=<blob URL to the published GrafanaWatchdog function package>
 
 @description('''
-Resource ID of an Azure Monitor Action Group capable of routing to IcM. There is no default value:
-at the time this template was authored, no such Action Group existed (the only known Grafana-side
-IcM connector, http://token-agent:5000/IcmConnector, is internal to Grafana and cannot be invoked by
-Azure Monitor). Supply this parameter only once a real IcM-capable Action Group resource ID is
-available; omitting it fails the deployment instead of silently deploying without alert routing.
+GUID of the Azure Monitor Incident Action connection configured in IcM. This is service-specific and
+must be supplied by the IcM service administrator; it is not the Grafana token-agent connector.
 ''')
 @minLength(1)
-param icmActionGroupResourceId string
+param icmConnectionId string
+
+@description('Name of the Azure Monitor Incident Action connection configured in IcM.')
+@minLength(1)
+param icmConnectionName string
+
+@description('Routing ID that has a verified matching rule on the supplied IcM connection.')
+@minLength(1)
+param icmRoutingId string
 
 @description('''
 URI to the built GrafanaWatchdog function deployment package (a zip package referenced via
@@ -75,11 +82,19 @@ var functionAppName = toLower('${baseName}-${uniqueSuffix}')
 var appServicePlanName = '${baseName}-plan'
 var appInsightsName = '${baseName}-ai'
 var logAnalyticsName = '${baseName}-law'
+var actionGroupName = '${baseName}-icm'
 var grafanaViewerRoleId = '60921a7e-fef1-4a43-9b16-a26c52ad4769'
 var repeatedFailureWindow = 'PT${repeatedFailureWindowMinutes}M'
 var repeatedFailureLookback = '${repeatedFailureWindowMinutes}m'
 var missingHeartbeatWindow = 'PT${missingHeartbeatWindowMinutes}M'
 var missingHeartbeatLookback = '${missingHeartbeatWindowMinutes}m'
+var alertRuleExpression = format('{0}{1}', '$', '{data.essentials.alertRule}')
+var descriptionExpression = format('{0}{1}', '$', '{data.essentials.description}')
+var firedDateTimeExpression = format('{0}{1}', '$', '{data.essentials.firedDateTime}')
+var monitorConditionExpression = format('{0}{1}', '$', '{data.essentials.monitorCondition}')
+var originAlertIdExpression = format('{0}{1}', '$', '{data.essentials.originAlertId}')
+var severityExpression = format('{0}{1}', '$', '{data.essentials.severity}')
+var watchdogRunbookUrl = 'https://github.com/dotnet/dnceng/blob/main/Documentation/ProjectDocs/Operations/Azure-Managed-Grafana-Watchdogs.md'
 
 // A row is returned only when a workspace has repeatedFailureThreshold or more failed probes
 // (AvailabilityTelemetry.Success == false) within repeatedFailureWindow; no rows means healthy.
@@ -137,6 +152,37 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
     IngestionMode: 'LogAnalytics'
     Flow_Type: 'Bluefield'
     Request_Source: 'rest'
+  }
+}
+
+resource icmActionGroup 'Microsoft.Insights/actionGroups@2024-10-01-preview' = {
+  name: actionGroupName
+  location: 'Global'
+  properties: {
+    groupShortName: 'grafana-wd'
+    enabled: true
+    incidentReceivers: [
+      {
+        name: 'DDFun Customer Requests'
+        connection: {
+          id: icmConnectionId
+          name: icmConnectionName
+        }
+        incidentManagementService: 'Icm'
+        mappings: {
+          'icm.automitigationenabled': 'true'
+          'icm.correlationid': originAlertIdExpression
+          'icm.description': descriptionExpression
+          'icm.impactstartdate': firedDateTimeExpression
+          'icm.monitorid': alertRuleExpression
+          'icm.occurringlocation.environment': 'PROD'
+          'icm.routingid': icmRoutingId
+          'icm.severity': severityExpression
+          'icm.title': format('[{0}] {1} - {2}', monitorConditionExpression, alertRuleExpression, descriptionExpression)
+          'icm.tsgid': watchdogRunbookUrl
+        }
+      }
+    ]
   }
 }
 
@@ -274,7 +320,7 @@ resource repeatedFailureAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15
   location: location
   properties: {
     displayName: 'Grafana Watchdog - Repeated Probe Failures'
-    description: 'Fires when a Grafana workspace has ${repeatedFailureThreshold} or more failed authenticated probe cycles within ${repeatedFailureWindow}. Routed only to the supplied IcM action group; see the runbook for the current connector blocker.'
+    description: 'Fires when a Grafana workspace has ${repeatedFailureThreshold} or more failed authenticated probe cycles within ${repeatedFailureWindow}. Routed through the watchdog IcM Incident Action.'
     severity: 2
     enabled: true
     evaluationFrequency: alertEvaluationFrequency
@@ -302,7 +348,7 @@ resource repeatedFailureAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15
     autoMitigate: true
     actions: {
       actionGroups: [
-        icmActionGroupResourceId
+        icmActionGroup.id
       ]
     }
   }
@@ -313,7 +359,7 @@ resource missingHeartbeatAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-1
   location: location
   properties: {
     displayName: 'Grafana Watchdog - Missing Heartbeat'
-    description: 'Fires when no GrafanaWatchdog heartbeat event has been recorded within ${missingHeartbeatWindow}, indicating the watchdog Function itself has stopped running (as opposed to running but seeing probe failures). Routed only to the supplied IcM action group.'
+    description: 'Fires when no GrafanaWatchdog heartbeat event has been recorded within ${missingHeartbeatWindow}, indicating the watchdog Function itself has stopped running (as opposed to running but seeing probe failures). Routed through the watchdog IcM Incident Action.'
     severity: 1
     enabled: true
     evaluationFrequency: alertEvaluationFrequency
@@ -341,7 +387,7 @@ resource missingHeartbeatAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-1
     autoMitigate: true
     actions: {
       actionGroups: [
-        icmActionGroupResourceId
+        icmActionGroup.id
       ]
     }
   }
@@ -351,3 +397,4 @@ output functionAppName string = functionApp.name
 output functionAppPrincipalId string = functionApp.identity.principalId
 output appInsightsName string = appInsights.name
 output logAnalyticsWorkspaceName string = logAnalyticsWorkspace.name
+output icmActionGroupResourceId string = icmActionGroup.id
