@@ -1,0 +1,870 @@
+{
+  "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "$connections": {
+      "defaultValue": {},
+      "type": "Object"
+    },
+    "storageTableEndpoint": {
+      "type": "String"
+    },
+    "storageTableName": {
+      "type": "String"
+    },
+    "teamId": {
+      "type": "String"
+    },
+    "channelId": {
+      "type": "String"
+    },
+    "icmProviderEndpoint": {
+      "type": "String"
+    },
+    "icmProviderAudience": {
+      "type": "String"
+    },
+    "icmConnectorId": {
+      "type": "String"
+    },
+    "icmRoutingRuleId": {
+      "type": "String"
+    }
+  },
+  "triggers": {
+    "When_a_new_channel_message_is_added": {
+      "type": "ApiConnection",
+      "inputs": {
+        "host": {
+          "connection": {
+            "name": "@parameters('$connections')['teams']['connectionId']"
+          }
+        },
+        "method": "get",
+        "path": "/trigger/beta/teams/@{encodeURIComponent(parameters('teamId'))}/channels/@{encodeURIComponent(parameters('channelId'))}/messages"
+      },
+      "recurrence": {
+        "frequency": "Minute",
+        "interval": 3
+      },
+      "splitOn": "@triggerBody()",
+      "runtimeConfiguration": {
+        "concurrency": {
+          "runs": 1
+        }
+      }
+    }
+  },
+  "actions": {
+    "Compose_Row_Key": {
+      "type": "Compose",
+      "inputs": "@replace(replace(replace(replace(string(triggerBody()?['id']), '/', '_'), '\\', '_'), '#', '_'), '?', '_')",
+      "runAfter": {}
+    },
+    "Reserve_Message": {
+      "type": "Http",
+      "inputs": {
+        "authentication": {
+          "type": "ManagedServiceIdentity",
+          "audience": "https://storage.azure.com/"
+        },
+        "body": {
+          "PartitionKey": "TeamsIcm",
+          "RowKey": "@{outputs('Compose_Row_Key')}",
+          "Status": "Processing",
+          "TeamId": "@{parameters('teamId')}",
+          "ChannelId": "@{parameters('channelId')}",
+          "MessageId": "@{triggerBody()?['id']}",
+          "WorkflowRunId": "@{workflow()?['run']?['name']}",
+          "UpdatedUtc": "@{utcNow()}"
+        },
+        "headers": {
+          "Accept": "application/json;odata=nometadata",
+          "Content-Type": "application/json",
+          "x-ms-date": "@{utcNow('R')}",
+          "x-ms-version": "2019-02-02"
+        },
+        "method": "POST",
+        "uri": "@{concat(parameters('storageTableEndpoint'), parameters('storageTableName'))}"
+      },
+      "runAfter": {
+        "Compose_Row_Key": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Accept_New_Or_Existing_Reservation": {
+      "type": "If",
+      "expression": {
+        "or": [
+          {
+            "equals": [
+              "@outputs('Reserve_Message')?['statusCode']",
+              201
+            ]
+          },
+          {
+            "equals": [
+              "@outputs('Reserve_Message')?['statusCode']",
+              204
+            ]
+          }
+        ]
+      },
+      "actions": {},
+      "else": {
+        "actions": {
+          "Is_Duplicate_Delivery": {
+            "type": "If",
+            "expression": {
+              "equals": [
+                "@outputs('Reserve_Message')?['statusCode']",
+                409
+              ]
+            },
+            "actions": {
+              "Get_Existing_State": {
+                "type": "Http",
+                "inputs": {
+                  "authentication": {
+                    "type": "ManagedServiceIdentity",
+                    "audience": "https://storage.azure.com/"
+                  },
+                  "headers": {
+                    "Accept": "application/json;odata=nometadata",
+                    "x-ms-date": "@{utcNow('R')}",
+                    "x-ms-version": "2019-02-02"
+                  },
+                  "method": "GET",
+                  "uri": "@{concat(parameters('storageTableEndpoint'), parameters('storageTableName'), '(PartitionKey=''TeamsIcm'',RowKey=''', outputs('Compose_Row_Key'), ''')')}"
+                }
+              },
+              "Already_Replied": {
+                "type": "If",
+                "expression": {
+                  "equals": [
+                    "@body('Get_Existing_State')?['Status']",
+                    "ReplyPosted"
+                  ]
+                },
+                "actions": {
+                  "Stop_Duplicate": {
+                    "type": "Terminate",
+                    "inputs": {
+                      "runStatus": "Succeeded"
+                    }
+                  }
+                },
+                "else": {
+                  "actions": {}
+                },
+                "runAfter": {
+                  "Get_Existing_State": [
+                    "Succeeded"
+                  ]
+                }
+              }
+            },
+            "else": {
+              "actions": {
+                "Stop_Reservation_Failure": {
+                  "type": "Terminate",
+                  "inputs": {
+                    "runStatus": "Failed",
+                    "runError": {
+                      "code": "StorageReservationFailed",
+                      "message": "The intake message could not be reserved in Azure Table Storage."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "runAfter": {
+        "Reserve_Message": [
+          "Succeeded",
+          "Failed",
+          "TimedOut"
+        ]
+      }
+    },
+    "Compose_Plain_Text": {
+      "type": "Compose",
+      "inputs": "@trim(replace(replace(replace(replace(replace(replace(replace(replace(string(triggerBody()?['body']?['content']), '<p>', ''), '</p>', decodeUriComponent('%0A')), '<br>', decodeUriComponent('%0A')), '<br/>', decodeUriComponent('%0A')), '<br />', decodeUriComponent('%0A')), '<div>', ''), '</div>', decodeUriComponent('%0A')), '&nbsp;', ' '))",
+      "runAfter": {
+        "Accept_New_Or_Existing_Reservation": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Compose_Title": {
+      "type": "Compose",
+      "inputs": "@trim(first(split(last(split(outputs('Compose_Plain_Text'), 'Title:')), decodeUriComponent('%0A'))))",
+      "runAfter": {
+        "Compose_Plain_Text": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Compose_Who": {
+      "type": "Compose",
+      "inputs": "@trim(first(split(last(split(outputs('Compose_Plain_Text'), 'Who/customer affected:')), decodeUriComponent('%0A'))))",
+      "runAfter": {
+        "Compose_Plain_Text": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Compose_Impact": {
+      "type": "Compose",
+      "inputs": "@trim(first(split(last(split(outputs('Compose_Plain_Text'), 'Impact:')), decodeUriComponent('%0A'))))",
+      "runAfter": {
+        "Compose_Plain_Text": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Compose_Affected_Infrastructure": {
+      "type": "Compose",
+      "inputs": "@trim(first(split(last(split(outputs('Compose_Plain_Text'), 'Affected service/infrastructure:')), decodeUriComponent('%0A'))))",
+      "runAfter": {
+        "Compose_Plain_Text": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Compose_Evidence": {
+      "type": "Compose",
+      "inputs": "@trim(first(split(last(split(outputs('Compose_Plain_Text'), 'Evidence or build/job URL:')), decodeUriComponent('%0A'))))",
+      "runAfter": {
+        "Compose_Plain_Text": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Compose_Requested_Action": {
+      "type": "Compose",
+      "inputs": "@trim(first(split(last(split(outputs('Compose_Plain_Text'), 'Requested action:')), decodeUriComponent('%0A'))))",
+      "runAfter": {
+        "Compose_Plain_Text": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Compose_Reporter": {
+      "type": "Compose",
+      "inputs": "@trim(first(split(last(split(outputs('Compose_Plain_Text'), 'Reporter:')), decodeUriComponent('%0A'))))",
+      "runAfter": {
+        "Compose_Plain_Text": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Compose_Severity": {
+      "type": "Compose",
+      "inputs": "@trim(first(split(last(split(outputs('Compose_Plain_Text'), 'Severity:')), decodeUriComponent('%0A'))))",
+      "runAfter": {
+        "Compose_Plain_Text": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Validate_Intake": {
+      "type": "If",
+      "expression": {
+        "and": [
+          {
+            "contains": [
+              "@outputs('Compose_Plain_Text')",
+              "Title:"
+            ]
+          },
+          {
+            "contains": [
+              "@outputs('Compose_Plain_Text')",
+              "Who/customer affected:"
+            ]
+          },
+          {
+            "contains": [
+              "@outputs('Compose_Plain_Text')",
+              "Impact:"
+            ]
+          },
+          {
+            "contains": [
+              "@outputs('Compose_Plain_Text')",
+              "Affected service/infrastructure:"
+            ]
+          },
+          {
+            "contains": [
+              "@outputs('Compose_Plain_Text')",
+              "Evidence or build/job URL:"
+            ]
+          },
+          {
+            "contains": [
+              "@outputs('Compose_Plain_Text')",
+              "Requested action:"
+            ]
+          },
+          {
+            "contains": [
+              "@outputs('Compose_Plain_Text')",
+              "Reporter:"
+            ]
+          },
+          {
+            "contains": [
+              "@outputs('Compose_Plain_Text')",
+              "Severity:"
+            ]
+          },
+          {
+            "equals": [
+              "@length(split(outputs('Compose_Plain_Text'), 'Title:'))",
+              2
+            ]
+          },
+          {
+            "equals": [
+              "@length(split(outputs('Compose_Plain_Text'), 'Who/customer affected:'))",
+              2
+            ]
+          },
+          {
+            "equals": [
+              "@length(split(outputs('Compose_Plain_Text'), 'Impact:'))",
+              2
+            ]
+          },
+          {
+            "equals": [
+              "@length(split(outputs('Compose_Plain_Text'), 'Affected service/infrastructure:'))",
+              2
+            ]
+          },
+          {
+            "equals": [
+              "@length(split(outputs('Compose_Plain_Text'), 'Evidence or build/job URL:'))",
+              2
+            ]
+          },
+          {
+            "equals": [
+              "@length(split(outputs('Compose_Plain_Text'), 'Requested action:'))",
+              2
+            ]
+          },
+          {
+            "equals": [
+              "@length(split(outputs('Compose_Plain_Text'), 'Reporter:'))",
+              2
+            ]
+          },
+          {
+            "equals": [
+              "@length(split(outputs('Compose_Plain_Text'), 'Severity:'))",
+              2
+            ]
+          },
+          {
+            "less": [
+              "@indexOf(outputs('Compose_Plain_Text'), 'Title:')",
+              "@indexOf(outputs('Compose_Plain_Text'), 'Who/customer affected:')"
+            ]
+          },
+          {
+            "less": [
+              "@indexOf(outputs('Compose_Plain_Text'), 'Who/customer affected:')",
+              "@indexOf(outputs('Compose_Plain_Text'), 'Impact:')"
+            ]
+          },
+          {
+            "less": [
+              "@indexOf(outputs('Compose_Plain_Text'), 'Impact:')",
+              "@indexOf(outputs('Compose_Plain_Text'), 'Affected service/infrastructure:')"
+            ]
+          },
+          {
+            "less": [
+              "@indexOf(outputs('Compose_Plain_Text'), 'Affected service/infrastructure:')",
+              "@indexOf(outputs('Compose_Plain_Text'), 'Evidence or build/job URL:')"
+            ]
+          },
+          {
+            "less": [
+              "@indexOf(outputs('Compose_Plain_Text'), 'Evidence or build/job URL:')",
+              "@indexOf(outputs('Compose_Plain_Text'), 'Requested action:')"
+            ]
+          },
+          {
+            "less": [
+              "@indexOf(outputs('Compose_Plain_Text'), 'Requested action:')",
+              "@indexOf(outputs('Compose_Plain_Text'), 'Reporter:')"
+            ]
+          },
+          {
+            "less": [
+              "@indexOf(outputs('Compose_Plain_Text'), 'Reporter:')",
+              "@indexOf(outputs('Compose_Plain_Text'), 'Severity:')"
+            ]
+          },
+          {
+            "not": {
+              "equals": [
+                "@outputs('Compose_Title')",
+                ""
+              ]
+            }
+          },
+          {
+            "not": {
+              "equals": [
+                "@outputs('Compose_Who')",
+                ""
+              ]
+            }
+          },
+          {
+            "not": {
+              "equals": [
+                "@outputs('Compose_Impact')",
+                ""
+              ]
+            }
+          },
+          {
+            "not": {
+              "equals": [
+                "@outputs('Compose_Affected_Infrastructure')",
+                ""
+              ]
+            }
+          },
+          {
+            "not": {
+              "equals": [
+                "@outputs('Compose_Evidence')",
+                ""
+              ]
+            }
+          },
+          {
+            "not": {
+              "equals": [
+                "@outputs('Compose_Requested_Action')",
+                ""
+              ]
+            }
+          },
+          {
+            "not": {
+              "equals": [
+                "@outputs('Compose_Reporter')",
+                ""
+              ]
+            }
+          },
+          {
+            "or": [
+              {
+                "equals": [
+                  "@outputs('Compose_Severity')",
+                  "3"
+                ]
+              },
+              {
+                "equals": [
+                  "@outputs('Compose_Severity')",
+                  "4"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "actions": {
+        "Compose_IcM_Description": {
+          "type": "Compose",
+          "inputs": "@concat('Created from a structured root message in the .NET Eng Services Teams IcM intake channel.', decodeUriComponent('%0A%0A'), 'Impact: ', outputs('Compose_Impact'), decodeUriComponent('%0A'), 'Affected service/infrastructure: ', outputs('Compose_Affected_Infrastructure'), decodeUriComponent('%0A'), 'Evidence: ', outputs('Compose_Evidence'), decodeUriComponent('%0A'), 'Requested action: ', outputs('Compose_Requested_Action'), decodeUriComponent('%0A%0A'), '---', decodeUriComponent('%0A'), 'Incident Details (4W)', decodeUriComponent('%0A'), 'Who: ', outputs('Compose_Who'), decodeUriComponent('%0A'), 'What: ', outputs('Compose_Impact'), decodeUriComponent('%0A'), 'When: Teams message posted at ', triggerBody()?['createdDateTime'], decodeUriComponent('%0A'), 'Where: ', outputs('Compose_Affected_Infrastructure'), decodeUriComponent('%0A%0A'), 'Filing Info', decodeUriComponent('%0A'), 'Filed by: ', outputs('Compose_Reporter'), decodeUriComponent('%0A'), 'Filing method: DncEng Teams IcM Logic App pilot', decodeUriComponent('%0A'), 'Teams message ID: ', triggerBody()?['id'])"
+        },
+        "Create_And_Parse_IcM": {
+          "type": "Scope",
+          "actions": {
+            "Create_Or_Update_IcM": {
+              "type": "Http",
+              "inputs": {
+                "authentication": {
+                  "type": "ManagedServiceIdentity",
+                  "audience": "@parameters('icmProviderAudience')"
+                },
+                "body": {
+                  "Title": "@{outputs('Compose_Title')}",
+                  "Description": "@{outputs('Compose_IcM_Description')}",
+                  "Summary": "@{outputs('Compose_Impact')}",
+                  "TeamRoutingRuleId": "@{parameters('icmRoutingRuleId')}",
+                  "Severity": "@{int(outputs('Compose_Severity'))}",
+                  "Status": 1,
+                  "SourceUserName": "@{outputs('Compose_Reporter')}",
+                  "SourceOrigin": "DncEng Teams IcM Pilot",
+                  "AlertSourceIncidentId": "AB12383-@{outputs('Compose_Row_Key')}",
+                  "IcmServiceConnectorId": "@{parameters('icmConnectorId')}",
+                  "Tags": [
+                    "DDFun",
+                    "Teams-IcM-Pilot",
+                    "AB-12383"
+                  ]
+                },
+                "headers": {
+                  "Content-Type": "application/json"
+                },
+                "method": "POST",
+                "retryPolicy": {
+                  "type": "exponential",
+                  "count": 3,
+                  "interval": "PT10S",
+                  "minimumInterval": "PT10S",
+                  "maximumInterval": "PT1M"
+                },
+                "uri": "@parameters('icmProviderEndpoint')"
+              }
+            },
+            "Compose_Incident_Id": {
+              "type": "Compose",
+              "inputs": "@int(json(body('Create_Or_Update_IcM'))?['IncidentId'])",
+              "runAfter": {
+                "Create_Or_Update_IcM": [
+                  "Succeeded"
+                ]
+              }
+            }
+          },
+          "runAfter": {
+            "Compose_IcM_Description": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Record_IcM_Created": {
+          "type": "Http",
+          "inputs": {
+            "authentication": {
+              "type": "ManagedServiceIdentity",
+              "audience": "https://storage.azure.com/"
+            },
+            "body": {
+              "PartitionKey": "TeamsIcm",
+              "RowKey": "@{outputs('Compose_Row_Key')}",
+              "Status": "Created",
+              "IncidentId": "@{outputs('Compose_Incident_Id')}",
+              "WorkflowRunId": "@{workflow()?['run']?['name']}",
+              "UpdatedUtc": "@{utcNow()}"
+            },
+            "headers": {
+              "Accept": "application/json;odata=nometadata",
+              "Content-Type": "application/json",
+              "If-Match": "*",
+              "x-ms-date": "@{utcNow('R')}",
+              "x-ms-version": "2019-02-02"
+            },
+            "method": "MERGE",
+            "uri": "@{concat(parameters('storageTableEndpoint'), parameters('storageTableName'), '(PartitionKey=''TeamsIcm'',RowKey=''', outputs('Compose_Row_Key'), ''')')}"
+          },
+          "runAfter": {
+            "Create_And_Parse_IcM": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Reply_With_IcM_Link": {
+          "type": "ApiConnection",
+          "inputs": {
+            "body": {
+              "messageBody": "<p>Created <a href=\"https://portal.microsofticm.com/imp/v5/incidents/details/@{outputs('Compose_Incident_Id')}/summary\">IcM @{outputs('Compose_Incident_Id')}</a> and routed it to DDFun Customer Requests.</p>",
+              "parentMessageId": "@{triggerBody()?['id']}",
+              "recipient": {
+                "groupId": "@{parameters('teamId')}",
+                "channelId": "@{parameters('channelId')}"
+              }
+            },
+            "host": {
+              "connection": {
+                "name": "@parameters('$connections')['teams']['connectionId']"
+              }
+            },
+            "method": "post",
+            "path": "/v1.0/teams/conversation/replyWithMessage/poster/@{encodeURIComponent('Flow bot')}/location/@{encodeURIComponent('Channel')}"
+          },
+          "runAfter": {
+            "Record_IcM_Created": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Record_Reply_Posted": {
+          "type": "Http",
+          "inputs": {
+            "authentication": {
+              "type": "ManagedServiceIdentity",
+              "audience": "https://storage.azure.com/"
+            },
+            "body": {
+              "PartitionKey": "TeamsIcm",
+              "RowKey": "@{outputs('Compose_Row_Key')}",
+              "Status": "ReplyPosted",
+              "IncidentId": "@{outputs('Compose_Incident_Id')}",
+              "WorkflowRunId": "@{workflow()?['run']?['name']}",
+              "UpdatedUtc": "@{utcNow()}"
+            },
+            "headers": {
+              "Accept": "application/json;odata=nometadata",
+              "Content-Type": "application/json",
+              "If-Match": "*",
+              "x-ms-date": "@{utcNow('R')}",
+              "x-ms-version": "2019-02-02"
+            },
+            "method": "MERGE",
+            "uri": "@{concat(parameters('storageTableEndpoint'), parameters('storageTableName'), '(PartitionKey=''TeamsIcm'',RowKey=''', outputs('Compose_Row_Key'), ''')')}"
+          },
+          "runAfter": {
+            "Reply_With_IcM_Link": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Record_Provider_Failure": {
+          "type": "Http",
+          "inputs": {
+            "authentication": {
+              "type": "ManagedServiceIdentity",
+              "audience": "https://storage.azure.com/"
+            },
+            "body": {
+              "PartitionKey": "TeamsIcm",
+              "RowKey": "@{outputs('Compose_Row_Key')}",
+              "Status": "Failed",
+              "FailureStage": "IcmProvider",
+              "FailureStatusCode": "@{outputs('Create_Or_Update_IcM')?['statusCode']}",
+              "WorkflowRunId": "@{workflow()?['run']?['name']}",
+              "UpdatedUtc": "@{utcNow()}"
+            },
+            "headers": {
+              "Accept": "application/json;odata=nometadata",
+              "Content-Type": "application/json",
+              "If-Match": "*",
+              "x-ms-date": "@{utcNow('R')}",
+              "x-ms-version": "2019-02-02"
+            },
+            "method": "MERGE",
+            "uri": "@{concat(parameters('storageTableEndpoint'), parameters('storageTableName'), '(PartitionKey=''TeamsIcm'',RowKey=''', outputs('Compose_Row_Key'), ''')')}"
+          },
+          "runAfter": {
+            "Create_And_Parse_IcM": [
+              "Failed",
+              "TimedOut"
+            ]
+          }
+        },
+        "Reply_Provider_Failure": {
+          "type": "ApiConnection",
+          "inputs": {
+            "body": {
+              "messageBody": "<p>The IcM request failed. No successful incident creation was recorded. Please contact the .NET Engineering Services First Responder and include workflow run <code>@{workflow()?['run']?['name']}</code>.</p>",
+              "parentMessageId": "@{triggerBody()?['id']}",
+              "recipient": {
+                "groupId": "@{parameters('teamId')}",
+                "channelId": "@{parameters('channelId')}"
+              }
+            },
+            "host": {
+              "connection": {
+                "name": "@parameters('$connections')['teams']['connectionId']"
+              }
+            },
+            "method": "post",
+            "path": "/v1.0/teams/conversation/replyWithMessage/poster/@{encodeURIComponent('Flow bot')}/location/@{encodeURIComponent('Channel')}"
+          },
+          "runAfter": {
+            "Record_Provider_Failure": [
+              "Succeeded",
+              "Failed",
+              "TimedOut"
+            ]
+          }
+        },
+        "Stop_Provider_Failure": {
+          "type": "Terminate",
+          "inputs": {
+            "runStatus": "Failed",
+            "runError": {
+              "code": "IcmProviderFailed",
+              "message": "The ICM Provider did not create or update an incident."
+            }
+          },
+          "runAfter": {
+            "Reply_Provider_Failure": [
+              "Succeeded",
+              "Failed",
+              "TimedOut"
+            ]
+          }
+        },
+        "Record_Reply_Failure": {
+          "type": "Http",
+          "inputs": {
+            "authentication": {
+              "type": "ManagedServiceIdentity",
+              "audience": "https://storage.azure.com/"
+            },
+            "body": {
+              "PartitionKey": "TeamsIcm",
+              "RowKey": "@{outputs('Compose_Row_Key')}",
+              "Status": "Failed",
+              "FailureStage": "TeamsReply",
+              "IncidentId": "@{outputs('Compose_Incident_Id')}",
+              "WorkflowRunId": "@{workflow()?['run']?['name']}",
+              "UpdatedUtc": "@{utcNow()}"
+            },
+            "headers": {
+              "Accept": "application/json;odata=nometadata",
+              "Content-Type": "application/json",
+              "If-Match": "*",
+              "x-ms-date": "@{utcNow('R')}",
+              "x-ms-version": "2019-02-02"
+            },
+            "method": "MERGE",
+            "uri": "@{concat(parameters('storageTableEndpoint'), parameters('storageTableName'), '(PartitionKey=''TeamsIcm'',RowKey=''', outputs('Compose_Row_Key'), ''')')}"
+          },
+          "runAfter": {
+            "Reply_With_IcM_Link": [
+              "Failed",
+              "TimedOut"
+            ]
+          }
+        },
+        "Stop_Reply_Failure": {
+          "type": "Terminate",
+          "inputs": {
+            "runStatus": "Failed",
+            "runError": {
+              "code": "TeamsReplyFailed",
+              "message": "The incident was created, but the Teams reply was not posted."
+            }
+          },
+          "runAfter": {
+            "Record_Reply_Failure": [
+              "Succeeded",
+              "Failed",
+              "TimedOut"
+            ]
+          }
+        }
+      },
+      "else": {
+        "actions": {
+          "Record_Validation_Failure": {
+            "type": "Http",
+            "inputs": {
+              "authentication": {
+                "type": "ManagedServiceIdentity",
+                "audience": "https://storage.azure.com/"
+              },
+              "body": {
+                "PartitionKey": "TeamsIcm",
+                "RowKey": "@{outputs('Compose_Row_Key')}",
+                "Status": "Failed",
+                "FailureStage": "Validation",
+                "WorkflowRunId": "@{workflow()?['run']?['name']}",
+                "UpdatedUtc": "@{utcNow()}"
+              },
+              "headers": {
+                "Accept": "application/json;odata=nometadata",
+                "Content-Type": "application/json",
+                "If-Match": "*",
+                "x-ms-date": "@{utcNow('R')}",
+                "x-ms-version": "2019-02-02"
+              },
+              "method": "MERGE",
+              "uri": "@{concat(parameters('storageTableEndpoint'), parameters('storageTableName'), '(PartitionKey=''TeamsIcm'',RowKey=''', outputs('Compose_Row_Key'), ''')')}"
+            }
+          },
+          "Reply_With_Intake_Template": {
+            "type": "ApiConnection",
+            "inputs": {
+              "body": {
+                "messageBody": "<p>No IcM was created because the request is incomplete or uses an unsupported severity. Submit a new root message with non-empty values using this exact template:</p><pre>Title:\nWho/customer affected:\nImpact:\nAffected service/infrastructure:\nEvidence or build/job URL:\nRequested action:\nReporter:\nSeverity: 3 or 4</pre>",
+                "parentMessageId": "@{triggerBody()?['id']}",
+                "recipient": {
+                  "groupId": "@{parameters('teamId')}",
+                  "channelId": "@{parameters('channelId')}"
+                }
+              },
+              "host": {
+                "connection": {
+                  "name": "@parameters('$connections')['teams']['connectionId']"
+                }
+              },
+              "method": "post",
+              "path": "/v1.0/teams/conversation/replyWithMessage/poster/@{encodeURIComponent('Flow bot')}/location/@{encodeURIComponent('Channel')}"
+            },
+            "runAfter": {
+              "Record_Validation_Failure": [
+                "Succeeded",
+                "Failed",
+                "TimedOut"
+              ]
+            }
+          },
+          "Stop_Validation_Failure": {
+            "type": "Terminate",
+            "inputs": {
+              "runStatus": "Failed",
+              "runError": {
+                "code": "InvalidIntake",
+                "message": "The Teams message did not satisfy the structured intake contract."
+              }
+            },
+            "runAfter": {
+              "Reply_With_Intake_Template": [
+                "Succeeded",
+                "Failed",
+                "TimedOut"
+              ]
+            }
+          }
+        }
+      },
+      "runAfter": {
+        "Compose_Title": [
+          "Succeeded"
+        ],
+        "Compose_Who": [
+          "Succeeded"
+        ],
+        "Compose_Impact": [
+          "Succeeded"
+        ],
+        "Compose_Affected_Infrastructure": [
+          "Succeeded"
+        ],
+        "Compose_Evidence": [
+          "Succeeded"
+        ],
+        "Compose_Requested_Action": [
+          "Succeeded"
+        ],
+        "Compose_Reporter": [
+          "Succeeded"
+        ],
+        "Compose_Severity": [
+          "Succeeded"
+        ]
+      }
+    }
+  },
+  "outputs": {}
+}
