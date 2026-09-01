@@ -560,6 +560,9 @@
               "PartitionKey": "TeamsIcm",
               "RowKey": "@{outputs('Compose_Row_Key')}",
               "Status": "Created",
+              "TeamId": "@{parameters('teamId')}",
+              "ChannelId": "@{parameters('channelId')}",
+              "MessageId": "@{triggerBody()?['id']}",
               "IncidentId": "@{outputs('Compose_Incident_Id')}",
               "WorkflowRunId": "@{workflow()?['run']?['name']}",
               "UpdatedUtc": "@{utcNow()}"
@@ -571,7 +574,7 @@
               "x-ms-date": "@{utcNow('R')}",
               "x-ms-version": "2019-02-02"
             },
-            "method": "MERGE",
+            "method": "PUT",
             "uri": "@{concat(parameters('storageTableEndpoint'), parameters('storageTableName'), '(PartitionKey=''TeamsIcm'',RowKey=''', outputs('Compose_Row_Key'), ''')')}"
           },
           "runAfter": {
@@ -616,6 +619,9 @@
               "PartitionKey": "TeamsIcm",
               "RowKey": "@{outputs('Compose_Row_Key')}",
               "Status": "ReplyPosted",
+              "TeamId": "@{parameters('teamId')}",
+              "ChannelId": "@{parameters('channelId')}",
+              "MessageId": "@{triggerBody()?['id']}",
               "IncidentId": "@{outputs('Compose_Incident_Id')}",
               "WorkflowRunId": "@{workflow()?['run']?['name']}",
               "UpdatedUtc": "@{utcNow()}"
@@ -627,7 +633,7 @@
               "x-ms-date": "@{utcNow('R')}",
               "x-ms-version": "2019-02-02"
             },
-            "method": "MERGE",
+            "method": "PUT",
             "uri": "@{concat(parameters('storageTableEndpoint'), parameters('storageTableName'), '(PartitionKey=''TeamsIcm'',RowKey=''', outputs('Compose_Row_Key'), ''')')}"
           },
           "runAfter": {
@@ -647,6 +653,9 @@
               "PartitionKey": "TeamsIcm",
               "RowKey": "@{outputs('Compose_Row_Key')}",
               "Status": "Failed",
+              "TeamId": "@{parameters('teamId')}",
+              "ChannelId": "@{parameters('channelId')}",
+              "MessageId": "@{triggerBody()?['id']}",
               "FailureStage": "IcmProvider",
               "FailureStatusCode": "@{outputs('Create_Or_Update_IcM')?['statusCode']}",
               "WorkflowRunId": "@{workflow()?['run']?['name']}",
@@ -659,7 +668,7 @@
               "x-ms-date": "@{utcNow('R')}",
               "x-ms-version": "2019-02-02"
             },
-            "method": "MERGE",
+            "method": "PUT",
             "uri": "@{concat(parameters('storageTableEndpoint'), parameters('storageTableName'), '(PartitionKey=''TeamsIcm'',RowKey=''', outputs('Compose_Row_Key'), ''')')}"
           },
           "runAfter": {
@@ -724,6 +733,9 @@
               "PartitionKey": "TeamsIcm",
               "RowKey": "@{outputs('Compose_Row_Key')}",
               "Status": "Failed",
+              "TeamId": "@{parameters('teamId')}",
+              "ChannelId": "@{parameters('channelId')}",
+              "MessageId": "@{triggerBody()?['id']}",
               "FailureStage": "TeamsReply",
               "IncidentId": "@{outputs('Compose_Incident_Id')}",
               "WorkflowRunId": "@{workflow()?['run']?['name']}",
@@ -736,7 +748,7 @@
               "x-ms-date": "@{utcNow('R')}",
               "x-ms-version": "2019-02-02"
             },
-            "method": "MERGE",
+            "method": "PUT",
             "uri": "@{concat(parameters('storageTableEndpoint'), parameters('storageTableName'), '(PartitionKey=''TeamsIcm'',RowKey=''', outputs('Compose_Row_Key'), ''')')}"
           },
           "runAfter": {
@@ -777,6 +789,9 @@
                 "PartitionKey": "TeamsIcm",
                 "RowKey": "@{outputs('Compose_Row_Key')}",
                 "Status": "Failed",
+                "TeamId": "@{parameters('teamId')}",
+                "ChannelId": "@{parameters('channelId')}",
+                "MessageId": "@{triggerBody()?['id']}",
                 "FailureStage": "Validation",
                 "WorkflowRunId": "@{workflow()?['run']?['name']}",
                 "UpdatedUtc": "@{utcNow()}"
@@ -788,7 +803,7 @@
                 "x-ms-date": "@{utcNow('R')}",
                 "x-ms-version": "2019-02-02"
               },
-              "method": "MERGE",
+              "method": "PUT",
               "uri": "@{concat(parameters('storageTableEndpoint'), parameters('storageTableName'), '(PartitionKey=''TeamsIcm'',RowKey=''', outputs('Compose_Row_Key'), ''')')}"
             }
           },

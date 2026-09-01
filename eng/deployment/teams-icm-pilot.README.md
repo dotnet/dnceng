@@ -22,6 +22,10 @@ Severity: 3 or 4
 The connector and routing rule are fixed in the deployment. Teams content cannot select an IcM
 destination, and the workflow rejects severities other than 3 or 4.
 
+The workflow reserves each message with a Table Storage `POST`, then records state transitions
+with full-entity `PUT` updates. Keep every persisted field in each replacement body; the Logic Apps
+HTTP action does not support Table Storage's `MERGE` verb.
+
 ## Deploy safely
 
 Validate the templates:
