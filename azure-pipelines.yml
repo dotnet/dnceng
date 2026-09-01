@@ -222,6 +222,28 @@ extends:
                   if ($LASTEXITCODE -ne 0) {
                     throw "Bicep template validation failed"
                   }
+
+                  $workflow = Get-Content "eng/deployment/teams-icm-pilot.workflow.json" -Raw | ConvertFrom-Json
+                  $unsupportedMethods = @()
+                  function Test-HttpMethods($actions) {
+                    foreach ($property in $actions.PSObject.Properties) {
+                      $action = $property.Value
+                      if ($action.type -eq "Http" -and $action.inputs.method -notin @("GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS")) {
+                        $script:unsupportedMethods += "$($property.Name): $($action.inputs.method)"
+                      }
+                      if ($action.actions) {
+                        Test-HttpMethods $action.actions
+                      }
+                      if ($action.else.actions) {
+                        Test-HttpMethods $action.else.actions
+                      }
+                    }
+                  }
+                  Test-HttpMethods $workflow.actions
+                  if ($unsupportedMethods.Count -gt 0) {
+                    throw "Workflow contains HTTP methods unsupported by Logic Apps: $($unsupportedMethods -join ', ')"
+                  }
+
                   Write-Host "SUCCESS: Bicep template validation successful"
 
     - template: /eng/common/templates-official/post-build/post-build.yml@self
