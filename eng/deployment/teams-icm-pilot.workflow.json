@@ -190,11 +190,41 @@
         ]
       }
     },
-    "Compose_Plain_Text": {
+    "Compose_Raw_Plain_Text": {
       "type": "Compose",
       "inputs": "@trim(replace(replace(replace(replace(replace(replace(replace(replace(string(triggerBody()?['body']?['content']), '<p>', ''), '</p>', decodeUriComponent('%0A')), '<br>', decodeUriComponent('%0A')), '<br/>', decodeUriComponent('%0A')), '<br />', decodeUriComponent('%0A')), '<div>', ''), '</div>', decodeUriComponent('%0A')), '&nbsp;', ' '))",
       "runAfter": {
         "Accept_New_Or_Existing_Reservation": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Compose_Plain_Text": {
+      "type": "Compose",
+      "inputs": "@if(outputs('Compose_Is_Structured'), outputs('Compose_Raw_Plain_Text'), concat('Title: ', outputs('Compose_Freeform_Title'), decodeUriComponent('%0A'), 'Who/customer affected: Not specified', decodeUriComponent('%0A'), 'Impact: Free-form Teams report', decodeUriComponent('%0A'), 'Affected service/infrastructure: Not specified', decodeUriComponent('%0A'), 'Evidence or build/job URL: ', if(empty(trim(string(triggerBody()?['webUrl']))), concat('https://teams.microsoft.com/l/message/', encodeUriComponent(parameters('channelId')), '/', triggerBody()?['id'], '?groupId=', parameters('teamId'), '&tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47&createdTime=', triggerBody()?['id'], '&parentMessageId=', triggerBody()?['id']), trim(string(triggerBody()?['webUrl']))), decodeUriComponent('%0A'), 'Requested action: Investigate the reported issue', decodeUriComponent('%0A'), 'Reporter: ', if(empty(trim(string(triggerBody()?['from']?['user']?['displayName']))), if(empty(trim(string(triggerBody()?['from']?['application']?['displayName']))), 'Teams user', trim(string(triggerBody()?['from']?['application']?['displayName']))), trim(string(triggerBody()?['from']?['user']?['displayName']))), decodeUriComponent('%0A'), 'Severity: ', if(or(contains(toLower(outputs('Compose_Raw_Plain_Text')), 'sev3'), contains(replace(replace(toLower(outputs('Compose_Raw_Plain_Text')), ':', ' '), '-', ' '), 'sev 3'), contains(replace(replace(toLower(outputs('Compose_Raw_Plain_Text')), ':', ' '), '-', ' '), 'severity 3')), '3', '4')))",
+      "runAfter": {
+        "Compose_Is_Structured": [
+          "Succeeded"
+        ],
+        "Compose_Freeform_Title": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Compose_Is_Structured": {
+      "type": "Compose",
+      "inputs": "@and(contains(outputs('Compose_Raw_Plain_Text'), 'Title:'), contains(outputs('Compose_Raw_Plain_Text'), 'Who/customer affected:'), contains(outputs('Compose_Raw_Plain_Text'), 'Impact:'), contains(outputs('Compose_Raw_Plain_Text'), 'Affected service/infrastructure:'), contains(outputs('Compose_Raw_Plain_Text'), 'Evidence or build/job URL:'), contains(outputs('Compose_Raw_Plain_Text'), 'Requested action:'), contains(outputs('Compose_Raw_Plain_Text'), 'Reporter:'), contains(outputs('Compose_Raw_Plain_Text'), 'Severity:'))",
+      "runAfter": {
+        "Compose_Raw_Plain_Text": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Compose_Freeform_Title": {
+      "type": "Compose",
+      "inputs": "@take(if(empty(trim(string(triggerBody()?['subject']))), trim(first(split(outputs('Compose_Raw_Plain_Text'), decodeUriComponent('%0A')))), trim(string(triggerBody()?['subject']))), 200)",
+      "runAfter": {
+        "Compose_Raw_Plain_Text": [
           "Succeeded"
         ]
       }
@@ -219,7 +249,7 @@
     },
     "Compose_Impact": {
       "type": "Compose",
-      "inputs": "@trim(first(split(last(split(outputs('Compose_Plain_Text'), 'Impact:')), decodeUriComponent('%0A'))))",
+      "inputs": "@if(outputs('Compose_Is_Structured'), trim(first(split(last(split(outputs('Compose_Plain_Text'), 'Impact:')), decodeUriComponent('%0A')))), outputs('Compose_Raw_Plain_Text'))",
       "runAfter": {
         "Compose_Plain_Text": [
           "Succeeded"
@@ -490,7 +520,7 @@
       "actions": {
         "Compose_IcM_Description": {
           "type": "Compose",
-          "inputs": "@concat('Created from a structured root message in the .NET Eng Services Teams IcM intake channel.', decodeUriComponent('%0A%0A'), 'Impact: ', outputs('Compose_Impact'), decodeUriComponent('%0A'), 'Affected service/infrastructure: ', outputs('Compose_Affected_Infrastructure'), decodeUriComponent('%0A'), 'Evidence: ', outputs('Compose_Evidence'), decodeUriComponent('%0A'), 'Requested action: ', outputs('Compose_Requested_Action'), decodeUriComponent('%0A%0A'), '---', decodeUriComponent('%0A'), 'Incident Details (4W)', decodeUriComponent('%0A'), 'Who: ', outputs('Compose_Who'), decodeUriComponent('%0A'), 'What: ', outputs('Compose_Impact'), decodeUriComponent('%0A'), 'When: Teams message posted at ', triggerBody()?['createdDateTime'], decodeUriComponent('%0A'), 'Where: ', outputs('Compose_Affected_Infrastructure'), decodeUriComponent('%0A%0A'), 'Filing Info', decodeUriComponent('%0A'), 'Filed by: ', outputs('Compose_Reporter'), decodeUriComponent('%0A'), 'Filing method: DncEng Teams IcM Logic App pilot', decodeUriComponent('%0A'), 'Teams message ID: ', triggerBody()?['id'])"
+          "inputs": "@concat('Created from a ', if(outputs('Compose_Is_Structured'), 'structured', 'free-form'), ' root message in the .NET Eng Services Teams IcM intake channel.', decodeUriComponent('%0A%0A'), if(outputs('Compose_Is_Structured'), '', concat('Original Teams message:', decodeUriComponent('%0A'), outputs('Compose_Raw_Plain_Text'), decodeUriComponent('%0A%0A'))), 'Impact: ', outputs('Compose_Impact'), decodeUriComponent('%0A'), 'Affected service/infrastructure: ', outputs('Compose_Affected_Infrastructure'), decodeUriComponent('%0A'), 'Evidence: ', outputs('Compose_Evidence'), decodeUriComponent('%0A'), 'Requested action: ', outputs('Compose_Requested_Action'), decodeUriComponent('%0A%0A'), '---', decodeUriComponent('%0A'), 'Incident Details (4W)', decodeUriComponent('%0A'), 'Who: ', outputs('Compose_Who'), decodeUriComponent('%0A'), 'What: ', outputs('Compose_Impact'), decodeUriComponent('%0A'), 'When: Teams message posted at ', triggerBody()?['createdDateTime'], decodeUriComponent('%0A'), 'Where: ', outputs('Compose_Affected_Infrastructure'), decodeUriComponent('%0A%0A'), 'Filing Info', decodeUriComponent('%0A'), 'Filed by: ', outputs('Compose_Reporter'), decodeUriComponent('%0A'), 'Filing method: DncEng Teams IcM Logic App pilot', decodeUriComponent('%0A'), 'Teams message ID: ', triggerBody()?['id'])"
         },
         "Create_And_Parse_IcM": {
           "type": "Scope",
@@ -505,7 +535,7 @@
                 "body": {
                   "Title": "@{outputs('Compose_Title')}",
                   "Description": "@{outputs('Compose_IcM_Description')}",
-                  "Summary": "@{outputs('Compose_Impact')}",
+                  "Summary": "@{take(outputs('Compose_Impact'), 500)}",
                   "TeamRoutingRuleId": "@{parameters('icmRoutingRuleId')}",
                   "Severity": "@{int(outputs('Compose_Severity'))}",
                   "Status": 1,
@@ -811,7 +841,7 @@
             "type": "ApiConnection",
             "inputs": {
               "body": {
-                "messageBody": "<p>No IcM was created because the request is incomplete or uses an unsupported severity. Submit a new root message with non-empty values using this exact template:</p><pre>Title:\nWho/customer affected:\nImpact:\nAffected service/infrastructure:\nEvidence or build/job URL:\nRequested action:\nReporter:\nSeverity: 3 or 4</pre>",
+                "messageBody": "<p>No IcM was created because the root message did not contain enough information. Submit a new root message with a subject and description. You can optionally override the inferred values with this exact template:</p><pre>Title:\nWho/customer affected:\nImpact:\nAffected service/infrastructure:\nEvidence or build/job URL:\nRequested action:\nReporter:\nSeverity: 3 or 4</pre>",
                 "parentMessageId": "@{triggerBody()?['id']}",
                 "recipient": {
                   "groupId": "@{parameters('teamId')}",
