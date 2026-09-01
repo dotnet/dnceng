@@ -223,7 +223,6 @@ extends:
                     throw "Bicep template validation failed"
                   }
 
-                  $workflow = Get-Content "eng/deployment/teams-icm-pilot.workflow.json" -Raw | ConvertFrom-Json
                   $unsupportedMethods = @()
                   function Test-HttpMethods($actions) {
                     foreach ($property in $actions.PSObject.Properties) {
@@ -239,7 +238,11 @@ extends:
                       }
                     }
                   }
-                  Test-HttpMethods $workflow.actions
+                  Get-ChildItem "eng/deployment/teams-icm-*.workflow.json" | ForEach-Object {
+                    Write-Host "Validating workflow $($_.Name)..."
+                    $workflow = Get-Content $_.FullName -Raw | ConvertFrom-Json
+                    Test-HttpMethods $workflow.actions
+                  }
                   if ($unsupportedMethods.Count -gt 0) {
                     throw "Workflow contains HTTP methods unsupported by Logic Apps: $($unsupportedMethods -join ', ')"
                   }
