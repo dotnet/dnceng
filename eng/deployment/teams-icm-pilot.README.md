@@ -5,8 +5,15 @@ This deployment implements the AB#12383 pilot for the `.NET Eng Services` Team a
 a user-authorized Teams connection, durable Azure Table state, managed-identity access to that
 state, and failed-run monitoring.
 
-The workflow accepts root channel messages only. A request must use this exact field order and
-must provide a non-empty value for every field:
+The workflow accepts root channel messages only. For a normal free-form post, it maps the Teams
+subject to the IcM title, the message body to impact and description, the sender to reporter, and
+the Teams message link to evidence. Missing customer and infrastructure details use `Not specified`,
+the requested action defaults to `Investigate the reported issue`, and severity defaults to 4.
+Writing `Sev3`, `Sev 3`, or `Severity 3` in the message selects severity 3.
+Other or missing severity text defaults to Sev4; it never creates Sev1 or Sev2.
+
+Customers can optionally override every inferred value by using this exact field order with a
+non-empty value for every field:
 
 ```text
 Title:
