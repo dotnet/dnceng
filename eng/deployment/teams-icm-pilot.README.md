@@ -1,9 +1,14 @@
 # Teams-to-IcM pilot
 
 This deployment implements the AB#12383 pilot for the `.NET Eng Services` Team and the
-`IcM Intake Automation Test` channel. It creates a disabled-by-default Consumption Logic App,
-a user-authorized Teams connection, durable Azure Table state, managed-identity access to that
-state, and failed-run monitoring.
+`IcM Intake Automation Test` channel. It creates disabled-by-default Consumption Logic Apps,
+a user-authorized Teams connection, durable Azure Table state, managed identities, and
+failed-run monitoring.
+
+The deployment uses a 15-second Logic Apps recurrence and the user-authorized Teams connector's
+`Get messages in a channel` action. This avoids the connector trigger's fixed three-minute
+polling interval while preserving one IcM for every new root thread without requiring an
+`@mention`, custom Teams app, tenant-wide Graph permission, or resource-specific consent (RSC).
 
 The workflow accepts root channel messages only. For a normal free-form post, it maps the Teams
 subject to the IcM title, the message body to impact and description, the sender to reporter, and
@@ -32,6 +37,29 @@ destination, and the workflow rejects severities other than 3 or 4.
 The workflow reserves each message with a Table Storage `POST`, then records state transitions
 with full-entity `PUT` updates. Keep every persisted field in each replacement body; the Logic Apps
 HTTP action does not support Table Storage's `MERGE` verb.
+
+## Intake architecture
+
+The deployment separates intake adapters from the processor:
+
+```text
+15-second recurrence
+  -> dnceng-teams-icm-pilot-connector
+       - reads up to 100 channel messages through the Teams connector
+       - selects root threads newer than its durable watermark
+       - advances the watermark only after all selected messages succeed
+  -> dnceng-teams-icm-pilot
+       - reserves the message ID in Azure Table Storage
+       - extracts structured or free-form intake
+       - creates the DDFun IcM
+       - replies in the originating thread
+```
+
+The poller stores `LastSuccessfulPoll` in the `TeamsIcmSystem` / `ChannelPoller` Table entity. On
+first deployment it looks back one hour. Each run uses its start time as the closed upper bound,
+processes matching root messages sequentially, and writes the new watermark only after every
+processor invocation succeeds. Overlapping reads are safe because the processor independently
+reserves each Teams message ID.
 
 ## Deploy safely
 
@@ -71,6 +99,29 @@ Deploy with `workflowEnabled=false`. Before enabling the workflow:
    identity.
 3. Confirm the Teams connection reports `Connected`.
 4. Enable the workflow with a second deployment using `workflowEnabled=true`.
+
+### Enable polling
+
+```powershell
+az deployment group create `
+  --subscription a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1 `
+  --resource-group dnceng-teams-icm-pilot `
+  --template-file eng/deployment/teams-icm-pilot.bicep `
+  --parameters alertEmail=<pilot-owner-email> `
+               workflowEnabled=true
+```
+
+This enables both the poller and processor. The poller uses the same authorized Teams connection
+for channel reads that the processor uses for thread replies.
+
+### Revert to the fixed connector trigger
+
+The previous implementation used the Teams connector's `When a new channel message is added`
+trigger directly on the processor. It remains the rollback option if the 15-second recurrence
+causes sustained throttling or reliability problems. Restoring that trigger removes the polling
+adapter and watermark but preserves the Teams connection, message-ID reservations, IcM
+idempotency keys, Table state transitions, and reply behavior. Its documented trade-off is a
+fixed polling latency of up to approximately three minutes.
 
 The Test ICM Provider creates real production IcM incidents. Use only controlled Sev4 test
 messages, verify routing to `DDFUNSERVICESMANAGEMENT\DDFuncustomerrequests`, and resolve every

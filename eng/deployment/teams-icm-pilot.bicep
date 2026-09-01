@@ -41,6 +41,8 @@ var teamsManagedApiId = subscriptionResourceId(
 )
 var storageTableDataContributorRoleId = '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3'
 var workflowDefinition = loadJsonContent('teams-icm-pilot.workflow.json')
+var connectorAdapterDefinition = loadJsonContent('teams-icm-connector-adapter.workflow.json')
+var connectorAdapterName = '${resourcePrefix}-connector'
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageAccountName
@@ -80,7 +82,7 @@ resource teamsConnection 'Microsoft.Web/connections@2016-06-01' = {
   location: location
   tags: {
     Environment: 'Pilot'
-    Purpose: 'Teams to IcM trigger and reply'
+    Purpose: 'Teams to IcM channel read and reply'
     Service: 'DncEng'
     WorkItem: '12383'
   }
@@ -97,7 +99,7 @@ resource logicApp 'Microsoft.Logic/workflows@2019-05-01' = {
   location: location
   tags: {
     Environment: 'Pilot'
-    Purpose: 'Teams to IcM intake automation'
+    Purpose: 'Teams to IcM message processor'
     Service: 'DncEng'
     WorkItem: '12383'
   }
@@ -145,11 +147,68 @@ resource logicApp 'Microsoft.Logic/workflows@2019-05-01' = {
   }
 }
 
+resource connectorAdapter 'Microsoft.Logic/workflows@2019-05-01' = {
+  name: connectorAdapterName
+  location: location
+  tags: {
+    Environment: 'Pilot'
+    Purpose: 'Short-interval Teams channel polling'
+    Service: 'DncEng'
+    WorkItem: '12383'
+  }
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    state: workflowEnabled ? 'Enabled' : 'Disabled'
+    definition: connectorAdapterDefinition
+    parameters: {
+      '$connections': {
+        value: {
+          teams: {
+            connectionId: teamsConnection.id
+            connectionName: teamsConnection.name
+            id: teamsManagedApiId
+          }
+        }
+      }
+      processorCallbackUrl: {
+        value: listCallbackUrl('${logicApp.id}/triggers/Process_Teams_Message', '2019-05-01').value
+      }
+      teamId: {
+        value: teamId
+      }
+      channelId: {
+        value: channelId
+      }
+      storageTableEndpoint: {
+        value: storageAccount.properties.primaryEndpoints.table
+      }
+      storageTableName: {
+        value: intakeTable.name
+      }
+    }
+  }
+}
+
 resource storageTableDataContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(storageAccount.id, logicApp.id, storageTableDataContributorRoleId)
   scope: storageAccount
   properties: {
     principalId: logicApp.identity.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      storageTableDataContributorRoleId
+    )
+  }
+}
+
+resource connectorStorageTableDataContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storageAccount.id, connectorAdapter.id, storageTableDataContributorRoleId)
+  scope: storageAccount
+  properties: {
+    principalId: connectorAdapter.identity.principalId
     principalType: 'ServicePrincipal'
     roleDefinitionId: subscriptionResourceId(
       'Microsoft.Authorization/roleDefinitions',
@@ -183,6 +242,26 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
 resource workflowDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   name: 'send-to-log-analytics'
   scope: logicApp
+  properties: {
+    workspaceId: logAnalytics.id
+    logs: [
+      {
+        categoryGroup: 'allLogs'
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
+  }
+}
+
+resource connectorAdapterDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'send-to-log-analytics'
+  scope: connectorAdapter
   properties: {
     workspaceId: logAnalytics.id
     logs: [
@@ -265,8 +344,52 @@ resource failedRunsAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
   }
 }
 
+resource connectorAdapterFailedRunsAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
+  name: '${connectorAdapterName}-failed-runs'
+  location: 'global'
+  tags: {
+    Environment: 'Pilot'
+    Purpose: 'Teams connector adapter failed-run detection'
+    Service: 'DncEng'
+    WorkItem: '12383'
+  }
+  properties: {
+    actions: [
+      {
+        actionGroupId: failureActionGroup.id
+      }
+    ]
+    autoMitigate: true
+    criteria: {
+      'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
+      allOf: [
+        {
+          criterionType: 'StaticThresholdCriterion'
+          metricName: 'RunsFailed'
+          metricNamespace: 'Microsoft.Logic/workflows'
+          name: 'Failed connector adapter runs'
+          operator: 'GreaterThan'
+          threshold: 0
+          timeAggregation: 'Total'
+        }
+      ]
+    }
+    description: 'Alerts when the Teams channel polling adapter fails.'
+    enabled: true
+    evaluationFrequency: 'PT5M'
+    scopes: [
+      connectorAdapter.id
+    ]
+    severity: 2
+    targetResourceRegion: location
+    targetResourceType: 'Microsoft.Logic/workflows'
+    windowSize: 'PT5M'
+  }
+}
+
 output logicAppName string = logicApp.name
 output logicAppPrincipalId string = logicApp.identity.principalId
+output connectorAdapterName string = connectorAdapter.name
 output storageAccountName string = storageAccount.name
 output storageTableName string = intakeTable.name
 output teamsConnectionId string = teamsConnection.id
