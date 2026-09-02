@@ -182,6 +182,13 @@
     }
   },
   {
+    "Name": "retired-dashboard-uids",
+    "Values": {
+      "Staging": "home",
+      "Production": "home"
+    }
+  },
+  {
     "Name": "dnceng-folderid",
     "Values": {
       "Staging": "46",

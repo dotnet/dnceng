@@ -15,6 +15,9 @@ namespace Microsoft.DotNet.Monitoring.Sdk;
 /// </summary>
 public static class GrafanaSerialization
 {
+    private const string BaseUidTagPrefix = "baseuid:";
+    private const string SourceTagPrefix = "source:";
+
     /// <summary>
     /// Extract the Folder ID of a Dashboard from a JSON object returned by the api/dashboards/uid endpoint
     /// </summary>
@@ -36,6 +39,40 @@ public static class GrafanaSerialization
         slimmedDashboard.Remove("uid");
         slimmedDashboard.Remove("version");
         return slimmedDashboard;
+    }
+
+    public static void SetDashboardManagementTags(JObject dashboard, string uid, string sourceTag)
+    {
+        var tags = dashboard["tags"] as JArray ?? new JArray();
+        var updatedTags = new JArray(tags
+            .Values<string>()
+            .Where(tag => !tag.StartsWith(BaseUidTagPrefix, StringComparison.Ordinal) &&
+                          !tag.StartsWith(SourceTagPrefix, StringComparison.Ordinal)));
+
+        updatedTags.Add(BaseUidTagPrefix + uid);
+        updatedTags.Add(sourceTag);
+        dashboard["tags"] = updatedTags;
+    }
+
+    public static bool IsManagedDashboard(JToken dashboard, string sourceTag)
+    {
+        string uid = dashboard.Value<string>("uid");
+        var tags = dashboard["tags"] as JArray;
+
+        return !string.IsNullOrEmpty(uid) &&
+               tags != null &&
+               tags.Values<string>().Contains(BaseUidTagPrefix + uid, StringComparer.Ordinal) &&
+               tags.Values<string>().Contains(sourceTag, StringComparer.Ordinal);
+    }
+
+    public static IReadOnlyCollection<string> ParseDashboardUidList(string value)
+    {
+        return (value ?? string.Empty)
+            .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(uid => uid.Trim())
+            .Where(uid => uid.Length > 0)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
     }
 
     /// <summary>

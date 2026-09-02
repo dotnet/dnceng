@@ -17,4 +17,12 @@ public class GrafanaNotification
     public string Message { get; set; }
     public IImmutableList<GrafanaNotificationMatch> EvalMatches { get; set; }
     public ImmutableDictionary<string, string> Tags { get; set; }
+    public ImmutableDictionary<string, string> CommonLabels { get; set; }
+    public ImmutableDictionary<string, string> GroupLabels { get; set; }
+    public IImmutableList<GrafanaAlert> Alerts { get; set; }
+}
+
+public class GrafanaAlert
+{
+    public ImmutableDictionary<string, string> Labels { get; set; }
 }

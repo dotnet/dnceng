@@ -47,6 +47,8 @@
       DashboardDirectory="$(DashboardDirectory)"
       DataSourceDirectory="$(DataSourceDirectory)"
       NotificationDirectory="$(NotificationDirectory)"
+      RetirementDirectory="$(RetirementDirectory)"
+      AllowDeletes="$(GrafanaAllowDeletes)"
       Host="$(GrafanaHost)"
       AccessToken="$(GrafanaAccessToken)"
       KeyVaultName="$(GrafanaKeyVaultName)"

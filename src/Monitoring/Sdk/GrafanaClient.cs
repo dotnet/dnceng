@@ -3,7 +3,9 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -21,10 +23,21 @@ public sealed class GrafanaClient : IDisposable
     private readonly string _baseUrl;
 
     public GrafanaClient(string baseUrl, string apiToken)
+        : this(baseUrl, CreateHttpClient(apiToken))
+    {
+    }
+
+    public GrafanaClient(string baseUrl, HttpClient client)
     {
         _baseUrl = baseUrl;
-        _client = new HttpClient(new HttpClientHandler() { CheckCertificateRevocationList = true });
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiToken);
+        _client = client;
+    }
+
+    private static HttpClient CreateHttpClient(string apiToken)
+    {
+        var client = new HttpClient(new HttpClientHandler() { CheckCertificateRevocationList = true });
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiToken);
+        return client;
     }
 
     public async Task<JObject> GetDashboardAsync(string uid)
@@ -352,6 +365,11 @@ public sealed class GrafanaClient : IDisposable
 
         using (HttpResponseMessage response = await _client.DeleteAsync(uri).ConfigureAwait(false))
         {
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return;
+            }
+
             await response.EnsureSuccessWithContentAsync();
         }
     }
@@ -393,6 +411,110 @@ public sealed class GrafanaClient : IDisposable
         }
     }
 
+    public async Task<bool> DeleteAlertRuleAsync(string uid)
+    {
+        var uri = new Uri(new Uri(_baseUrl), $"/api/v1/provisioning/alert-rules/{Uri.EscapeDataString(uid)}");
+
+        using (HttpResponseMessage existing = await _client.GetAsync(uri).ConfigureAwait(false))
+        {
+            if (existing.StatusCode == HttpStatusCode.NotFound)
+            {
+                return false;
+            }
+
+            await existing.EnsureSuccessWithContentAsync();
+        }
+
+        using (var request = new HttpRequestMessage(HttpMethod.Delete, uri))
+        {
+            request.Headers.Add("X-Disable-Provenance", "true");
+            using (HttpResponseMessage response = await _client.SendAsync(request).ConfigureAwait(false))
+            {
+                await response.EnsureSuccessWithContentAsync();
+            }
+        }
+
+        using (HttpResponseMessage verification = await _client.GetAsync(uri).ConfigureAwait(false))
+        {
+            if (verification.StatusCode != HttpStatusCode.NotFound)
+            {
+                await verification.EnsureSuccessWithContentAsync();
+                throw new InvalidOperationException($"Grafana alert rule '{uid}' still exists after deletion.");
+            }
+        }
+
+        return true;
+    }
+
+    public async Task<int> DeleteContactPointsByNameAsync(string name)
+    {
+        JArray contactPoints = await ListContactPointsAsync().ConfigureAwait(false);
+        string[] matchingUids = contactPoints
+            .OfType<JObject>()
+            .Where(contactPoint => contactPoint.Value<string>("name") == name)
+            .Select(contactPoint => contactPoint.Value<string>("uid"))
+            .Where(uid => !string.IsNullOrEmpty(uid))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        foreach (string uid in matchingUids)
+        {
+            var uri = new Uri(new Uri(_baseUrl), $"/api/v1/provisioning/contact-points/{Uri.EscapeDataString(uid)}");
+            using (var request = new HttpRequestMessage(HttpMethod.Delete, uri))
+            {
+                request.Headers.Add("X-Disable-Provenance", "true");
+                using (HttpResponseMessage response = await _client.SendAsync(request).ConfigureAwait(false))
+                {
+                    await response.EnsureSuccessWithContentAsync();
+                }
+            }
+        }
+
+        JArray remaining = await ListContactPointsAsync().ConfigureAwait(false);
+        if (remaining.OfType<JObject>().Any(contactPoint => contactPoint.Value<string>("name") == name))
+        {
+            throw new InvalidOperationException($"Grafana contact point '{name}' still exists after deletion.");
+        }
+
+        return matchingUids.Length;
+    }
+
+    public async Task<bool> NotificationPolicyReferencesContactPointAsync(string name)
+    {
+        var uri = new Uri(new Uri(_baseUrl), "/api/v1/provisioning/policies");
+        using (HttpResponseMessage response = await _client.GetAsync(uri).ConfigureAwait(false))
+        {
+            await response.EnsureSuccessWithContentAsync();
+
+            using (Stream stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+            using (var streamReader = new StreamReader(stream))
+            using (var jsonReader = new JsonTextReader(streamReader))
+            {
+                JObject policy = await JObject.LoadAsync(jsonReader).ConfigureAwait(false);
+                return policy
+                    .DescendantsAndSelf()
+                    .OfType<JProperty>()
+                    .Any(property => property.Name == "receiver" && property.Value.Value<string>() == name);
+            }
+        }
+    }
+
+    private async Task<JArray> ListContactPointsAsync()
+    {
+        var uri = new Uri(new Uri(_baseUrl), "/api/v1/provisioning/contact-points");
+        using (HttpResponseMessage response = await _client.GetAsync(uri).ConfigureAwait(false))
+        {
+            await response.EnsureSuccessWithContentAsync();
+
+            using (Stream stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+            using (var streamReader = new StreamReader(stream))
+            using (var jsonReader = new JsonTextReader(streamReader))
+            {
+                return await JArray.LoadAsync(jsonReader).ConfigureAwait(false);
+            }
+        }
+    }
+
     public async Task CreateAlertRuleAsync(JObject alertRule)
     {
         string uid = alertRule.Value<string>("uid");
@@ -429,6 +551,86 @@ public sealed class GrafanaClient : IDisposable
                 
                 var updateUri = new Uri(new Uri(_baseUrl), $"/api/v1/provisioning/alert-rules/{Uri.EscapeDataString(uid)}");
                 await SendObjectAsync(alertRule, updateUri, HttpMethod.Put).ConfigureAwait(false);
+            }
+        }
+    }
+
+    public async Task SetAlertRuleGroupIntervalAsync(string folderUid, string ruleGroup, int intervalSeconds)
+    {
+        if (intervalSeconds <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(intervalSeconds));
+        }
+
+        var uri = new Uri(
+            new Uri(_baseUrl),
+            $"/api/v1/provisioning/folder/{Uri.EscapeDataString(folderUid)}/rule-groups/{Uri.EscapeDataString(ruleGroup)}");
+        JObject group = await GetObjectAsync(uri).ConfigureAwait(false);
+        if (group.Value<int>("interval") == intervalSeconds)
+        {
+            return;
+        }
+
+        string[] ruleUids = GetRuleGroupUids(group, folderUid, ruleGroup);
+        group["interval"] = intervalSeconds;
+        using (var content = new StringContent(group.ToString(Formatting.None)))
+        {
+            content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            using (var request = new HttpRequestMessage(HttpMethod.Put, uri) { Content = content })
+            {
+                request.Headers.Add("X-Disable-Provenance", "true");
+                using (HttpResponseMessage response = await _client.SendAsync(request).ConfigureAwait(false))
+                {
+                    await response.EnsureSuccessWithContentAsync();
+                }
+            }
+        }
+
+        JObject updated = await GetObjectAsync(uri).ConfigureAwait(false);
+        if (updated.Value<int>("interval") != intervalSeconds)
+        {
+            throw new InvalidOperationException(
+                $"Grafana alert rule group '{folderUid}/{ruleGroup}' did not retain the {intervalSeconds}-second interval.");
+        }
+
+        string[] updatedRuleUids = GetRuleGroupUids(updated, folderUid, ruleGroup);
+        if (!new HashSet<string>(ruleUids, StringComparer.Ordinal).SetEquals(updatedRuleUids))
+        {
+            throw new InvalidOperationException(
+                $"Grafana alert rule group '{folderUid}/{ruleGroup}' changed its rule set while updating the interval.");
+        }
+    }
+
+    private static string[] GetRuleGroupUids(JObject group, string folderUid, string ruleGroup)
+    {
+        JArray rules = group.Value<JArray>("rules")
+            ?? throw new InvalidOperationException(
+                $"Grafana alert rule group '{folderUid}/{ruleGroup}' did not return a rules array.");
+        string[] uids = rules
+            .OfType<JObject>()
+            .Select(rule => rule.Value<string>("uid"))
+            .Where(uid => !string.IsNullOrEmpty(uid))
+            .ToArray();
+        if (uids.Length != rules.Count || uids.Distinct(StringComparer.Ordinal).Count() != uids.Length)
+        {
+            throw new InvalidOperationException(
+                $"Grafana alert rule group '{folderUid}/{ruleGroup}' returned missing or duplicate rule UIDs.");
+        }
+
+        return uids;
+    }
+
+    private async Task<JObject> GetObjectAsync(Uri uri)
+    {
+        using (HttpResponseMessage response = await _client.GetAsync(uri).ConfigureAwait(false))
+        {
+            await response.EnsureSuccessWithContentAsync();
+
+            using (Stream stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+            using (var streamReader = new StreamReader(stream))
+            using (var jsonReader = new JsonTextReader(streamReader))
+            {
+                return await JObject.LoadAsync(jsonReader).ConfigureAwait(false);
             }
         }
     }

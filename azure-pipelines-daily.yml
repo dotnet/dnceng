@@ -23,11 +23,6 @@ stages:
         inputs:
           useGlobalJson: true
 
-      - task: UseDotNet@2
-        displayName: Install .NET 6
-        inputs:
-          version: 6.x
-
       - task: AzureCLI@2
         displayName: Synchronize Secrets
         inputs:

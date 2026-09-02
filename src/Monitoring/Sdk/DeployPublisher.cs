@@ -27,6 +27,8 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
     private readonly Lazy<SecretClient> _keyVault;
     private readonly string _environment;
     private readonly string _parameterFile;
+    private readonly string _retirementDirectory;
+    private readonly bool _allowDeletes;
 
     private SecretClient KeyVault => _keyVault.Value;
 
@@ -38,6 +40,8 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
         string dashboardDirectory,
         string datasourceDirectory,
         string notificationDirectory,
+        string retirementDirectory,
+        bool allowDeletes,
         string environment,
         string parametersFile,
         TaskLoggingHelper log) : base(
@@ -46,6 +50,8 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
         _keyVaultName = keyVaultName;
         _tokenCredential = tokenCredential;
         _environment = environment;
+        _retirementDirectory = retirementDirectory;
+        _allowDeletes = allowDeletes;
         _keyVault = new Lazy<SecretClient>(GetKeyVaultClient);
         _parameterFile = parametersFile;
     }
@@ -82,9 +88,79 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
 
         await PostAlertRulesAsync().ConfigureAwait(false);
 
-        await PostDashboardsAsync().ConfigureAwait(false);
+        HashSet<string> knownDashboardUids = await PostDashboardsAsync().ConfigureAwait(false);
+
+        await RetireResourcesAsync().ConfigureAwait(false);
 
         await SetHomeDashboardAsync().ConfigureAwait(false);
+
+        await ClearExtraneousDashboardsAsync(knownDashboardUids).ConfigureAwait(false);
+
+        await DeleteRetiredDashboardsAsync().ConfigureAwait(false);
+    }
+
+    private async Task RetireResourcesAsync()
+    {
+        string retirementPath = Path.Combine(_retirementDirectory, _environment + ".retirement.json");
+        if (!File.Exists(retirementPath))
+        {
+            return;
+        }
+
+        JObject retirementPlan;
+        using (var streamReader = new StreamReader(retirementPath))
+        using (var jsonReader = new JsonTextReader(streamReader))
+        {
+            retirementPlan = await JObject.LoadAsync(jsonReader).ConfigureAwait(false);
+        }
+
+        string[] alertRuleUids = retirementPlan.Value<JArray>("alertRules")?
+            .Values<string>()
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray() ?? Array.Empty<string>();
+        string[] contactPointNames = retirementPlan.Value<JArray>("contactPoints")?
+            .Values<string>()
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray() ?? Array.Empty<string>();
+
+        if (!_allowDeletes)
+        {
+            Log.LogWarning(
+                "Grafana retirement plan {0} is in report-only mode. Would delete {1} alert rule(s) and {2} contact point(s).",
+                retirementPath,
+                alertRuleUids.Length,
+                contactPointNames.Length);
+            return;
+        }
+
+        foreach (string uid in alertRuleUids)
+        {
+            bool deleted = await GrafanaClient.DeleteAlertRuleAsync(uid).ConfigureAwait(false);
+            Log.LogMessage(
+                MessageImportance.High,
+                deleted ? "Deleted retired alert rule {0}." : "Retired alert rule {0} was already absent.",
+                uid);
+        }
+
+        foreach (string name in contactPointNames)
+        {
+            if (await GrafanaClient.NotificationPolicyReferencesContactPointAsync(name).ConfigureAwait(false))
+            {
+                throw new InvalidOperationException(
+                    $"Grafana notification policy still references contact point '{name}'. Remove the route before deleting the contact point.");
+            }
+
+            int deleted = await GrafanaClient.DeleteContactPointsByNameAsync(name).ConfigureAwait(false);
+            Log.LogMessage(
+                MessageImportance.High,
+                deleted == 0
+                    ? "Retired contact point {0} was already absent."
+                    : "Deleted {1} integration(s) for retired contact point {0}.",
+                name,
+                deleted);
+        }
     }
 
     private async Task PostDatasourcesAsync()
@@ -196,6 +272,8 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
         // Ensure all folders referenced by alert rules exist before posting rules
         var alertRuleFiles = Directory.GetFiles(AlertRuleDirectory, "*" + AlertRuleExtension, SearchOption.AllDirectories);
         var seenFolderUids = new HashSet<string>(StringComparer.Ordinal);
+        var ruleGroupIntervals = new Dictionary<(string FolderUid, string RuleGroup), int>();
+        var ruleGroupsWithoutExplicitIntervals = new HashSet<(string FolderUid, string RuleGroup)>();
         foreach (string alertRulePath in alertRuleFiles)
         {
             JObject data;
@@ -210,6 +288,49 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
             {
                 Log.LogMessage(MessageImportance.Normal, "Ensuring alert rule folder '{0}' exists...", folderUID);
                 await GrafanaClient.CreateFolderAsync(folderUID, folderUID).ConfigureAwait(false);
+            }
+
+            string ruleGroup = data.Value<string>("ruleGroup");
+            if (!string.IsNullOrEmpty(folderUID) && !string.IsNullOrEmpty(ruleGroup))
+            {
+                var key = (folderUID, ruleGroup);
+                if (data.TryGetValue("evaluationIntervalSeconds", out JToken intervalToken))
+                {
+                    int intervalSeconds = intervalToken.Type == JTokenType.Integer
+                        ? intervalToken.Value<int>()
+                        : 0;
+                    if (intervalSeconds <= 0)
+                    {
+                        throw new InvalidOperationException(
+                            $"Alert rule {alertRulePath} must specify a positive evaluationIntervalSeconds.");
+                    }
+
+                    if (ruleGroupsWithoutExplicitIntervals.Contains(key))
+                    {
+                        throw new InvalidOperationException(
+                            $"Every managed rule in alert rule group '{folderUID}/{ruleGroup}' must specify evaluationIntervalSeconds.");
+                    }
+
+                    if (ruleGroupIntervals.TryGetValue(key, out int existingInterval) &&
+                        existingInterval != intervalSeconds)
+                    {
+                        throw new InvalidOperationException(
+                            $"Alert rule group '{folderUID}/{ruleGroup}' has conflicting evaluation intervals: " +
+                            $"{existingInterval} and {intervalSeconds} seconds.");
+                    }
+
+                    ruleGroupIntervals[key] = intervalSeconds;
+                }
+                else
+                {
+                    if (ruleGroupIntervals.ContainsKey(key))
+                    {
+                        throw new InvalidOperationException(
+                            $"Every managed rule in alert rule group '{folderUID}/{ruleGroup}' must specify evaluationIntervalSeconds.");
+                    }
+
+                    ruleGroupsWithoutExplicitIntervals.Add(key);
+                }
             }
         }
 
@@ -230,6 +351,7 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
 
             // Replace [parameter(...)] placeholders with environment-specific values
             data = GrafanaSerialization.DeparameterizeDashboard(data, parameters, _environment);
+            data.Remove("evaluationIntervalSeconds");
 
             // Log the final JSON for debugging
             Log.LogMessage(MessageImportance.High, "Alert JSON after parameter replacement: {0}", data.ToString(Formatting.Indented));
@@ -238,9 +360,23 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
 
             await GrafanaClient.CreateAlertRuleAsync(data).ConfigureAwait(false);
         }
+
+        foreach (KeyValuePair<(string FolderUid, string RuleGroup), int> interval in ruleGroupIntervals)
+        {
+            Log.LogMessage(
+                MessageImportance.Normal,
+                "Setting alert rule group {0}/{1} evaluation interval to {2} seconds...",
+                interval.Key.FolderUid,
+                interval.Key.RuleGroup,
+                interval.Value);
+            await GrafanaClient.SetAlertRuleGroupIntervalAsync(
+                interval.Key.FolderUid,
+                interval.Key.RuleGroup,
+                interval.Value).ConfigureAwait(false);
+        }
     }
 
-    private async Task PostDashboardsAsync()
+    private async Task<HashSet<string>> PostDashboardsAsync()
     {
         JArray folderArray = await GrafanaClient.ListFoldersAsync().ConfigureAwait(false);
         List<FolderData> folders = folderArray.Select(f => new FolderData(f.Value<string>("uid"), f.Value<string>("title")))
@@ -283,32 +419,7 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
                 data = await JObject.LoadAsync(jr).ConfigureAwait(false);
             }
 
-            JArray tagArray = null;
-            if (data.TryGetValue("tags", out JToken tagToken))
-            {
-                tagArray = tagToken as JArray;
-            }
-
-            if (tagArray == null)
-            {
-                tagArray = new JArray();
-            }
-
-            var newTags = new JArray();
-            foreach (JToken tag in tagArray)
-            {
-                if (tag.Value<string>().StartsWith(BaseUidTagPrefix) ||
-                    tag.Value<string>().StartsWith(SourceTagPrefix))
-                {
-                    continue;
-                }
-
-                newTags.Add(tag);
-            }
-
-            tagArray.Add(GetUidTag(uid));
-            tagArray.Add(SourceTag);
-            data["tags"] = newTags;
+            GrafanaSerialization.SetDashboardManagementTags(data, uid, SourceTag);
             data["uid"] = uid;
 
             data = GrafanaSerialization.DeparameterizeDashboard(data, parameters, _environment);
@@ -318,13 +429,16 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
             await GrafanaClient.CreateDashboardAsync(data, folderId).ConfigureAwait(false);
         }
 
-        await ClearExtraneousDashboardsAsync(knownUids);
+        return knownUids;
     }
 
     private async Task ClearExtraneousDashboardsAsync(HashSet<string> knownUids)
     {
         JArray allTagged = await GrafanaClient.SearchDashboardsByTagAsync(SourceTag).ConfigureAwait(false);
-        HashSet<string> toRemove =  new HashSet<string>(allTagged.Where(IsManagedDashboard).Select(d => d.Value<string>("uid")));
+        HashSet<string> toRemove = new HashSet<string>(
+            allTagged
+                .Where(d => GrafanaSerialization.IsManagedDashboard(d, SourceTag))
+                .Select(d => d.Value<string>("uid")));
 
         // We shouldn't remove the ones we just deployed
         toRemove.ExceptWith(knownUids);
@@ -336,12 +450,40 @@ public sealed class DeployPublisher : DeployToolBase, IDisposable
         }
     }
 
-    private static bool IsManagedDashboard(JToken d)
+    private async Task DeleteRetiredDashboardsAsync()
     {
-        string uid = d.Value<string>("uid");
-        // If the uid tag (which we set whenever we publish) doesn't match, that means someone copied it
-        // so it's not managed by us. If it does match, that means it is managed and we deployed it
-        return uid == d.Value<JObject>()?.Value<string>(GetUidTag(uid));
+        List<Parameter> parameters;
+        using (var sr = new StreamReader(_parameterFile))
+        using (var jr = new JsonTextReader(sr))
+        {
+            parameters = new JsonSerializer().Deserialize<List<Parameter>>(jr);
+        }
+
+        Parameter retiredDashboardParameter = parameters?
+            .FirstOrDefault(parameter => parameter.Name == "retired-dashboard-uids");
+        if (retiredDashboardParameter == null ||
+            !retiredDashboardParameter.Values.TryGetValue(_environment, out string retiredDashboardValue))
+        {
+            return;
+        }
+
+        var knownUids = new HashSet<string>(
+            GetAllDashboardPaths()
+                .Select(Path.GetFileName)
+                .Select(GetUidFromDashboardFile),
+            StringComparer.Ordinal);
+
+        foreach (string uid in GrafanaSerialization.ParseDashboardUidList(retiredDashboardValue))
+        {
+            if (knownUids.Contains(uid))
+            {
+                throw new InvalidOperationException(
+                    $"Dashboard '{uid}' cannot be both deployed and explicitly retired.");
+            }
+
+            Log.LogMessage(MessageImportance.Normal, "Ensuring explicitly retired dashboard {0} is absent...", uid);
+            await GrafanaClient.DeleteDashboardAsync(uid).ConfigureAwait(false);
+        }
     }
 
     public async Task<JToken> ReplaceVaultAsync(JToken data)

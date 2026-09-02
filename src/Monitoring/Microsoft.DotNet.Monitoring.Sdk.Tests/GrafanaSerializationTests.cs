@@ -204,4 +204,45 @@ internal class GrafanaSerializationTests
 
         act.Should().Throw<ArgumentException>();
     }
+
+    [Test]
+    public void SetDashboardManagementTags_ReplacesExistingManagementTags()
+    {
+        var dashboard = new JObject
+        {
+            ["tags"] = new JArray("custom", "baseuid:old", "source:old")
+        };
+
+        GrafanaSerialization.SetDashboardManagementTags(dashboard, "home", "source:Monitoring.DncEng");
+
+        dashboard["tags"].Values<string>().Should().BeEquivalentTo(
+            "custom",
+            "baseuid:home",
+            "source:Monitoring.DncEng");
+    }
+
+    [Test]
+    public void IsManagedDashboard_RequiresMatchingUidAndSourceTags()
+    {
+        var dashboard = new JObject
+        {
+            ["uid"] = "home",
+            ["tags"] = new JArray("baseuid:home", "source:Monitoring.DncEng")
+        };
+
+        GrafanaSerialization.IsManagedDashboard(dashboard, "source:Monitoring.DncEng").Should().BeTrue();
+
+        dashboard["tags"] = new JArray("baseuid:other", "source:Monitoring.DncEng");
+        GrafanaSerialization.IsManagedDashboard(dashboard, "source:Monitoring.DncEng").Should().BeFalse();
+
+        dashboard["tags"] = new JArray("baseuid:home", "source:other");
+        GrafanaSerialization.IsManagedDashboard(dashboard, "source:Monitoring.DncEng").Should().BeFalse();
+    }
+
+    [Test]
+    public void ParseDashboardUidList_TrimsAndDeduplicatesValues()
+    {
+        GrafanaSerialization.ParseDashboardUidList(" home,other;home ; ")
+            .Should().Equal("home", "other");
+    }
 }

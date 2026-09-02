@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -30,6 +31,7 @@ public class AlertHookController : ControllerBase
     public const string InactiveAlertTag = "Inactive Alert";
     public const string BodyLabelTextFormat = "Grafana-Automated-Alert-Id-{0}";
     public const string NotificationTagName = "NotificationId";
+    public const string RuleUidLabelName = "__alert_rule_uid__";
 
     private readonly IOptions<AzureDevOpsAlertOptions> _alertOptions;
     private readonly IOptions<GrafanaOptions> _grafanaOptions;
@@ -55,6 +57,16 @@ public class AlertHookController : ControllerBase
         {
             _logger.LogWarning("Unauthorized alert webhook request received");
             return Unauthorized();
+        }
+
+        try
+        {
+            GetUniqueIdentifier(notification);
+        }
+        catch (InvalidOperationException exception)
+        {
+            _logger.LogError(exception, "Grafana alert webhook does not contain a stable alert identifier");
+            return BadRequest(exception.Message);
         }
 
         switch (notification.State)
@@ -275,15 +287,87 @@ public class AlertHookController : ControllerBase
         };
     }
 
-    private static string GetUniqueIdentifier(GrafanaNotification notification)
+    internal static string GetUniqueIdentifier(GrafanaNotification notification)
     {
-        string id = null;
-        if (notification.Tags?.TryGetValue(NotificationTagName, out id) ?? false)
+        string notificationId = GetUniqueLabelValue(
+            NotificationTagName,
+            notification.Tags,
+            notification.CommonLabels,
+            notification.GroupLabels);
+        string ruleUid = GetUniqueLabelValue(
+            RuleUidLabelName,
+            notification.Tags,
+            notification.CommonLabels,
+            notification.GroupLabels);
+
+        if (notification.Alerts?.Count > 0)
         {
-            return id;
+            string[] alertIdentifiers = notification.Alerts
+                .Select(alert => ResolveIdentifier(
+                    GetUniqueLabelValue(NotificationTagName, notification.CommonLabels, notification.GroupLabels, alert.Labels),
+                    GetUniqueLabelValue(RuleUidLabelName, notification.CommonLabels, notification.GroupLabels, alert.Labels),
+                    notification.RuleId))
+                .Distinct(StringComparer.Ordinal)
+                .ToArray();
+
+            if (alertIdentifiers.Length != 1)
+            {
+                throw new InvalidOperationException(
+                    "Grafana alert webhook contains alerts with conflicting stable identifiers.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(notificationId)
+                && !string.Equals(notificationId, alertIdentifiers[0], StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException(
+                    $"Grafana alert webhook contains conflicting '{NotificationTagName}' values.");
+            }
+
+            return alertIdentifiers[0];
         }
 
-        return notification.RuleId.ToString();
+        return ResolveIdentifier(notificationId, ruleUid, notification.RuleId);
+    }
+
+    private static string ResolveIdentifier(string notificationId, string ruleUid, ulong ruleId)
+    {
+        if (!string.IsNullOrWhiteSpace(notificationId))
+        {
+            return notificationId;
+        }
+
+        if (!string.IsNullOrWhiteSpace(ruleUid))
+        {
+            return ruleUid;
+        }
+
+        if (ruleId != 0)
+        {
+            return ruleId.ToString();
+        }
+
+        throw new InvalidOperationException(
+            $"Grafana alert webhook must provide '{NotificationTagName}', '{RuleUidLabelName}', or a nonzero RuleId.");
+    }
+
+    private static string GetUniqueLabelValue(
+        string labelName,
+        params ImmutableDictionary<string, string>[] labelSets)
+    {
+        string[] values = labelSets
+            .Where(labels => labels != null)
+            .Select(labels => labels.TryGetValue(labelName, out string value) ? value : null)
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        return values.Length switch
+        {
+            0 => null,
+            1 => values[0],
+            _ => throw new InvalidOperationException(
+                $"Grafana alert webhook contains conflicting '{labelName}' values."),
+        };
     }
 
     private static string BuildTagString(params string[] tags)
