@@ -1,0 +1,46 @@
+{
+  "catalogVersion": "2026-09-03",
+  "ownership": {
+    "team": "DDFun Customer Requests",
+    "service": "DDFun Services Management"
+  },
+  "intakeRunbook": {
+    "name": "Creating IcM incidents for DDFun customer requests",
+    "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1579/creating-icm-incidents-for-ddfun-customer-requests"
+  },
+  "fallbackPlaybook": {
+    "name": "DDFun customer request intake",
+    "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1579/creating-icm-incidents-for-ddfun-customer-requests",
+    "selection": "Fallback: no specific vendor playbook matched the Teams message.",
+    "remediationGuidance": [
+      "Investigate the reported issue using the evidence in the originating Teams thread.",
+      "Record the remediation or final disposition in the IcM."
+    ],
+    "validationCriteria": [
+      "Confirm the reported customer impact is mitigated.",
+      "Document the completed remediation or disposition before resolving the IcM."
+    ]
+  },
+  "playbooks": [
+    {
+      "id": "reimage-on-prem-machine",
+      "name": "Reimaging On-Prem Machines",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2327/DDFUN-Vendor-Playbooks/Reimaging-On-Prem-Machines",
+      "matchTerms": [
+        "reimage",
+        "physical machine",
+        "on-prem machine",
+        "on prem machine"
+      ],
+      "selection": "Matched from physical-machine or reimaging language in the Teams message.",
+      "remediationGuidance": [
+        "Quarantine the affected machine before remediation.",
+        "Follow the linked playbook to reimage or repair the machine."
+      ],
+      "validationCriteria": [
+        "Validate the machine after remediation.",
+        "Return it to service only after the reported failure no longer reproduces."
+      ]
+    }
+  ]
+}
