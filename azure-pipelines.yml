@@ -243,6 +243,54 @@ extends:
                     $workflow = Get-Content $_.FullName -Raw | ConvertFrom-Json
                     Test-HttpMethods $workflow.actions
                   }
+                  $operationalContext = Get-Content "eng/deployment/teams-icm-operational-context.json" -Raw | ConvertFrom-Json
+                  if (!$operationalContext.catalogVersion -or
+                      !$operationalContext.ownership.team -or
+                      !$operationalContext.ownership.service -or
+                      !$operationalContext.intakeRunbook.url -or
+                      !$operationalContext.fallbackPlaybook.url -or
+                      !$operationalContext.playbooks -or
+                      @($operationalContext.playbooks).Count -eq 0) {
+                    throw "Operational context catalog is missing required fields"
+                  }
+                  $fallback = $operationalContext.fallbackPlaybook
+                  if (!$fallback.name -or !$fallback.url -or !$fallback.selection -or
+                      !$fallback.remediationGuidance -or @($fallback.remediationGuidance).Count -eq 0 -or
+                      !$fallback.validationCriteria -or @($fallback.validationCriteria).Count -eq 0) {
+                    throw "Operational context catalog contains an incomplete fallback playbook"
+                  }
+                  $catalogLinks = @($operationalContext.intakeRunbook.url, $operationalContext.fallbackPlaybook.url)
+                  $catalogLinks += @($operationalContext.playbooks | ForEach-Object { $_.url })
+                  if (@($catalogLinks | Where-Object { $_ -notmatch '^https://' }).Count -gt 0) {
+                    throw "Operational context catalog contains a non-HTTPS link"
+                  }
+                  if (@($operationalContext.playbooks | Where-Object {
+                    !$_.id -or !$_.name -or !$_.url -or !$_.selection -or
+                    !$_.matchTerms -or @($_.matchTerms).Count -eq 0 -or @($_.matchTerms).Count -gt 4 -or
+                    !$_.remediationGuidance -or @($_.remediationGuidance).Count -eq 0 -or
+                    !$_.validationCriteria -or @($_.validationCriteria).Count -eq 0
+                  }).Count -gt 0) {
+                    throw "Operational context catalog contains an incomplete playbook"
+                  }
+                  function Select-OperationalPlaybook([string] $message) {
+                    $normalizedMessage = $message.ToLowerInvariant()
+                    foreach ($playbook in $operationalContext.playbooks) {
+                      foreach ($term in $playbook.matchTerms) {
+                        if ($normalizedMessage.Contains($term.ToLowerInvariant())) {
+                          return $playbook
+                        }
+                      }
+                    }
+                    return $operationalContext.fallbackPlaybook
+                  }
+                  $matchedPlaybook = Select-OperationalPlaybook "Please reimage this physical machine."
+                  if ($matchedPlaybook.id -ne "reimage-on-prem-machine") {
+                    throw "Operational context catalog did not match the reimaging playbook"
+                  }
+                  $fallbackPlaybook = Select-OperationalPlaybook "Investigate this unrelated customer request."
+                  if ($fallbackPlaybook.name -ne $operationalContext.fallbackPlaybook.name) {
+                    throw "Operational context catalog did not return its fallback playbook"
+                  }
                   if ($unsupportedMethods.Count -gt 0) {
                     throw "Workflow contains HTTP methods unsupported by Logic Apps: $($unsupportedMethods -join ', ')"
                   }

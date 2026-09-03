@@ -42,6 +42,7 @@ var teamsManagedApiId = subscriptionResourceId(
 var storageTableDataContributorRoleId = '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3'
 var workflowDefinition = loadJsonContent('teams-icm-pilot.workflow.json')
 var connectorAdapterDefinition = loadJsonContent('teams-icm-connector-adapter.workflow.json')
+var operationalContext = loadJsonContent('teams-icm-operational-context.json')
 var connectorAdapterName = '${resourcePrefix}-connector'
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
@@ -142,6 +143,9 @@ resource logicApp 'Microsoft.Logic/workflows@2019-05-01' = {
       }
       icmRoutingRuleId: {
         value: icmRoutingRuleId
+      }
+      operationalContext: {
+        value: operationalContext
       }
     }
   }

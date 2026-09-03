@@ -34,6 +34,13 @@ Severity: 3 or 4
 The connector and routing rule are fixed in the deployment. Teams content cannot select an IcM
 destination, and the workflow rejects severities other than 3 or 4.
 
+The processor also loads `teams-icm-operational-context.json`, a versioned catalog of DDFun
+ownership, intake guidance, playbook matching signals, remediation guidance, validation criteria,
+and canonical links. Physical-machine or reimaging language selects the Reimaging On-Prem
+Machines playbook. Messages without a specific match use the DDFun intake runbook as an explicit
+fallback; a missing match never prevents incident creation. Every incident records the catalog
+version used to compose its operational context.
+
 The workflow reserves each message with a Table Storage `POST`, then records state transitions
 with full-entity `PUT` updates. Keep every persisted field in each replacement body; the Logic Apps
 HTTP action does not support Table Storage's `MERGE` verb.

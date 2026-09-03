@@ -29,6 +29,9 @@
     },
     "icmRoutingRuleId": {
       "type": "String"
+    },
+    "operationalContext": {
+      "type": "Object"
     }
   },
   "triggers": {
@@ -234,6 +237,27 @@
       "inputs": "@take(if(empty(trim(string(outputs('Compose_Message')?['subject']))), trim(first(split(outputs('Compose_Raw_Plain_Text'), decodeUriComponent('%0A')))), trim(string(outputs('Compose_Message')?['subject']))), 200)",
       "runAfter": {
         "Compose_Raw_Plain_Text": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Filter_Matching_Playbooks": {
+      "type": "Query",
+      "inputs": {
+        "from": "@parameters('operationalContext')?['playbooks']",
+        "where": "@or(contains(toLower(outputs('Compose_Raw_Plain_Text')), toLower(coalesce(item()?['matchTerms']?[0], '__no_match__'))), contains(toLower(outputs('Compose_Raw_Plain_Text')), toLower(coalesce(item()?['matchTerms']?[1], '__no_match__'))), contains(toLower(outputs('Compose_Raw_Plain_Text')), toLower(coalesce(item()?['matchTerms']?[2], '__no_match__'))), contains(toLower(outputs('Compose_Raw_Plain_Text')), toLower(coalesce(item()?['matchTerms']?[3], '__no_match__'))))"
+      },
+      "runAfter": {
+        "Compose_Raw_Plain_Text": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Compose_Selected_Playbook": {
+      "type": "Compose",
+      "inputs": "@if(empty(body('Filter_Matching_Playbooks')), parameters('operationalContext')?['fallbackPlaybook'], first(body('Filter_Matching_Playbooks')))",
+      "runAfter": {
+        "Filter_Matching_Playbooks": [
           "Succeeded"
         ]
       }
@@ -529,7 +553,7 @@
       "actions": {
         "Compose_IcM_Description": {
           "type": "Compose",
-          "inputs": "@concat('Created from a ', if(outputs('Compose_Is_Structured'), 'structured', 'free-form'), ' root message in the .NET Eng Services Teams IcM intake channel.', decodeUriComponent('%0A%0A'), if(outputs('Compose_Is_Structured'), '', concat('Original Teams message:', decodeUriComponent('%0A'), outputs('Compose_Raw_Plain_Text'), decodeUriComponent('%0A%0A'))), 'Impact: ', outputs('Compose_Impact'), decodeUriComponent('%0A'), 'Affected service/infrastructure: ', outputs('Compose_Affected_Infrastructure'), decodeUriComponent('%0A'), 'Evidence: ', outputs('Compose_Evidence'), decodeUriComponent('%0A'), 'Requested action: ', outputs('Compose_Requested_Action'), decodeUriComponent('%0A%0A'), '---', decodeUriComponent('%0A'), 'Incident Details (4W)', decodeUriComponent('%0A'), 'Who: ', outputs('Compose_Who'), decodeUriComponent('%0A'), 'What: ', outputs('Compose_Impact'), decodeUriComponent('%0A'), 'When: Teams message posted at ', outputs('Compose_Message')?['createdDateTime'], decodeUriComponent('%0A'), 'Where: ', outputs('Compose_Affected_Infrastructure'), decodeUriComponent('%0A%0A'), 'Filing Info', decodeUriComponent('%0A'), 'Filed by: ', outputs('Compose_Reporter'), decodeUriComponent('%0A'), 'Filing method: DncEng Teams IcM Logic App pilot', decodeUriComponent('%0A'), 'Teams message ID: ', outputs('Compose_Message')?['id'])"
+          "inputs": "@concat('Created from a ', if(outputs('Compose_Is_Structured'), 'structured', 'free-form'), ' root message in the .NET Eng Services Teams IcM intake channel.', decodeUriComponent('%0A%0A'), if(outputs('Compose_Is_Structured'), '', concat('Original Teams message:', decodeUriComponent('%0A'), outputs('Compose_Raw_Plain_Text'), decodeUriComponent('%0A%0A'))), 'Impact: ', outputs('Compose_Impact'), decodeUriComponent('%0A'), 'Affected service/infrastructure: ', outputs('Compose_Affected_Infrastructure'), decodeUriComponent('%0A'), 'Evidence: ', outputs('Compose_Evidence'), decodeUriComponent('%0A'), 'Requested action: ', outputs('Compose_Requested_Action'), decodeUriComponent('%0A%0A'), '---', decodeUriComponent('%0A'), 'Incident Details (4W)', decodeUriComponent('%0A'), 'Who: ', outputs('Compose_Who'), decodeUriComponent('%0A'), 'What: ', outputs('Compose_Impact'), decodeUriComponent('%0A'), 'When: Teams message posted at ', outputs('Compose_Message')?['createdDateTime'], decodeUriComponent('%0A'), 'Where: ', outputs('Compose_Affected_Infrastructure'), decodeUriComponent('%0A%0A'), 'Operational Context', decodeUriComponent('%0A'), 'Owning team: ', parameters('operationalContext')?['ownership']?['team'], decodeUriComponent('%0A'), 'Owning service: ', parameters('operationalContext')?['ownership']?['service'], decodeUriComponent('%0A'), 'Playbook: ', outputs('Compose_Selected_Playbook')?['name'], decodeUriComponent('%0A'), 'Playbook link: ', outputs('Compose_Selected_Playbook')?['url'], decodeUriComponent('%0A'), 'Selection: ', outputs('Compose_Selected_Playbook')?['selection'], decodeUriComponent('%0A'), if(equals(outputs('Compose_Selected_Playbook')?['url'], parameters('operationalContext')?['intakeRunbook']?['url']), '', concat('DDFun intake runbook: ', parameters('operationalContext')?['intakeRunbook']?['url'], decodeUriComponent('%0A'))), decodeUriComponent('%0A'), 'Remediation Guidance', decodeUriComponent('%0A- '), join(outputs('Compose_Selected_Playbook')?['remediationGuidance'], decodeUriComponent('%0A- ')), decodeUriComponent('%0A%0A'), 'Validation Before Resolution', decodeUriComponent('%0A- '), join(outputs('Compose_Selected_Playbook')?['validationCriteria'], decodeUriComponent('%0A- ')), decodeUriComponent('%0A%0A'), 'Filing Info', decodeUriComponent('%0A'), 'Filed by: ', outputs('Compose_Reporter'), decodeUriComponent('%0A'), 'Filing method: DncEng Teams IcM Logic App pilot', decodeUriComponent('%0A'), 'Operational context catalog: ', parameters('operationalContext')?['catalogVersion'], decodeUriComponent('%0A'), 'Teams message ID: ', outputs('Compose_Message')?['id'])"
         },
         "Create_And_Parse_IcM": {
           "type": "Scope",
@@ -554,8 +578,13 @@
                   "IcmServiceConnectorId": "@{parameters('icmConnectorId')}",
                   "Tags": [
                     "DDFun",
+                    ".NET",
+                    "DNCENG",
+                    "DNCENG-Playbook",
+                    "Teams-Automation-Created",
                     "Teams-IcM-Pilot",
-                    "AB-12383"
+                    "AB-12383",
+                    "AB-12463"
                   ]
                 },
                 "headers": {
@@ -915,6 +944,9 @@
           "Succeeded"
         ],
         "Compose_Severity": [
+          "Succeeded"
+        ],
+        "Compose_Selected_Playbook": [
           "Succeeded"
         ]
       }
