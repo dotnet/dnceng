@@ -25,6 +25,8 @@ public class GitHubAppSecret : SecretType<GitHubAppSecret.Parameters>
     private const string OAuthId = "-oauth-id";
     private const string OAuthSecret = "-oauth-secret";
     private const string AppHookSecret = "-app-webhook-secret";
+    private const int MinimumWebhookSecretLength = 16;
+    private const int MaximumWebhookSecretLength = 128;
 
     private readonly List<string> _suffixes = new List<string> { AppId, AppPrivateKey, OAuthId, OAuthSecret, AppHookSecret };
     private readonly ISystemClock _clock;
@@ -95,8 +97,8 @@ public class GitHubAppSecret : SecretType<GitHubAppSecret.Parameters>
             if (changeWebhookSecret)
             {
                 webhookSecret = await _console.PromptAndValidateAsync("Webhook Secret",
-                    "is required",
-                    l => !string.IsNullOrWhiteSpace(l));
+                    $"must be between {MinimumWebhookSecretLength} and {MaximumWebhookSecretLength} characters long",
+                    IsValidWebhookSecret);
             }
         }
             
@@ -109,6 +111,13 @@ public class GitHubAppSecret : SecretType<GitHubAppSecret.Parameters>
             new SecretData(oauthId, DateTimeOffset.MaxValue, rollOn),
             new SecretData(oauthSecret, DateTimeOffset.MaxValue, rollOn),
             new SecretData(webhookSecret, DateTimeOffset.MaxValue, rollOn)};
+    }
+
+    internal static bool IsValidWebhookSecret(string value)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && value.Length >= MinimumWebhookSecretLength
+            && value.Length <= MaximumWebhookSecretLength;
     }
 
     private bool TryParsePemFileWithPrivateKey(string value, out string parsedValue)
