@@ -2,12 +2,14 @@ using DotNet.Status.Web.Controllers;
 using DotNet.Status.Web.Options;
 using AwesomeAssertions;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.DotNet.Internal.Testing.Utility;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace DotNet.Status.Web.Tests;
@@ -15,6 +17,15 @@ namespace DotNet.Status.Web.Tests;
 [TestFixture]
 public class AnnotationsControllerTests
 {
+    [Test]
+    public void GrafanaEndpointAllowsAnonymousRequests()
+    {
+        MethodInfo action = typeof(AnnotationsController).GetMethod(nameof(AnnotationsController.GetGrafanaAnnotations));
+
+        action.Should().NotBeNull();
+        action.GetCustomAttribute<AllowAnonymousAttribute>().Should().NotBeNull();
+    }
+
     [Test]
     public async Task StatusOkayTest()
     {

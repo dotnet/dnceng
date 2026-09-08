@@ -2,6 +2,7 @@ using Azure.Data.Tables;
 using Azure.Identity;
 using DotNet.Status.Web.Models;
 using DotNet.Status.Web.Options;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.DotNet.Services.Utility;
 using Microsoft.Extensions.Hosting;
@@ -146,6 +147,7 @@ public class AnnotationsController : ControllerBase
     [HttpPost]
     [HttpGet]
     [Route("grafana")]
+    [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<GrafanaAnnotation>>> GetGrafanaAnnotations(
         [FromBody(EmptyBodyBehavior = Microsoft.AspNetCore.Mvc.ModelBinding.EmptyBodyBehavior.Allow)] GrafanaAnnotationQuery query,
         [FromQuery] string from,
