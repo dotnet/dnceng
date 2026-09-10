@@ -196,6 +196,31 @@ stages:
             Write-Error "Failed to publish dashboards to Grafana"
             exit 1
           }
+
+          Write-Host "Validating deployment annotations datasource..."
+          $from = [uri]::EscapeDataString(
+            [DateTimeOffset]::UtcNow.AddHours(-1).ToString('O'))
+          $to = [uri]::EscapeDataString(
+            [DateTimeOffset]::UtcNow.ToString('O'))
+          $annotationsUri = "$(GrafanaEndpoint)/api/datasources/proxy/uid/deployment-annotations-infinity/api/annotations/grafana?from=$from&to=$to"
+
+          try {
+            $annotationsStatus = (Invoke-WebRequest `
+              -Uri $annotationsUri `
+              -Headers @{ Authorization = "Bearer $apiToken" } `
+              -UseBasicParsing).StatusCode
+          } catch {
+            if ($null -eq $_.Exception.Response) {
+              throw
+            }
+            $annotationsStatus = [int] $_.Exception.Response.StatusCode
+          }
+
+          if ($annotationsStatus -ne 200) {
+            Write-Error "Deployment annotations datasource validation returned HTTP $annotationsStatus"
+            exit 1
+          }
+          Write-Host "✓ Deployment annotations datasource returned HTTP 200"
           
           Write-Host ""
           Write-Host "=========================================="
