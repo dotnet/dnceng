@@ -207,18 +207,18 @@ extends:
                   Write-Host "SUCCESS: Bicep template validation successful"
 
             - task: AzureCLI@2
-              displayName: 'Validate Teams-to-IcM Pilot Bicep Template'
+              displayName: 'Validate Teams-to-IcM Bicep Template'
               inputs:
                 azureSubscription: '$(ServiceConnectionName)'
                 scriptType: 'ps'
                 scriptLocation: 'inlineScript'
                 inlineScript: |
-                  Write-Host "Validating Teams-to-IcM pilot Bicep template..."
-                  if (!(Test-Path "eng/deployment/teams-icm-pilot.bicep")) {
-                    throw "Bicep template not found: teams-icm-pilot.bicep"
+                  Write-Host "Validating Teams-to-IcM Bicep template..."
+                  if (!(Test-Path "eng/deployment/teams-icm.bicep")) {
+                    throw "Bicep template not found: teams-icm.bicep"
                   }
 
-                  az bicep build --file eng/deployment/teams-icm-pilot.bicep
+                  az bicep build --file eng/deployment/teams-icm.bicep
                   if ($LASTEXITCODE -ne 0) {
                     throw "Bicep template validation failed"
                   }

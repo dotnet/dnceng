@@ -91,7 +91,7 @@
       },
       "runtimeConfiguration": {
         "paginationPolicy": {
-          "minimumItemCount": 100
+          "minimumItemCount": 1000
         }
       },
       "runAfter": {
@@ -100,14 +100,55 @@
         ]
       }
     },
-    "Filter_New_Root_Messages": {
+    "Filter_Window_Messages": {
       "type": "Query",
       "inputs": {
         "from": "@coalesce(body('Get_Channel_Messages')?['value'], createArray())",
-        "where": "@and(equals(item()?['replyToId'], null), greater(ticks(item()?['createdDateTime']), ticks(outputs('Compose_Window_Start'))), lessOrEquals(ticks(item()?['createdDateTime']), ticks(outputs('Compose_Window_End'))))"
+        "where": "@and(greater(ticks(item()?['createdDateTime']), ticks(outputs('Compose_Window_Start'))), lessOrEquals(ticks(item()?['createdDateTime']), ticks(outputs('Compose_Window_End'))))"
       },
       "runAfter": {
         "Get_Channel_Messages": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Ensure_Window_Fully_Enumerated": {
+      "type": "If",
+      "expression": {
+        "less": [
+          "@length(body('Filter_Window_Messages'))",
+          1000
+        ]
+      },
+      "actions": {},
+      "else": {
+        "actions": {
+          "Stop_Pagination_Limit": {
+            "type": "Terminate",
+            "inputs": {
+              "runStatus": "Failed",
+              "runError": {
+                "code": "ChannelWindowPaginationLimitReached",
+                "message": "At least 1000 Teams messages were returned inside the polling window. The watermark was not advanced because older messages might not have been enumerated."
+              }
+            }
+          }
+        }
+      },
+      "runAfter": {
+        "Filter_Window_Messages": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Filter_New_Root_Messages": {
+      "type": "Query",
+      "inputs": {
+        "from": "@body('Filter_Window_Messages')",
+        "where": "@equals(item()?['replyToId'], null)"
+      },
+      "runAfter": {
+        "Ensure_Window_Fully_Enumerated": [
           "Succeeded"
         ]
       }
