@@ -361,3 +361,6 @@ MigrationBackup/
 
 # some ide stuff
 .idea
+
+# Azure Functions local development settings (may contain local secrets/connection strings)
+local.settings.json
