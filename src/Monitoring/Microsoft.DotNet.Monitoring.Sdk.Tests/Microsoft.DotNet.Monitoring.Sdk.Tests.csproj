@@ -12,4 +12,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Sdk\Microsoft.DotNet.Monitoring.Sdk.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\Sdk\sdk\Sdk.props" Link="Sdk.props" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>
