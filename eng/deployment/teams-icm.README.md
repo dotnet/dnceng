@@ -14,6 +14,8 @@ The target channel is `Eng Services Requests`:
 | Default severity | Sev3 |
 | IcM connector | `9bfe0f4f-4dcf-4033-94a3-f463e90baf04` |
 | IcM routing rule | `DDFUNCustomerRequests` |
+| Teams identity | `dnceng-req-intake@microsoft.onmicrosoft.com` |
+| Credential vault | `HelixKV` |
 
 The connector and routing rule are fixed deployment configuration. Teams content cannot select
 an IcM destination, and the workflow accepts only Sev3 or Sev4. A free-form request defaults to
@@ -74,6 +76,28 @@ Before enabling either workflow:
 
 The workflows remain disabled while any gate is open. Creating the resource group and disabled
 resources does not make the channel live.
+
+### Non-person account credential
+
+The Teams connection uses delegated OAuth, so neither Logic App reads the account password at
+runtime. The password is retained only for accountable recovery, connector reauthorization, and
+rotation through CoreIdentity.
+
+The Secret Manager declaration is `.vault-config/helixkv.yaml`. It stores
+`dnceng-req-intake-account-microsoft` in the existing `HelixKV` account-credential vault as a
+`domain-account`. The manifest contains no credential value, and neither Logic App identity has
+access to the vault.
+
+Initialize or rotate the password interactively:
+
+```powershell
+dotnet secret-manager synchronize `
+  --force-secret=dnceng-req-intake-account-microsoft `
+  .vault-config/helixkv.yaml
+```
+
+Use the password produced by CoreIdentity. Never place it in source control, deployment
+parameters, workflow configuration, or pipeline variables.
 
 ## Validate and deploy disabled
 

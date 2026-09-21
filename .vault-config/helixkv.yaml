@@ -22,3 +22,9 @@ secrets:
     parameters:
       accountName: dn-dependabot
       description: The dn-dependabot account
+
+  dnceng-req-intake-account-microsoft:
+    type: domain-account
+    parameters:
+      accountName: dnceng-req-intake@microsoft.onmicrosoft.com
+      description: Dedicated non-person account for the production Teams-to-IcM connector
