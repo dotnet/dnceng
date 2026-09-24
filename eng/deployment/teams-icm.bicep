@@ -49,8 +49,11 @@ var teamsManagedApiId = subscriptionResourceId(
 var storageTableDataContributorRoleId = '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3'
 var workflowDefinition = loadJsonContent('teams-icm.workflow.json')
 var connectorAdapterDefinition = loadJsonContent('teams-icm-connector-adapter.workflow.json')
+var latencyMonitorDefinition = loadJsonContent('teams-icm-latency-monitor.workflow.json')
 var operationalContext = loadJsonContent('teams-icm-operational-context.json')
 var connectorAdapterName = '${resourcePrefix}-connector'
+var latencyMonitorName = '${resourcePrefix}-latency-monitor'
+var storageTableDataReaderRoleId = '76199698-9eea-4c19-bc75-cec21354c6b6'
 
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageAccountName
@@ -205,6 +208,32 @@ resource connectorAdapter 'Microsoft.Logic/workflows@2019-05-01' = {
   }
 }
 
+resource latencyMonitor 'Microsoft.Logic/workflows@2019-05-01' = {
+  name: latencyMonitorName
+  location: location
+  tags: {
+    Environment: 'Production'
+    Purpose: 'Teams to IcM two-minute reply latency monitoring'
+    Service: 'DncEng'
+    WorkItem: '12751'
+  }
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    state: workflowEnabled ? 'Enabled' : 'Disabled'
+    definition: latencyMonitorDefinition
+    parameters: {
+      storageTableEndpoint: {
+        value: storageAccount.properties.primaryEndpoints.table
+      }
+      storageTableName: {
+        value: intakeTable.name
+      }
+    }
+  }
+}
+
 resource storageTableDataContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(storageAccount.id, logicApp.id, storageTableDataContributorRoleId)
   scope: storageAccount
@@ -227,6 +256,19 @@ resource connectorStorageTableDataContributor 'Microsoft.Authorization/roleAssig
     roleDefinitionId: subscriptionResourceId(
       'Microsoft.Authorization/roleDefinitions',
       storageTableDataContributorRoleId
+    )
+  }
+}
+
+resource latencyMonitorStorageTableDataReader 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storageAccount.id, latencyMonitor.id, storageTableDataReaderRoleId)
+  scope: storageAccount
+  properties: {
+    principalId: latencyMonitor.identity.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      storageTableDataReaderRoleId
     )
   }
 }
@@ -276,6 +318,26 @@ resource workflowDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-p
 resource connectorAdapterDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   name: 'send-to-log-analytics'
   scope: connectorAdapter
+  properties: {
+    workspaceId: logAnalytics.id
+    logs: [
+      {
+        categoryGroup: 'allLogs'
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
+  }
+}
+
+resource latencyMonitorDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  name: 'send-to-log-analytics'
+  scope: latencyMonitor
   properties: {
     workspaceId: logAnalytics.id
     logs: [
@@ -401,9 +463,53 @@ resource connectorAdapterFailedRunsAlert 'Microsoft.Insights/metricAlerts@2018-0
   }
 }
 
+resource latencyObjectiveAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
+  name: '${latencyMonitorName}-failed-runs'
+  location: 'global'
+  tags: {
+    Environment: 'Production'
+    Purpose: 'Teams to IcM two-minute reply latency objective'
+    Service: 'DncEng'
+    WorkItem: '12751'
+  }
+  properties: {
+    actions: [
+      {
+        actionGroupId: failureActionGroup.id
+      }
+    ]
+    autoMitigate: true
+    criteria: {
+      'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
+      allOf: [
+        {
+          criterionType: 'StaticThresholdCriterion'
+          metricName: 'RunsFailed'
+          metricNamespace: 'Microsoft.Logic/workflows'
+          name: 'Root message has not reached ReplyPosted within two minutes'
+          operator: 'GreaterThan'
+          threshold: 0
+          timeAggregation: 'Total'
+        }
+      ]
+    }
+    description: 'Alerts when an intake thread has not reached ReplyPosted within two minutes or the latency monitor cannot evaluate the state table.'
+    enabled: true
+    evaluationFrequency: 'PT1M'
+    scopes: [
+      latencyMonitor.id
+    ]
+    severity: 2
+    targetResourceRegion: location
+    targetResourceType: 'Microsoft.Logic/workflows'
+    windowSize: 'PT5M'
+  }
+}
+
 output logicAppName string = logicApp.name
 output logicAppPrincipalId string = logicApp.identity.principalId
 output connectorAdapterName string = connectorAdapter.name
+output latencyMonitorName string = latencyMonitor.name
 output storageAccountName string = storageAccount.name
 output storageTableName string = intakeTable.name
 output teamsConnectionId string = teamsConnection.id
