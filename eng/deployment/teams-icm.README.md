@@ -46,11 +46,18 @@ Severity: 3 or 4
        - adds versioned DDFun operational context
        - creates the fixed-route DDFun IcM
        - replies in the originating Teams thread
+1-minute recurrence
+  -> dnceng-teams-icm-latency-monitor
+       - pages through all in-flight durable states
+       - checks each state against the Teams message creation time
+       - fails when a thread has not reached ReplyPosted within two minutes
+       - triggers the dedicated latency-objective alert
 ```
 
 The processor stores `Processing`, `Created`, `ReplyPosted`, and `Failed` states in the
-`TeamsIcmIntake` table. Duplicate deliveries are safe because the message ID is reserved before
-IcM creation and is also used in the provider's deterministic source ID.
+`TeamsIcmIntake` table, including the root message creation time used by the latency monitor.
+Duplicate deliveries are safe because the message ID is reserved before IcM creation and is also
+used in the provider's deterministic source ID.
 
 If 1,000 messages fall inside one polling window, the adapter fails without advancing its
 watermark. This surfaces the backlog through failed-run monitoring instead of silently skipping
@@ -64,7 +71,7 @@ documented DDFun fallback and does not prevent incident creation.
 The Microsoft Teams managed connector used by the pilot was authorized with an individual
 operator. Production must not authorize `dnceng-teams-icm-teams` with a personal identity.
 
-Before enabling either workflow:
+Before enabling the workflows:
 
 1. Prove and approve a non-personal Teams identity that can read the selected channel and post a
    reply to the originating root thread.
@@ -122,6 +129,11 @@ az deployment group create `
   --parameters alertEmail=<rollout-owner-email> workflowEnabled=false
 ```
 
+Production Grafana rules for the connector, processor, and latency monitor route through the
+existing `amg-icm-ddfun-customer-requests` contact point. The Azure Monitor alerts continue to
+provide direct email notification as an independent fallback if Grafana cannot deliver an IcM
+notification.
+
 Resolve the processor identity's application ID from the deployment output:
 
 ```powershell
@@ -144,7 +156,8 @@ readiness gates are recorded as complete on AB#12465.
 
 During the attended rollout:
 
-1. Enable both workflows through a Bicep deployment with `workflowEnabled=true`.
+1. Enable the connector, processor, and latency-monitor workflows through a Bicep deployment with
+   `workflowEnabled=true`.
 2. Post one clearly labeled controlled root-thread request.
 3. Confirm one correctly routed DDFun IcM, one thread reply, and `ReplyPosted` state.
 4. Confirm a reply does not create an IcM and replaying the root does not create another IcM.

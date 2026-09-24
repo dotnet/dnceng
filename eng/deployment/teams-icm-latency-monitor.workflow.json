@@ -1,0 +1,235 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2016-06-01/Microsoft.Logic.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageTableEndpoint": {
+      "type": "String"
+    },
+    "storageTableName": {
+      "type": "String"
+    }
+  },
+  "triggers": {
+    "Check_Incomplete_Threads": {
+      "type": "Recurrence",
+      "recurrence": {
+        "frequency": "Minute",
+        "interval": 1
+      }
+    }
+  },
+  "actions": {
+    "Initialize_NextPartitionKey": {
+      "type": "InitializeVariable",
+      "inputs": {
+        "variables": [
+          {
+            "name": "NextPartitionKey",
+            "type": "string",
+            "value": ""
+          }
+        ]
+      },
+      "runAfter": {}
+    },
+    "Initialize_NextRowKey": {
+      "type": "InitializeVariable",
+      "inputs": {
+        "variables": [
+          {
+            "name": "NextRowKey",
+            "type": "string",
+            "value": ""
+          }
+        ]
+      },
+      "runAfter": {
+        "Initialize_NextPartitionKey": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Initialize_LatencyBreached": {
+      "type": "InitializeVariable",
+      "inputs": {
+        "variables": [
+          {
+            "name": "LatencyBreached",
+            "type": "boolean",
+            "value": false
+          }
+        ]
+      },
+      "runAfter": {
+        "Initialize_NextRowKey": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Initialize_HasMorePages": {
+      "type": "InitializeVariable",
+      "inputs": {
+        "variables": [
+          {
+            "name": "HasMorePages",
+            "type": "boolean",
+            "value": true
+          }
+        ]
+      },
+      "runAfter": {
+        "Initialize_LatencyBreached": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Check_State_Pages": {
+      "type": "Until",
+      "expression": "@equals(variables('HasMorePages'), false)",
+      "limit": {
+        "count": 60,
+        "timeout": "PT5M"
+      },
+      "actions": {
+        "Get_State_Page": {
+          "type": "Http",
+          "inputs": {
+            "authentication": {
+              "type": "ManagedServiceIdentity",
+              "audience": "https://storage.azure.com/"
+            },
+            "headers": {
+              "Accept": "application/json;odata=nometadata",
+              "x-ms-date": "@{utcNow('R')}",
+              "x-ms-version": "2019-02-02"
+            },
+            "method": "GET",
+            "uri": "@{concat(parameters('storageTableEndpoint'), parameters('storageTableName'), '()?$filter=', encodeUriComponent('PartitionKey eq ''TeamsIcm'' and (Status eq ''Processing'' or Status eq ''Created'')'), if(empty(variables('NextPartitionKey')), '', concat('&NextPartitionKey=', encodeUriComponent(variables('NextPartitionKey')))), if(empty(variables('NextRowKey')), '', concat('&NextRowKey=', encodeUriComponent(variables('NextRowKey')))))}"
+          },
+          "runAfter": {}
+        },
+        "Filter_Threads_Over_Two_Minutes": {
+          "type": "Query",
+          "inputs": {
+            "from": "@body('Get_State_Page')?['value']",
+            "where": "@lessOrEquals(ticks(if(empty(item()?['MessageCreatedUtc']), '1970-01-01T00:00:00Z', item()?['MessageCreatedUtc'])), ticks(addMinutes(utcNow(), -2)))"
+          },
+          "runAfter": {
+            "Get_State_Page": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Mark_Latency_Breach": {
+          "type": "If",
+          "expression": {
+            "greater": [
+              "@length(body('Filter_Threads_Over_Two_Minutes'))",
+              0
+            ]
+          },
+          "actions": {
+            "Set_LatencyBreached": {
+              "type": "SetVariable",
+              "inputs": {
+                "name": "LatencyBreached",
+                "value": true
+              },
+              "runAfter": {}
+            }
+          },
+          "else": {
+            "actions": {}
+          },
+          "runAfter": {
+            "Filter_Threads_Over_Two_Minutes": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Set_NextPartitionKey": {
+          "type": "SetVariable",
+          "inputs": {
+            "name": "NextPartitionKey",
+            "value": "@coalesce(outputs('Get_State_Page')?['headers']?['x-ms-continuation-NextPartitionKey'], outputs('Get_State_Page')?['headers']?['x-ms-continuation-nextpartitionkey'], '')"
+          },
+          "runAfter": {
+            "Mark_Latency_Breach": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Set_NextRowKey": {
+          "type": "SetVariable",
+          "inputs": {
+            "name": "NextRowKey",
+            "value": "@coalesce(outputs('Get_State_Page')?['headers']?['x-ms-continuation-NextRowKey'], outputs('Get_State_Page')?['headers']?['x-ms-continuation-nextrowkey'], '')"
+          },
+          "runAfter": {
+            "Set_NextPartitionKey": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Set_HasMorePages": {
+          "type": "SetVariable",
+          "inputs": {
+            "name": "HasMorePages",
+            "value": "@and(not(variables('LatencyBreached')), or(not(empty(variables('NextPartitionKey'))), not(empty(variables('NextRowKey')))))"
+          },
+          "runAfter": {
+            "Set_NextRowKey": [
+              "Succeeded"
+            ]
+          }
+        }
+      },
+      "runAfter": {
+        "Initialize_HasMorePages": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Fail_When_Threads_Exceed_Objective": {
+      "type": "If",
+      "expression": {
+        "or": [
+          {
+            "equals": [
+              "@variables('LatencyBreached')",
+              true
+            ]
+          },
+          {
+            "equals": [
+              "@variables('HasMorePages')",
+              true
+            ]
+          }
+        ]
+      },
+      "actions": {
+        "Terminate_With_Latency_Breach": {
+          "type": "Terminate",
+          "inputs": {
+            "runStatus": "Failed",
+            "runError": {
+              "code": "ReplyLatencyObjectiveBreached",
+              "message": "@{if(variables('HasMorePages'), 'The latency monitor could not evaluate every in-flight Teams intake state within its paging limit.', 'One or more Teams intake threads have not reached ReplyPosted within two minutes, or an in-flight record is missing MessageCreatedUtc.')}"
+            }
+          },
+          "runAfter": {}
+        }
+      },
+      "else": {
+        "actions": {}
+      },
+      "runAfter": {
+        "Check_State_Pages": [
+          "Succeeded"
+        ]
+      }
+    }
+  },
+  "outputs": {}
+}
