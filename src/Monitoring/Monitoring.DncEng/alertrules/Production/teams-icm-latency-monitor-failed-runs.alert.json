@@ -98,7 +98,7 @@
   "for": "0s",
   "frequency": "1m",
   "annotations": {
-    "description": "A production Teams intake thread did not reach ReplyPosted within two minutes, or the monitor could not fully evaluate in-flight state. Inspect the latency-monitor and processor run histories. IcM creation may be unavailable, so this alert routes through DotNet Status rather than IcM."
+    "description": "A production Teams intake thread did not reach ReplyPosted within two minutes, or the monitor could not fully evaluate in-flight state. Inspect the latency-monitor and processor run histories. Azure Monitor email remains the independent fallback if this IcM notification cannot be delivered."
   },
   "labels": {
     "NotificationId": "teams-icm-latency-monitor-failed-runs",
@@ -110,7 +110,7 @@
   "intervalMs": 60000,
   "isPaused": false,
   "notification_settings": {
-    "receiver": ".NET Status Alert",
+    "receiver": "amg-icm-ddfun-customer-requests",
     "group_wait": "0s",
     "repeat_interval": "4h"
   }

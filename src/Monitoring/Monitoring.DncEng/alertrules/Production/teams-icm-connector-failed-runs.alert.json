@@ -98,7 +98,7 @@
   "for": "0s",
   "frequency": "1m",
   "annotations": {
-    "description": "The production Teams channel polling connector recorded a failed run, so customer requests may not reach the IcM processor. Inspect the Logic App run history and Teams connector health."
+    "description": "The production Teams channel polling connector recorded a failed run, so customer requests may not reach the IcM processor. Inspect the Logic App run history and Teams connector health. Azure Monitor email remains the independent fallback if this IcM notification cannot be delivered."
   },
   "labels": {
     "NotificationId": "teams-icm-connector-failed-runs",
@@ -110,7 +110,7 @@
   "intervalMs": 60000,
   "isPaused": false,
   "notification_settings": {
-    "receiver": ".NET Status Alert",
+    "receiver": "amg-icm-ddfun-customer-requests",
     "group_wait": "0s",
     "repeat_interval": "4h"
   }

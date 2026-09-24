@@ -129,12 +129,10 @@ az deployment group create `
   --parameters alertEmail=<rollout-owner-email> workflowEnabled=false
 ```
 
-The Azure Monitor alerts provide direct email notification as a fallback. Production Grafana rules
-for the connector, processor, and latency monitor also route through the existing `.NET Status
-Alert` contact point. That route creates a deduplicated DNCENG Task when an alert fires, records
-recurrences on the same task, and closes the task when the alert resolves. This temporary AzDO
-route does not depend on IcM, so an ICM Provider outage remains visible. Revisit the destination
-when the legacy status-hook retirement tracked by AB#12297 is complete.
+Production Grafana rules for the connector, processor, and latency monitor route through the
+existing `amg-icm-ddfun-customer-requests` contact point. The Azure Monitor alerts continue to
+provide direct email notification as an independent fallback if Grafana cannot deliver an IcM
+notification.
 
 Resolve the processor identity's application ID from the deployment output:
 

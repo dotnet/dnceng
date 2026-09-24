@@ -98,7 +98,7 @@
   "for": "0s",
   "frequency": "1m",
   "annotations": {
-    "description": "The production Teams-to-IcM processor recorded a failed run. IcM creation may be unavailable. Inspect the Logic App run history and ICM Provider response before retrying. This alert routes through DotNet Status because IcM cannot be assumed to be available."
+    "description": "The production Teams-to-IcM processor recorded a failed run. Inspect the Logic App run history and ICM Provider response before retrying. Azure Monitor email remains the independent fallback if this IcM notification cannot be delivered."
   },
   "labels": {
     "NotificationId": "teams-icm-processor-failed-runs",
@@ -110,7 +110,7 @@
   "intervalMs": 60000,
   "isPaused": false,
   "notification_settings": {
-    "receiver": ".NET Status Alert",
+    "receiver": "amg-icm-ddfun-customer-requests",
     "group_wait": "0s",
     "repeat_interval": "4h"
   }
