@@ -413,7 +413,7 @@ resource failedRunsAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
     scopes: [
       logicApp.id
     ]
-    severity: 2
+    severity: 3
     targetResourceRegion: location
     targetResourceType: 'Microsoft.Logic/workflows'
     windowSize: 'PT5M'
@@ -456,7 +456,7 @@ resource connectorAdapterFailedRunsAlert 'Microsoft.Insights/metricAlerts@2018-0
     scopes: [
       connectorAdapter.id
     ]
-    severity: 2
+    severity: 3
     targetResourceRegion: location
     targetResourceType: 'Microsoft.Logic/workflows'
     windowSize: 'PT5M'
@@ -499,7 +499,7 @@ resource latencyObjectiveAlert 'Microsoft.Insights/metricAlerts@2018-03-01' = {
     scopes: [
       latencyMonitor.id
     ]
-    severity: 2
+    severity: 3
     targetResourceRegion: location
     targetResourceType: 'Microsoft.Logic/workflows'
     windowSize: 'PT5M'
