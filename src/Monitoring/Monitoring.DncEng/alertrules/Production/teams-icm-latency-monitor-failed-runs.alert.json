@@ -1,0 +1,117 @@
+{
+  "uid": "teams-icm-latency-monitor-failed-runs",
+  "title": "Teams-to-IcM reply latency objective breached",
+  "condition": "C",
+  "data": [
+    {
+      "refId": "A",
+      "queryType": "Azure Monitor",
+      "datasourceUid": "F2XodEi7z",
+      "relativeTimeRange": {
+        "from": 300,
+        "to": 0
+      },
+      "model": {
+        "azureMonitor": {
+          "aggregation": "Total",
+          "dimensionFilters": [],
+          "metricDefinition": "Microsoft.Logic/workflows",
+          "metricName": "RunsFailed",
+          "metricNamespace": "Microsoft.Logic/workflows",
+          "resources": [
+            {
+              "metricNamespace": "Microsoft.Logic/workflows",
+              "resourceGroup": "dnceng-teams-icm-production",
+              "resourceName": "dnceng-teams-icm-latency-monitor",
+              "subscription": "a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1"
+            }
+          ],
+          "timeGrain": "PT1M"
+        },
+        "datasource": {
+          "type": "grafana-azure-monitor-datasource",
+          "uid": "F2XodEi7z"
+        },
+        "queryType": "Azure Monitor",
+        "refId": "A",
+        "subscription": "a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1",
+        "subscriptions": [
+          "a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1"
+        ]
+      }
+    },
+    {
+      "refId": "B",
+      "queryType": "",
+      "datasourceUid": "-100",
+      "relativeTimeRange": {
+        "from": 300,
+        "to": 0
+      },
+      "model": {
+        "datasource": {
+          "type": "__expr__",
+          "uid": "-100"
+        },
+        "expression": "A",
+        "reducer": "sum",
+        "refId": "B",
+        "type": "reduce"
+      }
+    },
+    {
+      "refId": "C",
+      "queryType": "",
+      "datasourceUid": "-100",
+      "model": {
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                0
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "B"
+              ]
+            },
+            "type": "query"
+          }
+        ],
+        "datasource": {
+          "type": "__expr__",
+          "uid": "-100"
+        },
+        "expression": "B",
+        "refId": "C",
+        "type": "threshold"
+      }
+    }
+  ],
+  "noDataState": "OK",
+  "execErrState": "KeepLast",
+  "for": "0s",
+  "frequency": "1m",
+  "annotations": {
+    "description": "A production Teams intake thread did not reach ReplyPosted within two minutes, or the monitor could not fully evaluate in-flight state. Inspect the latency-monitor and processor run histories. IcM creation may be unavailable, so this alert routes through DotNet Status rather than IcM."
+  },
+  "labels": {
+    "NotificationId": "teams-icm-latency-monitor-failed-runs",
+    "Severity": "3"
+  },
+  "folderUID": "dnceng",
+  "ruleGroup": "Teams-to-IcM Alerts",
+  "evaluationIntervalSeconds": 60,
+  "intervalMs": 60000,
+  "isPaused": false,
+  "notification_settings": {
+    "receiver": ".NET Status Alert",
+    "group_wait": "0s",
+    "repeat_interval": "4h"
+  }
+}
