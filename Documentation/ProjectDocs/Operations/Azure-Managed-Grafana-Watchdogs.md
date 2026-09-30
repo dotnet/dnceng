@@ -92,21 +92,36 @@ successful cycle whose monitoring records were not accepted by the telemetry cha
 
 ## Deployment gate
 
-The Bicep template is intentionally not referenced from any deployment pipeline. Do not deploy it
-until the owning service administrator has supplied and approved the Azure Monitor Incident Action
-connection and routing values.
+The Bicep template is intentionally not referenced from any deployment pipeline. Do not deploy
+incident routing until the owning service administrator has supplied and approved the Azure Monitor
+Incident Action connection and routing values. A probe-only staging deployment may set
+`deployIncidentRouting=false` before those values are available.
 
-Until this gate is completed, the watchdog is not deployed and its two new alert rules do not run.
-Existing Grafana monitoring remains unchanged. After deployment, the alert rules still remain
-disabled until the Function produces a verified healthy cycle.
+Until this gate is completed, the watchdog may run only as a probe-only staging deployment; its two
+new alert rules do not exist or run. Existing Grafana monitoring remains unchanged. After incident
+routing is deployed, the alert rules still remain disabled until the Function produces a verified
+healthy cycle.
 
-The template requires:
+Incident routing requires:
 
 - `icmConnectionId`: GUID of the Azure Monitor Incident Action connection configured in IcM.
 - `icmConnectionName`: name of that connection.
 - `icmRoutingId`: routing ID with a verified matching rule on that connection.
 - `grafanaWorkspaceNameProduction`, `grafanaWorkspaceNameStaging`, and
   `grafanaWorkspaceNameWorkflow`: existing workspace resource names.
+
+The workspace names are always required so the same template can be promoted without changing its
+environment mapping. Use `targetEnvironment` to select `production`, `staging`, `workflow`, or
+`all`. A staging-only validation must set `targetEnvironment=staging`; the template then grants
+Grafana Viewer only on the staging workspace. The constrained parameter prevents an empty selection.
+
+Set `deployIncidentRouting=false` while validating the Function, authenticated probes, and telemetry
+before the IcM connector is enabled. This omits the Action Group and both scheduled-query rules.
+It does not validate alerting or incident delivery; those remain gated on the approved connector.
+Use a fresh staging-specific `baseName`. Azure Resource Manager deployments are incremental, so
+turning a probe or routing flag off does not delete resources or role assignments created by an
+earlier deployment. Follow the rollback procedure to remove a previous deployment before changing
+its scope.
 
 The template must be deployed to the resource group containing those workspaces. It creates
 dedicated Log Analytics and Application Insights resources, a Linux Flex Consumption Function with
@@ -131,12 +146,12 @@ $deployment = az deployment group create `
   --subscription "<subscription ID or name>" `
   --resource-group "<resource group containing the Grafana workspaces>" `
   --template-file eng\deployment\grafana-watchdog.bicep `
-  --parameters icmConnectionId="<IcM connection GUID>" `
-               icmConnectionName="<IcM connection name>" `
-               icmRoutingId="<verified routing ID>" `
+  --parameters baseName="grafana-watchdog-staging" `
                grafanaWorkspaceNameProduction="<production workspace name>" `
                grafanaWorkspaceNameStaging="<staging workspace name>" `
                grafanaWorkspaceNameWorkflow="<workflow workspace name>" `
+               targetEnvironment="staging" `
+               deployIncidentRouting=false `
   | ConvertFrom-Json
 
 $functionAppName = $deployment.properties.outputs.functionAppName.value
@@ -161,9 +176,12 @@ Require every configured workspace to have a recent successful probe and require
 greater than zero. These checks also validate the table and column names used by the two alert rules,
 whose deployment-time query validation is intentionally skipped during workspace bootstrap.
 
-After those checks succeed, redeploy the template with `enableAlerts=true` and the same approved
-parameters. This is the point at which the watchdog begins paging; do not enable the rules before a
-healthy cycle is verified.
+After those checks succeed and the IcM connector is approved, redeploy the same staging `baseName`
+with `deployIncidentRouting=true`, the approved `icmConnectionId`, `icmConnectionName`, and
+`icmRoutingId`, and `enableAlerts=false`. Verify that the Action Group and both disabled alert rules
+exist and that their queries evaluate successfully. Then redeploy with `enableAlerts=true`. This is
+the point at which the watchdog begins paging; do not enable the rules before a healthy cycle and
+incident-routing configuration are verified.
 
 ## Alert queries
 
