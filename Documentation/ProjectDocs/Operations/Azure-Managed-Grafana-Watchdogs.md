@@ -36,6 +36,19 @@ Workspace-based Application Insights and Log Analytics
 Azure Monitor Action Group with native IcM Incident Action
 ```
 
+## Why this is a separate watchdog
+
+The watchdog is intended to verify the authenticated Grafana data plane and the monitoring path, not
+only Azure Managed Grafana's platform availability. A platform can satisfy its availability target
+while requests made with the team's managed identity fail because of Entra, RBAC, organization
+access, or environment configuration.
+
+Running this check inside a Helix service such as Metrics Observer would reuse existing hosting, but
+it would also couple the monitor for the shared Grafana workspaces to Helix deployment and service
+health. A Helix outage or rollout could then suppress the independent signal used to investigate
+Helix and other engineering services. The standalone Function keeps that failure domain separate and
+emits its own missing-heartbeat signal.
+
 The Function runs on Flex Consumption with two explicitly selected user-assigned identities. The
 probe identity has Grafana Viewer access and is selected for `DefaultAzureCredential` through
 `AZURE_CLIENT_ID`. The storage identity accesses the Function host storage and private deployment
@@ -46,6 +59,11 @@ A workspace is healthy only when:
 
 - `/api/health` returns HTTP 200 and JSON with `database` equal to `ok`.
 - `/api/org` returns HTTP 200 and JSON with a positive `id`.
+
+The endpoints test different failures. `/api/health` verifies that Grafana and its database report
+healthy. `/api/org` requires an authenticated request and verifies that the managed identity can
+access a Grafana organization. Keeping both prevents a healthy service response from masking a
+broken authentication or authorization path.
 
 Each HTTP call gets one bounded retry by default for HTTP 408, HTTP 429, HTTP 5xx,
 `HttpRequestException`, or the configured per-request timeout. Other HTTP failures and invalid
@@ -77,6 +95,10 @@ successful cycle whose monitoring records were not accepted by the telemetry cha
 The Bicep template is intentionally not referenced from any deployment pipeline. Do not deploy it
 until the owning service administrator has supplied and approved the Azure Monitor Incident Action
 connection and routing values.
+
+Until this gate is completed, the watchdog is not deployed and its two new alert rules do not run.
+Existing Grafana monitoring remains unchanged. After deployment, the alert rules still remain
+disabled until the Function produces a verified healthy cycle.
 
 The template requires:
 
