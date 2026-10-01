@@ -90,6 +90,7 @@
           "TeamId": "@{parameters('teamId')}",
           "ChannelId": "@{parameters('channelId')}",
           "MessageId": "@{outputs('Compose_Message')?['id']}",
+          "MessageCreatedUtc": "@{outputs('Compose_Message')?['createdDateTime']}",
           "WorkflowRunId": "@{workflow()?['run']?['name']}",
           "UpdatedUtc": "@{utcNow()}"
         },
@@ -633,6 +634,7 @@
               "TeamId": "@{parameters('teamId')}",
               "ChannelId": "@{parameters('channelId')}",
               "MessageId": "@{outputs('Compose_Message')?['id']}",
+              "MessageCreatedUtc": "@{outputs('Compose_Message')?['createdDateTime']}",
               "IncidentId": "@{outputs('Compose_Incident_Id')}",
               "WorkflowRunId": "@{workflow()?['run']?['name']}",
               "UpdatedUtc": "@{utcNow()}"
@@ -692,6 +694,7 @@
               "TeamId": "@{parameters('teamId')}",
               "ChannelId": "@{parameters('channelId')}",
               "MessageId": "@{outputs('Compose_Message')?['id']}",
+              "MessageCreatedUtc": "@{outputs('Compose_Message')?['createdDateTime']}",
               "IncidentId": "@{outputs('Compose_Incident_Id')}",
               "WorkflowRunId": "@{workflow()?['run']?['name']}",
               "UpdatedUtc": "@{utcNow()}"
@@ -726,6 +729,7 @@
               "TeamId": "@{parameters('teamId')}",
               "ChannelId": "@{parameters('channelId')}",
               "MessageId": "@{outputs('Compose_Message')?['id']}",
+              "MessageCreatedUtc": "@{outputs('Compose_Message')?['createdDateTime']}",
               "FailureStage": "IcmProvider",
               "FailureStatusCode": "@{outputs('Create_Or_Update_IcM')?['statusCode']}",
               "WorkflowRunId": "@{workflow()?['run']?['name']}",
@@ -806,6 +810,7 @@
               "TeamId": "@{parameters('teamId')}",
               "ChannelId": "@{parameters('channelId')}",
               "MessageId": "@{outputs('Compose_Message')?['id']}",
+              "MessageCreatedUtc": "@{outputs('Compose_Message')?['createdDateTime']}",
               "FailureStage": "TeamsReply",
               "IncidentId": "@{outputs('Compose_Incident_Id')}",
               "WorkflowRunId": "@{workflow()?['run']?['name']}",
@@ -862,6 +867,7 @@
                 "TeamId": "@{parameters('teamId')}",
                 "ChannelId": "@{parameters('channelId')}",
                 "MessageId": "@{outputs('Compose_Message')?['id']}",
+                "MessageCreatedUtc": "@{outputs('Compose_Message')?['createdDateTime']}",
                 "FailureStage": "Validation",
                 "WorkflowRunId": "@{workflow()?['run']?['name']}",
                 "UpdatedUtc": "@{utcNow()}"

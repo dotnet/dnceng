@@ -1,16 +1,16 @@
 {
-  "catalogVersion": "2026-09-03",
+  "catalogVersion": "2026-09-24",
   "ownership": {
     "team": "DDFun Customer Requests",
     "service": "DDFun Services Management"
   },
   "intakeRunbook": {
     "name": "Creating IcM incidents for DDFun customer requests",
-    "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1579/creating-icm-incidents-for-ddfun-customer-requests"
+    "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1612/AI-Generated-Step-By-Step-Instructions/creating-icm-incidents-for-ddfun-customer-requests"
   },
   "fallbackPlaybook": {
     "name": "DDFun customer request intake",
-    "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1579/creating-icm-incidents-for-ddfun-customer-requests",
+    "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1612/AI-Generated-Step-By-Step-Instructions/creating-icm-incidents-for-ddfun-customer-requests",
     "selection": "Fallback: no specific vendor playbook matched the Teams message.",
     "remediationGuidance": [
       "Investigate the reported issue using the evidence in the originating Teams thread.",
@@ -25,21 +25,626 @@
     {
       "id": "reimage-on-prem-machine",
       "name": "Reimaging On-Prem Machines",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2327/DDFUN-Vendor-Playbooks/Reimaging-On-Prem-Machines",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2334/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Reimaging-On-Prem-Machines",
       "matchTerms": [
         "reimage",
-        "physical machine",
-        "on-prem machine",
-        "on prem machine"
+        "reimaging",
+        "fresh os installation",
+        "imaging failures"
       ],
-      "selection": "Matched from physical-machine or reimaging language in the Teams message.",
+      "selection": "Matched reimaging or fresh-OS-installation language for an on-prem Helix machine.",
       "remediationGuidance": [
-        "Quarantine the affected machine before remediation.",
-        "Follow the linked playbook to reimage or repair the machine."
+        "Confirm the exact machine and queue names, then take the machine offline with the OSOB CLI or Swagger API before touching it.",
+        "Reimage over KVM, reinstall the Helix client, and reinstall the queue-specific software the queue requires.",
+        "Bring the machine back online only after the client is installed and configured for its queue."
       ],
       "validationCriteria": [
-        "Validate the machine after remediation.",
-        "Return it to service only after the reported failure no longer reproduces."
+        "Confirm the machine heartbeats and picks up work in the Grafana queue monitor.",
+        "Confirm test work items complete successfully on the machine before closing."
+      ]
+    },
+    {
+      "id": "onboard-spare-or-new-hardware",
+      "name": "Onboarding Spare or New Hardware into Helix",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2445/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Onboarding-Spare-or-New-Hardware-into-Helix",
+      "matchTerms": [
+        "spare hardware",
+        "new lab hardware",
+        "deployment packet",
+        "rack and connect"
+      ],
+      "selection": "Matched a request to deploy approved spare or new physical hardware into a Helix on-prem queue.",
+      "remediationGuidance": [
+        "Accept the deployment packet and confirm the asset, hostname, queue, environment, and security boundary match the approved work item.",
+        "Rack, image, and secure the host, create exactly one inventory record mapping it to one queue, and quarantine it with the local offline marker before bootstrap.",
+        "Bootstrap the approved Azure Arc or OneCert path, apply queue-specific configuration, and remove temporary credentials."
+      ],
+      "validationCriteria": [
+        "Confirm a fresh heartbeat under the exact queue and machine identity while the host is still quarantined.",
+        "Confirm a representative Helix work item ran, finished, and uploaded logs, plus performance or tethered-device validation where applicable.",
+        "Confirm the requester and the DNCEng DRI recorded acceptance in the work item before close-out."
+      ]
+    },
+    {
+      "id": "onboard-machine-azure-arc",
+      "name": "Onboarding Helix Machines with Azure Arc",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2435/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Onboarding-Helix-Machines-with-Azure-Arc",
+      "matchTerms": [
+        "azure arc",
+        "arc-enabled",
+        "arc onboarding",
+        "arc resource"
+      ],
+      "selection": "Matched Azure Arc onboarding language for a Windows x64 or Arc-supported Linux Helix machine.",
+      "remediationGuidance": [
+        "Confirm the work item assigns the Arc authentication path; use the OneCert playbook for macOS, Windows ARM64, Alpine, or Raspbian instead of inferring from the queue name.",
+        "Connect the machine to Azure Arc with the approved service principal, subscription, and resource group, then create MachineSetting.json with the approved FederatedClientID.",
+        "Keep the machine disabled in Helix until every verification step passes."
+      ],
+      "validationCriteria": [
+        "Confirm the Arc resource reports Connected and its name, subscription, and resource group match the approved work item.",
+        "Confirm a fresh Helix heartbeat in the expected queue and a representative work item that completes and uploads logs.",
+        "Record the Arc resource ID, queue, heartbeat time, and work-item result without any certificate or private-key material."
+      ]
+    },
+    {
+      "id": "onboard-machine-onecert",
+      "name": "Onboarding Helix Machines with OneCert",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2436/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Onboarding-Helix-Machines-with-OneCert",
+      "matchTerms": [
+        "onecert",
+        "one-cert",
+        "onboarding certificate",
+        "client.pem"
+      ],
+      "selection": "Matched certificate-based (OneCert) Helix onboarding language for a clean Windows, Linux, or macOS machine.",
+      "remediationGuidance": [
+        "Confirm the target environment, queue, service principal, and certificate version with the work-item owner before starting.",
+        "Create the helix-prep directory, place the onboarding certificate, and run the bootstrap script with the approved parameters.",
+        "Remove the temporary certificate during post-installation cleanup and keep the machine disabled in Helix until verification passes."
+      ],
+      "validationCriteria": [
+        "Confirm a fresh Helix heartbeat in the expected queue.",
+        "Confirm a representative Helix work item completes and uploads its logs, then enable the machine.",
+        "Record the queue, heartbeat time, work-item result, certificate name and version, and operator, without certificate contents."
+      ]
+    },
+    {
+      "id": "upgrade-os-on-queue-devices",
+      "name": "Upgrading OS on Helix Queue Devices",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2336/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Upgrading-OS-on-Helix-Queue-Devices",
+      "matchTerms": [
+        "os upgrade",
+        "upgrade the operating system",
+        "upgrade macos",
+        "in-place upgrade"
+      ],
+      "selection": "Matched a request to upgrade the operating system on physical devices backing a Helix queue.",
+      "remediationGuidance": [
+        "Plan and obtain approval first, and create the replacement queue when the new OS version needs its own queue name.",
+        "Upgrade one machine at a time: take it offline, upgrade over KVM or SSH, then reinstall queue-specific tooling such as the required Xcode version.",
+        "Re-pair tethered iOS or tvOS devices after a macOS upgrade, and remove the old queue once the migration is complete."
+      ],
+      "validationCriteria": [
+        "Confirm each upgraded machine heartbeats and completes work items on the target queue.",
+        "Confirm EstimatedRemovalDate and UpdateRequiredDate were updated in the queue definition, and the Matrix of Truth where applicable."
+      ]
+    },
+    {
+      "id": "update-os-eol-dates",
+      "name": "Updating OS EOL Dates in Helix",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2335/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Updating-OS-EOL-Dates-in-Helix",
+      "matchTerms": [
+        "estimatedremovaldate",
+        "updaterequireddate",
+        "eol date",
+        "end-of-life date"
+      ],
+      "selection": "Matched a request to set or correct Helix queue or image lifecycle dates.",
+      "remediationGuidance": [
+        "Determine the authoritative EOL date from the OS publisher, or an earlier date when DNCEng has reason to remove sooner.",
+        "Update EstimatedRemovalDate and UpdateRequiredDate in the queue or image YAML in dotnet-helix-machines, with a comment citing the source and updater.",
+        "Open a PR listing the affected queues, the source of the EOL information, and the work item."
+      ],
+      "validationCriteria": [
+        "Confirm the dotnet-helix-machines-ci pipeline builds successfully with the date warnings or errors cleared.",
+        "Confirm the Matrix of Truth data source reflects the new dates when it is in scope."
+      ]
+    },
+    {
+      "id": "decommission-on-prem-devices",
+      "name": "Decommissioning On-Prem Devices",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2331/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Decommissioning-On-Prem-Devices",
+      "matchTerms": [
+        "decommission the machine",
+        "decommission hardware",
+        "retire physical hardware",
+        "hardware disposal"
+      ],
+      "selection": "Matched a request to permanently retire physical on-prem hardware from Helix service.",
+      "remediationGuidance": [
+        "Inventory the exact devices and prove no active dependency remains; deprecate the queue first if product teams still use it.",
+        "Take each device offline, remove its Helix queue registration, and wipe credentials, certificates, and residual test data.",
+        "File a DDFun IcM for the physical removal listing machine names, locations, and whether the hardware is stored, repurposed, or disposed of."
+      ],
+      "validationCriteria": [
+        "Confirm the decommissioned machines no longer appear in the queue or heartbeat data.",
+        "Confirm the work item records the machine list, decommission date, and the IcM reference for physical removal."
+      ]
+    },
+    {
+      "id": "deprecate-and-remove-helix-queue",
+      "name": "Deprecating and Removing Helix Queues",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2332/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Deprecating-and-Removing-Helix-Queues",
+      "matchTerms": [
+        "deprecate the queue",
+        "queue deprecation",
+        "remove the queue",
+        "queue removal"
+      ],
+      "selection": "Matched a request to deprecate or remove a Helix queue from service.",
+      "remediationGuidance": [
+        "Assess recent queue usage, obtain removal approval, and communicate the deprecation to consumers before changing anything.",
+        "Open a PR removing the queue definition from dotnet-helix-machines, plus any custom image definition no longer referenced.",
+        "Take on-prem machines offline before the removal PR merges, and let the autoscaler clean up VM scale sets for cloud queues."
+      ],
+      "validationCriteria": [
+        "Confirm the dotnet-helix-machines-ci build succeeds and the queue no longer appears on helix.dot.net.",
+        "Confirm stale HeartBeat and OsobInventory rows are deleted and any queue-specific dashboards, alerts, and Azure resources are cleaned up."
+      ]
+    },
+    {
+      "id": "manage-on-prem-machine-passwords",
+      "name": "Managing On-Prem Machine Passwords",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2333/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Managing-On-Prem-Machine-Passwords",
+      "matchTerms": [
+        "machine password",
+        "machine password rotation",
+        "local admin password",
+        "weak password"
+      ],
+      "selection": "Matched a request to audit, strengthen, or rotate passwords on on-prem Helix machines.",
+      "remediationGuidance": [
+        "Audit current passwords and identify any shared between internal and open queue machines, which must differ.",
+        "Generate strong per-boundary passwords, take each machine offline, and apply the change over KVM or SSH.",
+        "Store the new values in Key Vault, update every automation, script, and KVM reference, and notify DDFun of the change."
+      ],
+      "validationCriteria": [
+        "Confirm each machine is reachable with the new credential and back online processing work.",
+        "Confirm no stale password remains in Key Vault, repo content, or DDFun records, and that internal and open queues no longer share a password."
+      ]
+    },
+    {
+      "id": "bring-on-prem-machine-back-online",
+      "name": "Bringing On-Prem Machines Back Online",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2328/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Bringing-On-Prem-Machines-Back-Online",
+      "matchTerms": [
+        "back online",
+        "stopped heartbeating",
+        "offline file",
+        "no heartbeat"
+      ],
+      "selection": "Matched a request to restore an existing on-prem machine to active service in its Helix queue.",
+      "remediationGuidance": [
+        "Confirm the machine is powered on and reachable over KVM or SSH, contacting DDFun for physical state if it is not.",
+        "Check the machine state through the Helix API and determine whether it is disabled via API, blocked by an offline file, or not communicating.",
+        "Resolve the underlying fault, remove the offline file or re-enable the machine, and restart the Helix client."
+      ],
+      "validationCriteria": [
+        "Confirm a heartbeat appears within 5-10 minutes in the Grafana queue monitor or the helixscripts2 HeartBeat table.",
+        "Confirm work items are assigned and complete successfully, sending a test job on a low-traffic queue if needed.",
+        "Monitor at least 30 minutes of stable operation before closing."
+      ]
+    },
+    {
+      "id": "create-azure-devops-pipeline",
+      "name": "Creating Azure DevOps Pipelines",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2429/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Creating-Azure-DevOps-Pipelines",
+      "matchTerms": [
+        "create a pipeline",
+        "create azure devops pipeline",
+        "new yaml pipeline",
+        "pipeline creation"
+      ],
+      "selection": "Matched a request to create a YAML pipeline in dnceng/internal or dnceng-public/public.",
+      "remediationGuidance": [
+        "Require the exact project, pipeline name and folder, source repository, committed YAML path and ref, Service Tree service, production classification, agent pool, protected resources, and validation owner.",
+        "Create the definition without its first run, apply the customer-provided StartRight classification, and authorize only the approved resources for that pipeline.",
+        "Do not create customer YAML, grant signing, approve a new internal-to-GitHub connection, or weaken checks and approvals as part of pipeline creation."
+      ],
+      "validationCriteria": [
+        "Confirm the pipeline name, project, repository, YAML path, production classification, and Service Tree ownership match the request.",
+        "Confirm a representative customer run uses the intended pool and only the expected protected resources.",
+        "Record the pipeline and validation-build URLs plus the customer's confirmation before closing."
+      ]
+    },
+    {
+      "id": "retire-azdo-repos-and-pipelines",
+      "name": "Retiring Azure DevOps Repositories and Pipelines",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2446/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Retiring-Azure-DevOps-Repositories-and-Pipelines",
+      "matchTerms": [
+        "retire repository",
+        "retire pipeline",
+        "deprecate repository",
+        "deprecate pipeline"
+      ],
+      "selection": "Matched a request to disable, archive, or delete an Azure Repos Git repository or YAML/build pipeline.",
+      "remediationGuidance": [
+        "Require the exact resources, owning team, DRI-approved retirement mode, completed dependency inventory, and observation end timestamp before acting.",
+        "Activate PIM, recheck pipeline consumers, then disable first and observe the staged state for the approved window.",
+        "Only then archive or delete, recording rollback data and the 30-day repository recovery deadline."
+      ],
+      "validationCriteria": [
+        "Confirm names and immutable IDs match the approved tracking item and the dependency inventory has no unknown consumers.",
+        "Confirm the staged states completed their observation windows without impact and the replacement passed customer validation.",
+        "Confirm the PIM assignment is deactivated and all owners are recorded in the system of record."
+      ]
+    },
+    {
+      "id": "grant-azdo-access-and-permissions",
+      "name": "Granting Azure DevOps Access and Permissions",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2444/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Granting-Azure-DevOps-Access-and-Permissions",
+      "matchTerms": [
+        "repository access",
+        "pipeline permissions",
+        "repository permissions",
+        "agent pool permissions"
+      ],
+      "selection": "Matched a least-privilege access request for an existing Azure DevOps repository, pipeline, branch, feed, or agent pool.",
+      "remediationGuidance": [
+        "Validate that the resource exists and the request is not for administrator, feed owner, manage-permissions, policy-bypass, or force-push capability.",
+        "Activate PIM and add only the least-privilege permission or role to the approved group for the named resource.",
+        "Do not change inheritance, owner, or administrator permissions; route service connection, signing, secret, and variable-group requests elsewhere."
+      ],
+      "validationCriteria": [
+        "Confirm a representative customer completed the real operation successfully; a permission page showing Allow is not sufficient.",
+        "Confirm the tracking item records the previous and changed states, validation evidence, owner, and any next action."
+      ]
+    },
+    {
+      "id": "prepare-service-rollout-pull-requests",
+      "name": "Preparing .NET Engineering Services Rollout Pull Requests",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2450/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Preparing-Service-Rollout-Pull-Requests",
+      "matchTerms": [
+        "rollout pull request",
+        "rollout pr",
+        "cutoff commit",
+        "rollout release notes"
+      ],
+      "selection": "Matched a rollout-preparation request for dotnet-helix-machines, dotnet-helix-service, or dotnet/dnceng.",
+      "remediationGuidance": [
+        "Treat the IcM's repository scope and requested date as authoritative; do not add a repository or infer a date from cadence.",
+        "Determine which repositories have changes, select an eligible cutoff commit, and create the rollout branch and PR for each.",
+        "Build and review release notes, record staging evidence, and hand the IcM to the named DNCEng owner."
+      ],
+      "validationCriteria": [
+        "Confirm every repository in the IcM is explicitly marked No rollout, Prepared, or Deferred with its cutoff, PR, CI build, and staging result recorded.",
+        "Confirm release notes match the final rollout PRs and that unresolved warnings, failed policies, and missing reviewers are recorded.",
+        "Confirm DDFun has not merged a rollout PR, approved a production gate, or executed a production deployment."
+      ]
+    },
+    {
+      "id": "create-on-prem-queue",
+      "name": "Creating On-Prem Queues",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2329/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Creating-On-Prem-Queues",
+      "matchTerms": [
+        "on-prem queue",
+        "tethered device queue",
+        "new physical queue"
+      ],
+      "selection": "Matched a request to create a Helix queue backed by physical hardware such as perf or tethered device machines.",
+      "remediationGuidance": [
+        "Determine the queue properties, including name, OperatingSystemId, and machine set, from the requesting work item.",
+        "Add the queue definition to the appropriate file under definitions/ in dotnet-helix-machines.",
+        "Open a PR that names the queues, references the work item, and obtain DNCEng review before rollout."
+      ],
+      "validationCriteria": [
+        "Confirm the pipeline processes the definition without YAML, duplicate-name, or OperatingSystemId errors.",
+        "Confirm a FORCE_QUEUE test job is picked up and completed by the physical machines.",
+        "Confirm the queue appears on helix.dot.net after merge and that stakeholders were notified."
+      ]
+    },
+    {
+      "id": "create-vs-queue",
+      "name": "Creating VS Queues",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2330/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Creating-VS-Queues",
+      "matchTerms": [
+        "vs queue",
+        "visual studio queue",
+        "vs workloads"
+      ],
+      "selection": "Matched a request for Visual Studio build and test queues on 1ES Hosted Pools.",
+      "remediationGuidance": [
+        "Add the version anchor and image definition to definition-base/windows.base.yaml, then the four build and test queues to definitions/shared/windows.yaml.",
+        "Handle VS activation, and update artifacts/windows-vs-workloads only when new workloads are required.",
+        "Open a PR listing the VS version and SKU, all queue names, the base Windows Server image, and any new vault secrets."
+      ],
+      "validationCriteria": [
+        "Confirm the pipeline processes the definitions without YAML, missing base image, or vault reference errors.",
+        "Confirm a build targeting the new queue shows Visual Studio installed at the expected version with the expected workloads present."
+      ]
+    },
+    {
+      "id": "create-cloud-vm-helix-queue",
+      "name": "Creating Cloud / VM-based Helix Queues",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2442/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Creating-Cloud-or-VM-based-Helix-Queues",
+      "matchTerms": [
+        "cloud queue",
+        "vm-based queue",
+        "scouting queue",
+        "queue scaling"
+      ],
+      "selection": "Matched a request for an Azure VM-backed Helix test queue on an OS and image Helix already supports.",
+      "remediationGuidance": [
+        "Confirm an existing queue already uses the target OperatingSystemId, image, and architecture; otherwise route the request to the new OS/SKU onboarding playbook first.",
+        "Verify the VM SKU and regional quota, copy a template queue, reuse the image reference and artifact group, and create the Standard and Open pair plus any subscription variants.",
+        "Set OperatingSystemId, AzureComputeUnit/MinCores, and lifecycle dates, and keep queue names within 42 characters."
+      ],
+      "validationCriteria": [
+        "Confirm Types.Tests, DeployQueues.Tests, and the Validate tool pass locally after Build.cmd.",
+        "Confirm a test deployment produces working queues and that every new queue resolves to ProtectedMode.Mode: Off with no wait threshold.",
+        "Confirm the SKU and quota verification record is Pass and is linked from the work item."
+      ]
+    },
+    {
+      "id": "create-and-manage-1es-hosted-pools",
+      "name": "Creating & Managing 1ES Hosted Pools",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2396/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Creating-and-Managing-1ES-Hosted-Pools",
+      "matchTerms": [
+        "1es hosted pool",
+        "hosted pool",
+        "hostedpools.yaml",
+        "pool capacity"
+      ],
+      "selection": "Matched a request to create or reconfigure a 1ES Hosted Pool that backs DNCEng CI/CD builds.",
+      "remediationGuidance": [
+        "Confirm the requirements, then create the pool through 1ES Hub in its mapped production subscription and validate capacity.",
+        "Add the pool definition to definitions/shared/hostedpools.yaml, plus overflow load balancing and pipeline wiring only when required.",
+        "If the initial deployment needs quota, open a tracking work item, record the quota-granted mail, and redeploy with the final settings."
+      ],
+      "validationCriteria": [
+        "Confirm dotnet test test/Types.Tests/ and test/Deploy1ESHostedPools.Tests/ pass.",
+        "Confirm the pool exists in its dedicated resource group with the final name, region, VM SKU, visibility, and maximum size.",
+        "Confirm a scale-out smoke test reached Scaling.Production.MaximumSize concurrently running agents and the evidence is in the work item."
+      ]
+    },
+    {
+      "id": "prepare-azure-subscription-for-helix",
+      "name": "Making an Existing Azure Subscription Ready for Helix Queues",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2448/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Making-an-Existing-Azure-Subscription-Ready-for-Helix-Queues",
+      "matchTerms": [
+        "subscription route",
+        "helix-ready subscription",
+        "resource provider registration",
+        "autoscaler core limit"
+      ],
+      "selection": "Matched a request to make an existing, enabled Azure subscription ready to host production Helix queues.",
+      "remediationGuidance": [
+        "Confirm the subscription exists, reports Enabled, and that the proposed logical route is absent from main in dotnet-helix-machines.",
+        "Register the required resource providers, confirm VM-family quota per region, and plan target-subscription RBAC within the documented boundary.",
+        "Add the case-sensitive logical route in dotnet-helix-machines and the core limit in dotnet-autoscaler, merging both just in time."
+      ],
+      "validationCriteria": [
+        "Confirm every required provider reports Registered; Registering and NotRegistered do not qualify.",
+        "Confirm the VM family and regional quota meet the approved core requirement and every required RBAC assignment is verified at its scope.",
+        "Confirm the DNCEng DRI approval is recorded in the queue-request IcM before handoff."
+      ]
+    },
+    {
+      "id": "remediate-service-connection",
+      "name": "Service Connection Remediation",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2447/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Service-Connection-Remediation",
+      "matchTerms": [
+        "service connection",
+        "workload identity federation",
+        "aadsts700213",
+        "federated credential"
+      ],
+      "selection": "Matched a pipeline failure involving an Azure DevOps service connection, WIF, or feed authentication.",
+      "remediationGuidance": [
+        "Use the symptom decision table to isolate the failing boundary: connection lookup, pipeline authorization, federated credential, Azure resource authorization, NuGet authentication, or network access.",
+        "Do not assume every 403 is an identity problem; network ACLs, firewalls, and resource policy can deny an already authenticated caller.",
+        "Apply the least-privilege fix and do not broaden an identity, bypass pipeline checks, or change a customer-owned identity without owner approval."
+      ],
+      "validationCriteria": [
+        "Confirm a representative pipeline run on the operative branch resolves the connection without an interactive permit prompt and acquires a token.",
+        "Confirm the original target operation succeeds and, for a replacement connection, verify a post-merge or production-branch run.",
+        "Confirm the customer validated the workload; keep a follow-up open if service was restored with temporary or legacy credentials."
+      ]
+    },
+    {
+      "id": "onboard-new-os-or-sku",
+      "name": "Onboarding a New OS, OS Version, or Azure VM SKU to Helix",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2438/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Onboarding-a-New-OS-or-SKU-to-Helix",
+      "matchTerms": [
+        "new os version",
+        "new vm sku",
+        "operatingsystemid"
+      ],
+      "selection": "Matched a request to onboard an operating system, OS version, or Azure VM SKU that Helix does not yet offer.",
+      "remediationGuidance": [
+        "Run the guided onboarding wizard to pick the path and record the result; if the OS, image, and VM capability already exist, use the cloud queue playbook instead.",
+        "Provide the image first, either a pinned marketplace image or a base-images definition, then author the Standard and Open queue definitions.",
+        "Derive OperatingSystemId from the neighboring {OS}-{Distro}-{Version}-{Arch} convention and set lifecycle dates, defaulting EstimatedRemovalDate to five years out when no authoritative date exists."
+      ],
+      "validationCriteria": [
+        "Confirm BaseImages.Tests, Types.Tests, and DeployQueues.Tests pass, and that Image Generation completed on the branch before the PR pipeline re-ran.",
+        "Confirm a custom image build and test deployment succeed and every new queue resolves to ProtectedMode.Mode: Off.",
+        "Confirm the requesting team's workload passed on every new production queue."
+      ]
+    },
+    {
+      "id": "recurring-artifact-maintenance",
+      "name": "Performing Recurring Helix Artifact Maintenance",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2449/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Performing-Recurring-Helix-Artifact-Maintenance",
+      "matchTerms": [
+        "artifact update date",
+        "artifact maintenance",
+        "artifact lifecycle",
+        "updatedate"
+      ],
+      "selection": "Matched recurring artifact UpdateDate warnings from a dotnet-helix-machines build.",
+      "remediationGuidance": [
+        "Start when the warning first appears, 21 days before UpdateDate, rather than waiting for it to become a build error.",
+        "Classify every warning with an owner, then process one artifact at a time on a clean feature branch using that artifact's README instructions.",
+        "Update lifecycle dates, record the affected-lineage and rollback matrices, and roll out the merged change with any required pin PR."
+      ],
+      "validationCriteria": [
+        "Confirm release provenance and integrity checks passed and every edit and lifecycle date is approved and consistent.",
+        "Confirm staging and production use the intended images and that existing active instances no longer run the old image.",
+        "Confirm representative requester workloads pass, the observation window completes, and temporary payloads and elevation are removed."
+      ]
+    },
+    {
+      "id": "change-queue-artifacts-and-images",
+      "name": "Changing Helix Queue Artifacts and Images",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2425/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Changing-Helix-Queue-Artifacts-and-Images",
+      "matchTerms": [
+        "galleryimageversion",
+        "gallery image version",
+        "image pin",
+        "heliximagesprod"
+      ],
+      "selection": "Matched a change to artifacts, base images, or pinned gallery images on gallery-backed Helix queues.",
+      "remediationGuidance": [
+        "Classify the change and build the complete image-lineage and queue impact matrix, handling legacy or non-reproducible images explicitly.",
+        "Merge the source PR, rebuild every affected reproducible image, record the exact gallery versions, and update every GalleryImageVersion pin in a follow-up PR.",
+        "Validate staging, promote to HelixImagesProd, deploy production, then update existing VMSS instances so running machines pick up the new image."
+      ],
+      "validationCriteria": [
+        "Confirm each affected image was built from the expected commit and its exact gallery version is recorded.",
+        "Confirm the staging deployment and the requester workload passed before production promotion.",
+        "Verify from the consumer's perspective after deployment and complete the observation window before close-out."
+      ]
+    },
+    {
+      "id": "update-vs-2022-images",
+      "name": "Updating Visual Studio 2022 Helix Images",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2439/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/VS-2022-image-updates",
+      "matchTerms": [
+        "vs 2022 image",
+        "visual studio 2022 image",
+        "vs2022 golden layer",
+        "vs 2022 upgrade schedule"
+      ],
+      "selection": "Matched a request to update the Visual Studio 2022 version and installation source used by Helix Windows images.",
+      "remediationGuidance": [
+        "Determine the target Release or Preview version from the VS 2022 schedule and official release data, then update every affected version and permanent installation URL in base-images/variables.json.",
+        "Generate and verify every golden layer from the feature branch, recording each tracking ID and exact replicated gallery destination.",
+        "Pin the exact golden-layer names and versions in definition-base/windows.base.yaml and merge one PR containing both the source and pin updates."
+      ],
+      "validationCriteria": [
+        "Confirm every Image Factory job succeeded and replication completed with a recorded gallery, image name, and version.",
+        "Confirm the schedule, variables, image pins, and generated images all agree.",
+        "Confirm the main dotnet-helix-machines CI Build Images phase succeeds for every affected VS 2022 lineage."
+      ]
+    },
+    {
+      "id": "update-vs-2026-images",
+      "name": "Updating Visual Studio 2026 Helix Images",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2440/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/VS-2026-image-updates",
+      "matchTerms": [
+        "vs 2026 image",
+        "visual studio 2026 image",
+        "vs2026 golden layer",
+        "vs 2026 upgrade schedule"
+      ],
+      "selection": "Matched a request to update the Visual Studio 2026 version and installation source used by Helix Windows images.",
+      "remediationGuidance": [
+        "Determine the target Release or Insiders version from the VS 2026 schedule and official release data, then update every affected version and permanent installation URL in base-images/variables.json.",
+        "Generate and verify every golden layer from the feature branch, recording each tracking ID and exact replicated gallery destination.",
+        "Pin the exact golden-layer names and versions in definition-base/windows.base.yaml and merge one PR containing both the source and pin updates."
+      ],
+      "validationCriteria": [
+        "Confirm every Image Factory job succeeded and replication completed with a recorded gallery, image name, and version.",
+        "Confirm the schedule, variables, image pins, and generated images all agree.",
+        "Confirm the main dotnet-helix-machines CI Build Images phase succeeds for every affected VS 2026 lineage."
+      ]
+    },
+    {
+      "id": "apple-account-migration",
+      "name": "Apple Account Migration",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2345/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Apple-Account-Migration",
+      "matchTerms": [
+        "apple account",
+        "apple developer account",
+        "provisioning profile",
+        "dotnetappledev"
+      ],
+      "selection": "Matched a request about the shared Apple Developer account used to sign and run .NET tests on Helix Apple devices.",
+      "remediationGuidance": [
+        "Determine the migration path for the shared Apple Developer account and complete the pre-migration checklist before changing anything.",
+        "Execute the migration to a Microsoft-managed Apple Account, then re-establish 2FA for the Apple Developer Portal.",
+        "Regenerate signing certificates and provisioning profiles only if signing fails after the migration."
+      ],
+      "validationCriteria": [
+        "Confirm portal access to Certificates, Identifiers & Profiles, that all devices remain registered, that profiles remain valid, and that the program membership is active.",
+        "Confirm the xharness pipeline Apple device E2E tests install applications successfully."
+      ]
+    },
+    {
+      "id": "rotate-domain-account",
+      "name": "Manual Rotation of a domain-account Using secret-manager",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2428/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/domain-account-rotation",
+      "matchTerms": [
+        "user intervention required for creation or rotation of a domain account",
+        "rotation of a domain account",
+        "domain-account rotation",
+        "coreidentity password rotation"
+      ],
+      "selection": "Matched a secret-rotation build requiring manual rotation of an existing domain-account.",
+      "remediationGuidance": [
+        "Confirm the failed manifest entry is a domain-account and record its exact secret name and accountName; do not use this playbook for another manual secret type.",
+        "Run secret-manager interactively in a private, unrecorded terminal, reset the account password in CoreIdentity, and enter that exact generated value into the waiting prompt.",
+        "Keep CoreIdentity and Key Vault synchronized, clear the clipboard afterward, and never copy the old or new password into the IcM."
+      ],
+      "validationCriteria": [
+        "Confirm secret-manager reports the exact secret as Rotated and exits without an error.",
+        "Confirm any required account extension was completed and record only the account and secret names, never secret values.",
+        "Have the DNCEng DRI confirm correct consumer operation before closing the IcM."
+      ]
+    },
+    {
+      "id": "rotate-github-app-secret",
+      "name": "Manual Rotation of a github-app-secret Using secret-manager",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2426/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/github-app-secret-rotation",
+      "matchTerms": [
+        "user intervention required for creation or rotation of github app secret",
+        "rotation of github app secret",
+        "github-app-secret rotation",
+        "github app private key rotation"
+      ],
+      "selection": "Matched a secret-rotation build requiring manual rotation of an existing github-app-secret.",
+      "remediationGuidance": [
+        "Confirm the manifest entry is an existing github-app-secret, identify the owning GitHub App, Key Vault, enabled credential components, and consumer validation plan before generating anything.",
+        "Run secret-manager interactively and rotate only the private key, OAuth client secret, or webhook secret required by the manifest and coordinated plan.",
+        "Keep old GitHub credentials active until the DNCEng DRI restarts and validates every consumer; never record credentials, private-key contents, or local PEM paths."
+      ],
+      "validationCriteria": [
+        "Confirm secret-manager reports successful storage for the exact composite secret and delete the downloaded PEM after storage succeeds.",
+        "Confirm every consuming service authenticates as the GitHub App and processes webhooks where applicable after its restart.",
+        "Remove old GitHub credentials only after consumer validation, then record the rotated components without secret material."
+      ]
+    },
+    {
+      "id": "release-quarantined-package",
+      "name": "Releasing Quarantined Packages",
+      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2434/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Releasing-Quarantined-Packages",
+      "matchTerms": [
+        "quarantined package",
+        "release from quarantine",
+        "seven-day quarantine",
+        "dotnet-public-intermediate"
+      ],
+      "selection": "Matched a request to release a package version before its seven-day Azure Artifacts quarantine expires.",
+      "remediationGuidance": [
+        "Require the target feed, package name, exact version, business justification, and requesting contact, and decline routine or Dependabot upgrades.",
+        "Release packages destined for dotnet-public from the dotnet-public-intermediate feed in dnceng/internal, not from dotnet-public.",
+        "On the Upstream Versions tab, confirm the version still shows as quarantined, then use Release from Quarantine and enter the business justification."
+      ],
+      "validationCriteria": [
+        "Confirm the released feed, package name, and exact version are recorded in the IcM.",
+        "Confirm the customer's build succeeded or they can access the package before resolving."
       ]
     }
   ]
