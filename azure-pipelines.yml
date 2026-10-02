@@ -93,6 +93,10 @@ extends:
                   displayName: 'Publish AzureDevOpsClient Post-Deployment Tests'
                   targetPath: $(Build.SourcesDirectory)\artifacts\bin\AzureDevOpsClient.PostDeploymentTests\$(_BuildConfig)\net10.0
                   artifactName: AzureDevOpsClient.PostDeploymentTests
+                - output: pipelineArtifact
+                  displayName: 'Publish Teams-to-IcM Deployment'
+                  targetPath: $(Build.ArtifactStagingDirectory)\TeamsIcmDeployment
+                  artifactName: TeamsIcmDeployment
             variables:
             - _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
             - _BuildConfig: Release
@@ -182,6 +186,19 @@ extends:
                 robocopy src/Telemetry/TelemetryApplication/ApplicationPackageRoot $(Build.ArtifactStagingDirectory)\ServiceFabric\TelemetryApplication\projectartifacts\ApplicationPackageRoot /S *.xml
                 exit 0
               displayName: Copy Telemetry Project Artifacts
+
+            - task: CopyFiles@2
+              displayName: Prepare Teams-to-IcM Deployment
+              inputs:
+                sourceFolder: $(Build.SourcesDirectory)
+                contents: |
+                  eng/deployment/teams-icm.bicep
+                  eng/deployment/teams-icm.workflow.json
+                  eng/deployment/teams-icm-connector-adapter.workflow.json
+                  eng/deployment/teams-icm-latency-monitor.workflow.json
+                  eng/deployment/teams-icm-operational-context.json
+                  eng/deployment/Get-TeamsIcmDeploymentFingerprint.ps1
+                targetFolder: $(Build.ArtifactStagingDirectory)\TeamsIcmDeployment
               
             - script: $(Build.SourcesDirectory)\.dotnet\dotnet publish -o $(Build.ArtifactStagingDirectory)\DotNet.Status.Web\publish
                 -c $(_BuildConfig)

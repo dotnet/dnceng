@@ -152,7 +152,9 @@ re-enables the workflows after disabled-state validation.
 The rollout stage runs a production `what-if`, rejects resource deletions, deploys all workflows
 disabled, and verifies the deployment fingerprint, managed identities, Teams connection, storage
 account, and table before optionally enabling the workflows. The durable watermark itself requires
-Azure Table data-plane access and remains part of the attended validation.
+Azure Table data-plane access and remains part of the attended validation. The release job consumes
+the `TeamsIcmDeployment` artifact produced by the build, so the deployed files are the exact files
+validated and built from that source revision.
 
 Production Grafana rules for the connector, processor, and latency monitor route through the
 existing `amg-icm-ddfun-customer-requests` contact point. The Azure Monitor alerts continue to

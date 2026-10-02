@@ -26,8 +26,11 @@ stages:
       name: NetCore1ESPool-Internal-NoMSI
       demands: ImageOverride -equals 1es-windows-2022
     steps:
-    - checkout: self
-      clean: true
+    - task: 1ES.DownloadPipelineArtifact@1
+      displayName: Download Teams-to-IcM deployment
+      inputs:
+        artifactName: TeamsIcmDeployment
+        targetPath: $(Pipeline.Workspace)\TeamsIcmDeployment
 
     - task: AzureCLI@2
       name: CompareDeployment
@@ -188,9 +191,11 @@ stages:
               Write-Host 'Preserving the existing Azure Monitor alert recipient.'
             }
 
-            $candidateHash = & eng/deployment/Get-TeamsIcmDeploymentFingerprint.ps1
+            $deploymentRoot = '$(Pipeline.Workspace)\TeamsIcmDeployment'
+            $candidateHash = & "$deploymentRoot\eng\deployment\Get-TeamsIcmDeploymentFingerprint.ps1" `
+              -RepositoryRoot $deploymentRoot
             $sourceVersion = '$(Build.SourceVersion)'
-            $templateFile = 'eng/deployment/teams-icm.bicep'
+            $templateFile = "$deploymentRoot\eng\deployment\teams-icm.bicep"
             $before = @{}
 
             foreach ($workflowName in $workflowNames) {
