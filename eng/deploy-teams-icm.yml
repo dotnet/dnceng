@@ -26,11 +26,8 @@ stages:
       name: NetCore1ESPool-Internal-NoMSI
       demands: ImageOverride -equals 1es-windows-2022
     steps:
-    - task: 1ES.DownloadPipelineArtifact@1
-      displayName: Download Teams-to-IcM deployment
-      inputs:
-        artifactName: TeamsIcmDeployment
-        targetPath: $(Pipeline.Workspace)\TeamsIcmDeployment
+    - checkout: self
+      clean: true
 
     - task: AzureCLI@2
       name: CompareDeployment
@@ -151,8 +148,11 @@ stages:
         name: NetCore1ESPool-Internal-NoMSI
         demands: ImageOverride -equals 1es-windows-2022
       steps:
-      - checkout: self
-        clean: true
+      - task: 1ES.DownloadPipelineArtifact@1
+        displayName: Download Teams-to-IcM deployment
+        inputs:
+          artifactName: TeamsIcmDeployment
+          targetPath: $(Pipeline.Workspace)\TeamsIcmDeployment
 
       - task: AzureCLI@2
         displayName: Deploy Teams-to-IcM safely
