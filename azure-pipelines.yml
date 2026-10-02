@@ -1,3 +1,21 @@
+parameters:
+- name: deployTeamsIcm
+  displayName: Deploy Teams-to-IcM when production differs
+  type: boolean
+  default: false
+- name: forceTeamsIcmDeploy
+  displayName: Force Teams-to-IcM deployment
+  type: boolean
+  default: false
+- name: teamsIcmWorkflowEnabledAfterDeployment
+  displayName: Enable Teams-to-IcM after deployment
+  type: boolean
+  default: true
+- name: teamsIcmAlertEmail
+  displayName: Teams-to-IcM alert recipient override (optional)
+  type: string
+  default: ''
+
 variables:
   # Cannot use key:value syntax in root defined variables
   - name: _TeamName
@@ -295,6 +313,11 @@ extends:
                     throw "Workflow contains HTTP methods unsupported by Logic Apps: $($unsupportedMethods -join ', ')"
                   }
 
+                  $deploymentFingerprint = & eng/deployment/Get-TeamsIcmDeploymentFingerprint.ps1
+                  if ($deploymentFingerprint -notmatch '^[0-9a-f]{64}$') {
+                    throw "Teams-to-IcM deployment fingerprint is not a SHA-256 hash: $deploymentFingerprint"
+                  }
+                  Write-Host "Deployment fingerprint: $deploymentFingerprint"
                   Write-Host "SUCCESS: Bicep template validation successful"
 
     - template: /eng/common/templates-official/post-build/post-build.yml@self
@@ -350,3 +373,8 @@ extends:
             AMGDeploymentEnvironment: Production
             AMGGrafanaWorkspaceName: dnceng-grafana
             AMGGrafanaKeyVault: dnceng-amg-prod-kv
+            TeamsIcmDetectionEnabled: true
+            DeployTeamsIcm: ${{ parameters.deployTeamsIcm }}
+            ForceTeamsIcmDeploy: ${{ parameters.forceTeamsIcmDeploy }}
+            TeamsIcmWorkflowEnabledAfterDeployment: ${{ parameters.teamsIcmWorkflowEnabledAfterDeployment }}
+            TeamsIcmAlertEmail: ${{ parameters.teamsIcmAlertEmail }}

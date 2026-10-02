@@ -111,6 +111,9 @@ parameters, workflow configuration, or pipeline variables.
 ```powershell
 az bicep build --file eng/deployment/teams-icm.bicep
 
+$deploymentContentHash = & eng/deployment/Get-TeamsIcmDeploymentFingerprint.ps1
+$sourceVersion = git rev-parse HEAD
+
 az group create `
   --subscription a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1 `
   --name dnceng-teams-icm-production `
@@ -120,14 +123,36 @@ az deployment group what-if `
   --subscription a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1 `
   --resource-group dnceng-teams-icm-production `
   --template-file eng/deployment/teams-icm.bicep `
-  --parameters alertEmail=<rollout-owner-email> workflowEnabled=false
+  --parameters `
+    alertEmail=<rollout-owner-email> `
+    workflowEnabled=false `
+    deploymentContentHash=$deploymentContentHash `
+    sourceVersion=$sourceVersion
 
 az deployment group create `
   --subscription a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1 `
   --resource-group dnceng-teams-icm-production `
   --template-file eng/deployment/teams-icm.bicep `
-  --parameters alertEmail=<rollout-owner-email> workflowEnabled=false
+  --parameters `
+    alertEmail=<rollout-owner-email> `
+    workflowEnabled=false `
+    deploymentContentHash=$deploymentContentHash `
+    sourceVersion=$sourceVersion
 ```
+
+The production rollout pipeline computes the same fingerprint and compares it with the
+`DeploymentContentHash` tag on all three workflows. A normal production build reports whether the
+source differs from production but does not deploy it. To perform an approved rollout, manually
+queue the production branch with `deployTeamsIcm=true`. The pipeline preserves the existing Azure
+Monitor alert recipient unless `teamsIcmAlertEmail` is provided. Set `forceTeamsIcmDeploy=true`
+only when the same source revision must be redeployed. The
+`teamsIcmWorkflowEnabledAfterDeployment` parameter controls whether the attended rollout
+re-enables the workflows after disabled-state validation.
+
+The rollout stage runs a production `what-if`, rejects resource deletions, deploys all workflows
+disabled, and verifies the deployment fingerprint, managed identities, Teams connection, storage
+account, and table before optionally enabling the workflows. The durable watermark itself requires
+Azure Table data-plane access and remains part of the attended validation.
 
 Production Grafana rules for the connector, processor, and latency monitor route through the
 existing `amg-icm-ddfun-customer-requests` contact point. The Azure Monitor alerts continue to

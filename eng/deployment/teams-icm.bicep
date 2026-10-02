@@ -10,6 +10,12 @@ param teamsConnectionName string = 'dnceng-teams-icm-teams'
 @description('Whether the workflow is enabled. Keep false until the Teams connection and ICM Provider allowlist are ready.')
 param workflowEnabled bool = false
 
+@description('SHA-256 fingerprint of the source files that define this deployment.')
+param deploymentContentHash string
+
+@description('Source commit deployed by the rollout pipeline.')
+param sourceVersion string
+
 @description('Email address that receives failed-run alerts.')
 param alertEmail string
 
@@ -113,6 +119,8 @@ resource logicApp 'Microsoft.Logic/workflows@2019-05-01' = {
     Purpose: 'Teams to IcM message processor'
     Service: 'DncEng'
     WorkItem: '12465'
+    DeploymentContentHash: deploymentContentHash
+    SourceVersion: sourceVersion
   }
   identity: {
     type: 'SystemAssigned'
@@ -172,6 +180,8 @@ resource connectorAdapter 'Microsoft.Logic/workflows@2019-05-01' = {
     Purpose: 'Short-interval Teams channel polling'
     Service: 'DncEng'
     WorkItem: '12465'
+    DeploymentContentHash: deploymentContentHash
+    SourceVersion: sourceVersion
   }
   identity: {
     type: 'SystemAssigned'
@@ -216,6 +226,8 @@ resource latencyMonitor 'Microsoft.Logic/workflows@2019-05-01' = {
     Purpose: 'Teams to IcM two-minute reply latency monitoring'
     Service: 'DncEng'
     WorkItem: '12751'
+    DeploymentContentHash: deploymentContentHash
+    SourceVersion: sourceVersion
   }
   identity: {
     type: 'SystemAssigned'
@@ -514,3 +526,5 @@ output storageAccountName string = storageAccount.name
 output storageTableName string = intakeTable.name
 output teamsConnectionId string = teamsConnection.id
 output workflowEnabled bool = workflowEnabled
+output deploymentContentHash string = deploymentContentHash
+output sourceVersion string = sourceVersion
