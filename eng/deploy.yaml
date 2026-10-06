@@ -27,6 +27,21 @@ parameters:
   type: string
 - name: AMGGrafanaKeyVault
   type: string
+- name: TeamsIcmDetectionEnabled
+  type: boolean
+  default: false
+- name: DeployTeamsIcm
+  type: boolean
+  default: false
+- name: ForceTeamsIcmDeploy
+  type: boolean
+  default: false
+- name: TeamsIcmWorkflowEnabledAfterDeployment
+  type: boolean
+  default: false
+- name: TeamsIcmAlertEmail
+  type: string
+  default: ''
 
   # --- Secret Variable group requirements ---
   # dotnet-build-bot-dotnet-eng-status-token
@@ -64,7 +79,10 @@ stages:
   - publish_using_darc
   jobs:
   - deployment: approval
-    displayName: deployment approval (conditional)
+    ${{ if eq(parameters.DeployTeamsIcm, true) }}:
+      displayName: deployment approval (includes Teams-to-IcM)
+    ${{ else }}:
+      displayName: deployment approval (conditional)
     environment: ${{ parameters.DeploymentEnvironment }}
 
 - stage: predeploy
@@ -165,6 +183,15 @@ stages:
     AMGGrafanaWorkspaceName: ${{ parameters.AMGGrafanaWorkspaceName }}
     AMGGrafanaKeyVault: ${{ parameters.AMGGrafanaKeyVault }}
 
+- ${{ if eq(parameters.TeamsIcmDetectionEnabled, true) }}:
+  - template: /eng/deploy-teams-icm.yml@self
+    parameters:
+      ServiceConnectionName: ${{ parameters.AMGServiceConnectionName }}
+      DeployTeamsIcm: ${{ parameters.DeployTeamsIcm }}
+      ForceTeamsIcmDeploy: ${{ parameters.ForceTeamsIcmDeploy }}
+      WorkflowEnabledAfterDeployment: ${{ parameters.TeamsIcmWorkflowEnabledAfterDeployment }}
+      AlertEmail: ${{ parameters.TeamsIcmAlertEmail }}
+
 - stage: postdeploy
   displayName: Post-Deployment
   pool:
@@ -173,6 +200,8 @@ stages:
   dependsOn:
   - deploy
   - DeployGrafana
+  - ${{ if eq(parameters.DeployTeamsIcm, true) }}:
+    - DeployTeamsIcm
   variables:
   - group: ${{ parameters.StatusVariableGroup }}
   jobs:
@@ -197,6 +226,8 @@ stages:
   dependsOn:
   - deploy
   - DeployGrafana
+  - ${{ if eq(parameters.DeployTeamsIcm, true) }}:
+    - DeployTeamsIcm
   jobs:
   - job: scenario
     displayName: Scenario tests
