@@ -38,7 +38,7 @@ parameters:
   default: false
 - name: TeamsIcmWorkflowEnabledAfterDeployment
   type: boolean
-  default: true
+  default: false
 - name: TeamsIcmAlertEmail
   type: string
   default: ''
@@ -79,7 +79,10 @@ stages:
   - publish_using_darc
   jobs:
   - deployment: approval
-    displayName: deployment approval (conditional)
+    ${{ if eq(parameters.DeployTeamsIcm, true) }}:
+      displayName: deployment approval (includes Teams-to-IcM)
+    ${{ else }}:
+      displayName: deployment approval (conditional)
     environment: ${{ parameters.DeploymentEnvironment }}
 
 - stage: predeploy
@@ -197,6 +200,8 @@ stages:
   dependsOn:
   - deploy
   - DeployGrafana
+  - ${{ if eq(parameters.DeployTeamsIcm, true) }}:
+    - DeployTeamsIcm
   variables:
   - group: ${{ parameters.StatusVariableGroup }}
   jobs:
@@ -221,6 +226,8 @@ stages:
   dependsOn:
   - deploy
   - DeployGrafana
+  - ${{ if eq(parameters.DeployTeamsIcm, true) }}:
+    - DeployTeamsIcm
   jobs:
   - job: scenario
     displayName: Scenario tests

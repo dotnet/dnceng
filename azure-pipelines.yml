@@ -10,7 +10,7 @@ parameters:
 - name: teamsIcmWorkflowEnabledAfterDeployment
   displayName: Enable Teams-to-IcM after deployment
   type: boolean
-  default: true
+  default: false
 - name: teamsIcmAlertEmail
   displayName: Teams-to-IcM alert recipient override (optional)
   type: string

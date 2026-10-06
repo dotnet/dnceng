@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
   [Parameter()]
-  [string] $RepositoryRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
+  [string] $RepositoryRoot = (Resolve-Path (Join-Path (Join-Path $PSScriptRoot '..') '..')).Path
 )
 
 $deploymentInputs = @(
@@ -18,7 +18,16 @@ $manifest = foreach ($relativePath in $deploymentInputs) {
     throw "Teams-to-IcM deployment input not found: $fullPath"
   }
 
-  $fileHash = (Get-FileHash $fullPath -Algorithm SHA256).Hash.ToLowerInvariant()
+  $content = [System.IO.File]::ReadAllText($fullPath)
+  $normalizedContent = $content.Replace("`r`n", "`n").Replace("`r", "`n")
+  $contentBytes = [System.Text.Encoding]::UTF8.GetBytes($normalizedContent)
+  $contentSha256 = [System.Security.Cryptography.SHA256]::Create()
+  try {
+    $contentHashBytes = $contentSha256.ComputeHash($contentBytes)
+  } finally {
+    $contentSha256.Dispose()
+  }
+  $fileHash = ($contentHashBytes | ForEach-Object { $_.ToString('x2') }) -join ''
   "$relativePath=$fileHash"
 }
 

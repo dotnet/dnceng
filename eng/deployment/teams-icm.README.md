@@ -145,16 +145,27 @@ The production rollout pipeline computes the same fingerprint and compares it wi
 source differs from production but does not deploy it. To perform an approved rollout, manually
 queue the production branch with `deployTeamsIcm=true`. The pipeline preserves the existing Azure
 Monitor alert recipient unless `teamsIcmAlertEmail` is provided. Set `forceTeamsIcmDeploy=true`
-only when the same source revision must be redeployed. The
+only when the same source revision must be redeployed. Enabling is a separate explicit decision:
+`teamsIcmWorkflowEnabledAfterDeployment` defaults to `false`, and must be set to `true` only after
+the identity and provider gates below are complete. The
 `teamsIcmWorkflowEnabledAfterDeployment` parameter controls whether the attended rollout
 re-enables the workflows after disabled-state validation.
 
-The rollout stage runs a production `what-if`, rejects resource deletions, deploys all workflows
+The rollout stage runs after the standard service and Grafana deployments. It runs a production
+`what-if`, rejects changes outside the Teams-to-IcM resource allow-list, deploys all workflows
 disabled, and verifies the deployment fingerprint, managed identities, Teams connection, storage
-account, and table before optionally enabling the workflows. The durable watermark itself requires
-Azure Table data-plane access and remains part of the attended validation. The release job consumes
-the `TeamsIcmDeployment` artifact produced by the build, so the deployed files are the exact files
+account, and table before optionally enabling the workflows. This creates an intentional processing
+pause during a content rollout. When enablement is requested, the pipeline waits for a successful
+post-enable run from both scheduled workflows. The request-triggered processor and durable
+watermark require a controlled root-thread request plus Azure Table data-plane access and remain
+part of the attended validation. The release job consumes the
+`TeamsIcmDeployment` artifact produced by the build, so the deployed files are the exact files
 validated and built from that source revision.
+
+The `Dotnet Engineering services` WIF service connection uses application
+`fc1eb341-aea4-4a11-8f80-d14b8775b2ba`. Its inherited assignment on the target subscription
+resolves to `Owner`, which supplies both resource deployment and role-assignment permissions. The
+pipeline verifies that effective permission before changing production.
 
 Production Grafana rules for the connector, processor, and latency monitor route through the
 existing `amg-icm-ddfun-customer-requests` contact point. The Azure Monitor alerts continue to

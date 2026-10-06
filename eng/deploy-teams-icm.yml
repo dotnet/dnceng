@@ -9,7 +9,7 @@ parameters:
   default: false
 - name: WorkflowEnabledAfterDeployment
   type: boolean
-  default: true
+  default: false
 - name: AlertEmail
   type: string
   default: ''
@@ -52,33 +52,74 @@ stages:
             'Disabled'
           }
 
-          az account set --subscription $subscriptionId
-          if ($LASTEXITCODE -ne 0) {
-            throw "Unable to select subscription $subscriptionId."
+          function Publish-UnknownDetectionResult {
+            param(
+              [Parameter(Mandatory)]
+              [string] $Reason,
+              [Parameter(Mandatory)]
+              [string] $CandidateHash
+            )
+
+            Write-Warning $Reason
+            $summaryPath = Join-Path $env:AGENT_TEMPDIRECTORY 'teams-icm-deployment-status.md'
+            @"
+          # Teams-to-IcM deployment status
+
+          - **Detection status:** Unknown
+          - **Deployment required:** Unknown
+          - **Reason:** $Reason
+          - **Candidate fingerprint:** ``$CandidateHash``
+          - **Expected workflow state:** $expectedState
+
+          No production deployment will run until detection succeeds.
+          "@ | Set-Content $summaryPath
+            Write-Host "##vso[task.uploadsummary]$summaryPath"
+            Write-Host "##vso[task.setvariable variable=candidateHash;isOutput=true]$CandidateHash"
+            Write-Host '##vso[task.setvariable variable=detectionSucceeded;isOutput=true]false'
+            Write-Host '##vso[task.setvariable variable=deploymentRequired;isOutput=true]false'
+            Write-Host "##vso[task.setvariable variable=deploymentReason;isOutput=true]$Reason"
           }
 
           $candidateHash = & eng/deployment/Get-TeamsIcmDeploymentFingerprint.ps1
           Write-Host "Candidate deployment fingerprint: $candidateHash"
           Write-Host "Expected workflow state: $expectedState"
 
+          az account set --subscription $subscriptionId
+          if ($LASTEXITCODE -ne 0) {
+            Publish-UnknownDetectionResult `
+              -Reason "Unable to select subscription $subscriptionId." `
+              -CandidateHash $candidateHash
+            return
+          }
+
           $deployedWorkflows = foreach ($workflowName in $workflowNames) {
-            $resourceJson = az resource show `
+            $resourceOutput = az resource show `
               --resource-group $resourceGroup `
               --resource-type Microsoft.Logic/workflows `
               --name $workflowName `
-              --output json 2>$null
+              --only-show-errors `
+              --output json 2>&1
 
-            if ($LASTEXITCODE -ne 0) {
-              [pscustomobject]@{
-                Name = $workflowName
-                Exists = $false
-                DeploymentContentHash = $null
-                State = 'Missing'
+            $resourceExitCode = $LASTEXITCODE
+            if ($resourceExitCode -ne 0) {
+              $errorText = ($resourceOutput | Out-String).Trim()
+              if ($errorText -match '(?i)ResourceNotFound|could not be found|was not found|status code 404') {
+                [pscustomobject]@{
+                  Name = $workflowName
+                  Exists = $false
+                  DeploymentContentHash = $null
+                  State = 'Missing'
+                }
+                continue
               }
-              continue
+
+              Publish-UnknownDetectionResult `
+                -Reason "Unable to inspect workflow $workflowName. Azure CLI reported: $errorText" `
+                -CandidateHash $candidateHash
+              return
             }
 
-            $resource = $resourceJson | ConvertFrom-Json
+            $resource = $resourceOutput | ConvertFrom-Json
             [pscustomobject]@{
               Name = $workflowName
               Exists = $true
@@ -106,7 +147,7 @@ stages:
           } elseif (!$stateMatches) {
             $reason = "One or more production workflows are not $expectedState."
           } else {
-            $reason = 'Production already has this deployment fingerprint and expected workflow state.'
+            $reason = 'Production tags match this deployment fingerprint and the workflows have the expected state.'
           }
 
           Write-Host "Deployment required: $deploymentRequired"
@@ -128,6 +169,7 @@ stages:
           "@ | Set-Content $summaryPath
           Write-Host "##vso[task.uploadsummary]$summaryPath"
           Write-Host "##vso[task.setvariable variable=candidateHash;isOutput=true]$candidateHash"
+          Write-Host '##vso[task.setvariable variable=detectionSucceeded;isOutput=true]true'
           Write-Host "##vso[task.setvariable variable=deploymentRequired;isOutput=true]$($deploymentRequired.ToString().ToLowerInvariant())"
           Write-Host "##vso[task.setvariable variable=deploymentReason;isOutput=true]$reason"
 
@@ -137,10 +179,15 @@ stages:
     dependsOn:
     - approval
     - DetectTeamsIcmChanges
-    condition: and(succeeded(), eq(dependencies.DetectTeamsIcmChanges.outputs['Detect.CompareDeployment.deploymentRequired'], 'true'))
+    - deploy
+    - DeployGrafana
+    variables:
+      detectionSucceeded: $[ stageDependencies.DetectTeamsIcmChanges.Detect.outputs['CompareDeployment.detectionSucceeded'] ]
+      deploymentRequired: $[ stageDependencies.DetectTeamsIcmChanges.Detect.outputs['CompareDeployment.deploymentRequired'] ]
     jobs:
     - job: Deploy
       displayName: Deploy and verify Teams-to-IcM
+      condition: and(succeeded(), eq(variables.detectionSucceeded, 'true'), eq(variables.deploymentRequired, 'true'))
       templateContext:
         type: releaseJob
         isProduction: true
@@ -164,20 +211,42 @@ stages:
             $ErrorActionPreference = 'Stop'
             $subscriptionId = 'a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1'
             $resourceGroup = 'dnceng-teams-icm-production'
-            $storageAccountName = 'dncengicmc52czkqm4iii4'
-            $storageTableName = 'TeamsIcmIntake'
             $workflowNames = @(
               'dnceng-teams-icm'
               'dnceng-teams-icm-connector'
               'dnceng-teams-icm-latency-monitor'
             )
-            $alertEmail = $env:TEAMS_ICM_ALERT_EMAIL.Trim()
+            $alertEmail = ([string]$env:TEAMS_ICM_ALERT_EMAIL).Trim()
             $enableAfterDeployment = [System.Convert]::ToBoolean('${{ parameters.WorkflowEnabledAfterDeployment }}')
 
             az account set --subscription $subscriptionId
             if ($LASTEXITCODE -ne 0) {
               throw "Unable to select subscription $subscriptionId."
             }
+
+            $resourceGroupId = "/subscriptions/$subscriptionId/resourceGroups/$resourceGroup"
+            $permissionsJson = az rest `
+              --method get `
+              --url "https://management.azure.com$resourceGroupId/providers/Microsoft.Authorization/permissions?api-version=2022-04-01" `
+              --output json
+            if ($LASTEXITCODE -ne 0) {
+              throw 'Unable to verify the deployment service connection permissions.'
+            }
+            $permissionSets = ($permissionsJson | ConvertFrom-Json).value
+            $canManageRoleAssignments = @($permissionSets | Where-Object {
+              $actions = @($_.actions)
+              $notActions = @($_.notActions)
+              ($actions -contains '*' -or
+                $actions -contains 'Microsoft.Authorization/*' -or
+                $actions -contains 'Microsoft.Authorization/roleAssignments/*' -or
+                $actions -contains 'Microsoft.Authorization/roleAssignments/write') -and
+              $notActions -notcontains 'Microsoft.Authorization/roleAssignments/write' -and
+              $notActions -notcontains 'Microsoft.Authorization/roleAssignments/*'
+            }).Count -gt 0
+            if (!$canManageRoleAssignments) {
+              throw 'The deployment service connection cannot manage the role assignments declared by the Teams-to-IcM template.'
+            }
+            Write-Host "Verified Microsoft.Authorization/roleAssignments/write at $resourceGroupId."
 
             if (!$alertEmail) {
               $alertEmail = az monitor action-group show `
@@ -206,7 +275,10 @@ stages:
                 --output json 2>$null
               if ($LASTEXITCODE -eq 0) {
                 $resource = $resourceJson | ConvertFrom-Json
-                $before[$workflowName] = $resource.identity.principalId
+                $before[$workflowName] = @{
+                  PrincipalId = $resource.identity.principalId
+                  State = $resource.properties.state
+                }
               }
             }
 
@@ -228,14 +300,43 @@ stages:
             }
 
             $whatIf = $whatIfJson | ConvertFrom-Json
-            $deletions = @($whatIf.changes | Where-Object { $_.changeType -eq 'Delete' })
-            if ($deletions.Count -gt 0) {
-              $deletedResources = $deletions.resourceId -join [Environment]::NewLine
-              throw "The production what-if contains resource deletions:`n$deletedResources"
+            $allowedResourcePatterns = @(
+              '/providers/Microsoft\.Storage/storageAccounts/dncengicm[a-z0-9]+(?:/tableServices/default(?:/tables/TeamsIcmIntake)?)?(?:/providers/Microsoft\.Authorization/roleAssignments/[0-9a-f-]+)?$'
+              '/providers/Microsoft\.Web/connections/dnceng-teams-icm-teams$'
+              '/providers/Microsoft\.Logic/workflows/dnceng-teams-icm(?:-connector|-latency-monitor)?(?:/providers/Microsoft\.Insights/diagnosticSettings/send-to-log-analytics)?$'
+              '/providers/Microsoft\.OperationalInsights/workspaces/dnceng-teams-icm-logs$'
+              '/providers/Microsoft\.Insights/actionGroups/dnceng-teams-icm-failures$'
+              '/providers/Microsoft\.Insights/metricAlerts/dnceng-teams-icm(?:-connector|-latency-monitor)?-failed-runs$'
+            )
+            $unsupportedChanges = @(
+              $whatIf.changes |
+                Where-Object {
+                  $resourceId = $_.resourceId
+                  $_.changeType -eq 'Delete' -or
+                    !($allowedResourcePatterns | Where-Object { $resourceId -match $_ })
+                }
+            )
+            if ($unsupportedChanges.Count -gt 0) {
+              $unsupportedSummary = $unsupportedChanges |
+                ForEach-Object { "$($_.changeType): $($_.resourceId)" } |
+                Out-String
+              throw "The production what-if contains changes outside the Teams-to-IcM allow-list:`n$unsupportedSummary"
             }
 
+            $whatIfSummaryPath = Join-Path $env:AGENT_TEMPDIRECTORY 'teams-icm-what-if.md'
+            @"
+            # Teams-to-IcM production what-if
+
+            | Change | Resource |
+            | --- | --- |
+            $($whatIf.changes | ForEach-Object {
+              "| $($_.changeType) | ``$($_.resourceId)`` |"
+            } | Out-String)
+            "@ | Set-Content $whatIfSummaryPath
+            Write-Host "##vso[task.uploadsummary]$whatIfSummaryPath"
+
             $disabledDeploymentName = "teams-icm-$(Build.BuildId)-disabled"
-            az deployment group create `
+            $deploymentOutputsJson = az deployment group create `
               --name $disabledDeploymentName `
               --subscription $subscriptionId `
               --resource-group $resourceGroup `
@@ -245,9 +346,16 @@ stages:
                 workflowEnabled=false `
                 deploymentContentHash=$candidateHash `
                 sourceVersion=$sourceVersion `
-              --output none
+              --query properties.outputs `
+              --output json
             if ($LASTEXITCODE -ne 0) {
               throw 'The disabled Teams-to-IcM deployment failed.'
+            }
+            $deploymentOutputs = $deploymentOutputsJson | ConvertFrom-Json
+            $storageAccountName = $deploymentOutputs.storageAccountName.value
+            $storageTableName = $deploymentOutputs.storageTableName.value
+            if (!$storageAccountName -or !$storageTableName) {
+              throw 'The Teams-to-IcM deployment did not return its storage resource names.'
             }
 
             foreach ($workflowName in $workflowNames) {
@@ -266,7 +374,7 @@ stages:
                 throw "Workflow $workflowName does not have the expected deployment fingerprint."
               }
               if ($before.ContainsKey($workflowName) -and
-                  $before[$workflowName] -ne $resource.identity.principalId) {
+                  $before[$workflowName].PrincipalId -ne $resource.identity.principalId) {
                 throw "Workflow $workflowName received an unexpected replacement managed identity."
               }
             }
@@ -298,6 +406,7 @@ stages:
             }
 
             if ($enableAfterDeployment) {
+              $enablementStarted = [DateTime]::UtcNow
               $enabledDeploymentName = "teams-icm-$(Build.BuildId)-enabled"
               az deployment group create `
                 --name $enabledDeploymentName `
@@ -325,6 +434,48 @@ stages:
                   throw "Workflow $workflowName is not enabled after deployment."
                 }
               }
+
+              # The processor is request-triggered and runs only when the connector finds a new root message.
+              $healthCheckWorkflowNames = @(
+                'dnceng-teams-icm-connector'
+                'dnceng-teams-icm-latency-monitor'
+              )
+              $pendingHealthChecks = [System.Collections.Generic.HashSet[string]]::new(
+                [string[]]$healthCheckWorkflowNames,
+                [System.StringComparer]::OrdinalIgnoreCase
+              )
+              $healthCheckDeadline = [DateTime]::UtcNow.AddMinutes(5)
+              while ($pendingHealthChecks.Count -gt 0 -and [DateTime]::UtcNow -lt $healthCheckDeadline) {
+                foreach ($workflowName in @($pendingHealthChecks)) {
+                  $workflowResourceId = "/subscriptions/$subscriptionId/resourceGroups/$resourceGroup" +
+                    "/providers/Microsoft.Logic/workflows/$workflowName"
+                  $runsJson = az rest `
+                    --method get `
+                    --url "https://management.azure.com$workflowResourceId/runs?api-version=2016-06-01&%24top=20" `
+                    --output json
+                  if ($LASTEXITCODE -ne 0) {
+                    throw "Unable to inspect post-enable runs for workflow $workflowName."
+                  }
+                  $runs = ($runsJson | ConvertFrom-Json).value
+                  $successfulRun = @(
+                    $runs |
+                      Where-Object {
+                        $_.properties.status -eq 'Succeeded' -and
+                          ([DateTime]$_.properties.startTime).ToUniversalTime() -ge $enablementStarted
+                      }
+                  ).Count -gt 0
+                  if ($successfulRun) {
+                    [void]$pendingHealthChecks.Remove($workflowName)
+                    Write-Host "Workflow $workflowName completed a successful post-enable run."
+                  }
+                }
+                if ($pendingHealthChecks.Count -gt 0) {
+                  Start-Sleep -Seconds 15
+                }
+              }
+              if ($pendingHealthChecks.Count -gt 0) {
+                throw "These workflows did not complete a successful run within five minutes of enablement: $($pendingHealthChecks -join ', ')"
+              }
             }
 
             Write-Host "Teams-to-IcM deployment fingerprint: $candidateHash"
@@ -337,3 +488,18 @@ stages:
             }
         env:
           TEAMS_ICM_ALERT_EMAIL: ${{ parameters.AlertEmail }}
+
+    - job: NoDeployment
+      displayName: Skip Teams-to-IcM deployment
+      condition: or(ne(variables.detectionSucceeded, 'true'), ne(variables.deploymentRequired, 'true'))
+      pool:
+        name: NetCore1ESPool-Internal-NoMSI
+        demands: ImageOverride -equals 1es-windows-2022
+      steps:
+      - pwsh: |
+          if ('$(detectionSucceeded)' -ne 'true') {
+            Write-Warning 'Teams-to-IcM detection did not succeed. No Teams-to-IcM production change will run.'
+          } else {
+            Write-Host 'Teams-to-IcM production tags and workflow state already match the requested deployment.'
+          }
+        displayName: Report skipped Teams-to-IcM deployment
