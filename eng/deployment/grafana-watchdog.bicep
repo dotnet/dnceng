@@ -19,18 +19,15 @@
 
 @description('''
 GUID of the Azure Monitor Incident Action connection configured in IcM. This is service-specific and
-must be supplied by the IcM service administrator.
+must be supplied by the IcM service administrator when incident routing is deployed.
 ''')
-@minLength(1)
-param icmConnectionId string
+param icmConnectionId string = ''
 
-@description('Name of the Azure Monitor Incident Action connection configured in IcM.')
-@minLength(1)
-param icmConnectionName string
+@description('Name of the Azure Monitor Incident Action connection configured in IcM. Required when incident routing is deployed.')
+param icmConnectionName string = ''
 
-@description('Routing ID that has a verified matching rule on the supplied IcM connection.')
-@minLength(1)
-param icmRoutingId string
+@description('Routing ID that has a verified matching rule on the supplied IcM connection. Required when incident routing is deployed.')
+param icmRoutingId string = ''
 
 @description('Azure region for all resources created by this template.')
 param location string = resourceGroup().location
@@ -49,6 +46,18 @@ param grafanaWorkspaceNameStaging string
 @description('Name of the workflow Grafana workspace to probe and grant Grafana Viewer access to. Must already exist in this resource group.')
 @minLength(1)
 param grafanaWorkspaceNameWorkflow string
+
+@description('Grafana environment to probe. Use a single environment for isolated validation or all for the shared deployment.')
+@allowed([
+  'all'
+  'production'
+  'staging'
+  'workflow'
+])
+param targetEnvironment string = 'all'
+
+@description('Deploy the IcM Action Group and scheduled-query alert rules. Disable for probe-only staging validation.')
+param deployIncidentRouting bool = true
 
 @description('Number of additional attempts made after an initial transient failure for a single HTTP probe.')
 param retryCount int = 1
@@ -96,6 +105,15 @@ var monitorConditionExpression = format('{0}{1}', '$', '{data.essentials.monitor
 var originAlertIdExpression = format('{0}{1}', '$', '{data.essentials.originAlertId}')
 var severityExpression = format('{0}{1}', '$', '{data.essentials.severity}')
 var watchdogRunbookUrl = 'https://github.com/dotnet/dnceng/blob/main/Documentation/ProjectDocs/Operations/Azure-Managed-Grafana-Watchdogs.md'
+var validatedIncidentRouting = !deployIncidentRouting ? {
+  connectionId: ''
+  connectionName: ''
+  routingId: ''
+} : !empty(icmConnectionId) && !empty(icmConnectionName) && !empty(icmRoutingId) ? {
+  connectionId: icmConnectionId
+  connectionName: icmConnectionName
+  routingId: icmRoutingId
+} : fail('icmConnectionId, icmConnectionName, and icmRoutingId are required when deployIncidentRouting is true.')
 
 // A row is returned only when a workspace has repeatedFailureThreshold or more failed probes
 // (AvailabilityTelemetry.Success == false) within repeatedFailureWindow; no rows means healthy.
@@ -131,6 +149,45 @@ resource grafanaStaging 'Microsoft.Dashboard/grafana@2023-09-01' existing = {
 resource grafanaWorkflow 'Microsoft.Dashboard/grafana@2023-09-01' existing = {
   name: grafanaWorkspaceNameWorkflow
 }
+
+var probeProduction = targetEnvironment == 'all' || targetEnvironment == 'production'
+var probeStaging = targetEnvironment == 'all' || targetEnvironment == 'staging'
+var probeWorkflow = targetEnvironment == 'all' || targetEnvironment == 'workflow'
+var productionWorkspaceAppSettings = probeProduction ? [
+  {
+    name: 'GrafanaWatchdog__Workspaces__0__Name'
+    value: grafanaWorkspaceNameProduction
+  }
+  {
+    name: 'GrafanaWatchdog__Workspaces__0__Endpoint'
+    value: grafanaProduction.properties.endpoint
+  }
+] : []
+var stagingWorkspaceAppSettings = probeStaging ? [
+  {
+    name: 'GrafanaWatchdog__Workspaces__${targetEnvironment == 'all' ? 1 : 0}__Name'
+    value: grafanaWorkspaceNameStaging
+  }
+  {
+    name: 'GrafanaWatchdog__Workspaces__${targetEnvironment == 'all' ? 1 : 0}__Endpoint'
+    value: grafanaStaging.properties.endpoint
+  }
+] : []
+var workflowWorkspaceAppSettings = probeWorkflow ? [
+  {
+    name: 'GrafanaWatchdog__Workspaces__${targetEnvironment == 'all' ? 2 : 0}__Name'
+    value: grafanaWorkspaceNameWorkflow
+  }
+  {
+    name: 'GrafanaWatchdog__Workspaces__${targetEnvironment == 'all' ? 2 : 0}__Endpoint'
+    value: grafanaWorkflow.properties.endpoint
+  }
+] : []
+var workspaceAppSettings = concat(
+  productionWorkspaceAppSettings,
+  stagingWorkspaceAppSettings,
+  workflowWorkspaceAppSettings
+)
 
 resource probeIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: probeIdentityName
@@ -169,7 +226,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
-resource icmActionGroup 'Microsoft.Insights/actionGroups@2024-10-01-preview' = {
+resource icmActionGroup 'Microsoft.Insights/actionGroups@2024-10-01-preview' = if (deployIncidentRouting) {
   name: actionGroupName
   location: 'Global'
   properties: {
@@ -179,8 +236,8 @@ resource icmActionGroup 'Microsoft.Insights/actionGroups@2024-10-01-preview' = {
       {
         name: 'DDFun Customer Requests'
         connection: {
-          id: icmConnectionId
-          name: icmConnectionName
+          id: validatedIncidentRouting.connectionId
+          name: validatedIncidentRouting.connectionName
         }
         incidentManagementService: 'Icm'
         mappings: {
@@ -190,7 +247,7 @@ resource icmActionGroup 'Microsoft.Insights/actionGroups@2024-10-01-preview' = {
           'icm.impactstartdate': firedDateTimeExpression
           'icm.monitorid': alertRuleExpression
           'icm.occurringlocation.environment': 'PROD'
-          'icm.routingid': icmRoutingId
+          'icm.routingid': validatedIncidentRouting.routingId
           'icm.severity': severityExpression
           'icm.title': format('[{0}] {1} - {2}', monitorConditionExpression, alertRuleExpression, descriptionExpression)
           'icm.tsgid': watchdogRunbookUrl
@@ -288,7 +345,7 @@ resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
     siteConfig: {
       minTlsVersion: '1.2'
       ftpsState: 'Disabled'
-      appSettings: [
+      appSettings: concat([
         {
           name: 'AzureWebJobsStorage__accountName'
           value: storageAccount.name
@@ -317,31 +374,7 @@ resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
           name: 'GrafanaWatchdog__RequestTimeout'
           value: requestTimeout
         }
-        {
-          name: 'GrafanaWatchdog__Workspaces__0__Name'
-          value: grafanaWorkspaceNameProduction
-        }
-        {
-          name: 'GrafanaWatchdog__Workspaces__0__Endpoint'
-          value: grafanaProduction.properties.endpoint
-        }
-        {
-          name: 'GrafanaWatchdog__Workspaces__1__Name'
-          value: grafanaWorkspaceNameStaging
-        }
-        {
-          name: 'GrafanaWatchdog__Workspaces__1__Endpoint'
-          value: grafanaStaging.properties.endpoint
-        }
-        {
-          name: 'GrafanaWatchdog__Workspaces__2__Name'
-          value: grafanaWorkspaceNameWorkflow
-        }
-        {
-          name: 'GrafanaWatchdog__Workspaces__2__Endpoint'
-          value: grafanaWorkflow.properties.endpoint
-        }
-      ]
+      ], workspaceAppSettings)
     }
     functionAppConfig: {
       deployment: {
@@ -372,7 +405,7 @@ resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
   ]
 }
 
-resource grafanaViewerForProduction 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource grafanaViewerForProduction 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (probeProduction) {
   name: guid(grafanaProduction.id, probeIdentity.id, grafanaViewerRoleId)
   scope: grafanaProduction
   properties: {
@@ -382,7 +415,7 @@ resource grafanaViewerForProduction 'Microsoft.Authorization/roleAssignments@202
   }
 }
 
-resource grafanaViewerForStaging 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource grafanaViewerForStaging 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (probeStaging) {
   name: guid(grafanaStaging.id, probeIdentity.id, grafanaViewerRoleId)
   scope: grafanaStaging
   properties: {
@@ -392,7 +425,7 @@ resource grafanaViewerForStaging 'Microsoft.Authorization/roleAssignments@2022-0
   }
 }
 
-resource grafanaViewerForWorkflow 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource grafanaViewerForWorkflow 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (probeWorkflow) {
   name: guid(grafanaWorkflow.id, probeIdentity.id, grafanaViewerRoleId)
   scope: grafanaWorkflow
   properties: {
@@ -402,7 +435,7 @@ resource grafanaViewerForWorkflow 'Microsoft.Authorization/roleAssignments@2022-
   }
 }
 
-resource repeatedFailureAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' = {
+resource repeatedFailureAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' = if (deployIncidentRouting) {
   name: '${baseName}-repeated-failures'
   location: location
   properties: {
@@ -445,7 +478,7 @@ resource repeatedFailureAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15
   ]
 }
 
-resource missingHeartbeatAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' = {
+resource missingHeartbeatAlert 'Microsoft.Insights/scheduledQueryRules@2023-03-15-preview' = if (deployIncidentRouting) {
   name: '${baseName}-missing-heartbeat'
   location: location
   properties: {
@@ -492,4 +525,4 @@ output functionAppName string = functionApp.name
 output functionAppPrincipalId string = probeIdentity.properties.principalId
 output appInsightsName string = appInsights.name
 output logAnalyticsWorkspaceName string = logAnalyticsWorkspace.name
-output icmActionGroupResourceId string = icmActionGroup.id
+output icmActionGroupResourceId string = deployIncidentRouting ? resourceId('Microsoft.Insights/actionGroups', actionGroupName) : ''
