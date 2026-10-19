@@ -195,7 +195,7 @@ New secrets can be created by adding new entries to the manifest file, then runn
 
 ## Secret Stores
 
-Each secret manifest file specifies a single `storageLocation` field that determines where the secrets are stored. There are two valid options.
+Each secret manifest file specifies a single `storageLocation` field that determines where the secrets are stored.
 
 ### Azure Key Vault
 
@@ -208,18 +208,23 @@ Each secret manifest file specifies a single `storageLocation` field that determ
 
 This is the most common option, and is used to store secrets in an Azure Key Vault.
 
-### Azure DevOps Service Connections
+### Retired Azure DevOps PAT support
 
-```yaml
-      type: azure-devops-project
-      parameters:
-        organization: <Name of the Azure DevOps Organization>
-        project: <Name of the Azure DevOps Project>
-```
+Secret Manager no longer generates Azure DevOps PATs or rotates PAT-backed service
+connections. The `azure-devops-access-token` and `azure-devops-service-endpoint` secret
+types and the `azure-devops-project` storage location are no longer supported.
+The standalone `Microsoft.DncEng.PatGeneratorTool` / `pat-generator` tool is also retired
+and is no longer built or published from this repository.
 
-This location represents service connections in an Azure DevOps instance. This is designed to support strictly support connections that require Azure DevOps PATs (secret type `azure-devops-access-token`) to operate (all other service connections should be using SFI-compliant patterns).
+Remove retired declarations from active manifests before adopting this version.
+Use managed identity, workload identity federation, or interactive Entra authentication
+as appropriate for the consumer. See the
+[service-connection management and WIF recovery guide](https://dev.azure.com/dnceng/internal/_wiki/wikis/a00ac3e0-cc74-456d-9a34-66d070bb2b02?pagePath=%2FOperations%2FFR%2FService%20Connection%20Management%20dnceng%20internal)
+for pipeline feed authentication.
 
-Note that it is not possible to read secrets generated for this storage location.
+Other secret types, including GitHub access tokens and GitHub App credentials, remain
+supported. This change does not revoke existing credentials or modify WIF-backed service
+connections or runtime-WIF placeholders.
 
 ## Secret Types
 Each secret in the manifest has a specified type, and these types determine what parameters are required, and what ends up in the secret store. Some secret types require human interaction to generate and/or rotate. For such secrets the tool will prompt the user or fail if in a build context. Some secret types also produce multiple values. These values are all stored with additional suffixes in the secret store. Each type is documented below.
@@ -392,32 +397,3 @@ Recommended update steps for each account are:
 - Run 'dotnet secret-manager synchronize --force-secret={parameters.AccountName} {vault.yaml}' to update the key vault with the
   new password. 
   Example: For dn-bot domain account, params will be dn-bot-account-redmond and helixkv.yaml respectively.
-
-
-### Azure DevOps Access Token
-```yaml
-type: azure-devops-access-token
-parameters:
-  organizations: space separate list of organizations
-  scopes: space separated list of scopes in the format accepted by pat-generator
-  domainAccountName: name of domain account
-  domainAccountSecret: secret reference to a domain-account
-```
-
-### Service Connection
-This type represents a PAT-backed service endpoint in Azure DevOps. It is expected to use with the `azure-devops-service-endpoint` storage location.
-
-```yaml
-  dnceng-dotnet8:
-    type: azure-devops-service-endpoint
-    parameters:
-      authorization:
-        type: azure-devops-access-token
-        parameters:
-          domainAccountName: dn-bot
-          domainAccountSecret:
-            location: helixkv
-            name: dn-bot-account-redmond
-          organizations: dnceng
-          scopes: package-rw
-```
