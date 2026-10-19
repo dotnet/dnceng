@@ -208,24 +208,6 @@ Each secret manifest file specifies a single `storageLocation` field that determ
 
 This is the most common option, and is used to store secrets in an Azure Key Vault.
 
-### Retired Azure DevOps PAT support
-
-Secret Manager no longer generates Azure DevOps PATs or rotates PAT-backed service
-connections. The `azure-devops-access-token` and `azure-devops-service-endpoint` secret
-types and the `azure-devops-project` storage location are no longer supported.
-The standalone `Microsoft.DncEng.PatGeneratorTool` / `pat-generator` tool is also retired
-and is no longer built or published from this repository.
-
-Remove retired declarations from active manifests before adopting this version.
-Use managed identity, workload identity federation, or interactive Entra authentication
-as appropriate for the consumer. See the
-[service-connection management and WIF recovery guide](https://dev.azure.com/dnceng/internal/_wiki/wikis/a00ac3e0-cc74-456d-9a34-66d070bb2b02?pagePath=%2FOperations%2FFR%2FService%20Connection%20Management%20dnceng%20internal)
-for pipeline feed authentication.
-
-Other secret types, including GitHub access tokens and GitHub App credentials, remain
-supported. This change does not revoke existing credentials or modify WIF-backed service
-connections or runtime-WIF placeholders.
-
 ## Secret Types
 Each secret in the manifest has a specified type, and these types determine what parameters are required, and what ends up in the secret store. Some secret types require human interaction to generate and/or rotate. For such secrets the tool will prompt the user or fail if in a build context. Some secret types also produce multiple values. These values are all stored with additional suffixes in the secret store. Each type is documented below.
 
