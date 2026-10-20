@@ -9,7 +9,7 @@ public class AzureDevOpsAlertOptions
     public string Organization { get; set; }
     public string Project { get; set; }
     public string AreaPath { get; set; }
-    public string WorkItemType { get; set; } = "DNCENG Task";
+    public string WorkItemType { get; set; } = "Task";
     public string[] Tags { get; set; }
     public string TitlePrefix { get; set; }
     public string SupplementalBodyText { get; set; }

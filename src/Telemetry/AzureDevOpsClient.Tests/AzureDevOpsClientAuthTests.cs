@@ -8,6 +8,8 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -285,6 +287,56 @@ public class AzureDevOpsClientAuthTests
 
         // Assert - token should have been requested at least twice
         Assert.That(mockCredential.GetTokenCallCount, Is.GreaterThanOrEqualTo(2));
+    }
+
+    [TestCase("Task")]
+    [TestCase("RCA")]
+    [TestCase("UserSentiment")]
+    public async Task CreateWorkItemAsync_PreservesRequestedTypeAndFields(string type)
+    {
+        const string areaPath = @"internal\.NET Engineering Services\First Responders";
+        var fields = new Dictionary<string, string>
+        {
+            ["System.Title"] = "Automation notification",
+            ["System.Description"] = "<p><a href=\"https://example/build/42\">Origin</a></p>",
+            ["System.State"] = "Backlog",
+            ["System.Tags"] = "Build Failed; Ops - First Responder",
+            ["System.IterationPath"] = "internal",
+            ["System.AssignedTo"] = "build-owner@example.invalid",
+            ["Microsoft.VSTS.Common.Priority"] = "2",
+        };
+        var responseFields = fields.ToDictionary(field => field.Key, field => (object)field.Value);
+        responseFields["System.WorkItemType"] = type;
+        responseFields["System.AreaPath"] = areaPath;
+        var handler = new CapturingHandler(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(JsonConvert.SerializeObject(new { id = 42, fields = responseFields }),
+                Encoding.UTF8, "application/json"),
+        });
+        var client = new AzureDevOpsClient(
+            new AzureDevOpsClientOptions { Organization = "dnceng", AccessToken = "test-pat-value", MaxParallelRequests = 1 },
+            _logger, new DelegatingHandlerHttpClientFactory(handler));
+
+        WorkItem? result = await client.CreateWorkItemAsync("internal", type, fields, areaPath);
+
+        Assert.That(handler.LastRequest!.Method, Is.EqualTo(HttpMethod.Post));
+        Assert.That(handler.LastRequest.RequestUri!.AbsoluteUri,
+            Is.EqualTo($"https://dev.azure.com/dnceng/internal/_apis/wit/workitems/${type}?api-version=7.0"));
+        Assert.That(handler.LastRequest.Content!.Headers.ContentType!.MediaType, Is.EqualTo("application/json-patch+json"));
+        JsonPatchDocument[] patch = JsonConvert.DeserializeObject<JsonPatchDocument[]>(
+            await handler.LastRequest.Content.ReadAsStringAsync())!;
+        Assert.That(patch.All(operation => operation.Op == "add"), Is.True);
+        var submittedFields = patch.ToDictionary(operation => operation.Path, operation => operation.Value?.ToString());
+        Assert.That(submittedFields.Count, Is.EqualTo(fields.Count + 1));
+        foreach (var field in fields)
+        {
+            Assert.That(submittedFields[$"/fields/{field.Key}"], Is.EqualTo(field.Value));
+            Assert.That(result!.Fields![field.Key], Is.EqualTo(field.Value));
+        }
+        Assert.That(submittedFields["/fields/System.AreaPath"], Is.EqualTo(areaPath));
+        Assert.That(result!.Id, Is.EqualTo(42));
+        Assert.That(result.Fields!["System.WorkItemType"], Is.EqualTo(type));
+        Assert.That(result.Fields["System.AreaPath"], Is.EqualTo(areaPath));
     }
 
     #region Test helpers

@@ -1,12 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using AwesomeAssertions;
 using DotNet.Status.Web.Controllers;
 using DotNet.Status.Web.Models;
 using DotNet.Status.Web.Options;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.DotNet.Internal.AzureDevOps;
 using Microsoft.DotNet.Internal.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -223,16 +229,128 @@ public class AlertHookControllerTests
             .WithMessage("*conflicting stable identifiers*");
     }
 
-    private static AlertHookController CreateController()
+    [TestCase("alerting", false)]
+    [TestCase("no_data", false)]
+    [TestCase("alerting", true)]
+    [TestCase("no_data", true)]
+    public async Task NotifyAsync_NewAlert_CreatesTask(string state, bool useConfiguredOptions)
     {
-        Mock<IAzureDevOpsClient> azureDevOpsClient = new(MockBehavior.Strict);
-        Mock<IClientFactory<IAzureDevOpsClient>> clientFactory = new(MockBehavior.Strict);
-        IOptions<AzureDevOpsAlertOptions> alertOptions = Microsoft.Extensions.Options.Options.Create(new AzureDevOpsAlertOptions
+        AzureDevOpsAlertOptions options = useConfiguredOptions
+            ? new ConfigurationBuilder()
+                .SetBasePath(TestContext.CurrentContext.TestDirectory)
+                .AddJsonFile(".config/settings.json")
+                .Build()
+                .GetSection("AzureDevOpsAlert")
+                .Get<AzureDevOpsAlertOptions>()
+            : null;
+        Mock<IAzureDevOpsClient> client = new(MockBehavior.Strict);
+        client.Setup(c => c.QueryWorkItemsAsync("internal", It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<WorkItem>());
+        client.Setup(c => c.CreateWorkItemAsync(
+                "internal", "Task", It.IsAny<Dictionary<string, string>>(),
+                @"internal\.NET Engineering Services\First Responders", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new WorkItem { Id = 42 });
+        AlertHookController controller = CreateController(client, options);
+        GrafanaNotification notification = new()
+        {
+            Title = "CPU High",
+            RuleId = 1,
+            RuleUrl = "https://example/rule",
+            State = state,
+        };
+
+        IActionResult result = await controller.NotifyAsync(notification);
+
+        result.Should().BeOfType<NoContentResult>();
+        client.Verify(c => c.CreateWorkItemAsync(
+            "internal", "Task",
+            It.Is<Dictionary<string, string>>(fields =>
+                fields["System.Title"].EndsWith("CPU High") &&
+                fields["System.Description"].Contains("<strong>" + state + "</strong>") &&
+                fields["System.Description"].Contains("https://example/rule") &&
+                fields["System.Description"].Contains("Grafana-Automated-Alert-Id-1") &&
+                fields["System.State"] == "Backlog" &&
+                fields["System.Tags"] == "Grafana Alert; Active Alert"),
+            @"internal\.NET Engineering Services\First Responders", It.IsAny<CancellationToken>()), Times.Once);
+        client.Verify(c => c.QueryWorkItemsAsync(
+            "internal", It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+        client.VerifyNoOtherCalls();
+    }
+
+    [TestCase("Task", "alerting", "Done")]
+    [TestCase("DNCENG Task", "alerting", "Done")]
+    [TestCase("Task", "no_data", "Backlog")]
+    [TestCase("DNCENG Task", "no_data", "Backlog")]
+    [TestCase("Task", "ok", "Backlog")]
+    [TestCase("DNCENG Task", "ok", "Backlog")]
+    public async Task NotifyAsync_ExistingWorkItem_PreservesTypeAndUpdatesLifecycle(
+        string type, string state, string previousState)
+    {
+        bool recovering = state == "ok";
+        string expectedState = recovering ? "Done" : "Backlog";
+        string expectedTag = recovering ? "Inactive Alert" : "Active Alert";
+        string removedTag = recovering ? "Active Alert" : "Inactive Alert";
+        WorkItem existing = new()
+        {
+            Id = 42,
+            Fields = new Dictionary<string, object>
+            {
+                ["System.WorkItemType"] = type,
+                ["System.State"] = previousState,
+                ["System.Tags"] = $"Grafana Alert; {removedTag}; Retained tag",
+            },
+        };
+        string query = null;
+        Mock<IAzureDevOpsClient> client = new(MockBehavior.Strict);
+        client.Setup(c => c.QueryWorkItemsAsync("internal", It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Callback<string, string, CancellationToken>((_, wiql, _) => query = wiql)
+            .ReturnsAsync(new[] { existing });
+        client.Setup(c => c.UpdateWorkItemAsync(
+                "internal", 42, It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existing);
+        client.Setup(c => c.AddWorkItemCommentAsync("internal", 42, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        AlertHookController controller = CreateController(client);
+
+        IActionResult result = await controller.NotifyAsync(new GrafanaNotification
+        {
+            RuleId = 1,
+            RuleUrl = "https://example/rule",
+            State = state,
+        });
+
+        result.Should().BeOfType<NoContentResult>();
+        query.Should().Contain("[System.TeamProject] = 'internal'")
+            .And.Contain(@"[System.AreaPath] UNDER 'internal\.NET Engineering Services\First Responders'")
+            .And.Contain("Grafana-Automated-Alert-Id-1")
+            .And.Contain("[System.Tags] CONTAINS 'Grafana Alert'")
+            .And.NotContain("[System.WorkItemType]")
+            .And.NotContain("[System.State]");
+        client.Verify(c => c.UpdateWorkItemAsync("internal", 42,
+            It.Is<Dictionary<string, string>>(fields =>
+                fields.Count == 2 &&
+                fields["System.State"] == expectedState &&
+                fields["System.Tags"].Contains(expectedTag) &&
+                fields["System.Tags"].Contains("Retained tag") &&
+                !fields["System.Tags"].Contains(removedTag)), It.IsAny<CancellationToken>()), Times.Once);
+        client.Verify(c => c.AddWorkItemCommentAsync("internal", 42,
+            It.Is<string>(comment => comment.Contains("<strong>" + state + "</strong>")),
+            It.IsAny<CancellationToken>()), Times.Once);
+        client.Verify(c => c.CreateWorkItemAsync(
+            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, string>>(),
+            It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    private static AlertHookController CreateController(
+        Mock<IAzureDevOpsClient> azureDevOpsClient = null, AzureDevOpsAlertOptions options = null)
+    {
+        azureDevOpsClient ??= new(MockBehavior.Strict);
+        var clientFactory = new SingleClientFactory<IAzureDevOpsClient>(azureDevOpsClient.Object);
+        IOptions<AzureDevOpsAlertOptions> alertOptions = Microsoft.Extensions.Options.Options.Create(options ?? new AzureDevOpsAlertOptions
         {
             Organization = "dnceng",
             Project = "internal",
             AreaPath = @"internal\.NET Engineering Services\First Responders",
-            WorkItemType = "DNCENG Task",
             TitlePrefix = "[test] ",
             SupplementalBodyText = "Supplemental text",
         });
@@ -242,10 +360,16 @@ public class AlertHookControllerTests
             WebhookSecret = "test-secret",
         });
 
-        return new AlertHookController(
-            clientFactory.Object,
+        var controller = new AlertHookController(
+            clientFactory,
             alertOptions,
             grafanaOptions,
-            NullLogger<AlertHookController>.Instance);
+            NullLogger<AlertHookController>.Instance)
+        {
+            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
+        };
+        controller.Request.Headers.Authorization =
+            "Basic " + Convert.ToBase64String(Encoding.UTF8.GetBytes("grafana:test-secret"));
+        return controller;
     }
 }

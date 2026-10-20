@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using DotNet.Status.Web.Controllers;
@@ -10,6 +11,7 @@ using DotNet.Status.Web.Options;
 using Microsoft.DotNet.GitHub.Authentication;
 using Microsoft.DotNet.Internal.AzureDevOps;
 using Microsoft.DotNet.Internal.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -84,7 +86,6 @@ public class AzurePipelinesControllerAzDoTests
                     Id = "azdo-fr-target",
                     Project = "internal",
                     AreaPath = "internal\\.NET Engineering Services\\First Responders",
-                    WorkItemType = "DNCENG Task",
                     Tags = new[] { "Ops - First Responder" },
                     UpdateExisting = true
                 }
@@ -138,40 +139,74 @@ public class AzurePipelinesControllerAzDoTests
         return (controller, mockClient);
     }
 
-    [Test]
-    public async Task BuildComplete_AzDoTarget_CreatesNewWorkItem()
+    [TestCase(false, "main")]
+    [TestCase(false, "release/10.0")]
+    [TestCase(true, "main")]
+    [TestCase(true, "release/10.0")]
+    public async Task BuildComplete_AzDoTarget_CreatesNewTask(bool useConfiguredOptions, string branch)
     {
-        var options = CreateOptionsWithAzDoTarget();
-        var buildJson = CreateBuildJson();
+        var options = useConfiguredOptions
+            ? new ConfigurationBuilder()
+                .SetBasePath(TestContext.CurrentContext.TestDirectory)
+                .AddJsonFile(".config/settings.json")
+                .Build()
+                .GetSection("BuildMonitor")
+                .Get<BuildMonitorOptions>()
+            : CreateOptionsWithAzDoTarget();
+        string definitionName = useConfiguredOptions ? "arcade-official-ci" : "test-pipeline";
+        string definitionPath = useConfiguredOptions ? "\\dotnet\\arcade" : "\\test";
+        var monitor = options.Monitor.Builds.Single(b => b.DefinitionPath == $"{definitionPath}\\{definitionName}");
+        monitor.Assignee = "build-owner@example.invalid";
+        monitor.Labels = new[] { "Build Failed", "Additional tag" };
+        if (!useConfiguredOptions)
+        {
+            monitor.Branches = new[] { "main", "release/*" };
+        }
+        var buildJson = CreateBuildJson(definitionName, $"refs/heads/{branch}");
+        buildJson["definition"]["path"] = definitionPath;
         var (controller, mockClient) = CreateController(options, buildJson);
 
         var result = await controller.BuildComplete(CreateBuildEvent());
 
         mockClient.Verify(m => m.CreateWorkItemAsync(
             "internal",
-            "DNCENG Task",
+            "Task",
             It.Is<Dictionary<string, string>>(d =>
-                d["System.Title"].StartsWith("Build failed: test-pipeline/main") &&
-                d["System.Description"].Contains("20260522.1") &&
+                d["System.Title"] == "Build failed: " + definitionName + "/" + branch + " #20260522.1" &&
+                d["System.Description"].Contains("<h3>Summary</h3>") &&
+                d["System.Description"].Contains("https://dev.azure.com/dnceng/internal/_build/results?buildId=999") &&
                 d["System.State"] == "Backlog" &&
-                d["System.Tags"].Contains("Build Failed") &&
-                d["System.Tags"].Contains("Ops - First Responder")),
+                d["System.AssignedTo"] == "build-owner@example.invalid" &&
+                d["System.Tags"] == "Build Failed; Ops - First Responder; Additional tag"),
             "internal\\.NET Engineering Services\\First Responders",
             It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
-    [Test]
-    public async Task BuildComplete_AzDoTarget_UpdateExisting_AddsComment()
+    [TestCase("Task")]
+    [TestCase("DNCENG Task")]
+    public async Task BuildComplete_AzDoTarget_UpdateExisting_AddsComment(string type)
     {
         var options = CreateOptionsWithAzDoTarget();
         var buildJson = CreateBuildJson();
         var (controller, mockClient) = CreateController(options, buildJson);
 
-        // Simulate existing work item found
+        string query = null;
         mockClient.Setup(m => m.QueryWorkItemsAsync(
                 It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.FromResult(new[] { new WorkItem { Id = 42 } }));
+            .Callback<string, string, CancellationToken>((_, wiql, _) => query = wiql)
+            .Returns(Task.FromResult(new[]
+            {
+                new WorkItem
+                {
+                    Id = 42,
+                    Fields = new Dictionary<string, object>
+                    {
+                        ["System.WorkItemType"] = type,
+                        ["System.State"] = "Backlog",
+                    },
+                },
+            }));
 
         var result = await controller.BuildComplete(CreateBuildEvent());
 
@@ -184,6 +219,14 @@ public class AzurePipelinesControllerAzDoTests
             It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, string>>(),
             It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
+        Assert.That(query, Does.Contain("[System.TeamProject] = 'internal'"));
+        Assert.That(query, Does.Contain(@"[System.AreaPath] UNDER 'internal\.NET Engineering Services\First Responders'"));
+        Assert.That(query, Does.Contain("[System.Title] CONTAINS 'Build failed: test-pipeline/main'"));
+        Assert.That(query, Does.Contain("[System.State] <> 'Done'"));
+        Assert.That(query, Does.Not.Contain("[System.WorkItemType]"));
+        mockClient.Verify(m => m.UpdateWorkItemAsync(
+            It.IsAny<string>(), It.IsAny<int>(), It.IsAny<Dictionary<string, string>>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Test]
@@ -201,7 +244,7 @@ public class AzurePipelinesControllerAzDoTests
         var result = await controller.BuildComplete(CreateBuildEvent());
 
         mockClient.Verify(m => m.CreateWorkItemAsync(
-            "internal", "DNCENG Task", It.IsAny<Dictionary<string, string>>(),
+            "internal", "Task", It.IsAny<Dictionary<string, string>>(),
             "internal\\.NET Engineering Services\\First Responders",
             It.IsAny<CancellationToken>()),
             Times.Once);
@@ -230,7 +273,7 @@ public class AzurePipelinesControllerAzDoTests
 
         // Should create AzDO work item (not GitHub issue)
         mockClient.Verify(m => m.CreateWorkItemAsync(
-            "internal", "DNCENG Task", It.IsAny<Dictionary<string, string>>(),
+            "internal", "Task", It.IsAny<Dictionary<string, string>>(),
             It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -312,11 +355,15 @@ public class AzurePipelinesControllerAzDoTests
         Assert.That(createdIssue.Body, Does.Contain("cc @dotnet/prodconsvcs"));
     }
 
-    [Test]
-    public async Task BuildComplete_NonMatchingBranch_NoWorkItemCreated()
+    [TestCase("project.name", "unmonitored-project")]
+    [TestCase("definition.name", "other-pipeline")]
+    [TestCase("definition.path", "\\elsewhere")]
+    [TestCase("sourceBranch", "refs/heads/feature/unmonitored")]
+    public async Task BuildComplete_NonMatchingMonitor_NoWorkItemCreated(string property, string value)
     {
         var options = CreateOptionsWithAzDoTarget();
-        var buildJson = CreateBuildJson(branch: "refs/heads/release/8.0");
+        var buildJson = CreateBuildJson();
+        buildJson.SelectToken(property).Replace(value);
         var (controller, mockClient) = CreateController(options, buildJson);
 
         var result = await controller.BuildComplete(CreateBuildEvent());
@@ -325,5 +372,9 @@ public class AzurePipelinesControllerAzDoTests
             It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Dictionary<string, string>>(),
             It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
+        mockClient.Verify(m => m.QueryWorkItemsAsync(
+            It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        mockClient.Verify(m => m.AddWorkItemCommentAsync(
+            It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }
