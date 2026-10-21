@@ -126,7 +126,7 @@
   "annotations": {
     "__dashboardUid__": "serviceAvailability",
     "__panelId__": "57",
-    "description": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1308/-Alert-PCS-Background-Worker-Stopped)\n\nPCS appears to have stopped processing new WorkItems.\n\n@dotnet/prodconsvcs"
+    "description": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1865/Operations/FR/Wiki-for-Grafana-Alerts/%5BAlert%5D-PCS-Background-Worker-Stopped)\n\nPCS appears to have stopped processing new WorkItems.\n\n@dotnet/prodconsvcs"
   },
   "labels": {
     "NotificationId": "23909d48866646408f669cc1c3d325ee"

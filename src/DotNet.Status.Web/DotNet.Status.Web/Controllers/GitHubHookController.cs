@@ -456,7 +456,7 @@ Please fill out the root cause analysis [Azure Boards work item]({workItem?.Link
 
 Filling it out promptly after resolving an issue ensures things are fresh in your mind.
 
-For help filling out this form, see the [Root Cause Analysis](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/878/Root-Cause-Analysis).
+For help filling out this form, see the [Root Cause Analysis](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1846/Working-in-Engineering-Services/Process-and-Policy/root-cause-analysis).
 ",
         };
 
