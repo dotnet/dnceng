@@ -17,7 +17,7 @@ those values to this public document or source defaults.
 Probe user-assigned managed identity
   |
   v
-.NET 8 timer-triggered Function (every 5 minutes)
+.NET 10 timer-triggered Function (every 5 minutes)
   1. Request https://dashboard.azure.com/.default token
   2. Authenticated GET {workspace}/api/health
   3. Authenticated GET {workspace}/api/org
@@ -89,6 +89,12 @@ successful cycle whose monitoring records were not accepted by the telemetry cha
 | `src/GrafanaWatchdog/Microsoft.DncEng.GrafanaWatchdog/` | Function app and probe logic |
 | `src/GrafanaWatchdog/Microsoft.DncEng.GrafanaWatchdog.Tests/` | Unit tests |
 | `eng/deployment/grafana-watchdog.bicep` | Standalone infrastructure |
+
+Build and publish with the .NET 10 SDK. The Function project's target framework and the Bicep
+template's `functionAppConfig.runtime.version` must stay aligned. A runtime upgrade requires both
+a matching published package and the deployed runtime configuration; changing only the portal
+setting or merging a source change does not complete the upgrade. Verify a completed timer cycle
+and its availability and heartbeat telemetry in staging after deployment.
 
 ## Deployment gate
 
