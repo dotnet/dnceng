@@ -42,7 +42,7 @@ public class BuildMonitorOptions
         public string Id { get; set; }
         public string Project { get; set; }
         public string AreaPath { get; set; }
-        public string WorkItemType { get; set; } = "DNCENG Task";
+        public string WorkItemType { get; set; } = "Task";
         public string[] Tags { get; set; }
         public bool UpdateExisting { get; set; }
     }
