@@ -2,7 +2,7 @@ parameters:
 - name: deployTeamsIcm
   displayName: Deploy Teams-to-IcM when production differs
   type: boolean
-  default: false
+  default: true
 - name: forceTeamsIcmDeploy
   displayName: Force Teams-to-IcM deployment
   type: boolean
@@ -10,7 +10,7 @@ parameters:
 - name: teamsIcmWorkflowEnabledAfterDeployment
   displayName: Enable Teams-to-IcM after deployment
   type: boolean
-  default: false
+  default: true
 - name: teamsIcmAlertEmail
   displayName: Teams-to-IcM alert recipient override (optional)
   type: string
