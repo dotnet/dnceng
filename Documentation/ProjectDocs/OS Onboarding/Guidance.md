@@ -28,7 +28,7 @@ Notes:
 
 - [.NET OS Support Tracking (dotnet/core)](https://github.com/dotnet/core/issues/9638)
 - [.NET Support (dotnet/core)](https://github.com/dotnet/core/blob/main/support.md)
-- [Support for Linux Distros (MS internal)](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/940/Support-for-Linux-Distros)
-- [Support for Apple Operating Systems (MS internal)](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/933/Support-for-Apple-Operating-Systems-(macOS-iOS-and-tvOS))
-- [Support for Windows Operating Systems (MS internal)](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/939/Support-for-Windows-Operating-Systems)
-- [Investigating Helix VM images](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/915/Investigating-Helix-VM-images)
+- [Support for Linux Distros (MS internal)](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1939/Working-in-Engineering-Services/Process-and-Policy/Platform-Support/Linux)
+- [Support for Apple Operating Systems (MS internal)](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1938/Working-in-Engineering-Services/Process-and-Policy/Platform-Support/Apple)
+- [Support for Windows Operating Systems (MS internal)](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1940/Working-in-Engineering-Services/Process-and-Policy/Platform-Support/Windows)
+- [Investigating Helix VM images](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1835/Operations/FR/Investigating-Helix-VM-images)

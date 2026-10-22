@@ -201,7 +201,7 @@
         "for": "5m",
         "frequency": "1m",
         "handler": 1,
-        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1310/-Alert-PCS-Work-Item-Success-Rate-alert)\n\nThe PCS background work items started to fail frequently.\n\n@dotnet/prodconsvcs",
+        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1868/Operations/FR/Wiki-for-Grafana-Alerts/%5BAlert%5D-PCS-Work-Item-Success-Rate-alert)\n\nThe PCS background work items started to fail frequently.\n\n@dotnet/prodconsvcs",
         "name": "PCS Work Item Success Rate alert",
         "noDataState": "keep_state",
         "notifications": [
@@ -482,7 +482,7 @@
         "for": "5m",
         "frequency": "1m",
         "handler": 1,
-        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1311/-Alert-PCS-Exceptions-High)\n\nThe PCS background work items started to fail frequently.\n\n@dotnet/prodconsvcs",
+        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1867/Operations/FR/Wiki-for-Grafana-Alerts/%5BAlert%5D-PCS-Exceptions-High)\n\nThe PCS background work items started to fail frequently.\n\n@dotnet/prodconsvcs",
         "name": "PCS Exceptions High",
         "noDataState": "ok",
         "notifications": [
@@ -642,7 +642,7 @@
         "for": "5m",
         "frequency": "1m",
         "handler": 1,
-        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1308/-Alert-PCS-Background-Worker-Stopped)\n\nPCS appears to have stopped processing new WorkItems.\n\n@dotnet/prodconsvcs",
+        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1865/Operations/FR/Wiki-for-Grafana-Alerts/%5BAlert%5D-PCS-Background-Worker-Stopped)\n\nPCS appears to have stopped processing new WorkItems.\n\n@dotnet/prodconsvcs",
         "name": "PCS Background Worker Stopped",
         "noDataState": "alerting",
         "notifications": [
@@ -1991,7 +1991,7 @@
         "for": "5m",
         "frequency": "5m",
         "handler": 1,
-        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1346/-Alert-PCS-Disk-Space-Issues)\n\nThe PCS service is running out of disk space.\n\n@dotnet/prodconsvcs",
+        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1866/Operations/FR/Wiki-for-Grafana-Alerts/%5BAlert%5D-PCS-Disk-Space-Issues)\n\nThe PCS service is running out of disk space.\n\n@dotnet/prodconsvcs",
         "name": "PCS Disk Space Issues alert",
         "noDataState": "ok",
         "notifications": [
@@ -2140,7 +2140,7 @@
         "for": "5m",
         "frequency": "1m",
         "handler": 1,
-        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1318/-Alert-PCS-high-git-push-failure-rate)\n\nPCS has a high `git push` failure rate, please investigate\n\n@dotnet/prodconsvcs",
+        "message": "[!IMPORTANT]\n[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1870/Operations/FR/Wiki-for-Grafana-Alerts/%5BAlert%5D-PCS-high-%60git-push%60-failure-rate)\n\nPCS has a high `git push` failure rate, please investigate\n\n@dotnet/prodconsvcs",
         "name": "Git Push success rate alert",
         "noDataState": "keep_state",
         "notifications": [
@@ -2386,7 +2386,7 @@
         "for": "5m",
         "frequency": "1m",
         "handler": 1,
-        "message": "[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1350/-Alert-PCS-container-job-execution-failing)\n\nPlease note that this alert will fire every 12 hours as the list of failed jobs can change",
+        "message": "[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1869/Operations/FR/Wiki-for-Grafana-Alerts/%5BAlert%5D-PCS-container-job-execution-failing)\n\nPlease note that this alert will fire every 12 hours as the list of failed jobs can change",
         "name": "Container job execution failures alert",
         "noDataState": "ok",
         "notifications": [
