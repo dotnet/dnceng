@@ -6,11 +6,11 @@
   },
   "intakeRunbook": {
     "name": "Creating IcM incidents for DDFun customer requests",
-    "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1612/AI-Generated-Step-By-Step-Instructions/creating-icm-incidents-for-ddfun-customer-requests"
+    "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1612/Operations/AI-Generated-Step-By-Step-Instructions/creating-icm-incidents-for-ddfun-customer-requests"
   },
   "fallbackPlaybook": {
     "name": "DDFun customer request intake",
-    "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1612/AI-Generated-Step-By-Step-Instructions/creating-icm-incidents-for-ddfun-customer-requests",
+    "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1612/Operations/AI-Generated-Step-By-Step-Instructions/creating-icm-incidents-for-ddfun-customer-requests",
     "selection": "Fallback: no specific vendor playbook matched the Teams message.",
     "remediationGuidance": [
       "Investigate the reported issue using the evidence in the originating Teams thread.",
@@ -25,7 +25,7 @@
     {
       "id": "reimage-on-prem-machine",
       "name": "Reimaging On-Prem Machines",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2334/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Reimaging-On-Prem-Machines",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2334/Operations/DDFUN-Vendor-Playbooks/Reimaging-On-Prem-Machines",
       "matchTerms": [
         "reimage",
         "reimaging",
@@ -46,7 +46,7 @@
     {
       "id": "onboard-spare-or-new-hardware",
       "name": "Onboarding Spare or New Hardware into Helix",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2445/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Onboarding-Spare-or-New-Hardware-into-Helix",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2445/Operations/DDFUN-Vendor-Playbooks/Onboarding-Spare-or-New-Hardware-into-Helix",
       "matchTerms": [
         "spare hardware",
         "new lab hardware",
@@ -68,7 +68,7 @@
     {
       "id": "onboard-machine-azure-arc",
       "name": "Onboarding Helix Machines with Azure Arc",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2435/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Onboarding-Helix-Machines-with-Azure-Arc",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2435/Operations/DDFUN-Vendor-Playbooks/Onboarding-Helix-Machines-with-Azure-Arc",
       "matchTerms": [
         "azure arc",
         "arc-enabled",
@@ -90,7 +90,7 @@
     {
       "id": "onboard-machine-onecert",
       "name": "Onboarding Helix Machines with OneCert",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2436/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Onboarding-Helix-Machines-with-OneCert",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2436/Operations/DDFUN-Vendor-Playbooks/Onboarding-Helix-Machines-with-OneCert",
       "matchTerms": [
         "onecert",
         "one-cert",
@@ -112,7 +112,7 @@
     {
       "id": "upgrade-os-on-queue-devices",
       "name": "Upgrading OS on Helix Queue Devices",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2336/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Upgrading-OS-on-Helix-Queue-Devices",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2336/Operations/DDFUN-Vendor-Playbooks/Upgrading-OS-on-Helix-Queue-Devices",
       "matchTerms": [
         "os upgrade",
         "upgrade the operating system",
@@ -133,7 +133,7 @@
     {
       "id": "update-os-eol-dates",
       "name": "Updating OS EOL Dates in Helix",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2335/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Updating-OS-EOL-Dates-in-Helix",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2335/Operations/DDFUN-Vendor-Playbooks/Updating-OS-EOL-Dates-in-Helix",
       "matchTerms": [
         "estimatedremovaldate",
         "updaterequireddate",
@@ -154,7 +154,7 @@
     {
       "id": "decommission-on-prem-devices",
       "name": "Decommissioning On-Prem Devices",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2331/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Decommissioning-On-Prem-Devices",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2331/Operations/DDFUN-Vendor-Playbooks/Decommissioning-On-Prem-Devices",
       "matchTerms": [
         "decommission the machine",
         "decommission hardware",
@@ -175,7 +175,7 @@
     {
       "id": "deprecate-and-remove-helix-queue",
       "name": "Deprecating and Removing Helix Queues",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2332/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Deprecating-and-Removing-Helix-Queues",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2332/Operations/DDFUN-Vendor-Playbooks/Deprecating-and-Removing-Helix-Queues",
       "matchTerms": [
         "deprecate the queue",
         "queue deprecation",
@@ -196,7 +196,7 @@
     {
       "id": "manage-on-prem-machine-passwords",
       "name": "Managing On-Prem Machine Passwords",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2333/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Managing-On-Prem-Machine-Passwords",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2333/Operations/DDFUN-Vendor-Playbooks/Managing-On-Prem-Machine-Passwords",
       "matchTerms": [
         "machine password",
         "machine password rotation",
@@ -217,7 +217,7 @@
     {
       "id": "bring-on-prem-machine-back-online",
       "name": "Bringing On-Prem Machines Back Online",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2328/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Bringing-On-Prem-Machines-Back-Online",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2328/Operations/DDFUN-Vendor-Playbooks/Bringing-On-Prem-Machines-Back-Online",
       "matchTerms": [
         "back online",
         "stopped heartbeating",
@@ -239,7 +239,7 @@
     {
       "id": "create-azure-devops-pipeline",
       "name": "Creating Azure DevOps Pipelines",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2429/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Creating-Azure-DevOps-Pipelines",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2429/Operations/DDFUN-Vendor-Playbooks/Creating-Azure-DevOps-Pipelines",
       "matchTerms": [
         "create a pipeline",
         "create azure devops pipeline",
@@ -261,7 +261,7 @@
     {
       "id": "retire-azdo-repos-and-pipelines",
       "name": "Retiring Azure DevOps Repositories and Pipelines",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2446/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Retiring-Azure-DevOps-Repositories-and-Pipelines",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2446/Operations/DDFUN-Vendor-Playbooks/Retiring-Azure-DevOps-Repositories-and-Pipelines",
       "matchTerms": [
         "retire repository",
         "retire pipeline",
@@ -283,7 +283,7 @@
     {
       "id": "grant-azdo-access-and-permissions",
       "name": "Granting Azure DevOps Access and Permissions",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2444/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Granting-Azure-DevOps-Access-and-Permissions",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2444/Operations/DDFUN-Vendor-Playbooks/Granting-Azure-DevOps-Access-and-Permissions",
       "matchTerms": [
         "repository access",
         "pipeline permissions",
@@ -304,7 +304,7 @@
     {
       "id": "prepare-service-rollout-pull-requests",
       "name": "Preparing .NET Engineering Services Rollout Pull Requests",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2450/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Preparing-Service-Rollout-Pull-Requests",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2450/Operations/DDFUN-Vendor-Playbooks/Preparing-Service-Rollout-Pull-Requests",
       "matchTerms": [
         "rollout pull request",
         "rollout pr",
@@ -326,7 +326,7 @@
     {
       "id": "create-on-prem-queue",
       "name": "Creating On-Prem Queues",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2329/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Creating-On-Prem-Queues",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2329/Operations/DDFUN-Vendor-Playbooks/Creating-On-Prem-Queues",
       "matchTerms": [
         "on-prem queue",
         "tethered device queue",
@@ -347,7 +347,7 @@
     {
       "id": "create-vs-queue",
       "name": "Creating VS Queues",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2330/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Creating-VS-Queues",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2330/Operations/DDFUN-Vendor-Playbooks/Creating-VS-Queues",
       "matchTerms": [
         "vs queue",
         "visual studio queue",
@@ -367,7 +367,7 @@
     {
       "id": "create-cloud-vm-helix-queue",
       "name": "Creating Cloud / VM-based Helix Queues",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2442/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Creating-Cloud-or-VM-based-Helix-Queues",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2442/Operations/DDFUN-Vendor-Playbooks/Creating-Cloud-or-VM-based-Helix-Queues",
       "matchTerms": [
         "cloud queue",
         "vm-based queue",
@@ -389,7 +389,7 @@
     {
       "id": "create-and-manage-1es-hosted-pools",
       "name": "Creating & Managing 1ES Hosted Pools",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2396/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Creating-and-Managing-1ES-Hosted-Pools",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2396/Operations/DDFUN-Vendor-Playbooks/Creating-and-Managing-1ES-Hosted-Pools",
       "matchTerms": [
         "1es hosted pool",
         "hosted pool",
@@ -411,7 +411,7 @@
     {
       "id": "prepare-azure-subscription-for-helix",
       "name": "Making an Existing Azure Subscription Ready for Helix Queues",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2448/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Making-an-Existing-Azure-Subscription-Ready-for-Helix-Queues",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2448/Operations/DDFUN-Vendor-Playbooks/Making-an-Existing-Azure-Subscription-Ready-for-Helix-Queues",
       "matchTerms": [
         "subscription route",
         "helix-ready subscription",
@@ -433,7 +433,7 @@
     {
       "id": "remediate-service-connection",
       "name": "Service Connection Remediation",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2447/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Service-Connection-Remediation",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2447/Operations/DDFUN-Vendor-Playbooks/Service-Connection-Remediation",
       "matchTerms": [
         "service connection",
         "workload identity federation",
@@ -455,7 +455,7 @@
     {
       "id": "onboard-new-os-or-sku",
       "name": "Onboarding a New OS, OS Version, or Azure VM SKU to Helix",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2438/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Onboarding-a-New-OS-or-SKU-to-Helix",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2438/Operations/DDFUN-Vendor-Playbooks/Onboarding-a-New-OS-or-SKU-to-Helix",
       "matchTerms": [
         "new os version",
         "new vm sku",
@@ -476,7 +476,7 @@
     {
       "id": "recurring-artifact-maintenance",
       "name": "Performing Recurring Helix Artifact Maintenance",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2449/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Performing-Recurring-Helix-Artifact-Maintenance",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2449/Operations/DDFUN-Vendor-Playbooks/Performing-Recurring-Helix-Artifact-Maintenance",
       "matchTerms": [
         "artifact update date",
         "artifact maintenance",
@@ -498,7 +498,7 @@
     {
       "id": "change-queue-artifacts-and-images",
       "name": "Changing Helix Queue Artifacts and Images",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2425/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Changing-Helix-Queue-Artifacts-and-Images",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2425/Operations/DDFUN-Vendor-Playbooks/Changing-Helix-Queue-Artifacts-and-Images",
       "matchTerms": [
         "galleryimageversion",
         "gallery image version",
@@ -520,7 +520,7 @@
     {
       "id": "update-vs-2022-images",
       "name": "Updating Visual Studio 2022 Helix Images",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2439/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/VS-2022-image-updates",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2439/Operations/DDFUN-Vendor-Playbooks/VS-2022-image-updates",
       "matchTerms": [
         "vs 2022 image",
         "visual studio 2022 image",
@@ -542,7 +542,7 @@
     {
       "id": "update-vs-2026-images",
       "name": "Updating Visual Studio 2026 Helix Images",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2440/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/VS-2026-image-updates",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2440/Operations/DDFUN-Vendor-Playbooks/VS-2026-image-updates",
       "matchTerms": [
         "vs 2026 image",
         "visual studio 2026 image",
@@ -564,7 +564,7 @@
     {
       "id": "apple-account-migration",
       "name": "Apple Account Migration",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2345/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Apple-Account-Migration",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2345/Operations/DDFUN-Vendor-Playbooks/Apple-Account-Migration",
       "matchTerms": [
         "apple account",
         "apple developer account",
@@ -585,7 +585,7 @@
     {
       "id": "rotate-domain-account",
       "name": "Manual Rotation of a domain-account Using secret-manager",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2428/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/domain-account-rotation",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2428/Operations/DDFUN-Vendor-Playbooks/domain-account-rotation",
       "matchTerms": [
         "user intervention required for creation or rotation of a domain account",
         "rotation of a domain account",
@@ -607,7 +607,7 @@
     {
       "id": "rotate-github-app-secret",
       "name": "Manual Rotation of a github-app-secret Using secret-manager",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2426/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/github-app-secret-rotation",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2426/Operations/DDFUN-Vendor-Playbooks/github-app-secret-rotation",
       "matchTerms": [
         "user intervention required for creation or rotation of github app secret",
         "rotation of github app secret",
@@ -629,7 +629,7 @@
     {
       "id": "release-quarantined-package",
       "name": "Releasing Quarantined Packages",
-      "url": "https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2434/DNCEng-Internal-Process-Wikis/DDFUN-Vendor-Playbooks/Releasing-Quarantined-Packages",
+      "url": "https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/2434/Operations/DDFUN-Vendor-Playbooks/Releasing-Quarantined-Packages",
       "matchTerms": [
         "quarantined package",
         "release from quarantine",
