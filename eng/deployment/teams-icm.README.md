@@ -106,7 +106,11 @@ dotnet secret-manager synchronize `
 Use the password produced by CoreIdentity. Never place it in source control, deployment
 parameters, workflow configuration, or pipeline variables.
 
-## Validate and deploy disabled
+## Initial provisioning: validate and deploy disabled
+
+Provision new infrastructure disabled until the identity and provider gates are complete.
+The normal production rollout described below updates the existing service and enables the
+workflows by default; do not use it to bypass initial enablement gates.
 
 ```powershell
 az bicep build --file eng/deployment/teams-icm.bicep
@@ -140,16 +144,22 @@ az deployment group create `
     sourceVersion=$sourceVersion
 ```
 
-The production rollout pipeline computes the same fingerprint and compares it with the
-`DeploymentContentHash` tag on all three workflows. A normal production build reports whether the
-source differs from production but does not deploy it. To perform an approved rollout, manually
-queue the production branch with `deployTeamsIcm=true`. The pipeline preserves the existing Azure
-Monitor alert recipient unless `teamsIcmAlertEmail` is provided. Set `forceTeamsIcmDeploy=true`
-only when the same source revision must be redeployed. Enabling is a separate explicit decision:
-`teamsIcmWorkflowEnabledAfterDeployment` defaults to `false`, and must be set to `true` only after
-the identity and provider gates below are complete. The
-`teamsIcmWorkflowEnabledAfterDeployment` parameter controls whether the attended rollout
-re-enables the workflows after disabled-state validation.
+## Normal production rollouts
+
+Teams-to-IcM updates, including the operational-context catalog, are part of the normal
+production rollout and its existing approval. No Teams-to-IcM parameter overrides or separately
+queued run are required. The pipeline computes the same fingerprint and compares it with the
+`DeploymentContentHash` tag on all three workflows. It deploys when the fingerprint or expected
+workflow state differs and skips the deployment when both already match. These stages are
+included only for the production branch, not the main-branch staging deployment.
+
+`deployTeamsIcm` and `teamsIcmWorkflowEnabledAfterDeployment` both default to `true`: routine
+rollouts apply changes and re-enable the workflows after disabled-state validation. For an
+exceptional rollout, explicitly set `deployTeamsIcm=false` to skip Teams-to-IcM deployment, or
+`teamsIcmWorkflowEnabledAfterDeployment=false` to target disabled workflows. The pipeline
+preserves the existing Azure Monitor alert recipient unless `teamsIcmAlertEmail` is provided.
+`forceTeamsIcmDeploy` remains `false` by default; set it to `true` only when the same content and
+workflow state must be redeployed.
 
 The rollout stage runs after the standard service and Grafana deployments. It runs a production
 `what-if`, rejects changes outside the Teams-to-IcM resource allow-list, deploys all workflows
@@ -157,8 +167,9 @@ disabled, and verifies the deployment fingerprint, managed identities, Teams con
 account, and table before optionally enabling the workflows. This creates an intentional processing
 pause during a content rollout. When enablement is requested, the pipeline waits for a successful
 post-enable run from both scheduled workflows. The request-triggered processor and durable
-watermark require a controlled root-thread request plus Azure Table data-plane access and remain
-part of the attended validation. The release job consumes the
+watermark require a controlled root-thread request plus Azure Table data-plane access for
+end-to-end acceptance; routine rollouts do not generate a production request or test incident.
+The release job consumes the
 `TeamsIcmDeployment` artifact produced by the build, so the deployed files are the exact files
 validated and built from that source revision.
 

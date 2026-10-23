@@ -26,7 +26,7 @@
     <PackageVersion Include="ConsoleTables" Version="2.4.2" />
     <PackageVersion Include="JetBrains.Annotations" Version="11.1.0" PrivateAssets="All" />
     <PackageVersion Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.21.0" />
-    <PackageVersion Include="Microsoft.ApplicationInsights.WorkerService" Version="2.21.0" />
+    <PackageVersion Include="Microsoft.ApplicationInsights.WorkerService" Version="2.23.0" />
     <PackageVersion Include="Microsoft.AspNet.WebApi.Client" Version="5.2.7" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication" Version="2.2.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
@@ -34,10 +34,10 @@
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="$(AspNetCoreVersion)" />
     <PackageVersion Include="Microsoft.AspNetCore.WebHooks.Receivers" Version="1.0.0-preview2-final" />
     <PackageVersion Include="Microsoft.AspNetCore.WebHooks.Receivers.GitHub" Version="1.0.0-preview2-final" />
-    <PackageVersion Include="Microsoft.Azure.Functions.Worker" Version="1.24.0" />
-    <PackageVersion Include="Microsoft.Azure.Functions.Worker.ApplicationInsights" Version="1.4.0" />
+    <PackageVersion Include="Microsoft.Azure.Functions.Worker" Version="2.52.0" />
+    <PackageVersion Include="Microsoft.Azure.Functions.Worker.ApplicationInsights" Version="2.0.0" />
     <PackageVersion Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" Version="4.3.1" />
-    <PackageVersion Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.18.1" />
+    <PackageVersion Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.0.7" />
     <PackageVersion Include="Microsoft.Azure.Kusto.Ingest" Version="14.0.3" />
     <PackageVersion Include="Microsoft.Azure.WebJobs.Extensions.Storage" Version="5.0.1" />
     <PackageVersion Include="Microsoft.Build" Version="17.1.0" />

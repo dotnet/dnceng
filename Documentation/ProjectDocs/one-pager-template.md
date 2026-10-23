@@ -61,7 +61,7 @@ In order to align with Epic Content Guidance, one-pagers should be stored in a c
   - Example: Coordinate migration from "master" to "main" in all dotnet org repos - core-eng10412.md. 
 - Use the PR process to document the discussion around the content of the one-pager.
 
-Guidance for Epics can be found at [Guidelines for Epics](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/552/Guidelines-for-Epics) wiki.
+Guidance for Epics can be found at [Guidelines for Epics](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1652/Working-in-Engineering-Services/Process-and-Policy/Work-Management/Guidelines-for-Epics) wiki.
 
 After all discussions have been resolved, the resulting one-pager document should be signed-off (this does not need to be a formal process) by stakeholders (e.g. v-team members, epic owners, et cetera) and then linked to the associated epic's GitHub issue for discover-ability.
 

@@ -260,7 +260,7 @@
         "Id": "dotnet-dnceng-first-responder",
         "Project": "internal",
         "AreaPath": "internal\\.NET Engineering Services\\First Responders",
-        "WorkItemType": "DNCENG Task",
+        "WorkItemType": "Task",
         "Tags": [ "Ops - First Responder" ],
         "UpdateExisting": true
       }
@@ -281,7 +281,7 @@
     "Organization": "dnceng",
     "Project": "internal",
     "AreaPath": "internal\\.NET Engineering Services\\First Responders",
-    "WorkItemType": "DNCENG Task",
+    "WorkItemType": "Task",
     "TitlePrefix": "",
     "SupplementalBodyText": ""
   },

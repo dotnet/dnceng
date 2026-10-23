@@ -105,7 +105,7 @@
   "annotations": {
     "__dashboardUid__": "serviceAvailability",
     "__panelId__": "74",
-    "description": "[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1350/-Alert-PCS-container-job-execution-failing)\\n\\nPlease note that this alert will fire every 12 hours as the list of failed jobs can change"
+    "description": "[Description and instructions for this alert](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/1869/Operations/FR/Wiki-for-Grafana-Alerts/%5BAlert%5D-PCS-container-job-execution-failing)\\n\\nPlease note that this alert will fire every 12 hours as the list of failed jobs can change"
   },
   "labels": {
     "NotificationId": "0a5c68b0daf846ef83a66c6c70fd24ad"
