@@ -451,7 +451,8 @@ stages:
                     "/providers/Microsoft.Logic/workflows/$workflowName"
                   $runsJson = az rest `
                     --method get `
-                    --url "https://management.azure.com$workflowResourceId/runs?api-version=2016-06-01&%24top=20" `
+                    --url "https://management.azure.com$workflowResourceId/runs?api-version=2016-06-01" `
+                    --url-parameters '$top=20' `
                     --output json
                   if ($LASTEXITCODE -ne 0) {
                     throw "Unable to inspect post-enable runs for workflow $workflowName."
