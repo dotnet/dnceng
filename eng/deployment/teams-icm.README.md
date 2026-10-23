@@ -173,6 +173,35 @@ The release job consumes the
 `TeamsIcmDeployment` artifact produced by the build, so the deployed files are the exact files
 validated and built from that source revision.
 
+### Validate the health check without deploying
+
+Run the focused Pester 5 regression tests on Windows:
+
+```powershell
+Invoke-Pester eng/deployment/tests/TeamsIcmHealthCheck.Tests.ps1 -Output Detailed
+```
+
+The tests execute the health-check code extracted from the deployment template, exercise the
+Windows `.cmd` argument boundary, and cover fresh successful runs, stale or failed runs, request
+errors, and timeouts. They do not require Azure access or change any resources.
+
+To check the live run-history request using an existing Azure CLI login, run this read-only
+command for each scheduled workflow:
+
+```powershell
+$workflowResourceId = '/subscriptions/a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1' +
+  '/resourceGroups/dnceng-teams-icm-production/providers/Microsoft.Logic/workflows/' +
+  'dnceng-teams-icm-connector' # Also check dnceng-teams-icm-latency-monitor.
+az rest --method get `
+  --url "https://management.azure.com$workflowResourceId/runs?api-version=2016-06-01" `
+  --url-parameters '$top=20' `
+  --output json
+```
+
+Keep `$top` in `--url-parameters`: an ampersand in an unquoted URL can be interpreted by
+Windows `az.cmd` as a command separator. These checks do not enable workflows or submit an
+intake request and do not replace end-to-end acceptance.
+
 The `Dotnet Engineering services` WIF service connection uses application
 `fc1eb341-aea4-4a11-8f80-d14b8775b2ba`. Its inherited assignment on the target subscription
 resolves to `Owner`, which supplies both resource deployment and role-assignment permissions. The
