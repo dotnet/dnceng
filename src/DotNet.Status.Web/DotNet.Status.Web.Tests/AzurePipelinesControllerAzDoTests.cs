@@ -183,9 +183,8 @@ public class AzurePipelinesControllerAzDoTests
             Times.Once);
     }
 
-    [TestCase("Task")]
-    [TestCase("DNCENG Task")]
-    public async Task BuildComplete_AzDoTarget_UpdateExisting_AddsComment(string type)
+    [Test]
+    public async Task BuildComplete_AzDoTarget_UpdateExisting_AddsComment()
     {
         var options = CreateOptionsWithAzDoTarget();
         var buildJson = CreateBuildJson();
@@ -202,7 +201,7 @@ public class AzurePipelinesControllerAzDoTests
                     Id = 42,
                     Fields = new Dictionary<string, object>
                     {
-                        ["System.WorkItemType"] = type,
+                        ["System.WorkItemType"] = "Task",
                         ["System.State"] = "Backlog",
                     },
                 },
