@@ -18,16 +18,14 @@ explicit `AzureDevOpsAlert:WorkItemType` and `BuildMonitor:AzDoIssues` values in
 Responders area, descriptions, origin URLs, tags and build-monitor assignments
 are unchanged.
 
-Existing-item queries remain type-agnostic so historical `DNCENG Task` work items
-continue to match without conversion or duplicate filing. Grafana recurrences
-reopen the matching item to `Backlog`; recovery marks it `Done`, preserving other
-tags. The build monitor adds comments to matching non-`Done` items and retains
-its configured project, definition, branch and tag filters. GitHub issue targets
-and other Azure DevOps client callers are unaffected.
+Existing-item queries remain type-agnostic to avoid duplicate filing. Grafana
+recurrences reopen the matching item to `Backlog`; recovery marks it `Done`,
+preserving other tags. The build monitor adds comments to matching non-`Done`
+items and retains its configured project, definition, branch and tag filters.
+GitHub issue targets and other Azure DevOps client callers are unaffected.
 
 Source changes do not establish deployed adoption. After an approved Status Web
 rollout, verify both effective work-item type settings and the resulting items:
 new Grafana and build-monitor items should be `Task` in the configured project
 and area, retain their HTML evidence and origin links, and use `Backlog`/`Done`.
-Also verify recurrence/recovery and comments on existing historical items.
-Do not convert historical work items as part of this change.
+Also verify recurrence/recovery and comments on existing items.

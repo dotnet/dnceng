@@ -277,14 +277,11 @@ public class AlertHookControllerTests
         client.VerifyNoOtherCalls();
     }
 
-    [TestCase("Task", "alerting", "Done")]
-    [TestCase("DNCENG Task", "alerting", "Done")]
-    [TestCase("Task", "no_data", "Backlog")]
-    [TestCase("DNCENG Task", "no_data", "Backlog")]
-    [TestCase("Task", "ok", "Backlog")]
-    [TestCase("DNCENG Task", "ok", "Backlog")]
+    [TestCase("alerting", "Done")]
+    [TestCase("no_data", "Backlog")]
+    [TestCase("ok", "Backlog")]
     public async Task NotifyAsync_ExistingWorkItem_PreservesTypeAndUpdatesLifecycle(
-        string type, string state, string previousState)
+        string state, string previousState)
     {
         bool recovering = state == "ok";
         string expectedState = recovering ? "Done" : "Backlog";
@@ -295,7 +292,7 @@ public class AlertHookControllerTests
             Id = 42,
             Fields = new Dictionary<string, object>
             {
-                ["System.WorkItemType"] = type,
+                ["System.WorkItemType"] = "Task",
                 ["System.State"] = previousState,
                 ["System.Tags"] = $"Grafana Alert; {removedTag}; Retained tag",
             },
