@@ -10,24 +10,35 @@ schedules:
 
 name: $(Date:yyyMMdd)$(Rev:rr)
 
-stages:
-  - stage: SynchronizeSecrets
-    jobs:
-    - job: Synchronize
-      pool: 
-        name: NetCore1ESPool-Internal-NoMSI
-        demands: ImageOverride -equals 1es-windows-2022
-      steps:
-      - task: UseDotNet@2
-        displayName: Install .NET from global.json
-        inputs:
-          useGlobalJson: true
+resources:
+  repositories:
+  - repository: 1ESPipelineTemplates
+    type: git
+    name: 1ESPipelineTemplates/1ESPipelineTemplates
+    ref: refs/tags/release
 
-      - task: AzureCLI@2
-        displayName: Synchronize Secrets
-        inputs:
-          azureSubscription: DotNet Eng Services Secret Manager
-          scriptType: ps
-          scriptLocation: inlineScript
-          inlineScript: |
-            Get-ChildItem .vault-config/*.yaml |% { dotnet run --project src/SecretManager/Microsoft.DncEng.SecretManager -- synchronize --skip-untracked $_}
+extends:
+  template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
+  parameters:
+    pool:
+      name: NetCore1ESPool-Internal-NoMSI
+      image: 1es-windows-2022
+      os: windows
+    stages:
+    - stage: SynchronizeSecrets
+      jobs:
+      - job: Synchronize
+        steps:
+        - task: UseDotNet@2
+          displayName: Install .NET from global.json
+          inputs:
+            useGlobalJson: true
+
+        - task: AzureCLI@2
+          displayName: Synchronize Secrets
+          inputs:
+            azureSubscription: DotNet Eng Services Secret Manager
+            scriptType: ps
+            scriptLocation: inlineScript
+            inlineScript: |
+              Get-ChildItem .vault-config/*.yaml |% { dotnet run --project src/SecretManager/Microsoft.DncEng.SecretManager -- synchronize --skip-untracked $_}
