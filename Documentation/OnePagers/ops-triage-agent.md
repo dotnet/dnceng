@@ -1,7 +1,7 @@
 # DNCEng Operational Triage Agent — One Pager
 
 ## Description
-Automated triage system for DNCEng Tasks under  
+Automated triage system for `Task` work items under
 `internal\.NET Engineering Services\Operations`, ensuring transparent and consistent priority assignment.
 
 The architecture is intentionally split into two layers with a **strict separation of responsibilities**:
@@ -29,7 +29,7 @@ A functioning system where:
   - Queries for candidate items
   - Invokes MCP tooling
   - Writes updates back to Azure DevOps
-- Unprioritized DNCEng Tasks are automatically triaged
+- Unprioritized `Task` work items are automatically triaged
 - Items assigned to the agent’s service principal are re-triaged and unassigned
 - A read-only “Triage agent” section is created and appended to
 - Triage decisions follow a versioned wiki-based triage bar
