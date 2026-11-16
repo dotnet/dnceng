@@ -339,6 +339,12 @@ parameters:
 ```
 
 ### Helix Access Token
+Accepts `dnp2.<token ID>.<secret>` tokens, where the ID is a nonnegative Int32 in
+decimal and the secret is an 84-character, short-form Helix HIS-v2 key with the
+`dnhp` provider signature. Legacy base64url tokens of at least 24 characters
+remain supported. Validation checks the format only, not the checksum or whether
+the token is authorized by Helix.
+
 ```yaml
 type: helix-access-token
 parameters:
