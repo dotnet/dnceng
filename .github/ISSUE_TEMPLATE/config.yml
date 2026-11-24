@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Engineering Services Platform work
+    url: https://dev.azure.com/dnceng/internal/_workitems/
+    about: Track general Engineering Services Platform work in Azure DevOps under the internal\.NET Engineering Services area path.
