@@ -1,10 +1,13 @@
-name: Report an infrastructure known issue
-description: Report an infrastructure known issue causing build failures across multiple repositories
+name: Report a known build error
+description: Report a known build error that affects multiple repositories or a repository without issues enabled
 labels: ["First Responder", "Known Build Error"]
 body:
   - type: markdown
     attributes:
-      value: Thanks for reporting an infrastructure build breaking issue to be investigated by the engineering services team.
+      value: |
+        Use this form to report a known build error. Known build errors reported here typically affect builds across multiple repositories. They can also be reported here for a repository that does not have issues enabled.
+
+        Build Analysis uses the known issue JSON below to match failing builds to this issue.
   - type: textarea
     id: build
     attributes:
